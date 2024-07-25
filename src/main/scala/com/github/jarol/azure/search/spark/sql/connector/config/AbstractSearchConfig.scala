@@ -55,6 +55,14 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
     }
   }
 
+  protected final def getOrDefault[T](key: String, converter: String => T, defaultValue: T): T = {
+
+    safelyGet(key) match {
+      case Some(value) => converter(value)
+      case None => defaultValue
+    }
+  }
+
   override def getEndpoint: String = unsafelyGet(SearchConfig.END_POINT_CONFIG, identity)
 
   override def getAPIkey: String = unsafelyGet(SearchConfig.API_KEY_CONFIG, identity)

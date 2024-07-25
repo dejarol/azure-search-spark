@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
+import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchScanBuilder
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
 import org.apache.spark.sql.connector.read.ScanBuilder
@@ -14,7 +15,7 @@ class SearchTable(private val inferredSchema: StructType)
     with SupportsRead
     with SupportsWrite {
 
-  override def name(): String = f"AzureSearchTable(${"indexName"})"
+  override def name(): String = "AzureSearchTable()"
 
   override def schema(): StructType = inferredSchema
 
@@ -28,7 +29,16 @@ class SearchTable(private val inferredSchema: StructType)
     )
   }
 
-  override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = new SearchScanBuilder(inferredSchema)
+  override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
+
+    new SearchScanBuilder(
+      inferredSchema,
+      ReadConfig(
+        JavaScalaConverters.javaMapToScalaMap(
+          options
+        )
+      ))
+  }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = ???
 }
