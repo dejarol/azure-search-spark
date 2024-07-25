@@ -11,7 +11,7 @@ public enum UsageMode {
         this.prefix = prefix;
     }
 
-    public String getPrefix() {
+    public String prefix() {
         return prefix;
     }
 }

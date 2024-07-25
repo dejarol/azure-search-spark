@@ -20,7 +20,7 @@ class SearchTable(private val inferredSchema: StructType)
 
   override def capabilities(): util.Set[TableCapability] = {
 
-    ScalaToJava.set(
+    JavaScalaConverters.scalaSetToJavaSet(
       Set(
         TableCapability.BATCH_READ,
         TableCapability.BATCH_WRITE

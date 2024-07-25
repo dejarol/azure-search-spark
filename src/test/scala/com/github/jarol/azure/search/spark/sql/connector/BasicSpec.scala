@@ -12,9 +12,41 @@ trait BasicSpec
   protected final val SHOULD = "should"
   protected final val SHOULD_NOT = "should not"
 
-  protected final def AnInstanceOf[T: TypeTag]: String = s"An instance of class ${nameOf[T]}"
+  /**
+   * Given a class
+   * {{{
+   * class MySpecialClass
+   * }}}
+   * returns the string
+   * {{{
+   * "An instance of class MySpecialClass"
+   * }}}
+   * @tparam T class TypeTag
+   * @return a string to use as suite title or subtitle
+   */
 
-  protected final def TheCompanionObject[T: TypeTag]: String = s"The companion object ${nameOf[T]}"
+  protected final def anInstanceOf[T: TypeTag]: String = s"An instance of class ${nameOf[T]}"
+
+  /**
+   * Given an object
+   * {{{
+   * object MySpecialObject
+   * }}}
+   * returns the string
+   * {{{
+   * "Object MySpecialObject"
+   * }}}
+   * @tparam T object TypeTag
+   * @return a string to use as suite title or subtitle
+   */
+
+  protected final def `object`[T: TypeTag]: String = s"Object ${nameOf[T]}"
+
+  /**
+   * Return the class name of a TypeTag
+   * @tparam T TypeTag
+   * @return the class name of a TypeTag
+   */
 
   protected final def nameOf[T: TypeTag]: String = typeOf[T].typeSymbol.name.toString
 }

@@ -1,16 +1,20 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.JavaToScala
+import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
 
 import scala.util.matching.Regex
 
+/**
+ * Utilities for inferring the schema of a SearchIndex
+ */
+
 object SchemaUtils {
 
-  final val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
+  private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 
-  final val SIMPLE_TYPES: Map[SearchFieldDataType, DataType] = Map(
+  protected[schema] final val SIMPLE_TYPES: Map[SearchFieldDataType, DataType] = Map(
     SearchFieldDataType.STRING ->  DataTypes.StringType,
     SearchFieldDataType.INT32 -> DataTypes.IntegerType,
     SearchFieldDataType.INT64 -> DataTypes.LongType,
@@ -20,56 +24,127 @@ object SchemaUtils {
     SearchFieldDataType.SINGLE -> DataTypes.FloatType
   )
 
-  protected [schema] def isSimpleType(searchType: SearchFieldDataType): Boolean = SIMPLE_TYPES.contains(searchType)
-  protected [schema] def isComplexType(searchType: SearchFieldDataType): Boolean = SearchFieldDataType.COMPLEX.equals(searchType)
-  protected [schema] def isCollectionType(searchType: SearchFieldDataType): Boolean = COLLECTION_PATTERN.findFirstMatchIn(searchType.toString).isDefined
+  /**
+   * Evaluate if a search field type is simple (e.g. string, number, boolean or date)
+   * @param searchType search type to test
+   * @return true if the search type is simple (e.g. either a string or a number or a boolean or a date)
+   */
 
-  protected [schema] def extractCollectionSubType(searchType: SearchFieldDataType): SearchFieldDataType = {
-    COLLECTION_PATTERN.findFirstMatchIn(searchType.toString).map {
-      `match` => SearchFieldDataType.fromString(`match`.group(1))
-    } match {
-      case Some(value) => value
-      case None => throw new IllegalStateException("")
+  protected[schema] def isSimpleType(searchType: SearchFieldDataType): Boolean = SIMPLE_TYPES.contains(searchType)
+
+  /**
+   * Evaluate if a search field type is complex
+   * @param searchType search type to test
+   * @return true if the search type is complex
+   */
+
+  protected[schema] def isComplexType(searchType: SearchFieldDataType): Boolean = SearchFieldDataType.COMPLEX.equals(searchType)
+
+  /**
+   * Evaluate if a search field type is a collection type
+   * @param searchType search type to test
+   * @return true if the search type is a collection
+   */
+
+  protected[schema] def isCollectionType(searchType: SearchFieldDataType): Boolean = {
+
+    COLLECTION_PATTERN
+      .findFirstMatchIn(searchType.toString)
+      .isDefined
+  }
+
+  /**
+   * Safely extract the inner type of a collection type (if given type is a collection)
+   * @param searchType search type
+   * @return a non-empty value if the input search type is a collection
+   */
+
+  protected[schema] def safelyExtractCollectionType(searchType: SearchFieldDataType): Option[SearchFieldDataType] = {
+
+    COLLECTION_PATTERN
+      .findFirstMatchIn(searchType.toString)
+      .map {
+        regexMatch =>
+          SearchFieldDataType.fromString(regexMatch.group(1))
     }
   }
 
-  def asSchema(fields: Iterable[SearchField]): StructType = {
+  /**
+   * Extract the inner type of a collection type
+   * @param searchType search type
+   * @throws IllegalStateException if the given search type is not a collection type
+   * @return the inner collection type
+   */
 
-    StructType(
-      fields.map {
-        searchFieldAsStructField
-      }.toSeq
-    )
+  @throws[IllegalStateException]
+  protected[schema] def unsafelyExtractCollectionType(searchType: SearchFieldDataType): SearchFieldDataType = {
+
+    safelyExtractCollectionType(searchType) match {
+      case Some(value) => value
+      case None => throw new IllegalStateException(
+        f"Illegal state (a collection type is expected but no inner type could be found)"
+      )
+    }
   }
 
-  def searchFieldAsStructField(searchField: SearchField): StructField = {
+  /**
+   * Return the Spark equivalent [[DataType]] for a search field
+   * @param searchField a search field
+   * @return the equivalent Spark data type for given search field
+   */
 
-    StructField(
-      searchField.getName,
-      resolveSearchDataType(searchField),
-      nullable = true
-    )
-  }
-
-  def resolveSearchDataType(searchField: SearchField): DataType = {
+  def sparkDataTypeOf(searchField: SearchField): DataType = {
 
     val searchType = searchField.getType
     if (isSimpleType(searchType)) {
       SIMPLE_TYPES(searchType)
+    } else if (isCollectionType(searchType)) {
+
+      // Extract collection inner type
+      val collectionInnerType = unsafelyExtractCollectionType(searchType)
+      ArrayType(
+        sparkDataTypeOf(new SearchField(null, collectionInnerType)),
+        containsNull = true
+      )
     } else if (isComplexType(searchType)) {
 
-      // Extract subfields, convert them into StructFields and collect them into a StructType
-      StructType(JavaToScala.listToSeq(searchField.getFields)
-        .map(searchFieldAsStructField)
-      )
-    } else if (isCollectionType(searchType)) {
-      ArrayType(
-        resolveSearchDataType(
-          new SearchField(null, extractCollectionSubType(searchType))),
-        containsNull = true
+      // Extract subfields,
+      // convert them into StructFields
+      // and create a StructType
+      StructType(JavaScalaConverters
+        .listToSeq(searchField.getFields)
+        .map(asStructField)
       )
     } else {
       throw new IllegalStateException(f"Unsupported datatype $searchType")
     }
+  }
+
+  /**
+   * Convert a search field to a [[StructField]]
+   * @param searchField search field
+   * @return the equivalent [[StructField]] of this search field
+   */
+
+  protected[schema] def asStructField(searchField: SearchField): StructField = {
+
+    StructField(
+      searchField.getName,
+      sparkDataTypeOf(searchField),
+      nullable = true
+    )
+  }
+
+  /**
+   * Convert a SearchIndex schema to a [[StructType]]
+   * @param fields search index fields
+   * @return the schema of the search index
+   */
+
+  def asStructType(fields: Seq[SearchField]): StructType = {
+
+    StructType(
+      fields.map(asStructField)
+    )
   }
 }
