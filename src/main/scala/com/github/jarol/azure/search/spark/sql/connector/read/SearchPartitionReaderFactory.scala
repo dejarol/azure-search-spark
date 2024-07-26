@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType
@@ -11,6 +12,6 @@ class SearchPartitionReaderFactory(private val schema: StructType,
 
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
-    new SearchPartitionReader(schema, readConfig)
+    new SearchPartitionReader(schema, readConfig, partition.asInstanceOf[SearchPartition])
   }
 }

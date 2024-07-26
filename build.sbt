@@ -19,16 +19,18 @@ ThisBuild / Test / testOptions += Tests.Argument("-oD")
 ThisBuild / assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
 ThisBuild / assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false)
 
+// Dependencies versions
 lazy val sparkVersion = "3.3.0"
-lazy val scalaTestVersion = "3.2.16"
-lazy val azureSearchClientVersion = "11.6.0"
+lazy val azureSearchVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
+
+lazy val scalaTestVersion = "3.2.16"
 
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion % Provided
 lazy val sparkSQL = "org.apache.spark" %% "spark-sql" % sparkVersion % Provided
 
-lazy val azureSearchClient = ("com.azure" % "azure-search-documents" % azureSearchClientVersion)
+lazy val azureSearchClient = ("com.azure" % "azure-search-documents" % azureSearchVersion)
   .exclude("com.azure", "azure-core-http-netty")
 
 lazy val azureCoreOkHttp = "com.azure" % "azure-core-http-okhttp" % azureCoreOkHttpVersion

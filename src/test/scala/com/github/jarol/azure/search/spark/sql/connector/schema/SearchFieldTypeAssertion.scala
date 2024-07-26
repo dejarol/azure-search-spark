@@ -46,6 +46,10 @@ trait SearchFieldTypeAssertion {
 
 object TypeAssertions {
 
+  /**
+   * Assertion for simple types
+   */
+
   case object Simple
     extends SearchFieldTypeAssertion {
 
@@ -56,6 +60,10 @@ object TypeAssertions {
     override def expectedGeoPoint: Boolean = false
   }
 
+  /**
+   * Assertion for collection types
+   */
+
   case object Collection extends SearchFieldTypeAssertion {
     override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isCollectionType
     override def expectedSimple: Boolean = false
@@ -63,6 +71,10 @@ object TypeAssertions {
     override def expectedCollection: Boolean = true
     override def expectedGeoPoint: Boolean = false
   }
+
+  /**
+   * Assertions for complex types
+   */
 
   case object Complex extends SearchFieldTypeAssertion {
     override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isComplexType

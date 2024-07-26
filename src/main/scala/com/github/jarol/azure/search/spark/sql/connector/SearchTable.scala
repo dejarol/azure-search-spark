@@ -11,8 +11,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util
 
 class SearchTable(private val inferredSchema: StructType)
-  extends Table
-    with SupportsRead
+  extends Table with SupportsRead
     with SupportsWrite {
 
   override def name(): String = "AzureSearchTable()"

@@ -19,9 +19,9 @@ object SchemaUtils {
     SearchFieldDataType.INT32 -> DataTypes.IntegerType,
     SearchFieldDataType.INT64 -> DataTypes.LongType,
     SearchFieldDataType.DOUBLE -> DataTypes.DoubleType,
+    SearchFieldDataType.SINGLE -> DataTypes.FloatType,
     SearchFieldDataType.BOOLEAN -> DataTypes.BooleanType,
-    SearchFieldDataType.DATE_TIME_OFFSET -> DataTypes.TimestampType,
-    SearchFieldDataType.SINGLE -> DataTypes.FloatType
+    SearchFieldDataType.DATE_TIME_OFFSET -> DataTypes.TimestampType
   )
 
   /**

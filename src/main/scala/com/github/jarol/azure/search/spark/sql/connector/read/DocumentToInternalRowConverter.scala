@@ -18,6 +18,9 @@ case class DocumentToInternalRowConverter(private val schema: StructType,
         sf.dataType match {
           case DataTypes.StringType => UTF8String.fromString(obj.asInstanceOf[String])
           case DataTypes.IntegerType => obj.asInstanceOf[Integer]
+          case DataTypes.LongType => obj.asInstanceOf[java.lang.Long]
+          case DataTypes.DoubleType => obj.asInstanceOf[java.lang.Double]
+          case DataTypes.FloatType => obj.asInstanceOf[java.lang.Float]
           case DataTypes.BooleanType => obj.asInstanceOf[java.lang.Boolean]
           case _ => obj
         }

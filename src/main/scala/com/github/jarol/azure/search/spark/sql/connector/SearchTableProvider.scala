@@ -32,7 +32,7 @@ class SearchTableProvider
 object SearchTableProvider {
 
   /**
-   * Datasource name
+   * Datasource format
    */
 
   final val SHORT_NAME: String = "azuresearch"

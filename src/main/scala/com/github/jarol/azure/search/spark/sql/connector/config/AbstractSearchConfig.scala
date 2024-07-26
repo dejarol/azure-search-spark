@@ -1,28 +1,20 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /**
  * Parent class for all Search configurations
  * @param options options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
  *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
- * @param mode usage mode
+ * @param configOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
+ * @param usageMode usage mode
  */
 
 abstract class AbstractSearchConfig(protected val options: Map[String, String],
-                                    protected val mode: UsageMode)
+                                    protected val configOptions: Map[String, String],
+                                    protected val usageMode: UsageMode)
   extends SearchConfig {
-
-  /**
-   * Options retrieved by the underlying [[org.apache.spark.SparkConf]] (if any)
-   */
-
-  protected final val configOptions: Map[String, String] = SparkSession.getActiveSession
-    .map {
-      _.sparkContext.getConf
-        .getAllWithPrefix(mode.prefix)
-        .toMap
-    }.getOrElse(Map.empty)
 
   /**
    * Safely get the value of a key by inspecting first provided options and then [[org.apache.spark.SparkConf]] options
@@ -68,4 +60,35 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
   override def getAPIkey: String = unsafelyGet(SearchConfig.API_KEY_CONFIG, identity)
 
   override def getIndex: String = unsafelyGet(SearchConfig.INDEX_CONFIG, identity)
+}
+
+object AbstractSearchConfig {
+
+  /**
+   * Extract all options from given SparkConf that starts with the prefix of a usage mode
+   * @param sparkConf an instance of [[SparkConf]]
+   * @param usageMode usage mode
+   * @return all key-value pairs whose keys start with given mode prefix
+   */
+
+  protected[config] def allConfigsForMode(sparkConf: SparkConf, usageMode: UsageMode): Map[String, String] = {
+
+   sparkConf
+      .getAllWithPrefix(usageMode.prefix())
+      .toMap
+  }
+
+  /**
+   * Retrieve all options related to a mode from the active SparkSession (if any)
+   * @param usageMode usage mode
+   * @return an empty Map if no [[SparkSession]] is active, all options related to the mode otherwise
+   */
+
+  protected[config] def allConfigsFromActiveSessionForMode(usageMode: UsageMode): Map[String, String] = {
+
+    SparkSession.getActiveSession match {
+      case Some(value) => allConfigsForMode(value.sparkContext.getConf, usageMode)
+      case None => Map.empty
+    }
+  }
 }
