@@ -3,16 +3,18 @@ package com.github.jarol.azure.search.spark.sql.connector.config
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * Parent class for all Search configurations
  * @param options options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
  *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
- * @param configOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
+ * @param sparkConfOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
  * @param usageMode usage mode
  */
 
 abstract class AbstractSearchConfig(protected val options: Map[String, String],
-                                    protected val configOptions: Map[String, String],
+                                    protected val sparkConfOptions: Map[String, String],
                                     protected val usageMode: UsageMode)
   extends SearchConfig {
 
@@ -22,44 +24,64 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
    * @return the optional value related to given key
    */
 
-  protected final def safelyGet(key: String): Option[String] = {
+  protected[config] final def safelyGet(key: String): Option[String] = {
 
     options.get(key).orElse {
-      configOptions.get(key)
+      sparkConfOptions.get(key)
     }
   }
 
   /**
    * Get the value of a key and transform it, or throw an exception if not found
    * @param key key
-   * @param converter value converter
-   * @throws NoSuchElementException if the key is not found
-   * @tparam T output value type
+   * @throws ConfigException if the key is not found
    * @return the value related to given key, converted using given converter
    */
 
-  @throws[NoSuchElementException]
-  protected final def unsafelyGet[T](key: String, converter: String => T): T = {
+  @throws[ConfigException]
+  protected[config] final def unsafelyGet(key: String): String = {
 
     safelyGet(key) match {
-      case Some(value) => converter(value)
-      case None => throw new NoSuchElementException(s"Missing required option $key")
+      case Some(value) => value
+      case None => throw ConfigException.missingKey(key)
     }
   }
 
-  protected final def getOrDefault[T](key: String, converter: String => T, defaultValue: T): T = {
+  /**
+   * Get the value of a key, or a default
+   * @param key key
+   * @param defaultValue default value
+   * @return the value key or the default if the key is missing
+   */
 
-    safelyGet(key) match {
-      case Some(value) => converter(value)
-      case None => defaultValue
-    }
+  protected[config] final def getOrDefault(key: String, defaultValue: String): String = safelyGet(key).getOrElse(defaultValue)
+
+  /**
+   * Get the value of a key and map its value using a conversion function, or get a default value
+   * @param key key
+   * @param defaultValue default value to return in case of missing key
+   * @param conversion value conversion function
+   * @tparam T conversion type
+   * @return the default instance if key is missing, or the converted value
+   */
+
+  protected[config] final def getAsOrDefault[T](key: String, defaultValue: T, conversion: String => T): T = {
+
+    safelyGet(key).map {
+      value => Try {
+        conversion(value)
+      } match {
+        case Failure(exception) => throw new ConfigException(key, value, exception)
+        case Success(value) => value
+      }
+    }.getOrElse(defaultValue)
   }
 
-  override def getEndpoint: String = unsafelyGet(SearchConfig.END_POINT_CONFIG, identity)
+  override def getEndpoint: String = unsafelyGet(SearchConfig.END_POINT_CONFIG)
 
-  override def getAPIkey: String = unsafelyGet(SearchConfig.API_KEY_CONFIG, identity)
+  override def getAPIkey: String = unsafelyGet(SearchConfig.API_KEY_CONFIG)
 
-  override def getIndex: String = unsafelyGet(SearchConfig.INDEX_CONFIG, identity)
+  override def getIndex: String = unsafelyGet(SearchConfig.INDEX_CONFIG)
 }
 
 object AbstractSearchConfig {
