@@ -1,9 +1,12 @@
+
+
 lazy val scala212 = "2.12.18"
 lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
 
 ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := scala212
+ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= "-source" :: "1.8" ::
   "-target" :: "1.8" :: Nil
 ThisBuild / scalacOptions ++= "-target:jvm-1.8" ::

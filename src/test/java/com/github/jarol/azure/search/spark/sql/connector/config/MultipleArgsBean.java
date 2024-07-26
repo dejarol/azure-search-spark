@@ -8,6 +8,7 @@ import java.time.LocalDate;
  * A simple bean with a 2-args constructor
  */
 
+@SuppressWarnings("unused")
 public class MultipleArgsBean {
 
     private final Integer id;
