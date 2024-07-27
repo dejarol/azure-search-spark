@@ -1,5 +1,3 @@
-
-
 lazy val scala212 = "2.12.18"
 lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
@@ -32,7 +30,6 @@ lazy val scalaTestVersion = "3.2.16"
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion % Provided
 lazy val sparkSQL = "org.apache.spark" %% "spark-sql" % sparkVersion % Provided
-
 lazy val azureSearchClient = ("com.azure" % "azure-search-documents" % azureSearchVersion)
   .exclude("com.azure", "azure-core-http-netty")
 

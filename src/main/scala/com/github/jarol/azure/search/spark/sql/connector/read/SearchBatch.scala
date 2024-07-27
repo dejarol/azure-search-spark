@@ -9,7 +9,12 @@ class SearchBatch(private val schema: StructType,
   extends Batch {
 
   override def planInputPartitions(): Array[InputPartition] = {
-    ???
+
+    val partitioner = readConfig.partitioner
+
+    readConfig.partitioner
+      .generatePartitions()
+      .map(_.asInstanceOf[InputPartition])
   }
 
   override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(schema, readConfig)

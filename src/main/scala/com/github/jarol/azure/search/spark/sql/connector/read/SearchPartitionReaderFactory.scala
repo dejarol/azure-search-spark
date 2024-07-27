@@ -12,6 +12,10 @@ class SearchPartitionReaderFactory(private val schema: StructType,
 
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
-    new SearchPartitionReader(schema, readConfig, partition.asInstanceOf[SearchPartition])
+    partition match {
+      case sp: SearchPartition => new SearchPartitionReader(schema, readConfig, sp)
+      case _ => throw new IllegalStateException(s"Found a partition of type ${partition.getClass.getName}, " +
+        s"expecting a ${classOf[SearchPartition].getName}")
+    }
   }
 }

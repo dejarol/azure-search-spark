@@ -1,8 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.azure.core.util.Context
-import com.azure.search.documents.models.SearchOptions
-import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{ReadConfig, SearchConfig}
 
 import scala.collection.JavaConverters._
@@ -11,13 +8,16 @@ class ReadSpec extends SparkSpec {
 
   it("a") {
 
-    /*
     val df = spark.read.format(SearchTableProvider.SHORT_NAME)
       .option(SearchConfig.INDEX_CONFIG, "1721203770598-personnel-list")
+      .option(ReadConfig.FILTER_CONFIG, "firstName eq 'FRANCESCO'")
       .load().cache()
 
-     */
+    df.printSchema()
+    df.show(false)
+    println(df.count())
 
+    /*
     val result = ClientFactory.searchClient(
       ReadConfig(
         Map(
@@ -38,9 +38,8 @@ class ReadSpec extends SparkSpec {
       case (str, results) => results.asScala.map(_.getCount)
     }.toSeq.reduce( _ + _)
 
+     */
+
     val a = 1
-    // df.printSchema()
-    // df.show(false)
-    //println(df.count())
   }
 }
