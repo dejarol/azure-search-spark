@@ -89,27 +89,27 @@ object AbstractSearchConfig {
   /**
    * Extract all options from given SparkConf that starts with the prefix of a usage mode
    * @param sparkConf an instance of [[SparkConf]]
-   * @param usageMode usage mode
+   * @param mode usage mode
    * @return all key-value pairs whose keys start with given mode prefix
    */
 
-  protected[config] def allConfigsForMode(sparkConf: SparkConf, usageMode: UsageMode): Map[String, String] = {
+  protected[config] def allConfigsForMode(sparkConf: SparkConf, mode: UsageMode): Map[String, String] = {
 
    sparkConf
-      .getAllWithPrefix(usageMode.prefix())
+      .getAllWithPrefix(mode.prefix())
       .toMap
   }
 
   /**
    * Retrieve all options related to a mode from the active SparkSession (if any)
-   * @param usageMode usage mode
+   * @param mode usage mode
    * @return an empty Map if no [[SparkSession]] is active, all options related to the mode otherwise
    */
 
-  protected[config] def allConfigsFromActiveSessionForMode(usageMode: UsageMode): Map[String, String] = {
+  protected[config] def allConfigsFromActiveSessionForMode(mode: UsageMode): Map[String, String] = {
 
     SparkSession.getActiveSession match {
-      case Some(value) => allConfigsForMode(value.sparkContext.getConf, usageMode)
+      case Some(value) => allConfigsForMode(value.sparkContext.getConf, mode)
       case None => Map.empty
     }
   }

@@ -46,6 +46,13 @@ object ReadConfig {
   final val FILTER_CONFIG = "filter"
   final val PARTITIONER_CONFIG = "partitioner"
 
+  /**
+   * Create an instance from given options, retrieving SparkConf-related options
+   * from the underlying active [[org.apache.spark.sql.SparkSession]] (if any)
+   * @param options options passed via [[org.apache.spark.sql.DataFrameReader.option]] method
+   * @return an instance of [[ReadConfig]]
+   */
+
   def apply(options: Map[String, String]): ReadConfig = {
 
     ReadConfig(
