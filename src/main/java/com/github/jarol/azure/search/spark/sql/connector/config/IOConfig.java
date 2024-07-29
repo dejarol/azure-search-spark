@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Interface for Search read/write configurations
  */
 
-public interface SearchConfig
+public interface IOConfig
         extends Serializable {
 
     String PREFIX = "spark.azure.search.";

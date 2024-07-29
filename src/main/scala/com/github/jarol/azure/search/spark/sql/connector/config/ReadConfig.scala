@@ -4,13 +4,13 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Sear
 
 /**
  * Read configuration
- * @param options options passed to the [[org.apache.spark.sql.DataFrameReader]]
- * @param sparkConfOptions read options retrieved from the underlying [[org.apache.spark.SparkConf]]
+ * @param localOptions options passed to the [[org.apache.spark.sql.DataFrameReader]]
+ * @param globalOptions read options retrieved from the underlying [[org.apache.spark.SparkConf]]
  */
 
-case class ReadConfig(override protected val options: Map[String, String],
-                      override protected val sparkConfOptions: Map[String, String])
-  extends AbstractSearchConfig(options, sparkConfOptions, UsageMode.READ) {
+case class ReadConfig(override protected val localOptions: Map[String, String],
+                      override protected val globalOptions: Map[String, String])
+  extends AbstractIOConfig(localOptions, globalOptions, UsageMode.READ) {
 
   /**
    * Get the filter to apply on index documents. The filter must follow OData syntax
@@ -18,7 +18,7 @@ case class ReadConfig(override protected val options: Map[String, String],
    * @return the filter to apply on search index documents
    */
 
-  def filter: Option[String] = safelyGet(ReadConfig.FILTER_CONFIG)
+  def filter: Option[String] = get(ReadConfig.FILTER_CONFIG)
 
   /**
    * Get the [[SearchPartitioner]] to use for generating the search partitions.
@@ -40,14 +40,14 @@ case class ReadConfig(override protected val options: Map[String, String],
     )
   }
 
-  def partitionerOptions: Map[String, String] = getAllWithPrefix(ReadConfig.PARTITIONER_OPTIONS_PREFIX)
+  def partitionerOptions: SearchConfig = getAllWithPrefix(ReadConfig.PARTITIONER_OPTIONS_PREFIX)
 
   /**
    * Return the set of index fields to select. If not provided, all retrievable fields will be selected
    * @return index fields to select
    */
 
-  def select: Option[Seq[String]] = safelyGetAs(ReadConfig.SELECT_CONFIG, _.split(",").map(_.trim))
+  def select: Option[Seq[String]] = getAs(ReadConfig.SELECT_CONFIG, _.split(",").map(_.trim))
 }
 
 object ReadConfig {
@@ -70,7 +70,7 @@ object ReadConfig {
 
     ReadConfig(
       options,
-      AbstractSearchConfig.allConfigsFromActiveSessionForMode(UsageMode.READ)
+      AbstractIOConfig.allConfigsFromActiveSessionForMode(UsageMode.READ)
     )
   }
 }

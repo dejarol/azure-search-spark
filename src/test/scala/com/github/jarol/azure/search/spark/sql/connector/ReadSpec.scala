@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector
 import com.azure.core.util.Context
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
-import com.github.jarol.azure.search.spark.sql.connector.config.{ReadConfig, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.config.{ReadConfig, IOConfig}
 
 import scala.collection.JavaConverters._
 
@@ -25,9 +25,9 @@ class ReadSpec extends SparkSpec {
     val result = ClientFactory.searchClient(
       ReadConfig(
         Map(
-          SearchConfig.END_POINT_CONFIG -> "https://lohrwkpeacss01.search.windows.net",
-          SearchConfig.API_KEY_CONFIG -> "3F491488E774609119C10968C6D47634",
-          SearchConfig.INDEX_CONFIG -> "1721203770598-personnel-list"))
+          IOConfig.END_POINT_CONFIG -> "https://lohrwkpeacss01.search.windows.net",
+          IOConfig.API_KEY_CONFIG -> "3F491488E774609119C10968C6D47634",
+          IOConfig.INDEX_CONFIG -> "1721203770598-personnel-list"))
     ).search(
       null,
       new SearchOptions()

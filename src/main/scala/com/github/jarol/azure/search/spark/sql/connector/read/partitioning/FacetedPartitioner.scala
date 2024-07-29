@@ -1,12 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.azure.core.util.Context
 import com.azure.search.documents.indexes.models.SearchField
-import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
-import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig}
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
+import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig, SearchConfig}
 
 import java.util
 
@@ -15,12 +12,8 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   override def generatePartitions(): util.List[SearchPartition] = {
 
-    val partitionerOptions: Map[String, String] = readConfig.partitionerOptions
-    val facetName: String = partitionerOptions.get(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG) match {
-      case Some(value) => value
-      case None => throw ConfigException.missingKey(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
-    }
-
+    val partitionerOptions: SearchConfig = readConfig.partitionerOptions
+    val facetName: String = partitionerOptions.unsafelyGet(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
     val maybeFieldToFacet: Option[SearchField] = JavaScalaConverters.listToSeq(
       ClientFactory.indexClient(readConfig)
       .getIndex(readConfig.getIndex)
@@ -33,13 +26,18 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
     maybeFieldToFacet match {
       case Some(value) => ???
-      case None => throw new ConfigException("a")
+      case None => throw new ConfigException(
+        ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG,
+        facetName,
+        new IllegalArgumentException("Field not facetable or filterable")
+      )
     }
   }
 
   private def generateFacetPartitions(searchField: SearchField): util.List[SearchPartition] = {
 
     val facetName: String = searchField.getName
+    /*
     ClientFactory.searchClient(readConfig)
       .search(
         null,
@@ -50,6 +48,8 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
       ).getFacets.get(facetName).stream().map(
       facet => facet.getAdditionalProperties.get("value")
       )
+
+     */
 
     util.Collections.emptyList()
   }

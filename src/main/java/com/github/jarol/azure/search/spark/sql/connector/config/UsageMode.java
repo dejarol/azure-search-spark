@@ -12,13 +12,13 @@ public enum UsageMode {
      * Read mode
      */
 
-    READ(SearchConfig.READ_PREFIX),
+    READ(IOConfig.READ_PREFIX),
 
     /**
      * Write mode
      */
 
-    WRITE(SearchConfig.WRITE_PREFIX);
+    WRITE(IOConfig.WRITE_PREFIX);
 
     /**
      * Prefix of {@link org.apache.spark.SparkConf}'s options related to this mode

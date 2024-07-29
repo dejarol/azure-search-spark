@@ -1,74 +1,67 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
 import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
-import org.apache.spark.SparkConf
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class AbstractSearchConfigSpec
+class SearchConfigSpec
   extends BasicSpec {
 
   private lazy val (k1, v1, k2, v2, k3, v3) = ("k1", "v1", "k2", "v2", "k3", "v3")
+  private lazy val keyPrefix = "some.key.prefix."
 
   /**
-   * Create an instance of [[AbstractSearchConfig]] by injecting two maps
+   * Create an instance of [[SearchConfig]] by injecting two maps
    * @param m1 local options
    * @param m2 global (SparkConf) options
-   * @return an instance of [[AbstractSearchConfig]]
+   * @return an instance of [[SearchConfig]]
    */
 
-  private def createConfig(m1: Map[String, String], m2: Map[String, String]): AbstractSearchConfig = {
+  private def createConfig(m1: Map[String, String], m2: Map[String, String]): SearchConfig = new SearchConfig(m1, m2)
 
-    new AbstractSearchConfig(m1, m2, UsageMode.WRITE) {}
-  }
-
-  /**
-   * Create a test [[SparkConf]], retrieve all configs related to a mode, and run assertions on retrieved result
-   * @param usageConfigs usage-related configs
-   * @param externalConfigs usage-unrelated (or external) configs
-   * @param mode usage mode
-   */
-
-  private def testExtractedConfigs(usageConfigs: Map[String, String],
-                                   externalConfigs: Map[String, String],
-                                   mode: UsageMode): Unit = {
-
-    // Create the test conf
-    val sparkConf = new SparkConf()
-      .setAll(
-        usageConfigs.map {
-          case (k, v) => (s"${mode.prefix()}$k", v)
-        }
-      ).setAll(externalConfigs)
-
-    // Retrieve the result
-    val actual = AbstractSearchConfig.allConfigsForMode(sparkConf, mode)
-    actual should have size usageConfigs.size
-    actual should contain theSameElementsAs usageConfigs
-  }
-
-  describe(`object`[AbstractSearchConfig]) {
+  describe(`object`[SearchConfig]) {
     describe(SHOULD) {
-      it("retrieve all configs related to a usage mode") {
+      it("retrieve all configs starting with a prefix") {
 
-        val usageConfigs = Map(
-          SearchConfig.END_POINT_CONFIG -> "azureEndpoint",
-          SearchConfig.API_KEY_CONFIG -> "azureApiKey"
+        SearchConfig.allWithPrefix[Int](
+          Map(
+            keyPrefix + k1 -> 1,
+            keyPrefix + k2 -> 2,
+            k3 -> 3
+          ),
+          keyPrefix
+        ) should contain theSameElementsAs Map(
+          k1 -> 1,
+          k2 -> 2
         )
+      }
 
-        val externalConfigs = Map(
-          k1 -> v1,
-          k2 -> v2
-        )
+      describe(s"convert a raw value") {
+        it("either successfully") {
 
-        testExtractedConfigs(usageConfigs, externalConfigs, UsageMode.READ)
-        testExtractedConfigs(usageConfigs, externalConfigs, UsageMode.WRITE)
+          SearchConfig.unsafelyConvert[Double](
+            k1,
+            "3.14",
+            java.lang.Double.parseDouble
+          ) shouldBe 3.14
+        }
+
+        it(s"or throwing a ${nameOf[ConfigException]}") {
+
+          (the[ConfigException] thrownBy {
+            SearchConfig.unsafelyConvert[LocalDate](
+              k1,
+              v1,
+              LocalDate.parse
+            )
+          }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
+        }
       }
     }
   }
 
-  describe(anInstanceOf[AbstractSearchConfig]) {
+  describe(anInstanceOf[SearchConfig]) {
     describe(SHOULD) {
       describe("get a value") {
 
@@ -79,9 +72,9 @@ class AbstractSearchConfigSpec
 
         it("safely") {
 
-          emptyConfig.safelyGet(k1) shouldBe empty
-          configWithOptions.safelyGet(k1) shouldBe Some(v1)
-          configWithSparkOptions.safelyGet(k1) shouldBe Some(v1)
+          emptyConfig.get(k1) shouldBe empty
+          configWithOptions.get(k1) shouldBe Some(v1)
+          configWithSparkOptions.get(k1) shouldBe Some(v1)
         }
 
         it("unsafely") {
@@ -103,7 +96,7 @@ class AbstractSearchConfigSpec
         }
       }
 
-      describe("retrieve a typed value") {
+      describe("get a typed value") {
         it("safely") {
 
           val (now, formatter) = (LocalDate.now(), DateTimeFormatter.ISO_LOCAL_DATE)
@@ -116,11 +109,8 @@ class AbstractSearchConfigSpec
           )
 
           val conversion: String => LocalDate = s => LocalDate.parse(s, formatter)
-          config.safelyGetAs[LocalDate](k2, conversion) shouldBe empty
-          config.safelyGetAs[LocalDate](k1, conversion) shouldBe Some(now)
-          (the[ConfigException] thrownBy {
-            config.safelyGetAs[LocalDate](k3, conversion)
-          }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
+          config.getAs[LocalDate](k2, conversion) shouldBe empty
+          config.getAs[LocalDate](k1, conversion) shouldBe Some(now)
         }
 
         it("or a default") {
@@ -131,7 +121,7 @@ class AbstractSearchConfigSpec
             Map.empty
           )
 
-          config.safelyGet(k2) shouldBe empty
+          config.get(k2) shouldBe empty
           config.getOrDefaultAs[Int](k2, default, _.toInt) shouldBe default
         }
 
@@ -143,22 +133,43 @@ class AbstractSearchConfigSpec
             Map.empty
           )
 
-          config.safelyGet(k1) shouldBe defined
+          config.get(k1) shouldBe defined
           config.getOrDefaultAs[Int](k1, default, _.toInt) shouldBe existingValue
         }
 
         it("eventually throwing an exception for invalid configs") {
 
+          val conversion: String => LocalDate = LocalDate.parse
           val config = createConfig(
             Map(k1 -> "hello"),
             Map.empty
           )
 
-          config.safelyGet(k1) shouldBe defined
+          config.get(k1) shouldBe defined
+          (the[ConfigException] thrownBy {
+            config.getAs[LocalDate](k1, conversion)
+          }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
+
           (the [ConfigException] thrownBy {
-            config.getOrDefaultAs[LocalDate](k1, LocalDate.now(), LocalDate.parse)
+            config.getOrDefaultAs[LocalDate](k1, LocalDate.now(), conversion)
           }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
         }
+      }
+
+      it("collect all options starting with a prefix in a new config") {
+
+        val config = createConfig(
+          Map(
+            keyPrefix + k1 -> v1
+          ),
+          Map(
+            keyPrefix + k2 -> v2
+          )
+        )
+
+        val subConfig = config.getAllWithPrefix(keyPrefix)
+        subConfig.unsafelyGet(k1) shouldBe v1
+        subConfig.unsafelyGet(k2) shouldBe v2
       }
     }
   }

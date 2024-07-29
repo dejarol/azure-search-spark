@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.config.SearchConfig
+import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
 import org.apache.spark.sql.{DataFrame, Encoders, Row, SparkSession}
 import org.apache.spark.sql.types.StructType
 
@@ -12,8 +12,8 @@ trait SparkSpec
   protected final lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
     .appName(classOf[SparkSpec].getSimpleName)
-    .config(SearchConfig.READ_PREFIX + SearchConfig.END_POINT_CONFIG, "https://lohrwkpeacss01.search.windows.net")
-    .config(SearchConfig.READ_PREFIX + SearchConfig.API_KEY_CONFIG, "3F491488E774609119C10968C6D47634")
+    .config(IOConfig.READ_PREFIX + IOConfig.END_POINT_CONFIG, "https://lohrwkpeacss01.search.windows.net")
+    .config(IOConfig.READ_PREFIX + IOConfig.API_KEY_CONFIG, "3F491488E774609119C10968C6D47634")
     //.config("spark.sql.shuffle.partitions", "1")
     .getOrCreate()
 
