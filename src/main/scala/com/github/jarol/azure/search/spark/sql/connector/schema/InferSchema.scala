@@ -28,17 +28,32 @@ object InferSchema {
         .getFields
     )
 
-    // Set up a predicate for selecting a field, depending on provided select fields
-    val shouldBeSelected: SearchField => Boolean = readConfig.select match {
-      case Some(value) => sf => value.contains(sf.getName)
-      case None => _ => true
-    }
-
     // Infer schema for all non-hidden and selected fields
     SchemaUtils.asStructType(
-      allFields.filter {
-        sf => !sf.isHidden && shouldBeSelected(sf)
-      }
+      filterSearchFields(
+        allFields,
+        readConfig.select
+      )
     )
+  }
+
+  /**
+   * Filter a collection of Search fields by
+   *  - keeping only visible fields
+   *  - optionally selecting fields within a selection list
+   * @param allFields all index fields
+   * @param selection field names to select
+   * @return a collection with all visible and selected fields
+   */
+
+  protected[schema] def filterSearchFields(allFields: Seq[SearchField], selection: Option[Seq[String]]): Seq[SearchField] = {
+
+    val notHidden: SearchField => Boolean = sf => !sf.isHidden
+    val filterPredicate: SearchField => Boolean = selection match {
+      case Some(value) => sf => notHidden(sf) && value.contains(sf.getName)
+      case None => notHidden
+    }
+
+    allFields.filter(filterPredicate)
   }
 }
