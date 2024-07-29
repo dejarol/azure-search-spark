@@ -13,8 +13,7 @@ case class ReadConfig(override protected val options: Map[String, String],
   extends AbstractSearchConfig(options, sparkConfOptions, UsageMode.READ) {
 
   /**
-   * Get the filter to apply on index documents.
-   * The filter must follow OData syntax
+   * Get the filter to apply on index documents. The filter must follow OData syntax
    * ([[https://learn.microsoft.com/en-us/azure/search/search-query-odata-filter]])
    * @return the filter to apply on search index documents
    */
@@ -29,22 +28,31 @@ case class ReadConfig(override protected val options: Map[String, String],
 
   def partitioner: SearchPartitioner = {
 
-    getAsOrDefault[SearchPartitioner](
+    getOrDefaultAs[SearchPartitioner](
       ReadConfig.PARTITIONER_CONFIG,
       SinglePartitionPartitioner(this),
       s => {
         ClassHelper.createInstance(
-          Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
+          Class.forName(s).asInstanceOf[Class[SearchPartitioner]],
+          this
         )
       }
     )
   }
+
+  /**
+   * Return the set of index fields to select. If not provided, all retrievable fields will be selected
+   * @return index fields to select
+   */
+
+  def select: Option[Seq[String]] = safelyGetAs(ReadConfig.SELECT_CONFIG, _.split(",").map(_.trim))
 }
 
 object ReadConfig {
 
   final val FILTER_CONFIG = "filter"
   final val PARTITIONER_CONFIG = "partitioner"
+  final val SELECT_CONFIG = "select"
 
   /**
    * Create an instance from given options, retrieving SparkConf-related options

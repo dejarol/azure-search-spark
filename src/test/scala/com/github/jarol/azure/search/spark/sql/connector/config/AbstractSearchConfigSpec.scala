@@ -4,11 +4,24 @@ import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
 import org.apache.spark.SparkConf
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class AbstractSearchConfigSpec
   extends BasicSpec {
 
-  private lazy val (k1, v1, k2, v2) = ("k1", "v1", "k2", "v2")
+  private lazy val (k1, v1, k2, v2, k3, v3) = ("k1", "v1", "k2", "v2", "k3", "v3")
+
+  /**
+   * Create an instance of [[AbstractSearchConfig]] by injecting two maps
+   * @param m1 local options
+   * @param m2 global (SparkConf) options
+   * @return an instance of [[AbstractSearchConfig]]
+   */
+
+  private def createConfig(m1: Map[String, String], m2: Map[String, String]): AbstractSearchConfig = {
+
+    new AbstractSearchConfig(m1, m2, UsageMode.WRITE) {}
+  }
 
   /**
    * Create a test [[SparkConf]], retrieve all configs related to a mode, and run assertions on retrieved result
@@ -60,9 +73,9 @@ class AbstractSearchConfigSpec
       describe("get a value") {
 
         val map = Map(k1 -> v1)
-        val emptyConfig = new AbstractSearchConfig(Map.empty, Map.empty, UsageMode.READ) {}
-        val configWithOptions = new AbstractSearchConfig(map, Map.empty, UsageMode.READ) {}
-        val configWithSparkOptions = new AbstractSearchConfig(Map.empty, map, UsageMode.READ) {}
+        val emptyConfig = createConfig(Map.empty, Map.empty)
+        val configWithOptions = createConfig(map, Map.empty)
+        val configWithSparkOptions = createConfig(Map.empty, map)
 
         it("safely") {
 
@@ -91,43 +104,59 @@ class AbstractSearchConfigSpec
       }
 
       describe("retrieve a typed value") {
-        it("providing a default when a key is missing") {
+        it("safely") {
+
+          val (now, formatter) = (LocalDate.now(), DateTimeFormatter.ISO_LOCAL_DATE)
+          val config = createConfig(
+            Map(
+              k1 -> now.format(formatter),
+              k3 -> v3
+            ),
+            Map.empty
+          )
+
+          val conversion: String => LocalDate = s => LocalDate.parse(s, formatter)
+          config.safelyGetAs[LocalDate](k2, conversion) shouldBe empty
+          config.safelyGetAs[LocalDate](k1, conversion) shouldBe Some(now)
+          (the[ConfigException] thrownBy {
+            config.safelyGetAs[LocalDate](k3, conversion)
+          }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
+        }
+
+        it("or a default") {
 
           val default = 1
-          val config = new AbstractSearchConfig(
+          val config = createConfig(
             Map(k1 -> v1),
-            Map.empty,
-            UsageMode.WRITE
-          ) {}
+            Map.empty
+          )
 
           config.safelyGet(k2) shouldBe empty
-          config.getAsOrDefault[Int](k2, default, _.toInt) shouldBe default
+          config.getOrDefaultAs[Int](k2, default, _.toInt) shouldBe default
         }
 
         it("converting the actual value if present") {
 
           val (existingValue, default) = (123, 1)
-          val config = new AbstractSearchConfig(
+          val config = createConfig(
             Map(k1 -> String.valueOf(existingValue)),
-            Map.empty,
-            UsageMode.WRITE
-          ) {}
+            Map.empty
+          )
 
           config.safelyGet(k1) shouldBe defined
-          config.getAsOrDefault[Int](k1, default, _.toInt) shouldBe existingValue
+          config.getOrDefaultAs[Int](k1, default, _.toInt) shouldBe existingValue
         }
 
         it("eventually throwing an exception for invalid configs") {
 
-          val config = new AbstractSearchConfig(
+          val config = createConfig(
             Map(k1 -> "hello"),
-            Map.empty,
-            UsageMode.WRITE
-          ) {}
+            Map.empty
+          )
 
           config.safelyGet(k1) shouldBe defined
           (the [ConfigException] thrownBy {
-            config.getAsOrDefault[LocalDate](k1, LocalDate.now(), LocalDate.parse)
+            config.getOrDefaultAs[LocalDate](k1, LocalDate.now(), LocalDate.parse)
           }).getMessage should startWith(ConfigException.INVALID_VALUE_PREFIX)
         }
       }

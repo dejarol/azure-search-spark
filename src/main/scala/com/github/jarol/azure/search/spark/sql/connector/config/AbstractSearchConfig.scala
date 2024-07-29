@@ -32,6 +32,30 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
   }
 
   /**
+   * Safely get a typed value for a key
+   * @param key key
+   * @param conversion conversion function
+   * @tparam T conversion target type
+   * @throws ConfigException if a value for given key exists, but its conversion fails
+   * @return an empty value if the key does not exist, a non-empty value otherwise
+   */
+
+  @throws[ConfigException]
+  protected[config] final def safelyGetAs[T](key: String, conversion: String => T): Option[T] = {
+
+    safelyGet(key) match {
+      case Some(value) =>
+        Try {
+          conversion(value)
+        } match {
+          case Failure(exception) => throw new ConfigException(key, value, exception)
+          case Success(convertedValue) => Some(convertedValue)
+        }
+      case None => None
+    }
+  }
+
+  /**
    * Get the value of a key and transform it, or throw an exception if not found
    * @param key key
    * @throws ConfigException if the key is not found
@@ -61,11 +85,13 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
    * @param key key
    * @param defaultValue default value to return in case of missing key
    * @param conversion value conversion function
-   * @tparam T conversion type
+   * @tparam T target conversion type
+   * @throws ConfigException if a value for given key exists, but its conversion fails
    * @return the default instance if key is missing, or the converted value
    */
 
-  protected[config] final def getAsOrDefault[T](key: String, defaultValue: T, conversion: String => T): T = {
+  @throws[ConfigException]
+  protected[config] final def getOrDefaultAs[T](key: String, defaultValue: T, conversion: String => T): T = {
 
     safelyGet(key).map {
       value => Try {

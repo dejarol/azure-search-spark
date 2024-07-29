@@ -1,6 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
 import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.config.read.partitioning.EmptyPartitioner
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner
 
 class ReadConfigSpec
   extends BasicSpec {
@@ -20,23 +22,46 @@ class ReadConfigSpec
       describe("optionally retrieve") {
         it("the filter to apply on index documents") {
 
-          val filter = "filterValue"
+          val expected = "filterValue"
           emptyConfig.filter shouldBe empty
           createConfig(
             Map(
-              ReadConfig.FILTER_CONFIG -> filter
+              ReadConfig.FILTER_CONFIG -> expected
             )
-          ).filter shouldBe Some(filter)
+          ).filter shouldBe Some(expected)
         }
 
-        describe("a partitioner instance") {
-          it("default") {
+        it("the search fields to select") {
 
-            //TODO
+          val expected = Seq("f1", "f2")
+          emptyConfig.select shouldBe empty
+          val actual: Option[Seq[String]] = createConfig(
+            Map(
+              ReadConfig.SELECT_CONFIG -> expected.mkString(",")
+            )
+          ).select
+
+          actual shouldBe defined
+          actual.get should contain theSameElementsAs expected
+        }
+      }
+
+      describe("retrieve") {
+        describe("a partitioner instance using either") {
+          it("a default") {
+
+            emptyConfig.partitioner shouldBe a[SinglePartitionPartitioner]
           }
 
-          it("user-specified") {
-            //TODO
+          it("a user provided partitioner") {
+
+            val config = createConfig(
+              Map(
+                ReadConfig.PARTITIONER_CONFIG -> classOf[EmptyPartitioner].getName
+              )
+            )
+
+            config.partitioner shouldBe a [EmptyPartitioner]
           }
         }
       }
