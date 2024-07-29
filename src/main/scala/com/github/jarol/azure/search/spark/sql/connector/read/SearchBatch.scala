@@ -17,7 +17,7 @@ class SearchBatch(private val schema: StructType,
 
     partitioner
       .generatePartitions()
-      .map(_.asInstanceOf[InputPartition])
+      .stream().toArray((value: Int) => Array.ofDim(value))
   }
 
   override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(schema, readConfig)

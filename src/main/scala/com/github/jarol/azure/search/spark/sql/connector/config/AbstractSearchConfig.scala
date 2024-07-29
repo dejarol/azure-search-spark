@@ -103,6 +103,19 @@ abstract class AbstractSearchConfig(protected val options: Map[String, String],
     }.getOrElse(defaultValue)
   }
 
+  protected[config] final def getAllWithPrefix(prefix: String): Map[String, String] = {
+
+    def allWithPrefix[V](map: Map[String, V]): Map[String, V] = {
+
+      map.collect {
+        case (k, v) if k.startsWith(prefix) =>
+          (k.stripPrefix(prefix), v)
+      }
+    }
+
+    allWithPrefix(sparkConfOptions) ++ allWithPrefix(options)
+  }
+
   override def getEndpoint: String = unsafelyGet(SearchConfig.END_POINT_CONFIG)
 
   override def getAPIkey: String = unsafelyGet(SearchConfig.API_KEY_CONFIG)

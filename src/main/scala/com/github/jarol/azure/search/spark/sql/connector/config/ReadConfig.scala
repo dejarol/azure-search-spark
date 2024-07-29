@@ -40,6 +40,8 @@ case class ReadConfig(override protected val options: Map[String, String],
     )
   }
 
+  def partitionerOptions: Map[String, String] = getAllWithPrefix(ReadConfig.PARTITIONER_OPTIONS_PREFIX)
+
   /**
    * Return the set of index fields to select. If not provided, all retrievable fields will be selected
    * @return index fields to select
@@ -53,6 +55,9 @@ object ReadConfig {
   final val FILTER_CONFIG = "filter"
   final val PARTITIONER_CONFIG = "partitioner"
   final val SELECT_CONFIG = "select"
+  final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
+  final val PARTITIONER_OPTIONS_FACET_CONFIG = "facet"
+  final val PARTITIONER_OPTIONS_PARTITIONS_CONFIG = "partitions"
 
   /**
    * Create an instance from given options, retrieving SparkConf-related options
