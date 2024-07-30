@@ -6,15 +6,6 @@ import scala.collection.JavaConverters._
 object JavaScalaConverters {
 
   /**
-   * Convert a Scala set to a [[java.util.Set]]
-   * @param set Scala set
-   * @tparam T set type
-   * @return a java set
-   */
-
-  def scalaSetToJavaSet[T](set: Set[T]): util.Set[T] = set.asJava
-
-  /**
    * Convert a Scala seq to a [[java.util.List]]
    * @param seq Scala seq
    * @tparam T seq type
@@ -41,4 +32,13 @@ object JavaScalaConverters {
    */
 
   def javaMapToScalaMap[K, V](map: util.Map[K, V]): Map[K, V] = map.asScala.toMap
+
+  def streamToSeq[T](stream: util.stream.Stream[T]): Seq[T] = {
+
+    listToSeq(
+      stream.collect(
+        util.stream.Collectors.toList[T]
+      )
+    )
+  }
 }

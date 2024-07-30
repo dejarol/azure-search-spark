@@ -12,14 +12,16 @@ import scala.util.Try
  */
 
 class SearchConfig(protected val localOptions: Map[String, String],
-                   protected val globalOptions: Map[String, String]) {
+                   protected val globalOptions: Map[String, String])
+  extends Serializable {
+
   /**
    * Safely get the value of a key by inspecting local options and then [[org.apache.spark.SparkConf]] options
    * @param key key
    * @return the optional value related to given key
    */
 
-  protected[config] final def get(key: String): Option[String] = {
+  final def get(key: String): Option[String] = {
 
     localOptions.get(key).orElse {
       globalOptions.get(key)
@@ -39,7 +41,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
   protected[config] final def getAs[T](key: String, conversion: String => T): Option[T] = {
 
     get(key).map {
-      SearchConfig.unsafelyConvert[T](key, _, conversion)
+      SearchConfig.convertOrThrow[T](key, _, conversion)
     }
   }
 
@@ -82,7 +84,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
   protected[config] final def getOrDefaultAs[T](key: String, defaultValue: T, conversion: String => T): T = {
 
     get(key).map {
-      SearchConfig.unsafelyConvert[T](key, _, conversion)
+      SearchConfig.convertOrThrow[T](key, _, conversion)
     }.getOrElse(defaultValue)
   }
 
@@ -114,14 +116,12 @@ object SearchConfig {
    */
 
   @throws[ConfigException]
-  protected[config] final def unsafelyConvert[T](key: String, value: String, conversion: String => T): T = {
+  protected[config] final def convertOrThrow[T](key: String, value: String, conversion: String => T): T = {
 
     Try {
       conversion(value)
-    }.toEither.left.map {
-      new ConfigException(key, value, _)
-    } match {
-      case Left(value) => throw value
+    }.toEither match {
+      case Left(exception) => throw new ConfigException(key, value, exception)
       case Right(value) => value
     }
   }

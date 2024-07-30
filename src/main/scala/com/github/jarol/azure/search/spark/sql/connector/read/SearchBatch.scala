@@ -1,9 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType
+
+import java.util
 
 class SearchBatch(private val schema: StructType,
                   private val readConfig: ReadConfig)
@@ -13,7 +16,8 @@ class SearchBatch(private val schema: StructType,
   override def planInputPartitions(): Array[InputPartition] = {
 
     val partitioner = readConfig.partitioner
-    log.info(s"Generating partitions using ${partitioner.getClass.getName}")
+    val partitionsList: util.List[SearchPartition] = partitioner.generatePartitions()
+    log.info(s"Generated ${partitionsList.size()} partition(s) using ${partitioner.getClass.getName}")
 
     partitioner
       .generatePartitions()

@@ -3,8 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.config;
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Exception related to datasource configuration issues
@@ -20,25 +19,47 @@ public class ConfigException
      * Create an instance
      * @param key configuration key
      * @param value configuration value
+     * @param message error message
+     */
+
+    protected ConfigException(
+            String key,
+            Object value,
+            String message,
+            @Nullable Throwable cause
+    ) {
+        super(String.format(
+                "%s (%s) for configuration '%s'. Reason: %s",
+                        INVALID_VALUE_PREFIX,
+                        value,
+                        key,
+                        message
+                ),
+                cause
+        );
+    }
+
+    public ConfigException(
+            String key,
+            Object value,
+            String message
+    ) {
+        this(key, value, message, null);
+    }
+
+    /**
+     * Create an instance
+     * @param key configuration key
+     * @param value configuration value
      * @param cause exception cause
      */
 
     public ConfigException(
             String key,
             Object value,
-            Throwable cause
+            @NotNull Throwable cause
     ) {
-        super(String.format(
-                "%s (%s) for configuration %s%s",
-                        INVALID_VALUE_PREFIX,
-                        value,
-                        key,
-                        Objects.isNull(cause.getMessage()) ?
-                                "" :
-                                ". Reason: " + cause.getMessage()
-                ),
-                cause
-        );
+        this(key, value, cause.getMessage(), cause);
     }
 
     public ConfigException(

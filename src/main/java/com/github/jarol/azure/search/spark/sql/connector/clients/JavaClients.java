@@ -1,15 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.clients;
 
 import com.azure.core.credential.AzureKeyCredential;
+import com.azure.core.util.Context;
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchClientBuilder;
 import com.azure.search.documents.indexes.SearchIndexClient;
 import com.azure.search.documents.indexes.SearchIndexClientBuilder;
+import com.azure.search.documents.models.SearchOptions;
+import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class ClientFactory {
+public final class JavaClients {
 
     /**
      * Create a {@link SearchIndexClient}
@@ -18,7 +21,7 @@ public final class ClientFactory {
      */
 
     @Contract("_ -> new")
-    public static @NotNull SearchIndexClient indexClient(
+    public static @NotNull SearchIndexClient forIndex(
             @NotNull IOConfig config
     ) {
         return new SearchIndexClientBuilder()
@@ -34,7 +37,7 @@ public final class ClientFactory {
      */
 
     @Contract("_ -> new")
-    public static @NotNull SearchClient searchClient(
+    public static @NotNull SearchClient forSearch(
             @NotNull IOConfig config
     ) {
 
@@ -43,5 +46,14 @@ public final class ClientFactory {
                 .credential(new AzureKeyCredential(config.getAPIkey()))
                 .indexName(config.getIndex())
                 .buildClient();
+    }
+
+    public static SearchPagedIterable doSearch(
+            IOConfig config,
+            SearchOptions searchOptions
+    ) {
+
+        return forSearch(config)
+                .search(null, searchOptions, Context.NONE);
     }
 }

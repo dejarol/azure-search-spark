@@ -40,7 +40,7 @@ class SearchConfigSpec
       describe(s"convert a raw value") {
         it("either successfully") {
 
-          SearchConfig.unsafelyConvert[Double](
+          SearchConfig.convertOrThrow[Double](
             k1,
             "3.14",
             java.lang.Double.parseDouble
@@ -50,7 +50,7 @@ class SearchConfigSpec
         it(s"or throwing a ${nameOf[ConfigException]}") {
 
           (the[ConfigException] thrownBy {
-            SearchConfig.unsafelyConvert[LocalDate](
+            SearchConfig.convertOrThrow[LocalDate](
               k1,
               v1,
               LocalDate.parse

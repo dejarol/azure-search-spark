@@ -17,6 +17,8 @@ public interface IOConfig
     String API_KEY_CONFIG = "apiKey";
     String INDEX_CONFIG = "index";
 
+    Integer SKIP_LIMIT = 100000;
+
     /**
      * Get the target Search endpoint
      * @return target Search endpoint
