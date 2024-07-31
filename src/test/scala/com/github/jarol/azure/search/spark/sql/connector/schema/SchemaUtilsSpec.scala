@@ -1,13 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters}
+import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
 import org.apache.spark.sql.types.{ArrayType, StructType}
 import org.scalatest.Inspectors
 
 class SchemaUtilsSpec
   extends BasicSpec
-    with Inspectors {
+    with SearchFieldFactory
+      with Inspectors {
 
   /**
    * Run a set of tests using an instance of [[SearchFieldTypeAssertion]]
@@ -67,7 +68,7 @@ class SchemaUtilsSpec
           forAll(SchemaUtils.SIMPLE_TYPES.toSeq) {
             case (k, v) =>
               SchemaUtils.sparkDataTypeOf(
-                new SearchField("simple", k)
+                createField("simple", k)
               ) shouldBe v
           }
         }
@@ -76,14 +77,15 @@ class SchemaUtilsSpec
 
           val innerType = SearchFieldDataType.INT64
           SchemaUtils.sparkDataTypeOf(
-            new SearchField("collection",
+            createField(
+              "collection",
               SearchFieldDataType.collection(
                 innerType
               )
             )
           ) shouldBe ArrayType(
             SchemaUtils.sparkDataTypeOf(
-              new SearchField("inner", innerType)
+              createField("inner", innerType)
             )
           )
         }
@@ -91,10 +93,10 @@ class SchemaUtilsSpec
         it("a complex type") {
 
           val innerFields = Seq(
-            new SearchField("date", SearchFieldDataType.DATE_TIME_OFFSET),
-            new SearchField("flag", SearchFieldDataType.BOOLEAN)
+            createField("date", SearchFieldDataType.DATE_TIME_OFFSET),
+            createField("flag", SearchFieldDataType.BOOLEAN)
           )
-          val complexField = new SearchField("complex", SearchFieldDataType.COMPLEX)
+          val complexField = createField("complex", SearchFieldDataType.COMPLEX)
           complexField.setFields(
             JavaScalaConverters.seqToList(
               innerFields
@@ -115,18 +117,18 @@ class SchemaUtilsSpec
         it("in the standard scenario") {
 
           val innerFields = Seq(
-            new SearchField("date", SearchFieldDataType.DATE_TIME_OFFSET),
-            new SearchField("flag", SearchFieldDataType.BOOLEAN)
+            createField("date", SearchFieldDataType.DATE_TIME_OFFSET),
+            createField("flag", SearchFieldDataType.BOOLEAN)
           )
 
-          val complexField = new SearchField("complexField", SearchFieldDataType.COMPLEX)
+          val complexField = createField("complexField", SearchFieldDataType.COMPLEX)
           complexField.setFields(
             JavaScalaConverters.seqToList(innerFields)
           )
 
           val searchFields = Seq(
-            new SearchField("stringField", SearchFieldDataType.STRING),
-            new SearchField("collectionField", SearchFieldDataType.collection(
+            createField("stringField", SearchFieldDataType.STRING),
+            createField("collectionField", SearchFieldDataType.collection(
               SearchFieldDataType.INT32)
             ),
             complexField

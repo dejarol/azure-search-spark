@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.clients.JavaClients
+import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig}
 import org.apache.spark.sql.types.StructType
 
@@ -25,22 +25,27 @@ object InferSchema {
   @throws[InferSchemaException]
   def inferSchema(options: Map[String, String]): StructType = {
 
-    // Retrieve all index fields
+    // Retrieve all existing indexes
     val readConfig = ReadConfig(options)
-    val listOfIndexes: Seq[SearchIndex] = JavaScalaConverters.streamToSeq(
-      JavaClients.forIndex(readConfig)
+    val existingIndexes: Seq[SearchIndex] = JavaScalaConverters.streamToSeq(
+      ClientFactory.searchIndexClient(readConfig)
         .listIndexes().stream()
     )
 
+    // Retrieve the requested index (if any)
     val indexName: String = readConfig.getIndex
-    listOfIndexes.collectFirst {
+    existingIndexes.collectFirst {
       case index if index.getName.equalsIgnoreCase(indexName) => index
     } match {
+
+      // If it exists, infer its schema
       case Some(value) => inferSchemaForExistingIndex(
         indexName,
         JavaScalaConverters.listToSeq(value.getFields),
         readConfig.select
       )
+
+      // Otherwise, throw an exception
       case None => throw new InferSchemaException(indexName, "does not exist")
     }
   }
@@ -69,7 +74,6 @@ object InferSchema {
    * Filter a collection of Search fields by
    *  - keeping only visible fields
    *  - optionally selecting fields within a selection list
-   *
    * @param allFields all index fields
    * @param selection field names to select
    * @throws ConfigException if none of the selection fields exist in the search index
@@ -80,8 +84,11 @@ object InferSchema {
   protected[schema] def selectFields(allFields: Seq[SearchField], selection: Option[Seq[String]]): Seq[SearchField] = {
 
     selection match {
+
+      // Select only required fields
       case Some(value) =>
 
+        // Fields selected according to given configuration: if empty throw an exception
         val selectedFields: Seq[SearchField] = allFields.filter {
           field => value.contains(field.getName)
         }
@@ -93,7 +100,6 @@ object InferSchema {
             s"Selected fields (${value.mkString(",")} do not exist"
           )
         } else selectedFields
-
       case None => allFields
     }
   }

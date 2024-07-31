@@ -16,11 +16,11 @@ class SearchBatch(private val schema: StructType,
   override def planInputPartitions(): Array[InputPartition] = {
 
     val partitioner = readConfig.partitioner
-    val partitionsList: util.List[SearchPartition] = partitioner.generatePartitions()
+    val partitionsList: util.List[SearchPartition] = partitioner.createPartitions()
     log.info(s"Generated ${partitionsList.size()} partition(s) using ${partitioner.getClass.getName}")
 
     partitioner
-      .generatePartitions()
+      .createPartitions()
       .stream().toArray((value: Int) => Array.ofDim(value))
   }
 

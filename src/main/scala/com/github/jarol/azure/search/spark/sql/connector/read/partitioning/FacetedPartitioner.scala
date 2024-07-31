@@ -2,134 +2,165 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
-import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.clients.JavaClients
+import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, IOConfig, ReadConfig, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
+import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
 
 import java.util
-import java.util.stream.Collectors
+import scala.util.Try
 
 case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
 
-  override def generatePartitions(): util.List[SearchPartition] = {
+  /**
+   * Generate a number of partitions equal to
+   *  - the value related to key [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]]
+   *  - the number of default facets retrieved by the API (10)
+   *
+   * Each partition should contain o non-overlapping filter
+   * @throws ConfigException if
+   *                         - facet field is not facetable and retrievable
+   *                         - some facets include more than [[IOConfig.SKIP_LIMIT]] document(s)
+   * @return a collection of Search partitions
+   */
+
+  @throws[ConfigException]
+  override def createPartitions(): util.List[SearchPartition] = {
 
     val partitionerOptions: SearchConfig = readConfig.partitionerOptions
-    val facet: String = partitionerOptions.unsafelyGet(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
-    val facetQueryParam: Option[String] = partitionerOptions.get(ReadConfig.PARTITIONER_OPTIONS_FACET_QUERY_PARAMETER_CONFIG)
-    val searchFields: Seq[SearchField] = JavaScalaConverters.listToSeq(
-      JavaClients.forIndex(readConfig)
-        .getIndex(readConfig.getIndex)
-        .getFields
-    )
+    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
+    val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, Integer.parseInt)
 
-    val eitherExceptionOrFacets: Either[ConfigException, util.List[FacetResult]] = for {
-      facetField <- FacetedPartitioner.isEligibleFacet(searchFields, facet)
-      facetResults <- FacetedPartitioner.allFacetsAreValid(readConfig, facetField.getName, facetQueryParam)
-    } yield facetResults
-
-    eitherExceptionOrFacets match {
+    FacetedPartitioner.getFacetResults(readConfig, facetFieldName, facetPartitions) match {
       case Left(value) => throw value
-      case Right(value) => generateFacetPartitions(facet, value)
+      case Right(value) => FacetedPartitioner.generatePartitions(
+        getFacetFieldType(facetFieldName),
+        JavaScalaConverters.listToSeq(value).map {
+          _.getAdditionalProperties.get("value")
+        },
+        readConfig.filter,
+        readConfig.select
+      )
     }
   }
 
-  private def generateFacetPartitions(facet: String, results: util.List[FacetResult]): util.List[SearchPartition] = {
+  /** Retrieve the Search field with given name
+   * @param name field name
+   * @throws AzureSparkException if field cannot be retrieved
+   * @return Search field with given name
+   */
 
-    results.stream()
-      .map[SearchPartitionScalaImpl] {
-        fr => {
-          val value: Any = fr.getAdditionalProperties.get("value")
-          val filterValueAsString: String = value match {
-            case s: String => s"'$s'"
-            case _ => String.valueOf(value)
-          }
+  @throws[AzureSparkException]
+  private def getFacetFieldType(name: String): SearchField = {
 
-          val facetFilter: String = s"$facet eq $filterValueAsString"
-          val filter: Option[String] = readConfig.filter.map {
-            f => f"$f and $facetFilter"
-          }.orElse(Some(facetFilter))
-
-          SearchPartitionScalaImpl(
-            filter,
-            readConfig.select
-          )
-      }
-    }.collect(Collectors.toList[SearchPartition])
+    JavaScalaConverters.listToSeq(
+      ClientFactory.searchIndex(readConfig).getFields
+    ).collectFirst {
+      case sf if sf.getName.equalsIgnoreCase(name) => sf
+    } match {
+      case Some(value) => value
+      case None => throw new AzureSparkException(s"Could not retrieve information for facet field $name")
+    }
   }
 }
 
 object FacetedPartitioner {
 
-  final val FIELD_DOES_NOT_EXIST_ERROR_MSG = "Field does not exist"
-  final val FIELD_NOT_FACETABLE_ERROR_MSG = "Field not facetable or filterable"
+  /**
+   * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
+   * (i.e. number of documents with such field value) for the n most frequent values of a search field
+   * @param config read configuration
+   * @param facetField name of facetable field
+   * @param count number of values to retrieve. If not provided, the default search value will be used
+   * @return either a [[ConfigException]] if selected facet field does not exist or it's not facetable, or a list of [[FacetResult]]
+   */
 
-  protected[partitioning] def isEligibleFacet(searchFields: Seq[SearchField], facet: String): Either[ConfigException, SearchField] = {
+  private def getFacetResults(config: ReadConfig,
+                              facetField: String,
+                              count: Option[Int]): Either[ConfigException, util.List[FacetResult]] = {
 
-    // Detect a field with same name
-    val maybeSearchField: Option[SearchField] = searchFields
-      .collectFirst {
-        case sf if sf.getName.equalsIgnoreCase(facet) =>
-          sf
-    }
+    // Compose the facet
+    // [a] if query param is defined, facet --> join facetField and query param using comma
+    // [b] if query params is empty --> facetField
+    val facet: String = count.map {
+      partitions => s"$facetField,count:${partitions - 1}"
+    }.getOrElse(facetField)
 
-    // Evaluate if it's both filterable and facetable
-    val maybeFacetableAndFilterableField: Option[SearchField] = maybeSearchField
-      .filter {
-        sf => sf.isFacetable && sf.isFilterable
-    }
-
-    // If so, return a Right
-    if (maybeFacetableAndFilterableField.isDefined) {
-      Right(maybeFacetableAndFilterableField.get)
-    } else {
-
-      // Set the error message
-      val message = if (maybeSearchField.isEmpty) {
-        FacetedPartitioner.FIELD_DOES_NOT_EXIST_ERROR_MSG
-      } else FacetedPartitioner.FIELD_NOT_FACETABLE_ERROR_MSG
-
-      // create a ConfigException
-      Left(
+    // Try to retrieve facet results, mapping the exception to a ConfigException
+    Try {
+      ClientFactory.doSearch(
+        config,
+        new SearchOptions()
+          .setFilter(config.filter)
+          .setSelect(config.select)
+          .setFacets(facet)
+      ).getFacets.get(facetField)
+    }.toEither.left.map {
+      throwable =>
         new ConfigException(
           ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG,
           facet,
-          message
+          throwable
         )
-      )
     }
   }
 
-  protected[partitioning] def allFacetsAreValid(readConfig: ReadConfig,
-                                                facet: String,
-                                                facetQueryParam: Option[String]): Either[ConfigException, util.List[FacetResult]] = {
+  /**
+   * Combine two filters into one using the <b>and</b> logical operator.
+   * The output filter will be the combination of the two (if the second is defined), otherwise only the first filter
+   * @param first first filter
+   * @param second second filter (optional)
+   * @return the combination of the teo filters
+   */
 
-    val fullFacet: String = facetQueryParam.map {
-      qp => s"$facet,$qp"
-    }.getOrElse(facet)
+  protected[partitioning] def combineFilters(first: String, second: Option[String]): String = {
 
-    val facetResults: util.List[FacetResult] = JavaClients.doSearch(
-        readConfig,
-        new SearchOptions()
-          .setFilter(readConfig.filter)
-          .setFacets(fullFacet)
-      ).getFacets.get(facet)
+    second match {
+      case Some(value) => s"$first and $value"
+      case None => first
+    }
+  }
 
-    val allFacetsCountAreBelowSkipLimit = facetResults.stream().allMatch {
-      _.getCount <= IOConfig.SKIP_LIMIT
+  /**
+   * Generate a set of partitions exploiting values of a facetable field
+   * @param facetField facet field
+   * @param facets facet field values
+   * @param globalFilter overall filter (the value of key [[ReadConfig.FILTER_CONFIG]])
+   * @param select selection fields
+   * @return a collection of Search partitions
+   */
+
+  protected[partitioning] def generatePartitions(facetField: SearchField,
+                                                 facets: Seq[Any],
+                                                 globalFilter: Option[String],
+                                                 select: Option[Seq[String]]): util.List[SearchPartition] = {
+
+    val valueFormatter = FilterValueFormatters.forType(facetField.getType)
+    val facetFieldName: String = facetField.getName
+    val facetFormattedValues: Seq[String] = facets.map {
+      valueFormatter.format
     }
 
-    if (allFacetsCountAreBelowSkipLimit) {
-      Right(facetResults)
-    } else {
-      Left(
-        new ConfigException(
-          ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG,
-          facet,
-          s"Facet $facet is not valid (some facets have more than ${IOConfig.SKIP_LIMIT} documents"
-        )
+    val facetPartitionFilters: Seq[String] = facetFormattedValues.map {
+      value => s"$facetFieldName eq $value"
+    }
+
+    val nullOrNotInOtherFacets: String = s"$facetFieldName eq null or " +
+      s"not (${facetPartitionFilters.mkString(" or ")})"
+
+    val allSearchPartitions: Seq[SearchPartition] = (facetPartitionFilters :+ nullOrNotInOtherFacets).map {
+      facetFilter => SearchPartitionImpl(
+        Some(
+          combineFilters(
+            facetFilter,
+            globalFilter
+          )
+        ),
+        select
       )
     }
+
+    JavaScalaConverters.seqToList(allSearchPartitions)
   }
 }

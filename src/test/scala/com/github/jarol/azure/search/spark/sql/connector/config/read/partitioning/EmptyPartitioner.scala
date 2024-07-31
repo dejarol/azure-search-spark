@@ -13,5 +13,5 @@ import java.util
 case class EmptyPartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
 
-  override def generatePartitions(): util.List[SearchPartition] = util.Collections.emptyList()
+  override def createPartitions(): util.List[SearchPartition] = util.Collections.emptyList()
 }

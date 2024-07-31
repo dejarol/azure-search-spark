@@ -38,7 +38,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
    */
 
   @throws[ConfigException]
-  protected[config] final def getAs[T](key: String, conversion: String => T): Option[T] = {
+  final def getAs[T](key: String, conversion: String => T): Option[T] = {
 
     get(key).map {
       SearchConfig.convertOrThrow[T](key, _, conversion)

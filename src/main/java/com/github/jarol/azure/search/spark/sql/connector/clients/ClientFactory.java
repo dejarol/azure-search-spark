@@ -6,13 +6,14 @@ import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchClientBuilder;
 import com.azure.search.documents.indexes.SearchIndexClient;
 import com.azure.search.documents.indexes.SearchIndexClientBuilder;
+import com.azure.search.documents.indexes.models.SearchIndex;
 import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class JavaClients {
+public final class ClientFactory {
 
     /**
      * Create a {@link SearchIndexClient}
@@ -21,7 +22,7 @@ public final class JavaClients {
      */
 
     @Contract("_ -> new")
-    public static @NotNull SearchIndexClient forIndex(
+    public static @NotNull SearchIndexClient searchIndexClient(
             @NotNull IOConfig config
     ) {
         return new SearchIndexClientBuilder()
@@ -31,13 +32,27 @@ public final class JavaClients {
     }
 
     /**
-     * Create a {@link SearchClient}
+     * Create a client for interacting with a search index
      * @param config instance of {@link IOConfig}
-     * @return a search client (related to a specific index)
+     * @return a client for interacting with a search index
      */
 
     @Contract("_ -> new")
-    public static @NotNull SearchClient forSearch(
+    public static @NotNull SearchIndex searchIndex(
+            @NotNull IOConfig config
+    ) {
+        return searchIndexClient(config)
+                .getIndex(config.getIndex());
+    }
+
+    /**
+     * Create a client for performing search operations
+     * @param config instance of {@link IOConfig}
+     * @return a client for performing search operations
+     */
+
+    @Contract("_ -> new")
+    public static @NotNull SearchClient searchClient(
             @NotNull IOConfig config
     ) {
 
@@ -53,7 +68,7 @@ public final class JavaClients {
             SearchOptions searchOptions
     ) {
 
-        return forSearch(config)
+        return searchClient(config)
                 .search(null, searchOptions, Context.NONE);
     }
 }

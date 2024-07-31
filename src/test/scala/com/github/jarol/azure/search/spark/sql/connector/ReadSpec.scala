@@ -1,12 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.core.util.Context
-import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.SearchOptions
-import com.github.jarol.azure.search.spark.sql.connector.clients.JavaClients
+import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{IOConfig, ReadConfig}
-import com.github.jarol.azure.search.spark.sql.connector.schema.InferSchema
 
 import java.time.LocalDateTime
 import scala.collection.JavaConverters._
@@ -28,8 +25,6 @@ class ReadSpec extends SparkSpec {
     df.show(false)
     println(f"Number of partitions: ${df.rdd.getNumPartitions}")
     println(f"Number of rows: ${df.count()}")
-
-     */
 
     val schema = InferSchema.inferSchema(
       Map(
@@ -57,7 +52,10 @@ class ReadSpec extends SparkSpec {
     ).iterator().asScala.toSeq.head.getDocument(classOf[SearchDocument])
 
     println(s"Start time: ${LocalDateTime.now()}")
-    val result = JavaClients.forSearch(
+
+     */
+    val facet = "boh"
+    val result = ClientFactory.searchClient(
       ReadConfig(
         Map(
           IOConfig.END_POINT_CONFIG -> "https://lovappacsd01.search.windows.net",
@@ -68,6 +66,7 @@ class ReadSpec extends SparkSpec {
       new SearchOptions()
         .setIncludeTotalCount(true)
         .setTop(1000)
+        .setFacets(facet)
         //.setFilter("firstName eq 'ANDREA'")
         //.setFacets("unknownField")
         ,
@@ -75,11 +74,11 @@ class ReadSpec extends SparkSpec {
     )
 
     Try {
-      result.iterator().asScala.toSeq.zipWithIndex.foreach {
-        case (sr, i) => println(s"Processing document # ${i + 1}")
-      }
+      result.getFacets.get(facet).asScala
     } match {
-      case Failure(exception) => println(s"Failure at ${LocalDateTime.now()}")
+      case Failure(exception) =>
+        val a = 1
+        println(s"Failure at ${LocalDateTime.now()} (${exception.getMessage})")
       case Success(value) => println(s"Success at ${LocalDateTime.now()}")
     }
   }

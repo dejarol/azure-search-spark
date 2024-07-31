@@ -57,7 +57,7 @@ object ReadConfig {
   final val SELECT_CONFIG = "select"
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
   final val PARTITIONER_OPTIONS_FACET_CONFIG = "facet"
-  final val PARTITIONER_OPTIONS_FACET_QUERY_PARAMETER_CONFIG = "query"
+  final val PARTITIONER_OPTIONS_FACET_PARTITIONS = "query"
 
   /**
    * Create an instance from given options, retrieving SparkConf-related options

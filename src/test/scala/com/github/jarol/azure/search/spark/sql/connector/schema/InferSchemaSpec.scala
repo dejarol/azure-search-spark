@@ -1,19 +1,24 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory}
 import com.github.jarol.azure.search.spark.sql.connector.config.ConfigException
 
 class InferSchemaSpec
-  extends BasicSpec {
+  extends BasicSpec
+    with SearchFieldFactory {
 
   private lazy val (f1, f2, f3) = ("stringField", "intField", "dateField")
-  private lazy val hiddenField: SearchField = new SearchField("hidden", SearchFieldDataType.STRING).setHidden(true)
+  private lazy val hiddenField = createField("hidden", SearchFieldDataType.STRING).setHidden(true)
+  private lazy val stringField = createField(f1, SearchFieldDataType.STRING).setHidden(false)
+  private lazy val intField = createField(f2, SearchFieldDataType.INT32).setHidden(false)
+  private lazy val dateField = createField(f3, SearchFieldDataType.DATE_TIME_OFFSET).setHidden(false)
+
   private lazy val searchFields: Seq[SearchField] = Seq(
     hiddenField,
-    new SearchField(f1, SearchFieldDataType.STRING).setHidden(false),
-    new SearchField(f2, SearchFieldDataType.INT32).setHidden(false),
-    new SearchField(f3, SearchFieldDataType.DATE_TIME_OFFSET).setHidden(false)
+    stringField,
+    intField,
+    dateField
   )
 
   describe(`object`[InferSchema.type ]) {
@@ -42,16 +47,47 @@ class InferSchemaSpec
           }
         }
 
-        it(s"throwing a ${nameOf[ConfigException]} if selection fields do not exist") {
+        it(s"throwing a ${nameOf[ConfigException]} if selected fields do not exist") {
 
-          // TODO
+          a[ConfigException] shouldBe thrownBy {
+
+            InferSchema.selectFields(
+              Seq(stringField, intField),
+              Some(
+                Seq(
+                  dateField.getName
+                )
+              )
+            )
+          }
         }
       }
 
       describe("infer schema") {
         it("only for non-hidden and selected fields") {
 
-          // TODO
+          // no selection provided
+          InferSchema.inferSchemaForExistingIndex(
+            "index",
+            searchFields,
+            None
+          ) should have size searchFields.count {
+            sf => !sf.isHidden
+          }
+
+          // selection provided
+          val selection = Seq(
+            stringField.getName,
+            dateField.getName
+          )
+
+          InferSchema.inferSchemaForExistingIndex(
+            "index",
+            searchFields,
+            Some(selection)
+          ) should have size searchFields.count {
+            sf => !sf.isHidden && selection.contains(sf.getName)
+          }
         }
       }
     }

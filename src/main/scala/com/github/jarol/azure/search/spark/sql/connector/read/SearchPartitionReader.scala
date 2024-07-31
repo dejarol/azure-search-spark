@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchResult
-import com.github.jarol.azure.search.spark.sql.connector.clients.JavaClients
+import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
@@ -15,7 +15,7 @@ class SearchPartitionReader(private val schema: StructType,
   extends PartitionReader[InternalRow] {
 
   private lazy val documentConverter = DocumentToInternalRowConverter(schema, readConfig)
-  private lazy val searchResultIterator: java.util.Iterator[SearchResult] = JavaClients.doSearch(
+  private lazy val searchResultIterator: java.util.Iterator[SearchResult] = ClientFactory.doSearch(
       readConfig,
       searchPartition.getSearchOptions
     ).iterator()
