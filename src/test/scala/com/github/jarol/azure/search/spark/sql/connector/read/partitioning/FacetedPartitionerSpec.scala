@@ -100,8 +100,8 @@ class FacetedPartitionerSpec
           }
 
           // Assert generated filters
-          partitions.collect {
-            case ScalaSearchPartition(Some(filter), _) => filter
+          partitions.map {
+           _.getFilter
           } should contain theSameElementsAs computeExpectedFilters(
             values,
             fieldName,
@@ -131,8 +131,8 @@ class FacetedPartitionerSpec
               impl.maybeSelect shouldBe Some(selection)
           }
 
-          partitions.collect {
-            case ScalaSearchPartition(Some(filter), _) => filter
+          partitions.map {
+            _.getFilter
           } should contain theSameElementsAs computeExpectedFilters(
             values,
             fieldName,

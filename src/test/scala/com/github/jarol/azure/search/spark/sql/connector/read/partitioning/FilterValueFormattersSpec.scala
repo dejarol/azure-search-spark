@@ -4,6 +4,8 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
 import org.scalatest.Inspectors
 
+import java.time.LocalDateTime
+
 class FilterValueFormattersSpec
   extends BasicSpec
     with Inspectors {
@@ -39,6 +41,31 @@ class FilterValueFormattersSpec
           FilterValueFormatters.forType(
             SearchFieldDataType.DATE_TIME_OFFSET
           ) shouldBe a[FilterValueFormatters.DateTimeFormatter.type ]
+        }
+      }
+
+      describe("format the value of ") {
+        it("a string") {
+
+          val value = "hello"
+          FilterValueFormatters.StringFormatter.format(value) shouldBe s"'$value'"
+        }
+
+        it("a number") {
+
+          val (i, l, d) = (1, 10L, 3.14)
+          forAll(
+            Seq(i, l, d)
+          ) {
+            value =>
+              FilterValueFormatters.NumericFormatter.format(value) shouldBe String.valueOf(value)
+          }
+        }
+
+        it("a datetime") {
+
+          val date = LocalDateTime.now()
+          FilterValueFormatters.DateTimeFormatter.format(date) shouldBe s"'$date'"
         }
       }
     }

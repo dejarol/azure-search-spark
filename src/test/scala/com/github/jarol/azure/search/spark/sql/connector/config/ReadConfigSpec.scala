@@ -1,30 +1,21 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
-import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.config.read.partitioning.EmptyPartitioner
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner
 
 class ReadConfigSpec
-  extends BasicSpec {
+  extends ConfigSpec {
 
-  private lazy val emptyConfig = ReadConfig(Map.empty, Map.empty)
-
-  /**
-   * Create a [[ReadConfig]] with given options
-   * @param options options passed to the [[org.apache.spark.sql.DataFrameReader]]
-   * @return an instance of [[ReadConfig]]
-   */
-
-  private def createConfig(options: Map[String, String]): ReadConfig = ReadConfig(options, Map.empty)
+  private lazy val emptyConfig = readConfig(Map.empty)
 
   describe(anInstanceOf[ReadConfig]) {
     describe(SHOULD) {
-      describe("optionally retrieve") {
+      describe("retrieve") {
         it("the filter to apply on index documents") {
 
           val expected = "filterValue"
           emptyConfig.filter shouldBe empty
-          createConfig(
+          readConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> expected
             )
@@ -35,7 +26,7 @@ class ReadConfigSpec
 
           val expected = Seq("f1", "f2")
           emptyConfig.select shouldBe empty
-          val actual: Option[Seq[String]] = createConfig(
+          val actual: Option[Seq[String]] = readConfig(
             Map(
               ReadConfig.SELECT_CONFIG -> expected.mkString(",")
             )
@@ -44,9 +35,24 @@ class ReadConfigSpec
           actual shouldBe defined
           actual.get should contain theSameElementsAs expected
         }
-      }
 
-      describe("retrieve") {
+        it("the partitioner options") {
+
+          emptyConfig.partitionerOptions shouldBe empty
+          val (facet, partitions) = ("facet", 10)
+          val partitionerOptions = readConfig(
+            Map(
+              ReadConfig.FILTER_CONFIG -> "filter",
+              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG -> facet,
+              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS -> s"$partitions"
+            )
+          ).partitionerOptions
+
+          partitionerOptions.get(ReadConfig.FILTER_CONFIG) shouldBe empty
+          partitionerOptions.get( ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG) shouldBe defined
+          partitionerOptions.get(ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS) shouldBe defined
+        }
+
         describe("a partitioner instance using either") {
           it("a default") {
 
@@ -55,7 +61,7 @@ class ReadConfigSpec
 
           it("a user provided partitioner") {
 
-            val config = createConfig(
+            val config = readConfig(
               Map(
                 ReadConfig.PARTITIONER_CONFIG -> classOf[EmptyPartitioner].getName
               )

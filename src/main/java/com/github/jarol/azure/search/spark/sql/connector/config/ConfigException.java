@@ -20,9 +20,10 @@ public class ConfigException
      * @param key configuration key
      * @param value configuration value
      * @param message error message
+     * @param cause exception cause
      */
 
-    protected ConfigException(
+    private ConfigException(
             String key,
             Object value,
             String message,
@@ -38,6 +39,13 @@ public class ConfigException
                 cause
         );
     }
+
+    /**
+     * Create an instance with a customized message for a key-value pair
+     * @param key key
+     * @param value value
+     * @param message message
+     */
 
     public ConfigException(
             String key,
@@ -62,11 +70,22 @@ public class ConfigException
         this(key, value, cause.getMessage(), cause);
     }
 
+    /**
+     * Create an instance with custom message
+     * @param message exception message
+     */
+
     public ConfigException(
             String message
     ) {
         super(message);
     }
+
+    /**
+     * Create an instance for a missing key
+     * @param key missing key
+     * @return an instance for marking a missing key
+     */
 
     @Contract("_ -> new")
     public static @NotNull ConfigException missingKey(

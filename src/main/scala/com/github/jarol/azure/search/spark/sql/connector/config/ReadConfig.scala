@@ -10,7 +10,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Sear
 
 case class ReadConfig(override protected val localOptions: Map[String, String],
                       override protected val globalOptions: Map[String, String])
-  extends AbstractIOConfig(localOptions, globalOptions, UsageMode.READ) {
+  extends SearchIOConfig(localOptions, globalOptions, UsageMode.READ) {
 
   /**
    * Get the filter to apply on index documents. The filter must follow OData syntax
@@ -39,6 +39,11 @@ case class ReadConfig(override protected val localOptions: Map[String, String],
       }
     )
   }
+
+  /**
+   * Retrieve the options related to specified partitioner
+   * @return the partitioner options
+   */
 
   def partitionerOptions: SearchConfig = getAllWithPrefix(ReadConfig.PARTITIONER_OPTIONS_PREFIX)
 
@@ -70,7 +75,7 @@ object ReadConfig {
 
     ReadConfig(
       options,
-      AbstractIOConfig.allConfigsFromActiveSessionForMode(UsageMode.READ)
+      SearchIOConfig.allConfigsFromActiveSessionForMode(UsageMode.READ)
     )
   }
 }

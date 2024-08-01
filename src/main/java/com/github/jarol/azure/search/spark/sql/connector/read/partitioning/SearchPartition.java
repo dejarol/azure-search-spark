@@ -13,6 +13,13 @@ public interface SearchPartition
         extends InputPartition {
 
     /**
+     * Get the partition id
+     * @return partition id
+     */
+
+    int getPartitionId();
+
+    /**
      * Get the filter that would be applied by this instance for retrieving search documents.
      * If null, no filter will be applied to documents search
      * @return the search filter

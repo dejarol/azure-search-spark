@@ -16,6 +16,7 @@ case class SinglePartitionPartitioner(override protected val readConfig: ReadCon
 
     util.Collections.singletonList(
       ScalaSearchPartition(
+        0,
         readConfig.filter,
         readConfig.select
       )

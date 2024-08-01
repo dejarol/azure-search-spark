@@ -11,9 +11,9 @@ import org.apache.spark.sql.SparkSession
  * @param usageMode usage mode
  */
 
-class AbstractIOConfig(override protected val localOptions: Map[String, String],
-                       override protected val globalOptions: Map[String, String],
-                       protected val usageMode: UsageMode)
+class SearchIOConfig(override protected val localOptions: Map[String, String],
+                     override protected val globalOptions: Map[String, String],
+                     protected val usageMode: UsageMode)
   extends SearchConfig(localOptions, globalOptions)
     with IOConfig {
 
@@ -24,7 +24,7 @@ class AbstractIOConfig(override protected val localOptions: Map[String, String],
   override def getIndex: String = unsafelyGet(IOConfig.INDEX_CONFIG)
 }
 
-object AbstractIOConfig {
+object SearchIOConfig {
 
   /**
    * Extract all options from given SparkConf that starts with the prefix of a usage mode

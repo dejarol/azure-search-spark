@@ -14,13 +14,13 @@ import scala.util.Try
  * Faceted partitioner.
  *
  * Given a field <b>f1</b> which is filterable and facetable, it will generate partitions according to the following behavior
- *  - if a value of <b>n</b> is given for [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]], it will generate <b>n</b> partitions where
- *  <b>n - 1</b> partitions where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
+ *  - if a value of <b>n</b> is given for [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]], it will generate <b>n</b> partitions
+ *  where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
  *  most frequent value of field  <b>f1</b>,
  *  and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
  *  - otherwise, the number of partitions will be the default number of facets returned by the Azure Search API
  *
- * Suitable for cases where there exists a filterable and facetable field with few distinct values, with an homogeneous distribution
+ * Suitable for cases where there exists a filterable and facetable field with few distinct values
  * @param readConfig read configuration
  */
 
@@ -30,7 +30,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   /**
    * Generate a number of partitions equal to
    *  - the value related to key [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]]
-   *  - the number of default facets retrieved by the API (10)
+   *  - the number of default facets retrieved by the Azure Search API
    *
    * Each partition should contain o non-overlapping filter
    * @throws ConfigException if facet field is not facetable and retrievable
@@ -44,8 +44,11 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
     val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, Integer.parseInt)
 
+    // Retrieve facet result and generate partitions
     FacetedPartitioner.getFacetResults(readConfig, facetFieldName, facetPartitions) match {
+      // case Left: throw handled exception
       case Left(value) => throw value
+      // case Right: generate the partitions
       case Right(value) => FacetedPartitioner.generatePartitions(
         getFacetFieldType(facetFieldName),
         JavaScalaConverters.listToSeq(value).map {
@@ -65,6 +68,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   @throws[AzureSparkException]
   private def getFacetFieldType(name: String): SearchField = {
 
+    // Retrieve the search field with given name
     JavaScalaConverters.listToSeq(
       ClientFactory.searchIndex(readConfig).getFields
     ).collectFirst {
@@ -92,8 +96,8 @@ object FacetedPartitioner {
                               count: Option[Int]): Either[ConfigException, util.List[FacetResult]] = {
 
     // Compose the facet
-    // [a] if query param is defined, facet --> join facetField and query param using comma
-    // [b] if query params is empty --> facetField
+    // [a] if query param is defined, facet = join facetField and query param using comma
+    // [b] if query params is empty facet = facetField
     val facet: String = count.map {
       partitions => s"$facetField,count:${partitions - 1}"
     }.getOrElse(facetField)
@@ -158,16 +162,13 @@ object FacetedPartitioner {
     val nullOrNotInOtherFacets: String = s"$facetFieldName eq null or " +
       s"not (${facetPartitionFilters.mkString(" or ")})"
 
-    val allSearchPartitions: Seq[SearchPartition] = (facetPartitionFilters :+ nullOrNotInOtherFacets).map {
-      facetFilter => ScalaSearchPartition(
-        Some(
-          combineFilters(
-            facetFilter,
-            readConfig.filter
-          )
-        ),
-        readConfig.select
-      )
+    val allSearchPartitions: Seq[SearchPartition] = (facetPartitionFilters :+ nullOrNotInOtherFacets)
+      .zipWithIndex.map { case (facetFilter, partitionId) =>
+        ScalaSearchPartition(
+          partitionId,
+          Some(combineFilters(facetFilter, readConfig.filter)),
+          readConfig.select
+        )
     }
 
     JavaScalaConverters.seqToList(allSearchPartitions)

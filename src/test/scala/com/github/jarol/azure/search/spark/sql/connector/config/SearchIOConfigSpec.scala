@@ -3,22 +3,22 @@ package com.github.jarol.azure.search.spark.sql.connector.config
 import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
 import org.apache.spark.SparkConf
 
-class AbstractIOConfigSpec
+class SearchIOConfigSpec
   extends BasicSpec {
 
   private lazy val (k1, v1, k2, v2, k3, v3) = ("k1", "v1", "k2", "v2", "k3", "v3")
 
   /**
-   * Create an instance of [[AbstractIOConfig]] by injecting two maps
+   * Create an instance of [[SearchIOConfig]] by injecting two maps
  *
    * @param m1 local options
    * @param m2 global (SparkConf) options
-   * @return an instance of [[AbstractIOConfig]]
+   * @return an instance of [[SearchIOConfig]]
    */
 
-  private def createConfig(m1: Map[String, String], m2: Map[String, String]): AbstractIOConfig = {
+  private def createConfig(m1: Map[String, String], m2: Map[String, String]): SearchIOConfig = {
 
-    new AbstractIOConfig(m1, m2, UsageMode.WRITE)
+    new SearchIOConfig(m1, m2, UsageMode.WRITE)
   }
 
   /**
@@ -41,12 +41,12 @@ class AbstractIOConfigSpec
       ).setAll(externalConfigs)
 
     // Retrieve the result
-    val actual = AbstractIOConfig.allConfigsForMode(sparkConf, mode)
+    val actual = SearchIOConfig.allConfigsForMode(sparkConf, mode)
     actual should have size usageConfigs.size
     actual should contain theSameElementsAs usageConfigs
   }
 
-  describe(`object`[AbstractIOConfig]) {
+  describe(`object`[SearchIOConfig]) {
     describe(SHOULD) {
       it("retrieve all configs related to a usage mode") {
 
@@ -66,7 +66,7 @@ class AbstractIOConfigSpec
     }
   }
 
-  describe(anInstanceOf[AbstractIOConfig]) {
+  describe(anInstanceOf[SearchIOConfig]) {
     describe(SHOULD) {
       describe("retrieve") {
         it("the azure endpoint") {

@@ -16,6 +16,13 @@ class SearchConfig(protected val localOptions: Map[String, String],
   extends Serializable {
 
   /**
+   * Whether this config is empty or not (true only if both local and global options are empty)
+   * @return config emptiness flag
+   */
+
+  final def isEmpty: Boolean = localOptions.isEmpty && globalOptions.isEmpty
+
+  /**
    * Safely get the value of a key by inspecting local options and then [[org.apache.spark.SparkConf]] options
    * @param key key
    * @return the optional value related to given key
