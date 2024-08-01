@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
 import org.scalatest.Inspectors
 
@@ -36,6 +37,30 @@ class FacetedPartitionerSpec
     }
   }
 
+  /**
+   * Create a read config including an optional filter and selection list
+   * @param filter filter
+   * @param select selection list
+   * @return a read config
+   */
+
+  private def createReadConfig(filter: Option[String], select: Option[Seq[String]]): ReadConfig = {
+
+    val localOptionsMap = Map(
+      ReadConfig.FILTER_CONFIG -> filter,
+      ReadConfig.SELECT_CONFIG -> select.map {
+        _.mkString(",")
+      }
+    ).collect {
+      case (k, Some(v)) => (k, v)
+    }
+
+    ReadConfig(
+      localOptionsMap,
+      Map.empty
+    )
+  }
+
   describe(`object`[FacetedPartitioner]) {
     describe(SHOULD) {
       it("combine two filters into one") {
@@ -51,6 +76,7 @@ class FacetedPartitionerSpec
         val (fieldName, fieldType) = ("field", SearchFieldDataType.STRING)
         val emptyFilter: Option[String] = None
         val nonEmptyFilter = "country eq 'ITALY'"
+        val selection = Seq("f1", "f2")
 
         it("when no initial filter is provided") {
 
@@ -58,76 +84,61 @@ class FacetedPartitionerSpec
             FacetedPartitioner.generatePartitions(
               createField(fieldName, fieldType),
               values,
-              emptyFilter,
-              None
+              createReadConfig(emptyFilter, None)
             )
           )
 
+          // Assert size, partitions type, filter and select
+          partitions should have size (values.size + 1)
+
           forAll(partitions) {
-            _ shouldBe a[SearchPartitionImpl]
+            partition =>
+              partition shouldBe a[ScalaSearchPartition]
+              val impl = partition.asInstanceOf[ScalaSearchPartition]
+              impl.maybeFilter shouldBe defined
+              impl.maybeSelect shouldBe empty
           }
 
-          val partitionsImpl: Seq[SearchPartitionImpl] = partitions.map {
-            _.asInstanceOf[SearchPartitionImpl]
-          }
-
-          forAll(partitionsImpl) {
-            _.filter shouldBe defined
-          }
-
-          partitionsImpl should have size (values.size + 1)
-
-          partitionsImpl.collect {
-            case SearchPartitionImpl(Some(filter), _) => filter
+          // Assert generated filters
+          partitions.collect {
+            case ScalaSearchPartition(Some(filter), _) => filter
           } should contain theSameElementsAs computeExpectedFilters(
             values,
             fieldName,
             emptyFilter,
             FilterValueFormatters.StringFormatter
           )
-
-          forAll(partitionsImpl) {
-            _.select shouldBe empty
-          }
         }
 
-        it("when also a global filter is provided") {
+        it("when a global filter is provided and a selection is provided") {
 
           val partitions: Seq[SearchPartition] = JavaScalaConverters.listToSeq(
             FacetedPartitioner.generatePartitions(
               createField(fieldName, fieldType),
               values,
-              Some(nonEmptyFilter),
-              None
+              createReadConfig(Some(nonEmptyFilter), Some(selection))
             )
           )
 
+          // Assert size, partitions type, filter and select
+          partitions should have size (values.size + 1)
+
           forAll(partitions) {
-            _ shouldBe a[SearchPartitionImpl]
+            partition =>
+              partition shouldBe a[ScalaSearchPartition]
+              val impl = partition.asInstanceOf[ScalaSearchPartition]
+              impl.maybeFilter shouldBe defined
+              impl.maybeSelect shouldBe Some(selection)
           }
 
-          val partitionsImpl: Seq[SearchPartitionImpl] = partitions.map {
-            _.asInstanceOf[SearchPartitionImpl]
-          }
-
-          forAll(partitionsImpl) {
-            _.filter shouldBe defined
-          }
-
-          partitionsImpl should have size (values.size + 1)
-
-          partitionsImpl.collect {
-            case SearchPartitionImpl(Some(filter), _) => filter
+          partitions.collect {
+            case ScalaSearchPartition(Some(filter), _) => filter
           } should contain theSameElementsAs computeExpectedFilters(
             values,
             fieldName,
             Some(nonEmptyFilter),
             FilterValueFormatters.StringFormatter
           )
-
-          forAll(partitionsImpl) {
-            _.select shouldBe empty
-          }
         }
       }
     }

@@ -4,6 +4,7 @@ import com.azure.core.util.Context
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{IOConfig, ReadConfig}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner
 
 import java.time.LocalDateTime
 import scala.collection.JavaConverters._
@@ -13,19 +14,20 @@ class ReadSpec extends SparkSpec {
 
   it("a") {
 
-    /*
+    println(s"Read start time: ${LocalDateTime.now()}")
     val df = spark.read.format(SearchTableProvider.SHORT_NAME)
       .option(IOConfig.INDEX_CONFIG, "1721203770598-personnel-list")
       .option(ReadConfig.PARTITIONER_CONFIG, classOf[FacetedPartitioner].getName)
       .option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG, "country")
-      .option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_QUERY_PARAMETER_CONFIG, "count:24")
+      .option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, spark.sparkContext.defaultParallelism)
       .load().cache()
 
     df.printSchema()
-    df.show(false)
-    println(f"Number of partitions: ${df.rdd.getNumPartitions}")
-    println(f"Number of rows: ${df.count()}")
+    //df.show(false)
+    println(f"Number of partitions: ${df.rdd.getNumPartitions}, number of rows: ${df.count()}")
+    println(s"Read end time: ${LocalDateTime.now()}")
 
+    /*
     val schema = InferSchema.inferSchema(
       Map(
         IOConfig.END_POINT_CONFIG -> "https://lovappacsd01.search.windows.net",

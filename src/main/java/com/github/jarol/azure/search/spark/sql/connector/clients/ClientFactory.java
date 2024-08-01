@@ -56,11 +56,8 @@ public final class ClientFactory {
             @NotNull IOConfig config
     ) {
 
-        return new SearchClientBuilder()
-                .endpoint(config.getEndpoint())
-                .credential(new AzureKeyCredential(config.getAPIkey()))
-                .indexName(config.getIndex())
-                .buildClient();
+        return searchIndexClient(config)
+                .getSearchClient(config.getIndex());
     }
 
     public static SearchPagedIterable doSearch(

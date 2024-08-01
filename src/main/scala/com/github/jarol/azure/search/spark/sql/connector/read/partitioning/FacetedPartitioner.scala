@@ -3,12 +3,26 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
-import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, IOConfig, ReadConfig, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
 
 import java.util
 import scala.util.Try
+
+/**
+ * Faceted partitioner.
+ *
+ * Given a field <b>f1</b> which is filterable and facetable, it will generate partitions according to the following behavior
+ *  - if a value of <b>n</b> is given for [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]], it will generate <b>n</b> partitions where
+ *  <b>n - 1</b> partitions where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
+ *  most frequent value of field  <b>f1</b>,
+ *  and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
+ *  - otherwise, the number of partitions will be the default number of facets returned by the Azure Search API
+ *
+ * Suitable for cases where there exists a filterable and facetable field with few distinct values, with an homogeneous distribution
+ * @param readConfig read configuration
+ */
 
 case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
@@ -19,9 +33,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
    *  - the number of default facets retrieved by the API (10)
    *
    * Each partition should contain o non-overlapping filter
-   * @throws ConfigException if
-   *                         - facet field is not facetable and retrievable
-   *                         - some facets include more than [[IOConfig.SKIP_LIMIT]] document(s)
+   * @throws ConfigException if facet field is not facetable and retrievable
    * @return a collection of Search partitions
    */
 
@@ -39,8 +51,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
         JavaScalaConverters.listToSeq(value).map {
           _.getAdditionalProperties.get("value")
         },
-        readConfig.filter,
-        readConfig.select
+        readConfig
       )
     }
   }
@@ -126,15 +137,13 @@ object FacetedPartitioner {
    * Generate a set of partitions exploiting values of a facetable field
    * @param facetField facet field
    * @param facets facet field values
-   * @param globalFilter overall filter (the value of key [[ReadConfig.FILTER_CONFIG]])
-   * @param select selection fields
+   * @param readConfig read config
    * @return a collection of Search partitions
    */
 
   protected[partitioning] def generatePartitions(facetField: SearchField,
                                                  facets: Seq[Any],
-                                                 globalFilter: Option[String],
-                                                 select: Option[Seq[String]]): util.List[SearchPartition] = {
+                                                 readConfig: ReadConfig): util.List[SearchPartition] = {
 
     val valueFormatter = FilterValueFormatters.forType(facetField.getType)
     val facetFieldName: String = facetField.getName
@@ -150,14 +159,14 @@ object FacetedPartitioner {
       s"not (${facetPartitionFilters.mkString(" or ")})"
 
     val allSearchPartitions: Seq[SearchPartition] = (facetPartitionFilters :+ nullOrNotInOtherFacets).map {
-      facetFilter => SearchPartitionImpl(
+      facetFilter => ScalaSearchPartition(
         Some(
           combineFilters(
             facetFilter,
-            globalFilter
+            readConfig.filter
           )
         ),
-        select
+        readConfig.select
       )
     }
 
