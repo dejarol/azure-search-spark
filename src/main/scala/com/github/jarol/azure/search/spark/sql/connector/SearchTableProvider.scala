@@ -27,6 +27,9 @@ class SearchTableProvider
   override def getTable(schema: StructType, partitioning: Array[Transform], properties: util.Map[String, String]): Table = new SearchTable(schema)
 
   override def shortName(): String = SearchTableProvider.SHORT_NAME
+
+  override def supportsExternalMetadata(): Boolean = true
+
 }
 
 object SearchTableProvider {

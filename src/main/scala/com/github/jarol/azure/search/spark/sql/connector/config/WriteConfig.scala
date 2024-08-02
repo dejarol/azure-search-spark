@@ -32,13 +32,15 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
    * @return action type for indexing all documents
    */
 
-  def indexAction: Option[IndexActionType] = {
+  def actionType: Option[IndexActionType] = {
 
     getAs(
       WriteConfig.ACTION_CONFIG,
       WriteConfig.valueOfIndexActionType
     )
   }
+
+
 }
 
 object WriteConfig {
