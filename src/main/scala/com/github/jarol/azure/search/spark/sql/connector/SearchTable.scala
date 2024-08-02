@@ -43,7 +43,8 @@ class SearchTable(private val inferredSchema: StructType)
     new SearchWriteBuilder(
       WriteConfig(
         JavaScalaConverters.javaMapToScalaMap(info.options())
-      )
+      ),
+      info.schema()
     )
   }
 }
