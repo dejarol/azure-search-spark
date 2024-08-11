@@ -25,7 +25,7 @@ class WriteConfigSpec
 
         it("the index action type") {
 
-          emptyConfig.actionType shouldBe empty
+          emptyConfig.action shouldBe empty
           val indexActionType = IndexActionType.MERGE_OR_UPLOAD
           val configs: Seq[Map[String, String]] = Seq(
             indexActionType.name(),
@@ -42,8 +42,19 @@ class WriteConfigSpec
           forAll(configs) {
             config => writeConfig(
               config
-            ).actionType shouldBe Some(indexActionType)
+            ).action shouldBe Some(indexActionType)
           }
+        }
+
+        it("the name of the index action type column") {
+
+          val colName = "actionCol"
+          emptyConfig.actionColumn shouldBe empty
+          writeConfig(
+            Map(
+              WriteConfig.ACTION_COLUMN_CONFIG -> colName
+            )
+          ).actionColumn shouldBe Some(colName)
         }
       }
     }

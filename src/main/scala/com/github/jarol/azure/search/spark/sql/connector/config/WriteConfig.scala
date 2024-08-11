@@ -32,7 +32,7 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
    * @return action type for indexing all documents
    */
 
-  def actionType: Option[IndexActionType] = {
+  def action: Option[IndexActionType] = {
 
     getAs(
       WriteConfig.ACTION_CONFIG,
@@ -40,7 +40,13 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
     )
   }
 
+  /**
+   * Return the name of a [[org.apache.spark.sql.DataFrame]] column that contains a per-document action type.
+   * It must be the name of an existing string column whose values can be mapped to an [[IndexActionType]]
+   * @return column name for document action
+   */
 
+  def actionColumn: Option[String] = get(WriteConfig.ACTION_COLUMN_CONFIG)
 }
 
 object WriteConfig {
@@ -48,6 +54,7 @@ object WriteConfig {
   final val BATCH_SIZE_CONFIG = "batchSize"
   final val DEFAULT_BATCH_SIZE_VALUE = 1000
   final val ACTION_CONFIG = "action"
+  final val ACTION_COLUMN_CONFIG = "actionColumn"
 
   /**
    * Create an instance with options as local options

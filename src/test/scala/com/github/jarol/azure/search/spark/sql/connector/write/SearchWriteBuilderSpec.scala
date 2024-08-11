@@ -1,36 +1,25 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
-import com.github.jarol.azure.search.spark.sql.connector.{SearchTableProvider, SparkSpec}
-import org.apache.spark.sql.SaveMode
+import com.github.jarol.azure.search.spark.sql.connector.SparkSpec
+import com.github.jarol.azure.search.spark.sql.connector.config.ConfigException
 
 class SearchWriteBuilderSpec
   extends SparkSpec {
 
-  import SearchWriteBuilderSpec._
+  describe(`object`[SearchWriteBuilder]) {
+    describe(SHOULD) {
+      describe("evaluate index action column returning") {
+        it("an empty Option for valid columns") {
 
-  it("a") {
+          // TODO
 
-    val df = emptyDF[Product]
-    df.write.format(SearchTableProvider.SHORT_NAME)
-      .option(IOConfig.INDEX_CONFIG, "aaa")
-      .mode(SaveMode.Append)
-      .save()
+        }
+
+        it(s"a ${nameOf[ConfigException]} otherwise") {
+
+          // TODO
+        }
+      }
+    }
   }
-}
-
-object SearchWriteBuilderSpec {
-
-  case class Product(encodedId: String,
-                     nonEncodedId: String,
-                     firstName: Option[String],
-                     lastName: Option[String],
-                     country: Option[String],
-                     csrEmployeesCategory: Option[String],
-                     position: Option[String],
-                     functionBe: Option[String],
-                     minHcLevel: Int,
-                     urlPhoto: Option[String],
-                     openManagersPopup: Boolean,
-                     fullNameSortingLevel: Int)
 }
