@@ -19,7 +19,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
     writeConfig.actionColumn.flatMap {
       SearchWriteBuilder.evaluateIndexActionColumn(_, schema)
     } match {
-      case Some(configException) => throw configException
+      case Some(value) => throw value
       case None => new SearchWrite(
         writeConfig,
         schema

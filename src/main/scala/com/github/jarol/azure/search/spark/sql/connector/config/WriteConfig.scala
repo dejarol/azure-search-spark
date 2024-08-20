@@ -41,7 +41,7 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
   }
 
   /**
-   * Return the name of a [[org.apache.spark.sql.DataFrame]] column that contains a per-document action type.
+   * Return the name of a dataframe column that contains a per-document action type.
    * It must be the name of an existing string column whose values can be mapped to an [[IndexActionType]]
    * @return column name for document action
    */
