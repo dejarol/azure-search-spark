@@ -8,22 +8,24 @@ import org.apache.spark.sql.types.{DataTypes, StructType}
 
 /**
  * Getter for retrieving an [[IndexActionType]] from a Spark internal row
- * @param indexOfActionTypeColumn index of the column to use for fetching the action type
+ * @param actionColumnIndex index of the column to use for fetching the action type
+ * @param defaultAction default action type (used when the value of the action column is null or cannot be mapped to an [[IndexActionType]])
  */
 
-case class IndexActionTypeGetter private(private val indexOfActionTypeColumn: Int)
+case class IndexActionTypeGetter private(private val actionColumnIndex: Int,
+                                         private val defaultAction: IndexActionType)
   extends (InternalRow => IndexActionType) {
 
   override def apply(v1: InternalRow): IndexActionType = {
 
-    if (v1.isNullAt(indexOfActionTypeColumn)) {
-      IndexActionType.MERGE_OR_UPLOAD
+    if (v1.isNullAt(actionColumnIndex)) {
+      defaultAction
     } else {
       Generics.safeValueOfEnum[IndexActionType](
-        v1.getString(indexOfActionTypeColumn),
+        v1.getString(actionColumnIndex),
         (e, s) => e.name().equalsIgnoreCase(s) || e.toString.equalsIgnoreCase(s)
       ).getOrElse(
-        IndexActionType.MERGE_OR_UPLOAD
+        defaultAction
       )
     }
   }
@@ -51,6 +53,9 @@ object IndexActionTypeGetter {
       )
     }
 
-    IndexActionTypeGetter(indexOfActionColumn)
+    IndexActionTypeGetter(
+      indexOfActionColumn,
+      IndexActionType.MERGE_OR_UPLOAD
+    )
   }
 }
