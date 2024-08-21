@@ -24,14 +24,14 @@ class IndexActionTypeGetterSpec
         it("a non existing column") {
 
           an[AzureSparkException] shouldBe thrownBy {
-            IndexActionTypeGetter("hello", schema)
+            IndexActionTypeGetter("hello", schema, IndexActionType.UPLOAD)
           }
         }
 
         it("a non-string column") {
 
           an[AzureSparkException] shouldBe thrownBy {
-            IndexActionTypeGetter(dateColName, schema)
+            IndexActionTypeGetter(dateColName, schema, IndexActionType.UPLOAD)
           }
         }
       }
@@ -45,14 +45,14 @@ class IndexActionTypeGetterSpec
 
           val action = IndexActionType.DELETE
           val row = InternalRow(UTF8String.fromString(action.name()))
-          IndexActionTypeGetter(actionColName, schema)(row) shouldBe action
+          IndexActionTypeGetter(actionColName, schema, IndexActionType.UPLOAD)(row) shouldBe action
         }
 
         it("using a default value when null") {
 
-          val action: UTF8String = null
+          val (action, default): (UTF8String, IndexActionType) = (null, IndexActionType.DELETE)
           val row = InternalRow(action)
-          IndexActionTypeGetter(actionColName, schema)(row) shouldBe IndexActionType.MERGE_OR_UPLOAD
+          IndexActionTypeGetter(actionColName, schema, default)(row) shouldBe default
         }
       }
     }

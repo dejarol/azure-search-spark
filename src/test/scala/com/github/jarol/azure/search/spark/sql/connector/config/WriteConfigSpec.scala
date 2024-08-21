@@ -25,24 +25,27 @@ class WriteConfigSpec
 
         it("the index action type") {
 
-          emptyConfig.action shouldBe empty
-          val indexActionType = IndexActionType.MERGE_OR_UPLOAD
-          val configs: Seq[Map[String, String]] = Seq(
-            indexActionType.name(),
-            indexActionType.toString,
-            indexActionType.name().toLowerCase,
-            indexActionType.toString.toUpperCase,
-            indexActionType.toString.toLowerCase,
+          emptyConfig.maybeUserSpecifiedAction shouldBe empty
+          emptyConfig.overallAction shouldBe WriteConfig.DEFAULT_ACTION_TYPE
+          val action = IndexActionType.UPLOAD
+          val configMaps: Seq[Map[String, String]] = Seq(
+            action.name(),
+            action.toString,
+            action.name().toLowerCase,
+            action.toString.toUpperCase,
+            action.toString.toLowerCase,
           ).map {
             value => Map(
               WriteConfig.ACTION_CONFIG -> value
             )
           }
 
-          forAll(configs) {
-            config => writeConfig(
-              config
-            ).action shouldBe Some(indexActionType)
+          forAll(configMaps) {
+            configMap =>
+
+              val wConfig = writeConfig(configMap)
+              wConfig.maybeUserSpecifiedAction shouldBe Some(action)
+              wConfig.overallAction shouldBe action
           }
         }
 

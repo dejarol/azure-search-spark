@@ -14,25 +14,24 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
   extends DataWriter[InternalRow] {
 
   private lazy val batchSize: Int = writeConfig.batchSize
-  private lazy val actionTypeGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn
+  private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(schema)
+  private lazy val maybeActionTypeGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn
     .map {
-      IndexActionTypeGetter(
-      _, schema
-    )
-  }
+      name =>
+        IndexActionTypeGetter(name, schema, writeConfig.overallAction)
+    }
 
   private var actionsBatch: Seq[IndexAction[SearchDocument]] = Seq.empty
 
   override def write(record: InternalRow): Unit = {
 
     // Retrieve action type from current record or use a default
-    val actionType: IndexActionType = actionTypeGetter.map {
+    val actionType: IndexActionType = maybeActionTypeGetter.map {
       getter => getter.apply(record)
-    }.getOrElse(IndexActionType.MERGE_OR_UPLOAD)
+    }.getOrElse(writeConfig.overallAction)
 
-    val document: SearchDocument = null
     val indexAction: IndexAction[SearchDocument] = new IndexAction[SearchDocument]
-      .setDocument(document)
+      .setDocument(internalRowToSearchDocumentConverter.apply(record))
       .setActionType(actionType)
 
     actionsBatch = actionsBatch :+ indexAction

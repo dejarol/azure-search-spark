@@ -28,17 +28,25 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
   }
 
   /**
-   * Return the [[IndexActionType]] to use for indexing all documents
+   * Return the (optional) [[IndexActionType]] to use for indexing all documents
    * @return action type for indexing all documents
    */
 
-  def action: Option[IndexActionType] = {
+  def maybeUserSpecifiedAction: Option[IndexActionType] = {
 
     getAs(
       WriteConfig.ACTION_CONFIG,
       WriteConfig.valueOfIndexActionType
     )
   }
+
+  /**
+   * Return the [[IndexActionType]] defined by the user or a default. It will be used for indexing all documents.
+   * If not specified, [[WriteConfig.DEFAULT_ACTION_TYPE]] will be used
+   * @return action type for indexing all documents
+   */
+
+  def overallAction: IndexActionType = maybeUserSpecifiedAction.getOrElse(WriteConfig.DEFAULT_ACTION_TYPE)
 
   /**
    * Return the name of a dataframe column that contains a per-document action type.
@@ -55,6 +63,7 @@ object WriteConfig {
   final val DEFAULT_BATCH_SIZE_VALUE = 1000
   final val ACTION_CONFIG = "action"
   final val ACTION_COLUMN_CONFIG = "actionColumn"
+  final val DEFAULT_ACTION_TYPE = IndexActionType.MERGE_OR_UPLOAD
 
   /**
    * Create an instance with options as local options

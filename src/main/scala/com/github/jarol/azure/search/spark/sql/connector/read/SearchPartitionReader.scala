@@ -9,16 +9,16 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.PartitionReader
 import org.apache.spark.sql.types.StructType
 
+import java.util
+
 class SearchPartitionReader(private val schema: StructType,
                             private val readConfig: ReadConfig,
                             private val searchPartition: SearchPartition)
   extends PartitionReader[InternalRow] {
 
   private lazy val documentConverter = DocumentToInternalRowConverter(schema, readConfig)
-  private lazy val searchResultIterator: java.util.Iterator[SearchResult] = ClientFactory.doSearch(
-      readConfig,
-      searchPartition.getSearchOptions
-    ).iterator()
+  private lazy val searchResultIterator: util.Iterator[SearchResult] = ClientFactory
+    .doSearch(readConfig, searchPartition.getSearchOptions).iterator()
 
   override def next(): Boolean = searchResultIterator.hasNext
 
