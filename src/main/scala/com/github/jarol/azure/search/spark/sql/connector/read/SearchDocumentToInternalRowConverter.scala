@@ -6,8 +6,13 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 
-case class DocumentToInternalRowConverter(private val schema: StructType,
-                                          private val readConfig: ReadConfig)
+import java.sql.Date
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Objects
+
+case class SearchDocumentToInternalRowConverter(private val schema: StructType,
+                                                private val readConfig: ReadConfig)
   extends (SearchDocument => InternalRow) {
 
   override def apply(v1: SearchDocument): InternalRow = {
@@ -22,6 +27,16 @@ case class DocumentToInternalRowConverter(private val schema: StructType,
           case DataTypes.DoubleType => obj.asInstanceOf[java.lang.Double]
           case DataTypes.FloatType => obj.asInstanceOf[java.lang.Float]
           case DataTypes.BooleanType => obj.asInstanceOf[java.lang.Boolean]
+          case DataTypes.DateType => (if (Objects.isNull(obj)) {
+            null
+          } else {
+            Date.valueOf(
+              LocalDateTime.parse(
+                obj.asInstanceOf[String],
+                DateTimeFormatter.ISO_DATE_TIME
+              ).toLocalDate
+            )
+          }).asInstanceOf[Date]
           case _ => obj
         }
     }

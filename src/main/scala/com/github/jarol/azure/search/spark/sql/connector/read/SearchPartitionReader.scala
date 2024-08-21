@@ -16,7 +16,7 @@ class SearchPartitionReader(private val schema: StructType,
                             private val searchPartition: SearchPartition)
   extends PartitionReader[InternalRow] {
 
-  private lazy val documentConverter = DocumentToInternalRowConverter(schema, readConfig)
+  private lazy val documentConverter = SearchDocumentToInternalRowConverter(schema, readConfig)
   private lazy val searchResultIterator: util.Iterator[SearchResult] = ClientFactory
     .doSearch(readConfig, searchPartition.getSearchOptions).iterator()
 

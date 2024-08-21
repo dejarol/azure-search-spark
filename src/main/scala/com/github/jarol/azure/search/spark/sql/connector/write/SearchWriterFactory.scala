@@ -13,7 +13,9 @@ class SearchWriterFactory(private val writeConfig: WriteConfig,
 
     new SearchDataWriter(
       writeConfig,
-      schema
+      schema,
+      partitionId,
+      taskId
     )
   }
 }
