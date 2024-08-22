@@ -83,4 +83,12 @@ object TypeAssertions {
     override def expectedCollection: Boolean = false
     override def expectedGeoPoint: Boolean = false
   }
+
+  case object GeoPoint extends SearchFieldTypeAssertion {
+    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isGeoPoint
+    override def expectedSimple: Boolean = false
+    override def expectedComplex: Boolean = false
+    override def expectedCollection: Boolean = false
+    override def expectedGeoPoint: Boolean = true
+  }
 }

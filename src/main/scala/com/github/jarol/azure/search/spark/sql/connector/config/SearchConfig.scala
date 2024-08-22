@@ -30,8 +30,12 @@ class SearchConfig(protected val localOptions: Map[String, String],
 
   final def get(key: String): Option[String] = {
 
-    localOptions.get(key).orElse {
-      globalOptions.get(key)
+    localOptions.collectFirst {
+      case (k, v) if k.equalsIgnoreCase(key) => v
+    }.orElse {
+      globalOptions.collectFirst {
+        case (k, v) if k.equalsIgnoreCase(key) => v
+      }
     }
   }
 

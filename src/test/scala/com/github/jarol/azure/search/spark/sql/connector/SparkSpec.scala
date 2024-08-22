@@ -1,8 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
-import org.apache.spark.sql.{DataFrame, Encoders, Row, SparkSession}
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, Encoders, Row, SparkSession}
 
 import scala.reflect.runtime.universe.TypeTag
 
@@ -12,8 +11,8 @@ trait SparkSpec
   protected final lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
     .appName(classOf[SparkSpec].getSimpleName)
-    .config(IOConfig.READ_PREFIX + IOConfig.END_POINT_CONFIG, "https://lohrwkpeacss01.search.windows.net")
-    .config(IOConfig.READ_PREFIX + IOConfig.API_KEY_CONFIG, "3F491488E774609119C10968C6D47634")
+    //.config(IOConfig.READ_PREFIX + IOConfig.END_POINT_CONFIG, "https://lohrwkpeacss01.search.windows.net")
+    //.config(IOConfig.READ_PREFIX + IOConfig.API_KEY_CONFIG, "3F491488E774609119C10968C6D47634")
     //.config("spark.sql.shuffle.partitions", "1")
     .getOrCreate()
 
@@ -23,9 +22,7 @@ trait SparkSpec
    * @return Spark schema that matches the case class model
    */
 
-  protected def schemaOfCaseClass[A <: Product: TypeTag]: StructType = {
-    Encoders.product[A].schema
-  }
+  protected def schemaOfCaseClass[A <: Product: TypeTag]: StructType = Encoders.product[A].schema
 
   /**
    * Create a [[DataFrame]] from a collection of case classes.

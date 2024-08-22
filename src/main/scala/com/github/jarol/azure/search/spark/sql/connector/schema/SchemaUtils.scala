@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
 import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
 
 import scala.util.matching.Regex
@@ -22,6 +22,13 @@ object SchemaUtils {
     SearchFieldDataType.SINGLE -> DataTypes.FloatType,
     SearchFieldDataType.BOOLEAN -> DataTypes.BooleanType,
     SearchFieldDataType.DATE_TIME_OFFSET -> DataTypes.TimestampType
+  )
+
+  protected[schema] final val GEO_POINT_DEFAULT_STRUCT: StructType = StructType(
+    Seq(
+      StructField("type", DataTypes.StringType),
+      StructField("coordinates", ArrayType(DataTypes.DoubleType))
+    )
   )
 
   /**
@@ -54,7 +61,15 @@ object SchemaUtils {
   }
 
   /**
-   * Safely extract the inner type of a collection type (if given type is a collection)
+   * Evaluate if a search field type is a geo point
+   * @param searchType search type to test
+   * @return true if the search type is a geo point
+   */
+
+  protected[schema] def isGeoPoint(searchType: SearchFieldDataType): Boolean = SearchFieldDataType.GEOGRAPHY_POINT.equals(searchType)
+
+  /**
+   * Safely extract the inner type of collection type (if given type is a collection)
    * @param searchType search type
    * @return a non-empty value if the input search type is a collection
    */
@@ -70,18 +85,18 @@ object SchemaUtils {
   }
 
   /**
-   * Extract the inner type of a collection type
+   * Extract the inner type of collection type
    * @param searchType search type
-   * @throws IllegalStateException if the given search type is not a collection type
+   * @throws AzureSparkException if the given search type is not a collection type
    * @return the inner collection type
    */
 
-  @throws[IllegalStateException]
+  @throws[AzureSparkException]
   protected[schema] def unsafelyExtractCollectionType(searchType: SearchFieldDataType): SearchFieldDataType = {
 
     safelyExtractCollectionType(searchType) match {
       case Some(value) => value
-      case None => throw new IllegalStateException(
+      case None => throw new AzureSparkException(
         f"Illegal state (a collection type is expected but no inner type could be found)"
       )
     }
@@ -90,9 +105,11 @@ object SchemaUtils {
   /**
    * Return the Spark equivalent [[DataType]] for a search field
    * @param searchField a search field
+   * @throws AzureSparkException if given search type is not supported
    * @return the equivalent Spark data type for given search field
    */
 
+  @throws[AzureSparkException]
   def sparkDataTypeOf(searchField: SearchField): DataType = {
 
     val searchType = searchField.getType
@@ -103,7 +120,9 @@ object SchemaUtils {
       // Extract collection inner type
       val collectionInnerType = unsafelyExtractCollectionType(searchType)
       ArrayType(
-        sparkDataTypeOf(new SearchField(null, collectionInnerType)),
+        sparkDataTypeOf(
+          new SearchField(null, collectionInnerType)
+        ),
         containsNull = true
       )
     } else if (isComplexType(searchType)) {
@@ -115,8 +134,10 @@ object SchemaUtils {
         .listToSeq(searchField.getFields)
         .map(asStructField)
       )
+    } else if (isGeoPoint(searchType)) {
+      GEO_POINT_DEFAULT_STRUCT
     } else {
-      throw new IllegalStateException(f"Unsupported datatype $searchType")
+      throw new AzureSparkException(f"Unsupported datatype $searchType")
     }
   }
 

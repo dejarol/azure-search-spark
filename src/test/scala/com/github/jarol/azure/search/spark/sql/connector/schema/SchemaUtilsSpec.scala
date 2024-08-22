@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec, JavaScalaConverters, SearchFieldFactory}
 import org.apache.spark.sql.types.{ArrayType, StructType}
 import org.scalatest.Inspectors
 
@@ -45,13 +45,18 @@ class SchemaUtilsSpec
 
           runTypeAssertion(TypeAssertions.Collection)
         }
+
+        it("is a geo point") {
+
+          runTypeAssertion(TypeAssertions.GeoPoint)
+        }
       }
 
       it("extract a collection inner type") {
 
         // Simple type
         SchemaUtils.safelyExtractCollectionType(SearchFieldDataType.STRING) shouldBe empty
-        an[IllegalStateException] shouldBe thrownBy {
+        an[AzureSparkException] shouldBe thrownBy {
           SchemaUtils.unsafelyExtractCollectionType(SearchFieldDataType.STRING)
         }
 
@@ -110,6 +115,13 @@ class SchemaUtilsSpec
               SchemaUtils.asStructField
             )
           )
+        }
+
+        it(" a geo point") {
+
+          SchemaUtils.sparkDataTypeOf(
+            createField("location", SearchFieldDataType.GEOGRAPHY_POINT)
+          ) shouldBe SchemaUtils.GEO_POINT_DEFAULT_STRUCT
         }
       }
 

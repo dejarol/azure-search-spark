@@ -1,29 +1,47 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.azure.core.util.Context
+import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
-import com.github.jarol.azure.search.spark.sql.connector.config.{IOConfig, ReadConfig}
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner
+import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
 
+import java.sql.{Date, Timestamp}
 import java.time.LocalDateTime
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
 
 class ReadSpec extends SparkSpec {
+
+  ignore("abc") {
+
+    val searchDocument = ClientFactory.doSearch(
+      new IOConfig {
+
+        override def getEndpoint: String = "https://searchsparkd01cs01.search.windows.net"
+        override def getAPIkey: String = "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR"
+        override def getIndex: String = "people"
+      },
+      new SearchOptions()
+    ).iterator().asScala.toSeq.head.getDocument(classOf[SearchDocument])
+
+    val a = 1
+  }
 
   it("a") {
 
     println(s"Read start time: ${LocalDateTime.now()}")
     val df = spark.read.format(SearchTableProvider.SHORT_NAME)
-      .option(IOConfig.INDEX_CONFIG, "1721203770598-personnel-list")
-      .option(ReadConfig.PARTITIONER_CONFIG, classOf[FacetedPartitioner].getName)
-      .option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG, "country")
-      .option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, spark.sparkContext.defaultParallelism)
+      .option(IOConfig.END_POINT_CONFIG, "https://searchsparkd01cs01.search.windows.net")
+      .option(IOConfig.API_KEY_CONFIG, "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR")
+      //.option(IOConfig.INDEX_CONFIG, "1721203770598-personnel-list")
+      .option(IOConfig.INDEX_CONFIG, "people")
+      //.schema(Encoders.product[ReadSpec.Person].schema)
+      //.option(ReadConfig.PARTITIONER_CONFIG, classOf[FacetedPartitioner].getName)
+      //.option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG, "country")
+      //.option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, spark.sparkContext.defaultParallelism)
       .load().cache()
 
     df.printSchema()
-    //df.show(false)
+    df.show(false)
     println(f"Number of partitions: ${df.rdd.getNumPartitions}, number of rows: ${df.count()}")
     println(s"Read end time: ${LocalDateTime.now()}")
 
@@ -55,7 +73,6 @@ class ReadSpec extends SparkSpec {
 
     println(s"Start time: ${LocalDateTime.now()}")
 
-     */
     val facet = "boh"
     val result = ClientFactory.searchClient(
       ReadConfig(
@@ -83,5 +100,14 @@ class ReadSpec extends SparkSpec {
         println(s"Failure at ${LocalDateTime.now()} (${exception.getMessage})")
       case Success(value) => println(s"Success at ${LocalDateTime.now()}")
     }
+
+     */
   }
+}
+
+object ReadSpec {
+
+  case class Person(id: String,
+                    creationDate: Date,
+                    lastModifiedDate: Timestamp)
 }
