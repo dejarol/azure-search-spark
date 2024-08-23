@@ -8,12 +8,10 @@ import org.apache.spark.sql.SparkSession
  * @param localOptions options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
  *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
  * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
- * @param usageMode usage mode
  */
 
 class SearchIOConfig(override protected val localOptions: Map[String, String],
-                     override protected val globalOptions: Map[String, String],
-                     protected val usageMode: UsageMode)
+                     override protected val globalOptions: Map[String, String])
   extends SearchConfig(localOptions, globalOptions)
     with IOConfig {
 

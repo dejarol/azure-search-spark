@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 class SearchConfigSpec
   extends BasicSpec {
 
-  private lazy val (k1, v1, k2, v2, k3, v3) = ("k1", "v1", "k2", "v2", "k3", "v3")
+  private lazy val (k1, v1, k2, v2, k3, v3) = ("key1", "value1", "key2", "value2", "key3", "value3")
   private lazy val keyPrefix = "some.key.prefix."
 
   /**
@@ -74,14 +74,16 @@ class SearchConfigSpec
 
           emptyConfig.get(k1) shouldBe empty
           configWithOptions.get(k1) shouldBe Some(v1)
+          configWithOptions.get(k1.toUpperCase) shouldBe Some(v1)
           configWithSparkOptions.get(k1) shouldBe Some(v1)
+          configWithSparkOptions.get(k1.toUpperCase) shouldBe Some(v1)
         }
 
         it("unsafely") {
 
-          (the [ConfigException] thrownBy {
+          a [ConfigException] shouldBe thrownBy {
             emptyConfig.unsafelyGet(k1)
-          }).getMessage should startWith (ConfigException.MISSING_REQUIRED_OPTION_PREFIX)
+          }
 
           configWithOptions.unsafelyGet(k1) shouldBe v1
           configWithSparkOptions.unsafelyGet(k1) shouldBe v1

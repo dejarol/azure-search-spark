@@ -16,10 +16,7 @@ class SearchIOConfigSpec
    * @return an instance of [[SearchIOConfig]]
    */
 
-  private def createConfig(m1: Map[String, String], m2: Map[String, String]): SearchIOConfig = {
-
-    new SearchIOConfig(m1, m2, UsageMode.WRITE)
-  }
+  private def createConfig(m1: Map[String, String], m2: Map[String, String]): SearchIOConfig = new SearchIOConfig(m1, m2)
 
   /**
    * Create a test [[SparkConf]], retrieve all configs related to a mode, and run assertions on retrieved result
@@ -71,14 +68,56 @@ class SearchIOConfigSpec
       describe("retrieve") {
         it("the azure endpoint") {
 
+          createConfig(
+            Map(IOConfig.END_POINT_CONFIG -> v1),
+            Map.empty
+          ).getEndpoint shouldBe v1
+
+          createConfig(
+            Map.empty,
+            Map(IOConfig.END_POINT_CONFIG -> v2),
+          ).getEndpoint shouldBe v2
+
+          createConfig(
+            Map(IOConfig.END_POINT_CONFIG -> v3),
+            Map(IOConfig.END_POINT_CONFIG -> v2),
+          ).getEndpoint shouldBe v3
         }
 
         it("the api key") {
 
+          createConfig(
+            Map(IOConfig.API_KEY_CONFIG -> v1),
+            Map.empty
+          ).getEndpoint shouldBe v1
+
+          createConfig(
+            Map.empty,
+            Map(IOConfig.API_KEY_CONFIG -> v2),
+          ).getEndpoint shouldBe v2
+
+          createConfig(
+            Map(IOConfig.API_KEY_CONFIG -> v3),
+            Map(IOConfig.API_KEY_CONFIG -> v2),
+          ).getEndpoint shouldBe v3
         }
 
         it("the index name") {
 
+          createConfig(
+            Map(IOConfig.INDEX_CONFIG -> v1),
+            Map.empty
+          ).getEndpoint shouldBe v1
+
+          createConfig(
+            Map.empty,
+            Map(IOConfig.INDEX_CONFIG -> v2),
+          ).getEndpoint shouldBe v2
+
+          createConfig(
+            Map(IOConfig.INDEX_CONFIG -> v3),
+            Map(IOConfig.INDEX_CONFIG -> v2),
+          ).getEndpoint shouldBe v3
         }
       }
     }

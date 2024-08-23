@@ -4,8 +4,8 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
+import org.apache.spark.sql.Encoders
 
-import java.sql.{Date, Timestamp}
 import java.time.LocalDateTime
 import scala.collection.JavaConverters._
 
@@ -34,7 +34,7 @@ class ReadSpec extends SparkSpec {
       .option(IOConfig.API_KEY_CONFIG, "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR")
       //.option(IOConfig.INDEX_CONFIG, "1721203770598-personnel-list")
       .option(IOConfig.INDEX_CONFIG, "people")
-      //.schema(Encoders.product[ReadSpec.Person].schema)
+      .schema(Encoders.product[Person].schema)
       //.option(ReadConfig.PARTITIONER_CONFIG, classOf[FacetedPartitioner].getName)
       //.option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG, "country")
       //.option(ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, spark.sparkContext.defaultParallelism)
@@ -107,7 +107,5 @@ class ReadSpec extends SparkSpec {
 
 object ReadSpec {
 
-  case class Person(id: String,
-                    creationDate: Date,
-                    lastModifiedDate: Timestamp)
+
 }

@@ -10,7 +10,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Sear
 
 case class ReadConfig(override protected val localOptions: Map[String, String],
                       override protected val globalOptions: Map[String, String])
-  extends SearchIOConfig(localOptions, globalOptions, UsageMode.READ) {
+  extends SearchIOConfig(localOptions, globalOptions) {
 
   /**
    * Get the filter to apply on index documents. The filter must follow OData syntax

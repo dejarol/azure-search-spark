@@ -5,8 +5,10 @@ import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
+import java.sql.Timestamp
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.time.{Instant, LocalDate, ZoneOffset}
 import java.util
 
 case class InternalRowToSearchDocumentConverter(private val schema: StructType)
@@ -26,10 +28,17 @@ case class InternalRowToSearchDocumentConverter(private val schema: StructType)
             case DataTypes.DoubleType => v1.getDouble(index)
             case DataTypes.FloatType => v1.getFloat(index)
             case DataTypes.BooleanType => v1.getBoolean(index)
-            case DataTypes.DateType => v1.getInt(index)
-            case DataTypes.TimestampType => OffsetDateTime.ofInstant(
-              Instant.EPOCH.plus(v1.getLong(index), ChronoUnit.MICROS),
-              ZoneId.of("UTC")
+            case DataTypes.DateType => LocalDate.ofEpochDay(v1.getInt(index))
+              .atTime(0, 0, 0)
+              .atOffset(ZoneOffset.UTC)
+              .format(DateTimeFormatter.ISO_DATE_TIME)
+            case DataTypes.TimestampType => Timestamp.from(
+              Instant.EPOCH.plus(v1.getLong(index),
+                ChronoUnit.MICROS)
+            ).toLocalDateTime.atOffset(
+              ZoneOffset.UTC
+            ).format(
+              DateTimeFormatter.ISO_DATE_TIME
             )
             case struct: StructType => apply(v1.getStruct(index, struct.size))
             case _ => throw new AzureSparkException("Unsupported type for write")

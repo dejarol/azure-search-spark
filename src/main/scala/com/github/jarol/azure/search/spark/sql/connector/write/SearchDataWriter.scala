@@ -6,6 +6,7 @@ import com.azure.search.documents.models.{IndexAction, IndexActionType}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 import org.apache.spark.sql.types.StructType
@@ -14,7 +15,8 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
                        private val schema: StructType,
                        private val partitionId: Int,
                        private val taskId: Long)
-  extends DataWriter[InternalRow] {
+  extends DataWriter[InternalRow]
+    with Logging {
 
   private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(schema)
   private lazy val maybeActionGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn.map {
@@ -41,7 +43,29 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
     actionsBatch = actionsBatch :+ indexAction
 
     // If the batch is full, write it
-    if (actionsBatch.size.equals(writeConfig.batchSize)) {
+    if (actionsBatch.size >= writeConfig.batchSize) {
+      writeDocuments()
+    }
+  }
+
+  override def commit(): WriterCommitMessage = {
+
+    writeDocuments()
+    SearchWriterCommitMessage(partitionId, taskId)
+  }
+
+  override def abort(): Unit = {}
+
+  override def close(): Unit = {}
+
+  private def writeDocuments(): Unit = {
+
+    if (actionsBatch.nonEmpty) {
+
+      log.info(s"Starting to write ${actionsBatch.size} document(s) to index ${writeConfig.getIndex}. " +
+        s"PartitionId: $partitionId, " +
+        s"TaskId: $taskId"
+      )
       val documentsBatch = new IndexDocumentsBatch[SearchDocument]
         .addActions(
           JavaScalaConverters.seqToList(actionsBatch)
@@ -51,10 +75,4 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
       actionsBatch = Seq.empty
     }
   }
-
-  override def commit(): WriterCommitMessage = SearchWriterCommitMessage(partitionId, taskId)
-
-  override def abort(): Unit = {}
-
-  override def close(): Unit = {}
 }

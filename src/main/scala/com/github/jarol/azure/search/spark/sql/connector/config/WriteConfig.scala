@@ -11,7 +11,7 @@ import com.github.jarol.azure.search.spark.sql.connector.utils.Generics
 
 case class WriteConfig(override protected val localOptions: Map[String, String],
                        override protected val globalOptions: Map[String, String])
-  extends SearchIOConfig(localOptions, globalOptions, UsageMode.WRITE) {
+  extends SearchIOConfig(localOptions, globalOptions) {
 
   /**
    * Get the batch size to be used for writing documents along partitions
@@ -63,7 +63,7 @@ object WriteConfig {
   final val DEFAULT_BATCH_SIZE_VALUE = 1000
   final val ACTION_CONFIG = "action"
   final val ACTION_COLUMN_CONFIG = "actionColumn"
-  final val DEFAULT_ACTION_TYPE = IndexActionType.MERGE_OR_UPLOAD
+  final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
 
   /**
    * Create an instance with options as local options

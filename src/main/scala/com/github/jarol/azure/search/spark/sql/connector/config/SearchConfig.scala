@@ -68,7 +68,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
 
     get(key) match {
       case Some(value) => value
-      case None => throw ConfigException.missingKey(key)
+      case None => throw new ConfigException(s"Missing required option $key")
     }
   }
 

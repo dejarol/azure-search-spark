@@ -18,7 +18,8 @@ class SearchPartitionReader(private val schema: StructType,
 
   private lazy val documentConverter = SearchDocumentToInternalRowConverter(schema)
   private lazy val searchResultIterator: util.Iterator[SearchResult] = ClientFactory
-    .doSearch(readConfig, searchPartition.getSearchOptions).iterator()
+    .doSearch(readConfig, searchPartition.getSearchOptions)
+    .iterator()
 
   override def next(): Boolean = searchResultIterator.hasNext
 
@@ -31,6 +32,5 @@ class SearchPartitionReader(private val schema: StructType,
   }
 
   override def close(): Unit = {
-
   }
 }

@@ -1,12 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.SearchDocument
+import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.lang
+import java.util
 import java.sql.Timestamp
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -25,7 +27,7 @@ object ReadConverters {
    */
 
   case object StringConverter
-    extends ReadNullableConverter[UTF8String] {
+    extends ReadTransformConverter[UTF8String] {
 
     override protected def transform(obj: Object): UTF8String = {
       UTF8String.fromString(obj.asInstanceOf[String])
@@ -76,7 +78,7 @@ object ReadConverters {
    */
 
   case object DateConverter
-    extends ReadNullableConverter[Integer] {
+    extends ReadTransformConverter[Integer] {
 
     override protected def transform(obj: Object): Integer = {
 
@@ -96,7 +98,7 @@ object ReadConverters {
    */
 
   case object TimestampConverter
-    extends ReadNullableConverter[lang.Long] {
+    extends ReadTransformConverter[lang.Long] {
 
     override protected def transform(obj: Object): lang.Long = {
 
@@ -117,18 +119,45 @@ object ReadConverters {
   }
 
   case class ArrayConverter(sparkElementType: DataType)
-    extends ReadNullableConverter[ArrayData] {
+    extends ReadTransformConverter[ArrayData] {
 
-    override protected def transform(obj: Object): ArrayData = ArrayData.toArrayData(Seq.empty[Any])
+    override protected def transform(obj: Object): ArrayData = {
+
+      val readConverter: ReadConverter[_] = converterForType(sparkElementType)
+      val arrayValues: Seq[Any] = JavaScalaConverters.listToSeq(
+        obj.asInstanceOf[util.List[Object]]
+      ).map {
+        readConverter(_)
+      }
+
+      ArrayData.toArrayData(arrayValues)
+    }
   }
 
   case class ComplexConverter(schema: StructType)
-    extends ReadNullableConverter[InternalRow] {
+    extends ReadTransformConverter[InternalRow] {
 
     override protected def transform(obj: Object): InternalRow = {
 
       val subDocument = new SearchDocument(obj.asInstanceOf[java.util.Map[String, Object]])
       SearchDocumentToInternalRowConverter(schema).apply(subDocument)
+    }
+  }
+
+  def converterForType(dType: DataType): ReadConverter[_] = {
+
+    dType match {
+      case DataTypes.StringType => ReadConverters.StringConverter
+      case DataTypes.IntegerType => ReadConverters.IntegerConverter
+      case DataTypes.LongType => ReadConverters.LongConverter
+      case DataTypes.DoubleType => ReadConverters.DoubleConverter
+      case DataTypes.FloatType => ReadConverters.FloatConverter
+      case DataTypes.BooleanType => ReadConverters.BooleanConverter
+      case DataTypes.DateType => ReadConverters.DateConverter
+      case DataTypes.TimestampType => ReadConverters.TimestampConverter
+      case struct: StructType => ReadConverters.ComplexConverter(struct)
+      case array: ArrayType => ReadConverters.ArrayConverter(array.elementType)
+      case _ => throw new AzureSparkException(s"No conversion defined for datatype ($dType)")
     }
   }
 }

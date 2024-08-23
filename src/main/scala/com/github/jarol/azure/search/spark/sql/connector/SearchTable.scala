@@ -11,14 +11,14 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import java.util
 
-class SearchTable(private val inferredSchema: StructType)
+class SearchTable(private val tableSchema: StructType)
   extends Table
     with SupportsRead
       with SupportsWrite {
 
   override def name(): String = "AzureSearchTable()"
 
-  override def schema(): StructType = inferredSchema
+  override def schema(): StructType = tableSchema
 
   override def capabilities(): util.Set[TableCapability] = {
 
@@ -31,7 +31,7 @@ class SearchTable(private val inferredSchema: StructType)
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
     new SearchScanBuilder(
-      inferredSchema,
+      schema(),
       ReadConfig(
         JavaScalaConverters.javaMapToScalaMap(options)
       )

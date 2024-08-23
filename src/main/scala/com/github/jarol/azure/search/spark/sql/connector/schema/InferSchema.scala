@@ -14,10 +14,9 @@ object InferSchema {
 
   /**
    * Infer the schema by reading options provided to a [[org.apache.spark.sql.DataFrameReader]]
-   *
    * @param options options passed to the reader via [[org.apache.spark.sql.DataFrameReader.option]] method
    * @throws InferSchemaException if schema cannot be inferred due to
-   *                              - a non existing index
+   *                              - a non-existing index
    *                              - a non-retrievable index (i.e. an index whose fields are all hidden)
    * @return the schema of target Search index
    */

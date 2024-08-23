@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.config;
 
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public class ConfigException
         extends AzureSparkException {
 
-    static final String MISSING_REQUIRED_OPTION_PREFIX = "Missing required option";
     static final String INVALID_VALUE_PREFIX = "Invalid value";
 
     /**
@@ -79,22 +77,5 @@ public class ConfigException
             String message
     ) {
         super(message);
-    }
-
-    /**
-     * Create an instance for a missing key
-     * @param key missing key
-     * @return an instance for marking a missing key
-     */
-
-    @Contract("_ -> new")
-    public static @NotNull ConfigException missingKey(
-            String key
-    ) {
-
-        return new ConfigException(
-                String.format("%s (%s)",
-                        MISSING_REQUIRED_OPTION_PREFIX, key)
-        );
     }
 }

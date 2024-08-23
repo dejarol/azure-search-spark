@@ -21,34 +21,34 @@ class ReadConvertersSpec
 
           // [a] non-null input
           val input = "hello"
-          val output = ReadConverters.StringConverter.toInternal(input)
+          val output = ReadConverters.StringConverter.apply(input)
           output shouldBe a [UTF8String]
           new String(output.getBytes, StandardCharsets.UTF_8) shouldBe input
 
           // [b] null input
-          ReadConverters.StringConverter.toInternal(null.asInstanceOf[String]) shouldBe null
+          ReadConverters.StringConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 
         it("dates") {
 
           // [a] non-null input
-          val output = ReadConverters.DateConverter.toInternal(currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME))
+          val output = ReadConverters.DateConverter.apply(currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME))
           output shouldBe a[Int]
           output shouldBe ChronoUnit.DAYS.between(Instant.EPOCH, currentInstant)
 
           // [b] null input
-          ReadConverters.DateConverter.toInternal(null.asInstanceOf[String]) shouldBe null
+          ReadConverters.DateConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 
         it("timestamps") {
 
           // [a] non-null input
-          val output = ReadConverters.TimestampConverter.toInternal(currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME))
+          val output = ReadConverters.TimestampConverter.apply(currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME))
           output shouldBe a[Long]
           output shouldBe ChronoUnit.MICROS.between(Instant.EPOCH, currentInstant)
 
           // [b] null input
-          ReadConverters.TimestampConverter.toInternal(null.asInstanceOf[String]) shouldBe null
+          ReadConverters.TimestampConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
       }
     }
