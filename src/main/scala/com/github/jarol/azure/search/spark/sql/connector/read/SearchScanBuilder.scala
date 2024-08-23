@@ -33,9 +33,9 @@ class SearchScanBuilder(private val schema: StructType,
 
 object SearchScanBuilder {
 
-  def allSchemaFieldsExists(schema: StructType,
-                            searchFields: Seq[SearchField],
-                            index: String): Either[SchemaCompatibilityException, Unit] = {
+  protected[read] def allSchemaFieldsExists(schema: Seq[StructField],
+                                            searchFields: Seq[SearchField],
+                                            index: String): Either[SchemaCompatibilityException, Unit] = {
 
     // Detect those schema fields whose name does not match with any search field
     val schemaFieldsNotExistingOnSearchIndex: Seq[StructField] = schema
@@ -64,9 +64,9 @@ object SearchScanBuilder {
     }
   }
 
-  def allDataTypesAreCompatible(schema: StructType,
-                                searchFields: Seq[SearchField],
-                                index: String): Either[SchemaCompatibilityException, Unit] = {
+  protected[read] def allDataTypesAreCompatible(schema: Seq[StructField],
+                                                searchFields: Seq[SearchField],
+                                                index: String): Either[SchemaCompatibilityException, Unit] = {
 
     val searchFieldsAndStructFields = searchFields.filter {
       searchField =>

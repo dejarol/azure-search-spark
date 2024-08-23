@@ -14,7 +14,7 @@ class WriteSpec
 
     val df = toDF(
       Seq(
-        Person("luca", Date.valueOf(LocalDate.now()), Timestamp.valueOf(LocalDateTime.now()), Some(32), "aaa")
+        Person("luca", Date.valueOf(LocalDate.now()), Timestamp.valueOf(LocalDateTime.now()), Some(32))
       )
     )
 
