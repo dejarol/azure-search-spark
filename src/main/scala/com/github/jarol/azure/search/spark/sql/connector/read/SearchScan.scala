@@ -10,5 +10,8 @@ class SearchScan(private val schema: StructType,
 
   override def readSchema(): StructType = schema
 
-  override def toBatch: Batch = new SearchBatch(schema, readConfig)
+  override def toBatch: Batch = {
+
+    new SearchBatch(schema, readConfig)
+  }
 }

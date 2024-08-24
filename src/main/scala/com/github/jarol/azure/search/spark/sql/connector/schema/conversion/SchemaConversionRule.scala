@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.types.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 trait SchemaConversionRule
   extends SearchSparkConversionRule {

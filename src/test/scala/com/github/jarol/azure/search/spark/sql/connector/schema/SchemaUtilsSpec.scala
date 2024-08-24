@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.types.conversion.{AtomicInferSchemaRules, GeoPointRule}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.{AtomicInferSchemaRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
 import org.apache.spark.sql.types.{ArrayType, StructType}
 import org.scalatest.Inspectors
@@ -18,7 +18,7 @@ class SchemaUtilsSpec
 
           forAll(AtomicInferSchemaRules.allRules().filter(_.useForSchemaInference())) {
             rule =>
-              SchemaUtils.sparkDataTypeOf(
+              SchemaUtils.inferSparkTypeFor(
                 createField("simple", rule.searchType())
               ) shouldBe rule.sparkType()
           }
@@ -27,7 +27,7 @@ class SchemaUtilsSpec
         it("a collection type") {
 
           val innerType = SearchFieldDataType.INT64
-          SchemaUtils.sparkDataTypeOf(
+          SchemaUtils.inferSparkTypeFor(
             createField(
               "collection",
               SearchFieldDataType.collection(
@@ -35,7 +35,7 @@ class SchemaUtilsSpec
               )
             )
           ) shouldBe ArrayType(
-            SchemaUtils.sparkDataTypeOf(
+            SchemaUtils.inferSparkTypeFor(
               createField("inner", innerType)
             )
           )
@@ -54,7 +54,7 @@ class SchemaUtilsSpec
             )
           )
 
-          SchemaUtils.sparkDataTypeOf(
+          SchemaUtils.inferSparkTypeFor(
             complexField
           ) shouldBe StructType(
             innerFields.map(
@@ -65,7 +65,7 @@ class SchemaUtilsSpec
 
         it(" a geo point") {
 
-          SchemaUtils.sparkDataTypeOf(
+          SchemaUtils.inferSparkTypeFor(
             createField("location", SearchFieldDataType.GEOGRAPHY_POINT)
           ) shouldBe GeoPointRule.sparkType
         }

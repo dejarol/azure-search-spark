@@ -1,7 +1,6 @@
-package com.github.jarol.azure.search.spark.sql.connector.types
+package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.types.implicits._
 
 /**
  * Assertion for testing the type of a [[SearchFieldDataType]]

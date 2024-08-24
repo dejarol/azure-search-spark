@@ -1,6 +1,6 @@
-package com.github.jarol.azure.search.spark.sql.connector.types.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
-object CompatibilityRules
+object SchemaConversionRules
   extends RuleSet {
 
   final def allRules(): Set[SearchSparkConversionRule] = Set(

@@ -14,7 +14,7 @@ class SearchPartitionReaderFactory(private val schema: StructType,
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
     partition match {
-      case sp: SearchPartition => new SearchPartitionReader(schema, readConfig, sp)
+      case sp: SearchPartition => new SearchPartitionReader(readConfig, sp)
       case _ => throw new AzureSparkException(s"Found a partition of type ${partition.getClass.getName}, " +
         s"expecting a ${classOf[SearchPartition].getName}")
     }

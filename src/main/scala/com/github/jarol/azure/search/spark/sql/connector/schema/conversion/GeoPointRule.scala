@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.types.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import org.apache.spark.sql.types._
@@ -15,4 +15,7 @@ case object GeoPointRule
 
   override def sparkType: DataType = GEO_POINT_DEFAULT_STRUCT
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
+  override def converter(): SparkInternalConverter = new SparkInternalConverter {
+    override def toSparkInternalObject(value: Any): AnyRef = 1
+  }
 }
