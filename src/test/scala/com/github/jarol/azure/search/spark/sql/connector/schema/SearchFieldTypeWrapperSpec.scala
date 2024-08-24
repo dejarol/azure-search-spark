@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicInferSchemaRules
-import com.github.jarol.azure.search.spark.sql.connector.types.{SearchFieldTypeAssertion, TypeAssertions}
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
 import org.scalatest.Inspectors
 
