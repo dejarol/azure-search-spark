@@ -1,8 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.types.conversion.{InferSchemaRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
-import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
+import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
 import scala.util.matching.Regex
 
@@ -14,30 +15,13 @@ object SchemaUtils {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 
-  protected[schema] final val SIMPLE_TYPES: Map[SearchFieldDataType, DataType] = Map(
-    SearchFieldDataType.STRING ->  DataTypes.StringType,
-    SearchFieldDataType.INT32 -> DataTypes.IntegerType,
-    SearchFieldDataType.INT64 -> DataTypes.LongType,
-    SearchFieldDataType.DOUBLE -> DataTypes.DoubleType,
-    SearchFieldDataType.SINGLE -> DataTypes.FloatType,
-    SearchFieldDataType.BOOLEAN -> DataTypes.BooleanType,
-    SearchFieldDataType.DATE_TIME_OFFSET -> DataTypes.TimestampType
-  )
-
-  protected[schema] final val GEO_POINT_DEFAULT_STRUCT: StructType = StructType(
-    Seq(
-      StructField("type", DataTypes.StringType),
-      StructField("coordinates", ArrayType(DataTypes.DoubleType))
-    )
-  )
-
   /**
    * Evaluate if a search field type is simple (e.g. string, number, boolean or date)
    * @param searchType search type to test
    * @return true if the search type is simple (e.g. either a string or a number or a boolean or a date)
    */
 
-  protected[schema] def isSimpleType(searchType: SearchFieldDataType): Boolean = SIMPLE_TYPES.contains(searchType)
+  protected[schema] def isAtomicType(searchType: SearchFieldDataType): Boolean = InferSchemaRules.existsRuleForType(searchType)
 
   /**
    * Evaluate if a search field type is complex
@@ -67,6 +51,7 @@ object SchemaUtils {
    */
 
   protected[schema] def isGeoPoint(searchType: SearchFieldDataType): Boolean = SearchFieldDataType.GEOGRAPHY_POINT.equals(searchType)
+
 
   /**
    * Safely extract the inner type of collection type (if given type is a collection)
@@ -113,8 +98,10 @@ object SchemaUtils {
   def sparkDataTypeOf(searchField: SearchField): DataType = {
 
     val searchType = searchField.getType
-    if (isSimpleType(searchType)) {
-      SIMPLE_TYPES(searchType)
+    if (isAtomicType(searchType)) {
+      InferSchemaRules
+        .unsafeRuleForType(searchType)
+        .sparkType
     } else if (isCollectionType(searchType)) {
 
       // Extract collection inner type
@@ -135,7 +122,7 @@ object SchemaUtils {
         .map(asStructField)
       )
     } else if (isGeoPoint(searchType)) {
-      GEO_POINT_DEFAULT_STRUCT
+      GeoPointRule.sparkType
     } else {
       throw new AzureSparkException(f"Unsupported datatype $searchType")
     }

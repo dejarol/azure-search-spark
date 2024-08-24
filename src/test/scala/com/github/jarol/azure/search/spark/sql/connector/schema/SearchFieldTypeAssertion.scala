@@ -53,7 +53,7 @@ object TypeAssertions {
   case object Simple
     extends SearchFieldTypeAssertion {
 
-    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isSimpleType
+    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isAtomicType
     override def expectedSimple: Boolean = true
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = false

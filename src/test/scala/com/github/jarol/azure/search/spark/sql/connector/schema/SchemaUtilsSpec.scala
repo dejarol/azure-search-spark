@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.types.conversion.{InferSchemaRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec, JavaScalaConverters, SearchFieldFactory}
 import org.apache.spark.sql.types.{ArrayType, StructType}
 import org.scalatest.Inspectors
@@ -18,7 +19,7 @@ class SchemaUtilsSpec
   private def runTypeAssertion(assertion: SearchFieldTypeAssertion): Unit = {
 
     // Check for simple types
-    forAll(SchemaUtils.SIMPLE_TYPES.keys) {
+    forAll(InferSchemaRules.allRules().map(_.searchType())) {
       k => assertion.predicate(k) shouldBe assertion.expectedSimple
     }
 
@@ -70,11 +71,11 @@ class SchemaUtilsSpec
       describe("resolve Spark dataType for") {
         it("a simple type") {
 
-          forAll(SchemaUtils.SIMPLE_TYPES.toSeq) {
-            case (k, v) =>
+          forAll(InferSchemaRules.allRules().filter(_.useForSchemaInference())) {
+            rule =>
               SchemaUtils.sparkDataTypeOf(
-                createField("simple", k)
-              ) shouldBe v
+                createField("simple", rule.searchType())
+              ) shouldBe rule.sparkType()
           }
         }
 
@@ -121,7 +122,7 @@ class SchemaUtilsSpec
 
           SchemaUtils.sparkDataTypeOf(
             createField("location", SearchFieldDataType.GEOGRAPHY_POINT)
-          ) shouldBe SchemaUtils.GEO_POINT_DEFAULT_STRUCT
+          ) shouldBe GeoPointRule.sparkType
         }
       }
 

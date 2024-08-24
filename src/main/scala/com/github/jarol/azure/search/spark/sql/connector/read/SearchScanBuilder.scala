@@ -1,12 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.types.conversion.{CompatibilityRules, InferSchemaRules}
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
-import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
+import org.apache.spark.sql.types.{StructField, StructType}
 
 class SearchScanBuilder(private val schema: StructType,
                         private val readConfig: ReadConfig)
@@ -80,10 +80,9 @@ object SearchScanBuilder {
     })
 
     val mismatchedFields = searchFieldsAndStructFields.filterNot {
-      case (searchField, structField) => SchemaUtils.sparkDataTypeOf(searchField)
-        .equals(structField.dataType) ||
-        (searchField.getType.equals(SearchFieldDataType.DATE_TIME_OFFSET) &&
-          structField.dataType.equals(DataTypes.DateType))
+      case (searchField, structField) =>
+        CompatibilityRules.existsForTypes(structField.dataType, searchField.getType) ||
+          InferSchemaRules.existsForTypes(structField.dataType, searchField.getType)
     }
 
     if (mismatchedFields.nonEmpty) {
