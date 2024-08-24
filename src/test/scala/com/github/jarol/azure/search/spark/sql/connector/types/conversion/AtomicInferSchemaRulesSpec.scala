@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
 import org.scalatest.Inspectors
 
-class AtomicTypeRulesSpec
+class AtomicInferSchemaRulesSpec
   extends BasicSpec
     with Inspectors {
 
@@ -58,14 +58,14 @@ class AtomicTypeRulesSpec
           forAll(atomicSearchTypes) {
             `type` =>
               noException shouldBe thrownBy {
-                AtomicInferSchemaRules.unsafeRuleForType(`type`)
+                AtomicInferSchemaRules.ruleForType(`type`)
               }
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
               an[AzureSparkException] shouldBe thrownBy {
-                AtomicInferSchemaRules.unsafeRuleForType(`type`)
+                AtomicInferSchemaRules.ruleForType(`type`)
               }
           }
         }

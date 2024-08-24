@@ -85,7 +85,7 @@ object SearchScanBuilder {
     val mismatchedFields = searchFieldsAndStructFields.filterNot {
       case (searchField, structField) =>
         SchemaUtils.sparkDataTypeOf(searchField).equals(structField.dataType) ||
-          CompatibilityRules.existsForTypes(structField.dataType, searchField.getType)
+          CompatibilityRules.existsRuleForTypes(structField.dataType, searchField.getType)
     }
 
     if (mismatchedFields.nonEmpty) {

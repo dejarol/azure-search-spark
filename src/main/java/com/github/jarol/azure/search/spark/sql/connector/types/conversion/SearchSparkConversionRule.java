@@ -10,4 +10,6 @@ public interface SearchSparkConversionRule {
     SearchFieldDataType searchType();
 
     boolean useForSchemaInference();
+
+    boolean useForSchemaConversion();
 }

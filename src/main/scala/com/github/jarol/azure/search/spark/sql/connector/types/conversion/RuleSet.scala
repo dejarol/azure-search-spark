@@ -22,5 +22,5 @@ trait RuleSet {
     }
   }
 
-  final def existsForTypes(spark: DataType, search: SearchFieldDataType): Boolean = safeRuleForTypes(spark, search).isDefined
+  final def existsRuleForTypes(spark: DataType, search: SearchFieldDataType): Boolean = safeRuleForTypes(spark, search).isDefined
 }

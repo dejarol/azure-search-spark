@@ -25,7 +25,7 @@ object SchemaUtils {
     val searchType = searchField.getType
     if (searchType.isAtomic) {
       AtomicInferSchemaRules
-        .unsafeRuleForType(searchType)
+        .ruleForType(searchType)
         .sparkType
     } else if (searchType.isCollection) {
 
@@ -38,9 +38,7 @@ object SchemaUtils {
       )
     } else if (searchType.isComplex) {
 
-      // Extract subfields,
-      // convert them into StructFields
-      // and create a StructType
+      // Extract subfields, convert them into StructFields and create a StructType
       StructType(
         JavaScalaConverters
           .listToSeq(searchField.getFields)

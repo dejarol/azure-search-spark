@@ -95,7 +95,7 @@ object AtomicInferSchemaRules
    */
 
   @throws[AzureSparkException]
-  final def unsafeRuleForType(`type`: SearchFieldDataType): SearchSparkConversionRule = {
+  final def ruleForType(`type`: SearchFieldDataType): SearchSparkConversionRule = {
 
     safeRuleForType(`type`) match {
       case Some(value) => value
