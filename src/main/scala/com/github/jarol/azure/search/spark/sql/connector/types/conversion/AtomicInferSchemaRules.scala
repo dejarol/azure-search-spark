@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
-object InferSchemaRules
+object AtomicInferSchemaRules
   extends RuleSet {
 
   private case object StringRule

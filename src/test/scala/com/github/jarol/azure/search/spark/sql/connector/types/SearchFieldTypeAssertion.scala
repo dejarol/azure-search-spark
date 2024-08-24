@@ -1,6 +1,7 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema
+package com.github.jarol.azure.search.spark.sql.connector.types
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.types.implicits._
 
 /**
  * Assertion for testing the type of a [[SearchFieldDataType]]
@@ -53,7 +54,7 @@ object TypeAssertions {
   case object Simple
     extends SearchFieldTypeAssertion {
 
-    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isAtomicType
+    override def predicate: SearchFieldDataType => Boolean = _.isAtomic
     override def expectedSimple: Boolean = true
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = false
@@ -65,7 +66,7 @@ object TypeAssertions {
    */
 
   case object Collection extends SearchFieldTypeAssertion {
-    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isCollectionType
+    override def predicate: SearchFieldDataType => Boolean = _.isCollection
     override def expectedSimple: Boolean = false
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = true
@@ -77,7 +78,7 @@ object TypeAssertions {
    */
 
   case object Complex extends SearchFieldTypeAssertion {
-    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isComplexType
+    override def predicate: SearchFieldDataType => Boolean = _.isComplex
     override def expectedSimple: Boolean = false
     override def expectedComplex: Boolean = true
     override def expectedCollection: Boolean = false
@@ -85,7 +86,7 @@ object TypeAssertions {
   }
 
   case object GeoPoint extends SearchFieldTypeAssertion {
-    override def predicate: SearchFieldDataType => Boolean = SchemaUtils.isGeoPoint
+    override def predicate: SearchFieldDataType => Boolean = _.isGeoPoint
     override def expectedSimple: Boolean = false
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = false

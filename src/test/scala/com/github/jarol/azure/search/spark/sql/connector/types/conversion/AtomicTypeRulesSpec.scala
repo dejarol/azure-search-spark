@@ -24,18 +24,18 @@ class AtomicTypeRulesSpec
     SearchFieldDataType.GEOGRAPHY_POINT
   )
 
-  describe(`object`[InferSchemaRules.type ]) {
+  describe(`object`[AtomicInferSchemaRules.type ]) {
     describe(SHOULD) {
       it("evaluate if an inference rule exists for a search atomic type") {
 
         forAll(atomicSearchTypes) {
           `type` =>
-            InferSchemaRules.existsRuleForType(`type`) shouldBe true
+            AtomicInferSchemaRules.existsRuleForType(`type`) shouldBe true
         }
 
         forAll(nonAtomicTypes) {
           `type` =>
-            InferSchemaRules.existsRuleForType(`type`) shouldBe false
+            AtomicInferSchemaRules.existsRuleForType(`type`) shouldBe false
         }
       }
 
@@ -44,12 +44,12 @@ class AtomicTypeRulesSpec
 
           forAll(atomicSearchTypes) {
             `type` =>
-              InferSchemaRules.safeRuleForType(`type`) shouldBe defined
+              AtomicInferSchemaRules.safeRuleForType(`type`) shouldBe defined
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
-              InferSchemaRules.safeRuleForType(`type`) shouldBe empty
+              AtomicInferSchemaRules.safeRuleForType(`type`) shouldBe empty
           }
         }
 
@@ -58,14 +58,14 @@ class AtomicTypeRulesSpec
           forAll(atomicSearchTypes) {
             `type` =>
               noException shouldBe thrownBy {
-                InferSchemaRules.unsafeRuleForType(`type`)
+                AtomicInferSchemaRules.unsafeRuleForType(`type`)
               }
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
               an[AzureSparkException] shouldBe thrownBy {
-                InferSchemaRules.unsafeRuleForType(`type`)
+                AtomicInferSchemaRules.unsafeRuleForType(`type`)
               }
           }
         }

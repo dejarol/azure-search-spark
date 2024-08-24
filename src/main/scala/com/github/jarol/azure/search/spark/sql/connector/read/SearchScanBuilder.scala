@@ -4,7 +4,8 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.types.conversion.{CompatibilityRules, InferSchemaRules}
+import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.types.conversion.CompatibilityRules
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.{StructField, StructType}
 
@@ -68,6 +69,7 @@ object SearchScanBuilder {
                                                 searchFields: Seq[SearchField],
                                                 index: String): Either[SchemaCompatibilityException, Unit] = {
 
+    // Zip search fields with their equivalent struct fields
     val searchFieldsAndStructFields = searchFields.filter {
       searchField =>
         schema.exists {
@@ -79,10 +81,11 @@ object SearchScanBuilder {
       _.name
     })
 
+    // Detect those tuples where there's a datatype mismatch
     val mismatchedFields = searchFieldsAndStructFields.filterNot {
       case (searchField, structField) =>
-        CompatibilityRules.existsForTypes(structField.dataType, searchField.getType) ||
-          InferSchemaRules.existsForTypes(structField.dataType, searchField.getType)
+        SchemaUtils.sparkDataTypeOf(searchField).equals(structField.dataType) ||
+          CompatibilityRules.existsForTypes(structField.dataType, searchField.getType)
     }
 
     if (mismatchedFields.nonEmpty) {
