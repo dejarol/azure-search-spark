@@ -1,9 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchField
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion._
-import org.apache.spark.sql.types.{DataType, StructField, StructType}
+import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
+import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
 /**
  * Utilities for inferring the schema of a SearchIndex
@@ -12,40 +12,40 @@ import org.apache.spark.sql.types.{DataType, StructField, StructType}
 object SchemaUtils {
 
   /**
-   * Return the inferred Spark equivalent [[DataType]] for a search field
-   * @param searchField a search field
-   * @return the equivalent Spark data type for given search field
-   */
-
-  def safelyGetInferenceRuleFor(searchField: SearchField): Option[SearchSparkConversionRule] = {
-
-    val searchType = searchField.getType
-    if (searchType.isAtomic) {
-      Some(AtomicInferSchemaRules.ruleForType(searchType))
-    } else if (searchType.isCollection) {
-      // Extract collection inner type
-      Some(ArrayConversionRule(searchType.unsafelyExtractCollectionType))
-    } else if (searchType.isComplex) {
-      // Create a complex rule by extracting sub fields
-      Some(ComplexConversionRule(searchField.getFields))
-    } else if (searchType.isGeoPoint) {
-      Some(GeoPointRule)
-    } else None
-  }
-
-  /**
-   * Return the inferred Spark equivalent [[DataType]] for a search field
+   * Return the Spark equivalent [[DataType]] for a search field
    * @param searchField a search field
    * @throws AzureSparkException if given search type is not supported
    * @return the equivalent Spark data type for given search field
    */
 
   @throws[AzureSparkException]
-  def inferSparkTypeFor(searchField: SearchField): DataType = {
+  final def inferSparkTypeOf(searchField: SearchField): DataType = {
 
-    safelyGetInferenceRuleFor(searchField) match {
-      case Some(value) => value.sparkType()
-      case None => throw new AzureSparkException(f"Unsupported datatype ${searchField.getType}")
+    val searchType = searchField.getType
+    if (searchType.isAtomic) {
+      AtomicInferSchemaRules.unsafeInferredTypeOf(searchType)
+    } else if (searchType.isCollection) {
+
+      // Extract collection inner type
+      ArrayType(
+        inferSparkTypeOf(
+          new SearchField(null, searchType.unsafelyExtractCollectionType)
+        ),
+        containsNull = true
+      )
+    } else if (searchType.isComplex) {
+
+      // Extract subfields,
+      // convert them into StructFields
+      // and create a StructType
+      StructType(
+        JavaScalaConverters.listToSeq(searchField.getFields)
+          .map(asStructField)
+      )
+    } else if (searchType.isGeoPoint) {
+      GeoPointRule.sparkType
+    } else {
+      throw new AzureSparkException(f"Unsupported datatype $searchType")
     }
   }
 
@@ -59,7 +59,7 @@ object SchemaUtils {
 
     StructField(
       searchField.getName,
-      inferSparkTypeFor(searchField),
+      inferSparkTypeOf(searchField),
       nullable = true
     )
   }
@@ -77,15 +77,17 @@ object SchemaUtils {
     )
   }
 
-  def searchFieldCompatibleWith(field: SearchField, f: StructField): Boolean = {
+  def areCompatible(first: DataType, second: DataType): Boolean = {
 
-    val sameName = field.getName.equalsIgnoreCase(f.name)
-    val compatibleDataType = safelyGetInferenceRuleFor(field).exists {
-      _.sparkType().equals(f.dataType)
-    } || SchemaConversionRules.existsRuleForTypes(
-      f.dataType, field.getType
-    )
-
-    sameName && compatibleDataType
+    (first, second) match {
+      case (f: ArrayType, s: ArrayType) => areCompatible(f.elementType, s.elementType)
+      case (f: StructType, s: StructType) => f.size.equals(s.size) &&
+        f.sortBy(_.name).zip(s.sortBy(_.name)).forall {
+          case (left, right) =>
+            left.name.equalsIgnoreCase(right.name) &&
+              areCompatible(left.dataType, right.dataType)
+        }
+      case _ => first.equals(second)
+    }
   }
 }

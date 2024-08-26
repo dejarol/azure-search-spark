@@ -2,23 +2,22 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicInferSchemaRules
 
 import scala.util.matching.Regex
 
 /**
- * Wrapper for adding utility methods to a [[SearchFieldDataType]]
- * @param `type` search data type
+ * A set of utility methods for a [[SearchFieldDataType]]
+ * @param searchType search data type
  */
 
-class SearchFieldTypeWrapper(private val `type`: SearchFieldDataType) {
+class SearchFieldTypeOperations(private val searchType: SearchFieldDataType) {
 
   /**
    * Return tru if this type is atomic (i.e. string, number, boolean or date)
    * @return true for atomic types
    */
 
-  def isAtomic: Boolean = AtomicInferSchemaRules.existsRuleForType(`type`)
+  def isAtomic: Boolean = SearchFieldTypeOperations.ATOMIC_TYPES.contains(searchType)
 
   /**
    * Return true if this type is a collection
@@ -27,8 +26,8 @@ class SearchFieldTypeWrapper(private val `type`: SearchFieldDataType) {
 
   def isCollection: Boolean = {
 
-    SearchFieldTypeWrapper.COLLECTION_PATTERN
-      .findFirstMatchIn(`type`.toString)
+    SearchFieldTypeOperations.COLLECTION_PATTERN
+      .findFirstMatchIn(searchType.toString)
       .isDefined
   }
 
@@ -37,14 +36,14 @@ class SearchFieldTypeWrapper(private val `type`: SearchFieldDataType) {
    * @return true for complex types
    */
 
-  def isComplex: Boolean = `type`.equals(SearchFieldDataType.COMPLEX)
+  def isComplex: Boolean = searchType.equals(SearchFieldDataType.COMPLEX)
 
   /**
    * Evaluate if this search field type is [[SearchFieldDataType.GEOGRAPHY_POINT]]
    * @return true if the search type is a geo point
    */
 
-  def isGeoPoint: Boolean = `type`.equals(SearchFieldDataType.GEOGRAPHY_POINT)
+  def isGeoPoint: Boolean = searchType.equals(SearchFieldDataType.GEOGRAPHY_POINT)
 
   /**
    * Safely extract the inner type of this instance (if it's collection)
@@ -53,8 +52,8 @@ class SearchFieldTypeWrapper(private val `type`: SearchFieldDataType) {
 
   def safelyExtractCollectionType: Option[SearchFieldDataType] = {
 
-   SearchFieldTypeWrapper.COLLECTION_PATTERN
-      .findFirstMatchIn(`type`.toString)
+   SearchFieldTypeOperations.COLLECTION_PATTERN
+      .findFirstMatchIn(searchType.toString)
       .map {
         regexMatch =>
           SearchFieldDataType.fromString(regexMatch.group(1))
@@ -72,14 +71,22 @@ class SearchFieldTypeWrapper(private val `type`: SearchFieldDataType) {
 
     safelyExtractCollectionType match {
       case Some(value) => value
-      case None => throw new AzureSparkException(
-        f"Illegal state (a collection type is expected but no inner type could be found)"
-      )
+      case None => throw new AzureSparkException(f"Search type $searchType is not a collection")
     }
   }
 }
 
-private object SearchFieldTypeWrapper {
+private object SearchFieldTypeOperations {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
+
+  protected[schema] val ATOMIC_TYPES: Set[SearchFieldDataType] = Set(
+    SearchFieldDataType.STRING,
+    SearchFieldDataType.INT32,
+    SearchFieldDataType.INT64,
+    SearchFieldDataType.DOUBLE,
+    SearchFieldDataType.SINGLE,
+    SearchFieldDataType.BOOLEAN,
+    SearchFieldDataType.DATE_TIME_OFFSET
+  )
 }

@@ -15,5 +15,5 @@ trait SearchFieldFactory {
    * @return a search field
    */
 
-  protected final def createField(name: String, `type`: SearchFieldDataType): SearchField = new SearchField(name, `type`)
+  protected final def createSearchField(name: String, `type`: SearchFieldDataType): SearchField = new SearchField(name, `type`)
 }

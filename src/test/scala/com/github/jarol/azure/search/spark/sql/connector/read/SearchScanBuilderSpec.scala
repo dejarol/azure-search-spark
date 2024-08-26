@@ -14,7 +14,7 @@ class SearchScanBuilderSpec
   private lazy val sparkStringField = StructField(name, DataTypes.StringType)
   private lazy val sparkIntField = StructField(id, DataTypes.IntegerType)
   private lazy val sparkDateField = StructField(date, DataTypes.DateType)
-  private lazy val searchStringField = createField(sparkStringField.name, SearchFieldDataType.STRING)
+  private lazy val searchStringField = createSearchField(sparkStringField.name, SearchFieldDataType.STRING)
 
   describe(`object`[SearchScanBuilder]) {
     describe(SHOULD) {
@@ -43,7 +43,7 @@ class SearchScanBuilderSpec
             SearchScanBuilder.allDataTypesAreCompatible(
               Seq(sparkDateField),
               Seq(
-                createField(sparkDateField.name, SearchFieldDataType.DATE_TIME_OFFSET)
+                createSearchField(sparkDateField.name, SearchFieldDataType.DATE_TIME_OFFSET)
               ),
               index
             ) shouldBe 'right
@@ -63,7 +63,7 @@ class SearchScanBuilderSpec
           SearchScanBuilder.allSchemaFieldsExists(
             Seq(sparkStringField, sparkIntField),
             Seq(
-              createField(sparkStringField.name, SearchFieldDataType.STRING)
+              createSearchField(sparkStringField.name, SearchFieldDataType.STRING)
             ),
             index
           ) shouldBe 'left
@@ -74,7 +74,7 @@ class SearchScanBuilderSpec
           SearchScanBuilder.allDataTypesAreCompatible(
             Seq(sparkStringField),
             Seq(
-              createField(sparkStringField.name, SearchFieldDataType.INT32)
+              createSearchField(sparkStringField.name, SearchFieldDataType.INT32)
             ),
             index
           ) shouldBe 'left

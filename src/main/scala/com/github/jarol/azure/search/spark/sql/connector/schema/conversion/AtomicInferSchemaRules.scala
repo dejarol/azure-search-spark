@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 object AtomicInferSchemaRules
-  extends RuleSet {
+  extends Set[InferSchemaRule] {
 
   private case object StringRule
     extends InferSchemaRule {
@@ -56,7 +56,7 @@ object AtomicInferSchemaRules
     override def converter(): SparkInternalConverter = AtomicTypeConverters.DateTimeToTimestampConverter
   }
 
-  private lazy val ALL_INFERENCE_RULES: Set[SearchSparkConversionRule] = Set(
+  private lazy val ALL_INFERENCE_RULES: Set[InferSchemaRule] = Set(
     StringRule,
     Int32Rule,
     Int64Rule,
@@ -65,48 +65,36 @@ object AtomicInferSchemaRules
     BooleanRule,
     DateTimeToTimestampRule
   )
+  override def contains(elem: InferSchemaRule): Boolean = ALL_INFERENCE_RULES.contains(elem)
+
+  override def +(elem: InferSchemaRule): Set[InferSchemaRule] = ALL_INFERENCE_RULES + elem
+
+  override def -(elem: InferSchemaRule): Set[InferSchemaRule] = ALL_INFERENCE_RULES - elem
+
+  override def iterator: Iterator[InferSchemaRule] = ALL_INFERENCE_RULES.iterator
 
   /**
-   * Return all the defined atomic rules
-   * @return all atomic rules
+   * Safely retrieve the inferred Spark dataType of a SearchField.
+   *
+   * It will return a non-empty Option for atomic fields (i.e. strings, numbers, boolean and dates)
+   * for which an [[InferSchemaRule]] with same search type exists
+   * @param `type` search field
+   * @return a non-empty Option if the field is atomic and there exists an infer schema rule
    */
 
-  final def allRules(): Set[SearchSparkConversionRule] = ALL_INFERENCE_RULES
+  final def safeInferredTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
 
-  /**
-   * Safely retrieve the predefined [[SearchSparkConversionRule]] for inferring an atomic search type
-   * @param `type` search type
-   * @return an empty Option if the search type is not atomic, a defined Option otherwise
-   */
-
-  final def safeRuleForType(`type`: SearchFieldDataType): Option[SearchSparkConversionRule] = {
-
-    collectFirst {
-      rule => rule.searchType().equals(`type`)
+    ALL_INFERENCE_RULES.collectFirst {
+      case rule if rule.searchType().equals(`type`) =>
+        rule.sparkType()
     }
   }
 
-  /**
-   * Evaluate if an inference rule for a search type exists
-   * @param `type` search type
-   * @return true if there exists an inference rule for given search type atomic
-   */
+  final def unsafeInferredTypeOf(`type`: SearchFieldDataType): DataType = {
 
-  final def existsRuleForType(`type`: SearchFieldDataType): Boolean = safeRuleForType(`type`).isDefined
-
-  /**
-   * Unsafely get the inference rule for a search type
-   * @param `type` search type
-   * @throws AzureSparkException if given search type is not atomic, or an inference rule could not be found
-   * @return the inference rule related to given search type
-   */
-
-  @throws[AzureSparkException]
-  final def ruleForType(`type`: SearchFieldDataType): SearchSparkConversionRule = {
-
-    safeRuleForType(`type`) match {
+    safeInferredTypeOf(`type`) match {
       case Some(value) => value
-      case None => throw new AzureSparkException(s"Could not get a conversion rule for type ${`type`}")
+      case None => throw new AzureSparkException(s"Could not find equivalent atomic type for SearchType ${`type`}")
     }
   }
 }

@@ -15,7 +15,10 @@ case object GeoPointRule
 
   override def sparkType: DataType = GEO_POINT_DEFAULT_STRUCT
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
-  override def converter(): SparkInternalConverter = new SparkInternalConverter {
-    override def toSparkInternalObject(value: Any): AnyRef = 1
-  }
+  override def converter(): SparkInternalConverter = ComplexConverter(
+    Map(
+      "type" -> AtomicTypeConverters.StringConverter,
+      "coordinates" -> ArrayConverter(SearchFieldDataType.DOUBLE)
+    )
+  )
 }

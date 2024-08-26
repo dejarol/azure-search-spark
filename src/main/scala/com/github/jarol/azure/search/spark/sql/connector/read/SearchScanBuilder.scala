@@ -5,6 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.SchemaConversionRules
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.{StructField, StructType}
 
@@ -38,12 +39,11 @@ object SearchScanBuilder {
                                             index: String): Either[SchemaCompatibilityException, Unit] = {
 
     // Detect those schema fields whose name does not match with any search field
-    val schemaFieldsNotExistingOnSearchIndex: Seq[StructField] = schema
-      .filterNot {
-        structField =>
-          searchFields.exists {
-            searchField =>
-              structField.name.equalsIgnoreCase(searchField.getName)
+    val schemaFieldsNotExistingOnSearchIndex: Seq[StructField] = schema.filterNot {
+      structField =>
+        searchFields.exists {
+          searchField =>
+            structField.name.equalsIgnoreCase(searchField.getName)
       }
     }
 
@@ -82,7 +82,8 @@ object SearchScanBuilder {
 
     // Detect those tuples where there's a datatype mismatch
     val mismatchedFields = searchFieldsAndStructFields.filterNot {
-      case (searchField, structField) => SchemaUtils.searchFieldCompatibleWith(searchField, structField)
+      case (searchField, structField) =>
+        areCompatible(searchField, structField)
     }
 
     if (mismatchedFields.nonEmpty) {
@@ -97,5 +98,16 @@ object SearchScanBuilder {
     } else {
       Right()
     }
+  }
+
+  protected[read] def areCompatible(searchField: SearchField, structField: StructField): Boolean = {
+
+    SchemaUtils.areCompatible(
+      SchemaUtils.inferSparkTypeOf(searchField),
+      structField.dataType
+    ) || SchemaConversionRules.existsRuleFor(
+      searchField.getType,
+      structField.dataType
+    )
   }
 }

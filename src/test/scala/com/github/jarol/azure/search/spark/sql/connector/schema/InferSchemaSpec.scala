@@ -9,10 +9,10 @@ class InferSchemaSpec
     with SearchFieldFactory {
 
   private lazy val (f1, f2, f3) = ("stringField", "intField", "dateField")
-  private lazy val hiddenField = createField("hidden", SearchFieldDataType.STRING).setHidden(true)
-  private lazy val stringField = createField(f1, SearchFieldDataType.STRING).setHidden(false)
-  private lazy val intField = createField(f2, SearchFieldDataType.INT32).setHidden(false)
-  private lazy val dateField = createField(f3, SearchFieldDataType.DATE_TIME_OFFSET).setHidden(false)
+  private lazy val hiddenField = createSearchField("hidden", SearchFieldDataType.STRING).setHidden(true)
+  private lazy val stringField = createSearchField(f1, SearchFieldDataType.STRING).setHidden(false)
+  private lazy val intField = createSearchField(f2, SearchFieldDataType.INT32).setHidden(false)
+  private lazy val dateField = createSearchField(f3, SearchFieldDataType.DATE_TIME_OFFSET).setHidden(false)
 
   private lazy val searchFields: Seq[SearchField] = Seq(
     hiddenField,

@@ -15,7 +15,7 @@ case class ArrayConverter(private val internal: SearchFieldDataType)
       case SearchFieldDataType.INT64 => castAsSeqOf[java.lang.Long](value)
       case SearchFieldDataType.DOUBLE => castAsSeqOf[java.lang.Double](value)
     }
-    ArrayData.toArrayData(values: _*)
+    ArrayData.toArrayData(values)
   }
 
   private def castAsSeqOf[T](value: Any): Seq[T] = {

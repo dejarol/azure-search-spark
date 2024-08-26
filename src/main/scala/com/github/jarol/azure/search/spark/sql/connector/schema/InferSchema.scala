@@ -49,6 +49,15 @@ object InferSchema {
     }
   }
 
+  /**
+   * Infer the schema of an existing Search index
+   * @param name index name
+   * @param searchFields index search fields
+   * @param select fields to select (specified by the user)
+   * @throws InferSchemaException if none of the search fields is retrievable
+   * @return the equivalent schema of an index
+   */
+
   @throws[InferSchemaException]
   protected[schema] def inferSchemaForExistingIndex(name: String,
                                                     searchFields: Seq[SearchField],
@@ -70,9 +79,7 @@ object InferSchema {
   }
 
   /**
-   * Filter a collection of Search fields by
-   *  - keeping only visible fields
-   *  - optionally selecting fields within a selection list
+   * Filter a collection of Search fields by selecting fields within a selection list
    * @param allFields all index fields
    * @param selection field names to select
    * @throws ConfigException if none of the selection fields exist in the search index

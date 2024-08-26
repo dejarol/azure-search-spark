@@ -1,13 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicInferSchemaRules
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
 import org.scalatest.Inspectors
 
 import scala.language.implicitConversions
 
-class SearchFieldTypeWrapperSpec
+class SearchFieldTypeOperationsSpec
   extends BasicSpec
     with Inspectors {
 
@@ -19,7 +18,7 @@ class SearchFieldTypeWrapperSpec
   private def runTypeAssertion(assertion: SearchFieldTypeAssertion): Unit = {
 
     // Check for simple types
-    forAll(AtomicInferSchemaRules.allRules().map(_.searchType())) {
+    forAll(SearchFieldTypeOperations.ATOMIC_TYPES) {
       k => assertion.predicate(k) shouldBe assertion.expectedSimple
     }
 
@@ -29,7 +28,7 @@ class SearchFieldTypeWrapperSpec
     assertion.predicate(SearchFieldDataType.GEOGRAPHY_POINT) shouldBe assertion.expectedGeoPoint
   }
 
-  describe(anInstanceOf[SearchFieldTypeWrapper]) {
+  describe(anInstanceOf[SearchFieldTypeOperations]) {
     describe(SHOULD) {
       describe("evaluate if a search field") {
         it("is simple") {

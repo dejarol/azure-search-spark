@@ -82,7 +82,7 @@ class FacetedPartitionerSpec
 
           val partitions: Seq[SearchPartition] = JavaScalaConverters.listToSeq(
             FacetedPartitioner.generatePartitions(
-              createField(fieldName, fieldType),
+              createSearchField(fieldName, fieldType),
               values,
               createReadConfig(emptyFilter, None)
             )
@@ -114,7 +114,7 @@ class FacetedPartitionerSpec
 
           val partitions: Seq[SearchPartition] = JavaScalaConverters.listToSeq(
             FacetedPartitioner.generatePartitions(
-              createField(fieldName, fieldType),
+              createSearchField(fieldName, fieldType),
               values,
               createReadConfig(Some(nonEmptyFilter), Some(selection))
             )
