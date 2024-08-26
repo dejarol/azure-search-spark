@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.SchemaConversionRules
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicSchemaConversionRules
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.{StructField, StructType}
 
@@ -105,7 +105,7 @@ object SearchScanBuilder {
     SchemaUtils.areCompatible(
       SchemaUtils.inferSparkTypeOf(searchField),
       structField.dataType
-    ) || SchemaConversionRules.existsRuleFor(
+    ) || AtomicSchemaConversionRules.existsRuleFor(
       searchField.getType,
       structField.dataType
     )

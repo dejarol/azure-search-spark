@@ -4,8 +4,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
-object AtomicInferSchemaRules
-  extends Set[InferSchemaRule] {
+object AtomicInferSchemaRules {
 
   private case object StringRule
     extends InferSchemaRule {
@@ -65,13 +64,14 @@ object AtomicInferSchemaRules
     BooleanRule,
     DateTimeToTimestampRule
   )
-  override def contains(elem: InferSchemaRule): Boolean = ALL_INFERENCE_RULES.contains(elem)
 
-  override def +(elem: InferSchemaRule): Set[InferSchemaRule] = ALL_INFERENCE_RULES + elem
+  private def safelyCollectRule[T](predicate: InferSchemaRule => Boolean, mapping: InferSchemaRule => T): Option[T] = {
 
-  override def -(elem: InferSchemaRule): Set[InferSchemaRule] = ALL_INFERENCE_RULES - elem
-
-  override def iterator: Iterator[InferSchemaRule] = ALL_INFERENCE_RULES.iterator
+    ALL_INFERENCE_RULES.collectFirst {
+      case rule if predicate(rule) =>
+        mapping(rule)
+    }
+  }
 
   /**
    * Safely retrieve the inferred Spark dataType of a SearchField.
@@ -84,10 +84,10 @@ object AtomicInferSchemaRules
 
   final def safeInferredTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
 
-    ALL_INFERENCE_RULES.collectFirst {
-      case rule if rule.searchType().equals(`type`) =>
-        rule.sparkType()
-    }
+    safelyCollectRule(
+      _.searchType().equals(`type`),
+      _.sparkType()
+    )
   }
 
   final def unsafeInferredTypeOf(`type`: SearchFieldDataType): DataType = {
@@ -96,5 +96,13 @@ object AtomicInferSchemaRules
       case Some(value) => value
       case None => throw new AzureSparkException(s"Could not find equivalent atomic type for SearchType ${`type`}")
     }
+  }
+
+  final def safeRuleFor(searchType: SearchFieldDataType, spark: DataType): Option[SearchSparkConversionRule] = {
+
+    safelyCollectRule(
+      rule => rule.searchType().equals(searchType) && rule.sparkType().equals(spark),
+      identity
+    )
   }
 }
