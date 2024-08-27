@@ -33,8 +33,8 @@ class SearchScanBuilder(private val schema: StructType,
 
     // Execute a set of schema compatibility checks
     val maybeSchemaCompatibilityException: Option[SchemaCompatibilityException] = Set(
-      AllSchemaFieldsExistsCheck(schema, searchFields, index),
-      AllDatatypesCompatibleCheck(schema, searchFields, index)
+      FieldExistsCheck(schema, searchFields, index),
+      CompatibleTypesCheck(schema, searchFields, index)
     ).map(_.maybeException).collectFirst {
       case Some(exception) => exception
     }

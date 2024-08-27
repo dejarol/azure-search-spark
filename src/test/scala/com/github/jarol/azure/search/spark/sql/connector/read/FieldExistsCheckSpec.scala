@@ -1,16 +1,17 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory, StructFieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 
-class AllSchemaFieldsExistsCheckSpec
+class FieldExistsCheckSpec
   extends BasicSpec
-    with SearchFieldFactory {
+    with SearchFieldFactory
+      with StructFieldFactory {
 
   private lazy val (index, name, id) = ("people", "name", "id")
-  private lazy val sparkStringField = StructField(name, DataTypes.StringType)
-  private lazy val sparkIntField = StructField(id, DataTypes.IntegerType)
+  private lazy val sparkStringField = createStructField(name, DataTypes.StringType)
+  private lazy val sparkIntField = createStructField(id, DataTypes.IntegerType)
   private lazy val searchStringField = createSearchField(sparkStringField.name, SearchFieldDataType.STRING)
 
   /**
@@ -23,14 +24,14 @@ class AllSchemaFieldsExistsCheckSpec
   private def maybeExceptionFor(schema: Seq[StructField],
                                 searchFields: Seq[SearchField]): Option[SchemaCompatibilityException] = {
 
-    AllSchemaFieldsExistsCheck(
+    FieldExistsCheck(
       StructType(schema),
       searchFields,
       index
     ).maybeException
   }
 
-  describe(anInstanceOf[AllSchemaFieldsExistsCheck]) {
+  describe(anInstanceOf[FieldExistsCheck]) {
     describe(SHOULD) {
       describe("evaluate if all schema fields names exist on a Search index returning") {
         it("an empty Option for valid cases") {

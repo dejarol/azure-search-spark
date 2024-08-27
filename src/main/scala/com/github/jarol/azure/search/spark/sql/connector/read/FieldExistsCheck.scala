@@ -10,9 +10,9 @@ import org.apache.spark.sql.types.{StructField, StructType}
  * @param index index name
  */
 
-case class AllSchemaFieldsExistsCheck(override protected val schema: StructType,
-                                      override protected val searchFields: Seq[SearchField],
-                                      override protected val index: String)
+case class FieldExistsCheck(override protected val schema: StructType,
+                            override protected val searchFields: Seq[SearchField],
+                            override protected val index: String)
   extends SchemaCompatibilityCheckImpl[StructField](schema, searchFields, index) {
 
   override protected def computeResult: Set[StructField] = {

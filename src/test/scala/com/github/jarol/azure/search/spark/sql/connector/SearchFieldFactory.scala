@@ -16,4 +16,20 @@ trait SearchFieldFactory {
    */
 
   protected final def createSearchField(name: String, `type`: SearchFieldDataType): SearchField = new SearchField(name, `type`)
+
+  /**
+   * Create a collection type using given inner type
+   * @param `type` inner collection type
+   * @return a search collection type
+   */
+
+  protected final def createCollectionType(`type`: SearchFieldDataType): SearchFieldDataType = SearchFieldDataType.collection(`type`)
+
+  protected final def createComplexField(name: String, fields: Seq[SearchField]): SearchField = {
+
+    createSearchField(name, SearchFieldDataType.COMPLEX)
+      .setFields(
+        JavaScalaConverters.seqToList(fields)
+      )
+  }
 }

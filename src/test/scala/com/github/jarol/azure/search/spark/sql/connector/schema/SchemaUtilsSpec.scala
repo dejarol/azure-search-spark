@@ -113,18 +113,18 @@ class SchemaUtilsSpec
       describe("evaluate Spark type compatibilities") {
         it("for atomic types") {
 
-          SchemaUtils.areCompatible(DataTypes.StringType, DataTypes.StringType) shouldBe true
-          SchemaUtils.areCompatible(DataTypes.StringType, DataTypes.IntegerType) shouldBe false
+          SchemaUtils.areNaturallyCompatible(DataTypes.StringType, DataTypes.StringType) shouldBe true
+          SchemaUtils.areNaturallyCompatible(DataTypes.StringType, DataTypes.IntegerType) shouldBe false
         }
 
         it("for collection types") {
 
-          SchemaUtils.areCompatible(
+          SchemaUtils.areNaturallyCompatible(
             ArrayType(DataTypes.StringType, containsNull = true),
             ArrayType(DataTypes.StringType, containsNull = true)
           ) shouldBe true
 
-          SchemaUtils.areCompatible(
+          SchemaUtils.areNaturallyCompatible(
             ArrayType(DataTypes.StringType, containsNull = true),
             ArrayType(DataTypes.IntegerType, containsNull = true)
           ) shouldBe false
@@ -156,9 +156,9 @@ class SchemaUtilsSpec
             )
           )
 
-          SchemaUtils.areCompatible(firstSchema, firstSchema) shouldBe true
-          SchemaUtils.areCompatible(firstSchema, secondSchema) shouldBe false
-          SchemaUtils.areCompatible(firstSchema, thirdSchema) shouldBe false
+          SchemaUtils.areNaturallyCompatible(firstSchema, firstSchema) shouldBe true
+          SchemaUtils.areNaturallyCompatible(firstSchema, secondSchema) shouldBe false
+          SchemaUtils.areNaturallyCompatible(firstSchema, thirdSchema) shouldBe false
         }
       }
     }

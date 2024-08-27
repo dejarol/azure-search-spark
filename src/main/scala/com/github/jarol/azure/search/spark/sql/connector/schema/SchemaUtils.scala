@@ -40,7 +40,12 @@ object SchemaUtils {
       // and create a StructType
       StructType(
         JavaScalaConverters.listToSeq(searchField.getFields)
-          .map(asStructField)
+          .map { searchField =>
+            StructField(
+              searchField.getName,
+              inferSparkTypeOf(searchField)
+            )
+          }
       )
     } else if (searchType.isGeoPoint) {
       GeoPointRule.sparkType
@@ -59,8 +64,7 @@ object SchemaUtils {
 
     StructField(
       searchField.getName,
-      inferSparkTypeOf(searchField),
-      nullable = true
+      inferSparkTypeOf(searchField)
     )
   }
 
@@ -77,15 +81,25 @@ object SchemaUtils {
     )
   }
 
-  def areCompatible(first: DataType, second: DataType): Boolean = {
+  /**
+   * Evaluate natural data type compatibility according to the following behavior
+   *  - for atomic types, the natural equality test is employed
+   *  - for array types, the inner types should be compatible
+   *  - for struct types, all subfields should be compatible (same size and same type for all subfields)
+   * @param first first type
+   * @param second second type
+   * @return true if the two types are compatible
+   */
+
+  def areNaturallyCompatible(first: DataType, second: DataType): Boolean = {
 
     (first, second) match {
-      case (f: ArrayType, s: ArrayType) => areCompatible(f.elementType, s.elementType)
+      case (f: ArrayType, s: ArrayType) => areNaturallyCompatible(f.elementType, s.elementType)
       case (f: StructType, s: StructType) => f.size.equals(s.size) &&
         f.sortBy(_.name).zip(s.sortBy(_.name)).forall {
           case (left, right) =>
             left.name.equalsIgnoreCase(right.name) &&
-              areCompatible(left.dataType, right.dataType)
+              areNaturallyCompatible(left.dataType, right.dataType)
         }
       case _ => first.equals(second)
     }
