@@ -3,24 +3,12 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import org.apache.spark.sql.types.DataType
 
-object AtomicSchemaConversionRules {
+object AtomicSchemaConversionRules
+  extends SearchSparkConversionRuleSet {
 
-  private lazy val ALL_CONVERSION_RULES: Set[SchemaConversionRule] = Set(
+  override protected val ALL_RULES: Set[SearchSparkConversionRule] = Set(
     DateTimeToDateRule
   )
 
-  final def safeRuleFor(searchType: SearchFieldDataType, sparkType: DataType): Option[SchemaConversionRule] = {
-
-    ALL_CONVERSION_RULES.collectFirst {
-      case rule if rule.searchType().equals(searchType) &&
-        rule.sparkType().equals(sparkType) => rule
-    }
-  }
-
-  final def existsRuleFor(searchType: SearchFieldDataType, sparkType: DataType): Boolean = {
-
-    safeRuleFor(
-      searchType, sparkType
-    ).isDefined
-  }
+  final def existsRuleFor(sparkType: DataType, searchType: SearchFieldDataType): Boolean = safeRuleForTypes(sparkType, searchType).isDefined
 }

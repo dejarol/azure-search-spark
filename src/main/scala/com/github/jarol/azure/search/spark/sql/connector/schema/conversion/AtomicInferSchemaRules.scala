@@ -4,7 +4,8 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
-object AtomicInferSchemaRules {
+object AtomicInferSchemaRules
+  extends SearchSparkConversionRuleSet {
 
   private case object StringRule
     extends InferSchemaRule {
@@ -55,7 +56,7 @@ object AtomicInferSchemaRules {
     override def converter(): SparkInternalConverter = AtomicTypeConverters.DateTimeToTimestampConverter
   }
 
-  private lazy val ALL_INFERENCE_RULES: Set[InferSchemaRule] = Set(
+  override protected val ALL_RULES: Set[SearchSparkConversionRule] = Set(
     StringRule,
     Int32Rule,
     Int64Rule,
@@ -64,14 +65,6 @@ object AtomicInferSchemaRules {
     BooleanRule,
     DateTimeToTimestampRule
   )
-
-  private def safelyCollectRule[T](predicate: InferSchemaRule => Boolean, mapping: InferSchemaRule => T): Option[T] = {
-
-    ALL_INFERENCE_RULES.collectFirst {
-      case rule if predicate(rule) =>
-        mapping(rule)
-    }
-  }
 
   /**
    * Safely retrieve the inferred Spark dataType of a SearchField.
@@ -96,13 +89,5 @@ object AtomicInferSchemaRules {
       case Some(value) => value
       case None => throw new AzureSparkException(s"Could not find equivalent atomic type for SearchType ${`type`}")
     }
-  }
-
-  final def safeRuleFor(searchType: SearchFieldDataType, spark: DataType): Option[SearchSparkConversionRule] = {
-
-    safelyCollectRule(
-      rule => rule.searchType().equals(searchType) && rule.sparkType().equals(spark),
-      identity
-    )
   }
 }

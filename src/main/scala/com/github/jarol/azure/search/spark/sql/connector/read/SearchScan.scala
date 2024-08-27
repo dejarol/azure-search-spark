@@ -15,3 +15,16 @@ class SearchScan(private val schema: StructType,
     new SearchBatch(schema, readConfig)
   }
 }
+
+object SearchScan {
+
+  def apply(): SearchScan = {
+
+    new SearchScan(
+      StructType(
+        Seq.empty
+      ),
+      null
+    )
+  }
+}
