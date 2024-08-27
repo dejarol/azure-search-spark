@@ -9,12 +9,7 @@ case class SearchDocumentToInternalRowConverter(private val schema: StructType)
 
   override def apply(v1: SearchDocument): InternalRow = {
 
-    val values: Seq[Any] = schema.map {
-      sf =>
-        ReadConverters.converterForType(sf.dataType)
-          .apply(v1.get(sf.name))
-    }
-
+    val values: Seq[Any] = Seq.empty
     InternalRow(values: _*)
   }
 }
