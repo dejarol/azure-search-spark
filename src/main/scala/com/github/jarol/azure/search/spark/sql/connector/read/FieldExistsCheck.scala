@@ -1,10 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchField
+import com.github.jarol.azure.search.spark.sql.connector.schema._
 import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
- * Schema compatibility check that will ensure that each Spark field name exists on a Search index
+ * Schema compatibility check that will ensure that for each schema fields exists
+ * a Search field with same name
  * @param schema Spark schema (either inferred or user-specified)
  * @param searchFields Search index fields
  * @param index index name
@@ -15,11 +17,11 @@ case class FieldExistsCheck(override protected val schema: StructType,
                             override protected val index: String)
   extends SchemaCompatibilityCheckImpl[StructField](schema, searchFields, index) {
 
-  override protected def computeResult: Set[StructField] = {
+  override protected def computeResultSet: Set[StructField] = {
 
     schema.filterNot {
       structField => searchFields.exists {
-        searchField => structField.name.equalsIgnoreCase(searchField.getName)
+        searchField => searchField.sameNameOf(structField)
       }
     }.toSet
   }

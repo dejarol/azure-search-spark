@@ -25,6 +25,13 @@ trait SearchFieldFactory {
 
   protected final def createCollectionType(`type`: SearchFieldDataType): SearchFieldDataType = SearchFieldDataType.collection(`type`)
 
+  /**
+   * Create a complex field
+   * @param name field name
+   * @param fields sub fields
+   * @return a complex Search field
+   */
+
   protected final def createComplexField(name: String, fields: Seq[SearchField]): SearchField = {
 
     createSearchField(name, SearchFieldDataType.COMPLEX)

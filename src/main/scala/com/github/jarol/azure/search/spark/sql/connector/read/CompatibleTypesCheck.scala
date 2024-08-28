@@ -3,27 +3,36 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicSchemaConversionRules
-import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchTypeOperations}
+import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchTypeOperations, toSearchFieldOperations}
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
+
+/**
+ * Compatibility check for datatypes
+ * @param schema schema (either inferred or used-defined)
+ * @param searchFields index fields
+ * @param index index name
+ */
 
 case class CompatibleTypesCheck(override protected val schema: StructType,
                                 override protected val searchFields: Seq[SearchField],
                                 override protected val index: String)
   extends SchemaCompatibilityCheckImpl[(SearchField, StructField)](schema, searchFields, index) {
 
-  override protected def computeResult: Set[(SearchField, StructField)] = {
+  override protected def computeResultSet: Set[(SearchField, StructField)] = {
 
-    // Zip search fields with their equivalent struct fields
-    val searchFieldsAndStructFields = searchFields.filter {
-      searchField => schema.exists {
-        structField => searchField.getName.equalsIgnoreCase(structField.name)
-      }
-    }.sortBy(_.getName).zip(schema.sortBy(_.name))
+    // Zip schema fields with their search counterpart
+    val searchFieldsAndStructFields = schema.map {
+      strField => (strField, searchFields.collectFirst {
+        case seaField if seaField.sameNameOf(strField) => seaField
+      })
+    }.collect {
+      case (strField, Some(searchField)) => (searchField, strField)
+    }
 
     // Detect those tuples where there's a datatype mismatch
     searchFieldsAndStructFields.filterNot {
-      case (searchField, structField) => CompatibleTypesCheck
-        .areCompatible(searchField, structField)
+      case (searchField, structField) =>
+        CompatibleTypesCheck.areCompatible(searchField, structField)
     }.toSet
   }
 
@@ -40,7 +49,14 @@ case class CompatibleTypesCheck(override protected val schema: StructType,
 
 object CompatibleTypesCheck {
 
-  def areCompatible(searchField: SearchField, structField: StructField): Boolean = {
+  /**
+   * Evaluate the data type compatibility of a SearchField and a StructField
+   * @param searchField search field
+   * @param structField struct field
+   * @return true for compatible fields
+   */
+
+  protected[read] def areCompatible(searchField: SearchField, structField: StructField): Boolean = {
 
     val searchType = searchField.getType
     val sparkType = structField.dataType
@@ -69,10 +85,19 @@ object CompatibleTypesCheck {
 
       // Evaluate compatibility for all subfields
       sparkType match {
-        case StructType(fields) => JavaScalaConverters
-          .listToSeq(searchField.getFields)
-          .sortBy(_.getName).zip(fields.sortBy(_.name)).forall {
-            case (searchSubField, sparkSubField) => areCompatible(searchSubField, sparkSubField)
+        case StructType(sparkSubFields) =>
+
+          val searchSubFields: Seq[SearchField] = JavaScalaConverters.listToSeq(searchField.getFields)
+          sparkSubFields.map {
+            spField => (spField, searchSubFields.collectFirst {
+                case seField if seField.sameNameOf(spField) => seField
+              })
+          }.collect {
+            case (spField, Some(seField)) => (spField, seField)
+          }.forall {
+            case (sparkSubField, searchSubField) =>
+              searchSubField.sameNameOf(sparkSubField) &&
+                areCompatible(searchSubField, sparkSubField)
         }
         case _ => false
       }

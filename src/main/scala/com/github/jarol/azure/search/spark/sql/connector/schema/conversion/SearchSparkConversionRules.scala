@@ -7,7 +7,7 @@ import org.apache.spark.sql.types.DataType
 
 case object SearchSparkConversionRules {
 
-  def safeConversionRuleFor(dataType: DataType, searchField: SearchField): Option[SearchSparkConversionRule] = {
+  def safeRuleFor(dataType: DataType, searchField: SearchField): Option[SearchSparkConversionRule] = {
 
     val searchFieldType = searchField.getType
     if (searchFieldType.isAtomic) {
@@ -42,7 +42,7 @@ case object SearchSparkConversionRules {
 
   final def unsafeRuleForTypes(dataType: DataType, searchField: SearchField): SearchSparkConversionRule = {
 
-    safeConversionRuleFor(dataType, searchField) match {
+    safeRuleFor(dataType, searchField) match {
       case Some(value) => value
       case None => throw new AzureSparkException(s"Could not find a conversion rule " +
         s"for field ${searchField.getName} (Search type: ${searchField.getType}, Spark type: ${dataType.typeName})")

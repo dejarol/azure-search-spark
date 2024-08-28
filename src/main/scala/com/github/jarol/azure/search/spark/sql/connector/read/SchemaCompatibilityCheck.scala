@@ -15,7 +15,7 @@ abstract class SchemaCompatibilityCheckImpl[T](protected val schema: StructType,
 
   override final def maybeException: Option[SchemaCompatibilityException] = {
 
-    val result: Set[T] = computeResult
+    val result: Set[T] = computeResultSet
     if (result.nonEmpty) {
       Some(
         new SchemaCompatibilityException(
@@ -27,7 +27,7 @@ abstract class SchemaCompatibilityCheckImpl[T](protected val schema: StructType,
     }
   }
 
-  protected def computeResult: Set[T]
+  protected def computeResultSet: Set[T]
 
   protected def exceptionMessage(result: Set[T]): String
 }

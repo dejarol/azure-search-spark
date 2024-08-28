@@ -31,18 +31,13 @@ class SearchScanBuilder(private val schema: StructType,
       ClientFactory.searchIndex(readConfig).getFields
     )
 
-    // Execute a set of schema compatibility checks
-    val maybeSchemaCompatibilityException: Option[SchemaCompatibilityException] = Set(
-      FieldExistsCheck(schema, searchFields, index),
-      CompatibleTypesCheck(schema, searchFields, index)
-    ).map(_.maybeException).collectFirst {
-      case Some(exception) => exception
-    }
-
-    // If an exception is found, throw it. Otherwise, build the scan
-    maybeSchemaCompatibilityException match {
-      case Some(value) => throw value
-      case None => SearchScan()
+    // Execute a schema compatibility check
+    SchemaCompatibilityValidator.computeMismatches(
+      schema,
+      searchFields
+    ) match {
+      case Some(value) => throw new SchemaCompatibilityException(value.mkString(", "))
+      case None => SearchScan(schema, searchFields, readConfig)
     }
   }
 }
