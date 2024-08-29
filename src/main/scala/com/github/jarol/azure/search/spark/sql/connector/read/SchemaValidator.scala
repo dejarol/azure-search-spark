@@ -1,35 +1,48 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.AtomicSchemaConversionRules
+import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 
-object SchemaCompatibilityValidator {
+object SchemaValidator {
 
-  def computeMismatches(schema: Seq[StructField], searchFields: Seq[SearchField]): Option[Seq[String]] = {
+  def validate(schema: Seq[StructField], searchFields: Seq[SearchField]): Option[SchemaCompatibilityException] = {
 
     val existsASearchFieldWithSameName: StructField => Boolean = strField => searchFields.exists {
       seField =>
         seField.sameNameOf(strField)
     }
 
-    val missingSchemaFields: Seq[StructField] = schema.filterNot(existsASearchFieldWithSameName)
-    val schemaFieldsWithNonCompatibleTypes: Seq[(StructField, SearchFieldDataType)] = schema
-      .filter(existsASearchFieldWithSameName)
-      .map {
-        strField => (
-          strField,
-          searchFields.collectFirst {
-            case seField if seField.sameNameOf(strField) => seField
-        })
-    }.collect {
-        case (strField, Some(seField)) if !areCompatible(seField, strField) =>
-          (strField, seField.getType)
-      }
+    // Schema fields that cannot be mapped to Search fields
+    val missingSchemaFields: Seq[String] = schema.collect {
+      case field if !existsASearchFieldWithSameName(field) => field.name
+    }
 
-    None
+    // Schema fields that can be mapped to a Search field but with non-compatible datatype
+    val schemaFieldsWithNonCompatibleTypes: Map[StructField, SearchField] = schema
+      .collect {
+        case strField if existsASearchFieldWithSameName(strField) => (
+          strField, searchFields.collectFirst {
+            case seField if seField.sameNameOf(strField) => seField
+          }
+        )
+      }.collect {
+        case (strField, Some(seField)) if !areCompatible(seField, strField) =>
+          (strField, seField)
+      }.toMap
+
+    if (missingSchemaFields.isEmpty && schemaFieldsWithNonCompatibleTypes.isEmpty) {
+      None
+    } else {
+      Some(
+        new SchemaCompatibilityException(
+          missingSchemaFields,
+          schemaFieldsWithNonCompatibleTypes
+        )
+      )
+    }
   }
 
   /**

@@ -26,17 +26,16 @@ class SearchScanBuilder(private val schema: StructType,
   @throws[SchemaCompatibilityException]
   override def build(): Scan = {
 
-    val index: String = readConfig.getIndex
     val searchFields: Seq[SearchField] = JavaScalaConverters.listToSeq(
       ClientFactory.searchIndex(readConfig).getFields
     )
 
     // Execute a schema compatibility check
-    SchemaCompatibilityValidator.computeMismatches(
+    SchemaValidator.validate(
       schema,
       searchFields
     ) match {
-      case Some(value) => throw new SchemaCompatibilityException(value.mkString(", "))
+      case Some(value) => throw value
       case None => SearchScan(schema, searchFields, readConfig)
     }
   }

@@ -33,6 +33,23 @@ object JavaScalaConverters {
 
   def javaMapToScalaMap[K, V](map: util.Map[K, V]): Map[K, V] = map.asScala.toMap
 
+  /**
+   * Convert a Scala map to a Java map
+   * @param map map
+   * @tparam K key type
+   * @tparam V value type
+   * @return a Java map
+   */
+
+  def scalaMapToJavaMpa[K, V](map: Map[K, V]): util.Map[K, V] = map.asJava
+
+  /**
+   * Convert a java Stream to a seq
+   * @param stream stream
+   * @tparam T stream type
+   * @return a Scala Seq
+   */
+
   def streamToSeq[T](stream: util.stream.Stream[T]): Seq[T] = {
 
     listToSeq(
