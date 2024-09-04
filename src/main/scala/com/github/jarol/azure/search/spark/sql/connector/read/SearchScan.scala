@@ -31,45 +31,43 @@ object SearchScan {
                 searchFields: Seq[SearchField],
                 readConfig: ReadConfig): Either[String, SearchScan] = {
 
-    // Zip each StructField to the namesake Search field
-    val indexName: String = readConfig.getIndex
-    val sparkFieldsAndMaybeSearchFields: Map[StructField, Option[SearchField]] = schema.map {
-      structField => (
-        structField,
-        searchFields.collectFirst {
-          case searchField if searchField.sameNameOf(structField) => searchField
-        })
-    }.toMap
-
     // Retrieve the set of schema fields that do not exist on Search index
-    val nonExistingSchemaFields: Seq[String] = sparkFieldsAndMaybeSearchFields.collect {
-      case (k, None) => k.name
-    }.toSeq
-
-    if (nonExistingSchemaFields.nonEmpty) {
-      leftMessageForNonExistingFields(nonExistingSchemaFields, indexName)
+    val missingSchemaFields: Seq[String] = getMissingSchemaFields(schema, searchFields)
+    if (missingSchemaFields.nonEmpty) {
+      leftMessageForMissingFields(missingSchemaFields, readConfig.getIndex)
     } else {
 
-      // Collect existing schema fields (which should be all due to previous evaluation)
-      // and safely compute the conversion rule
-      val sparkFieldsSearchFieldsAndMaybeConversionRule = sparkFieldsAndMaybeSearchFields.collect {
-        case (k, Some(v)) => (k, v, safeConversionRuleFor(k, v))
+      // Match each Spark field with its namesake Search field
+      // and then compute the set of schema fields for which a conversion rule cannot be found
+      val sparkAndSearchFields: Map[StructField, SearchField] = matchSchemaFieldsWithNamesakeSearchFields(schema, searchFields)
+      val convertersMap: Map[String, SparkInternalConverter] = getConvertersMap(sparkAndSearchFields)
+      val schemaFieldsWithoutConversionRule: Map[StructField, SearchField] = sparkAndSearchFields.filterNot {
+        case (k, _) => convertersMap.exists {
+          case (colName, _) => k.name.equalsIgnoreCase(colName)
+        }
       }
 
-      // Collect the existing fields that have a data type incompatibility
-      val sparkFieldsWithNonCompatibleSearchType: Map[StructField, SearchField] = sparkFieldsSearchFieldsAndMaybeConversionRule.collect {
-        case (v1, v2, None) => (v1, v2)
-      }.toMap
-
-      if (sparkFieldsWithNonCompatibleSearchType.nonEmpty) {
-        leftMessageForNonCompatibleFields(sparkFieldsWithNonCompatibleSearchType)
+      // If all schema fields have a conversion rule, create the Scan
+      if (schemaFieldsWithoutConversionRule.nonEmpty) {
+        leftMessageForNonCompatibleFields(schemaFieldsWithoutConversionRule)
       } else {
         Right(
-          new SearchScan(schema, readConfig, sparkFieldsSearchFieldsAndMaybeConversionRule.collect {
-            case (v1, _, Some(rule)) => (v1.name, rule.converter())
-          }.toMap)
+          new SearchScan(
+            schema,
+            readConfig,
+            convertersMap
+          )
         )
       }
+    }
+  }
+
+  private def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
+
+    schema.collect {
+      case spField if !searchFields.exists {
+        seField => seField.sameNameOf(spField)
+      } => spField.name
     }
   }
 
@@ -80,11 +78,34 @@ object SearchScan {
    * @return a Left instance
    */
 
-  private def leftMessageForNonExistingFields(fields: Traversable[String], index: String): Either[String, SearchScan] = {
+  private def leftMessageForMissingFields(fields: Traversable[String], index: String): Either[String, SearchScan] = {
 
     val size = fields.size
     val fieldNames = fields.mkString("(", ", ", ")")
     Left(s"$size schema fields ($fieldNames) do not exist on index $index")
+  }
+
+  private def matchSchemaFieldsWithNamesakeSearchFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
+
+    schema.map {
+      spField => (
+        spField,
+        searchFields.collectFirst {
+          case seField if seField.sameNameOf(spField) => seField
+        }
+      )
+    }.collect {
+      case (k, Some(v)) => (k, v)
+    }.toMap
+  }
+
+  private def getConvertersMap(fields: Map[StructField, SearchField]): Map[String, SparkInternalConverter] = {
+
+    fields.map {
+      case (k, v) => (k, safeConversionRuleFor(k, v))
+    }.collect {
+      case (k, Some(rule)) => (k.name, rule.converter())
+    }
   }
 
   /**
@@ -111,18 +132,14 @@ object SearchScan {
       None
     } else {
 
+      // For atomic types, there should exist either an inference rule or a conversion rule
       if (searchFieldType.isAtomic) {
-        AtomicInferSchemaRules.safeRuleForTypes(
-          sparkType,
-          searchFieldType
-        ).orElse(
-          AtomicSchemaConversionRules.safeRuleForTypes(
-            sparkType,
-            searchFieldType
+        AtomicInferSchemaRules.safeRuleForTypes(sparkType, searchFieldType)
+          .orElse(AtomicSchemaConversionRules.safeRuleForTypes(sparkType, searchFieldType)
           )
-        )
       } else if (searchFieldType.isCollection) {
 
+        // Evaluate rule for the inner type
         val searchInnerType = searchFieldType.unsafelyExtractCollectionType
         sparkType match {
           case ArrayType(sparkInternalType, _) => safeConversionRuleFor(
@@ -139,30 +156,26 @@ object SearchScan {
         }
       } else if (searchFieldType.isComplex) {
 
+        // Build a rule that wraps subField conversion rules
         sparkType match {
           case StructType(sparkSubFields) =>
 
-            val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
-            val converters = sparkSubFields.map {
-              spField => (
-                spField,
-                searchSubFields.collectFirst {
-                  case seField if seField.sameNameOf(spField) => safeConversionRuleFor(spField, seField)
-                }
+            val convertersMap: Map[String, SparkInternalConverter] = getConvertersMap(
+              matchSchemaFieldsWithNamesakeSearchFields(
+                sparkSubFields,
+                JavaScalaConverters.listToSeq(searchField.getFields)
               )
-            }.collect {
-              case (k, Some(Some(value))) => (k, value)
-            }.toMap
+            )
 
-            if (sparkSubFields.map(_.name).diff(converters.keySet.toSeq).nonEmpty) {
-              None
+            val forAllSubFieldsExistAConverter = sparkSubFields.forall {
+              spField => convertersMap.exists {
+                case (k, _) => spField.name.equalsIgnoreCase(k)
+              }
+            }
+            if (forAllSubFieldsExistAConverter) {
+              Some(ComplexConversionRule(sparkSubFields, convertersMap))
             } else {
-              Some(
-                ComplexConversionRule(
-                  sparkSubFields,
-                  converters
-                )
-              )
+              None
             }
           case _ => None
         }
