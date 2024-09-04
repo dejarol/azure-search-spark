@@ -4,6 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaCompatibilityException
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -30,13 +31,9 @@ class SearchScanBuilder(private val schema: StructType,
       ClientFactory.searchIndex(readConfig).getFields
     )
 
-    // Execute a schema compatibility check
-    SchemaValidator.validate(
-      schema,
-      searchFields
-    ) match {
-      case Some(value) => throw value
-      case None => SearchScan(schema, searchFields, readConfig)
+    SearchScan.safeApply(schema, searchFields, readConfig) match {
+      case Left(value) => throw new SchemaCompatibilityException(value)
+      case Right(value) => value
     }
   }
 }

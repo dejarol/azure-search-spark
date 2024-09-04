@@ -43,7 +43,7 @@ trait SearchFieldFactory {
   /**
    * Create a complex field
    * @param name field name
-   * @param fields sub fields
+   * @param fields subFields
    * @return a complex Search field
    */
 

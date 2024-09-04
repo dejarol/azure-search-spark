@@ -2,14 +2,17 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.GeoPointRule
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
-import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory, StructFieldFactory}
+import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
 
 class SchemaUtilsSpec
   extends BasicSpec
     with SearchFieldFactory
-      with Inspectors {
+    with StructFieldFactory
+    with Inspectors {
+
+  private lazy val (first, second, third) = ("field1", "field2", "field3")
 
   describe(`object`[SchemaUtils.type ]) {
     describe(SHOULD) {
@@ -40,9 +43,7 @@ class SchemaUtilsSpec
           SchemaUtils.inferSparkTypeOf(
             createSearchField(
               "collection",
-              SearchFieldDataType.collection(
-                innerType
-              )
+              createCollectionType(innerType)
             )
           ) shouldBe ArrayType(
             SchemaUtils.inferSparkTypeOf(
@@ -57,12 +58,7 @@ class SchemaUtilsSpec
             createSearchField("date", SearchFieldDataType.DATE_TIME_OFFSET),
             createSearchField("flag", SearchFieldDataType.BOOLEAN)
           )
-          val complexField = createSearchField("complex", SearchFieldDataType.COMPLEX)
-          complexField.setFields(
-            JavaScalaConverters.seqToList(
-              innerFields
-            )
-          )
+          val complexField = createComplexField("complex", innerFields)
 
           SchemaUtils.inferSparkTypeOf(
             complexField
@@ -89,16 +85,10 @@ class SchemaUtilsSpec
             createSearchField("flag", SearchFieldDataType.BOOLEAN)
           )
 
-          val complexField = createSearchField("complexField", SearchFieldDataType.COMPLEX)
-          complexField.setFields(
-            JavaScalaConverters.seqToList(innerFields)
-          )
-
+          val complexField = createComplexField("complexField", innerFields)
           val searchFields = Seq(
             createSearchField("stringField", SearchFieldDataType.STRING),
-            createSearchField("collectionField", SearchFieldDataType.collection(
-              SearchFieldDataType.INT32)
-            ),
+            createCollectionField("collectionField", SearchFieldDataType.INT32),
             complexField
           )
 
@@ -110,55 +100,201 @@ class SchemaUtilsSpec
         }
       }
 
-      describe("evaluate Spark type compatibilities") {
-        it("for atomic types") {
+      describe("evaluate Spark type compatibilities of") {
+        it("atomic types") {
 
-          SchemaUtils.areNaturallyCompatible(DataTypes.StringType, DataTypes.StringType) shouldBe true
-          SchemaUtils.areNaturallyCompatible(DataTypes.StringType, DataTypes.IntegerType) shouldBe false
+          SchemaUtils.evaluateSparkTypesCompatibility(DataTypes.StringType, DataTypes.StringType) shouldBe true
+          SchemaUtils.evaluateSparkTypesCompatibility(DataTypes.StringType, DataTypes.IntegerType) shouldBe false
         }
 
-        it("for collection types") {
+        it("collection types") {
 
-          SchemaUtils.areNaturallyCompatible(
+          SchemaUtils.evaluateSparkTypesCompatibility(
             ArrayType(DataTypes.StringType, containsNull = true),
             ArrayType(DataTypes.StringType, containsNull = true)
           ) shouldBe true
 
-          SchemaUtils.areNaturallyCompatible(
+          SchemaUtils.evaluateSparkTypesCompatibility(
             ArrayType(DataTypes.StringType, containsNull = true),
             ArrayType(DataTypes.IntegerType, containsNull = true)
           ) shouldBe false
         }
 
-        it("for struct types") {
+        it("struct types") {
 
           val (stringFieldName, intFieldName) = ("string", "int")
           val firstSchema = StructType(
             Seq(
-              StructField(stringFieldName, DataTypes.StringType),
-              StructField(intFieldName, DataTypes.IntegerType)
+              createStructField(stringFieldName, DataTypes.StringType),
+              createStructField(intFieldName, DataTypes.IntegerType)
             )
           )
 
           // same names, different types
           val secondSchema = StructType(
             Seq(
-              StructField(stringFieldName, DataTypes.DateType),
-              StructField(intFieldName, DataTypes.IntegerType)
+              createStructField(stringFieldName, DataTypes.DateType),
+              createStructField(intFieldName, DataTypes.IntegerType)
             )
           )
 
           // different names, same dtypes
           val thirdSchema = StructType(
             Seq(
-              StructField(stringFieldName, DataTypes.StringType),
-              StructField("hello", DataTypes.IntegerType)
+              createStructField(stringFieldName, DataTypes.StringType),
+              createStructField("hello", DataTypes.IntegerType)
             )
           )
 
-          SchemaUtils.areNaturallyCompatible(firstSchema, firstSchema) shouldBe true
-          SchemaUtils.areNaturallyCompatible(firstSchema, secondSchema) shouldBe false
-          SchemaUtils.areNaturallyCompatible(firstSchema, thirdSchema) shouldBe false
+          SchemaUtils.evaluateSparkTypesCompatibility(firstSchema, firstSchema) shouldBe true
+          SchemaUtils.evaluateSparkTypesCompatibility(firstSchema, secondSchema) shouldBe false
+          SchemaUtils.evaluateSparkTypesCompatibility(firstSchema, thirdSchema) shouldBe false
+        }
+      }
+
+      describe("evaluate as compatible") {
+        it("two atomic fields with same name and compatible type") {
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createStructField(first, DataTypes.StringType),
+            createSearchField(first, SearchFieldDataType.STRING)
+          ) shouldBe true
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createStructField(first, DataTypes.DateType),
+            createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET)
+          ) shouldBe true
+        }
+
+        it("two collection fields with same name and compatible type") {
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createArrayField(first, DataTypes.IntegerType),
+            createCollectionField(first, SearchFieldDataType.INT32)
+          ) shouldBe true
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createArrayField(first, DataTypes.DateType),
+            createCollectionField(first, SearchFieldDataType.DATE_TIME_OFFSET)
+          ) shouldBe true
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createArrayField(first, DataTypes.IntegerType),
+            createCollectionField(first, SearchFieldDataType.DOUBLE)
+          ) shouldBe false
+        }
+
+        describe("two complex fields") {
+
+          lazy val complexField = createComplexField(
+            first,
+            Seq(
+              createSearchField(second, SearchFieldDataType.DOUBLE),
+              createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
+            )
+          )
+
+          it("that have same number of subfields and all are compatible") {
+
+            SchemaUtils.evaluateFieldsCompatibility(
+              createStructField(
+                first,
+                StructType(
+                  Seq(
+                    createStructField(second, DataTypes.DoubleType),
+                    createStructField(third, DataTypes.TimestampType)
+                  )
+                )
+              ),
+              complexField
+            ) shouldBe true
+          }
+
+          it("when the Spark field has less subfields but all compatible") {
+
+            SchemaUtils.evaluateFieldsCompatibility(
+              createStructField(
+                first,
+                StructType(
+                  Seq(
+                    createStructField(third, DataTypes.DateType)
+                  )
+                )
+              ),
+              complexField
+            ) shouldBe true
+          }
+        }
+      }
+
+      describe("evaluate as non-compatible") {
+        it("two atomic fields with different name or non-compatible types") {
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createStructField(first, DataTypes.DateType),
+            createSearchField(first, SearchFieldDataType.BOOLEAN)
+          ) shouldBe false
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createStructField(third, DataTypes.BooleanType),
+            createSearchField(second, SearchFieldDataType.BOOLEAN)
+          ) shouldBe false
+        }
+
+        it("two collection types with different name or non-compatible inner type") {
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createArrayField(second, DataTypes.BooleanType),
+            createCollectionField(first, SearchFieldDataType.BOOLEAN)
+          ) shouldBe false
+
+          SchemaUtils.evaluateFieldsCompatibility(
+            createArrayField(second, DataTypes.StringType),
+            createCollectionField(second, SearchFieldDataType.BOOLEAN)
+          ) shouldBe false
+        }
+
+        describe("two complex fields") {
+          it("with different names") {
+
+            SchemaUtils.evaluateFieldsCompatibility(
+              createStructField(
+                third,
+                StructType(
+                  Seq(
+                    createStructField(second, DataTypes.StringType)
+                  )
+                )
+              ),
+              createComplexField(
+                first,
+                Seq(
+                  createSearchField(second, SearchFieldDataType.STRING)
+                )
+              )
+            ) shouldBe false
+          }
+
+          it("with more subfields on Spark side") {
+
+            SchemaUtils.evaluateFieldsCompatibility(
+              createStructField(
+                first,
+                StructType(
+                  Seq(
+                    createStructField(second, DataTypes.StringType),
+                    createStructField(third, DataTypes.TimestampType)
+                  )
+                )
+              ),
+              createComplexField(
+                first,
+                Seq(
+                  createSearchField(second, SearchFieldDataType.STRING)
+                )
+              )
+            ) shouldBe false
+          }
         }
       }
     }

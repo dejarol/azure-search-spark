@@ -18,7 +18,7 @@ case object GeoPointRule
   override def converter(): SparkInternalConverter = ComplexConverter(
     Map(
       "type" -> AtomicTypeConverters.StringConverter,
-      "coordinates" -> ArrayConverter(SearchFieldDataType.DOUBLE)
+      "coordinates" -> ArrayConverter(AtomicTypeConverters.DoubleConverter)
     )
   )
 }

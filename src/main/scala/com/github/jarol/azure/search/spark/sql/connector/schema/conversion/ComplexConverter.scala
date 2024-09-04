@@ -10,9 +10,12 @@ case class ComplexConverter(private val conversions: Map[String, SparkInternalCo
   override def toSparkInternalObject(value: Any): InternalRow = {
 
     val searchDocument: java.util.Map[String, Object] = value.asInstanceOf[java.util.Map[String, Object]]
-    val values: Seq[Any] = conversions.collect {
-      case (k, converter) if Objects.nonNull(searchDocument.get(k)) =>
+    val values: Seq[Any] = conversions.map {
+      case (k, converter) => if (Objects.nonNull(searchDocument.get(k))) {
         converter.toSparkInternalObject(searchDocument.get(k))
+      } else {
+        null
+      }
     }.toSeq
 
     InternalRow(values: _*)

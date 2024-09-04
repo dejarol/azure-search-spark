@@ -7,7 +7,8 @@ object AtomicSchemaConversionRules
   extends SearchSparkConversionRuleSet {
 
   override protected val ALL_RULES: Set[SearchSparkConversionRule] = Set(
-    DateTimeToDateRule
+    DateTimeToDateRule,
+    DateTimeToStringRule
   )
 
   final def existsRuleFor(sparkType: DataType, searchType: SearchFieldDataType): Boolean = safeRuleForTypes(sparkType, searchType).isDefined

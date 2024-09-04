@@ -6,7 +6,11 @@ import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, J
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
 /**
- * Utilities for inferring the schema of a SearchIndex
+ * Utilities for
+ *  - inferring a SearchField's datatype
+ *  - convert a Search index schema to a Spark schema
+ *  - evaluate Spark types compatibility
+ *  - evaluate Spark field and Search field compatibility
  */
 
 object SchemaUtils {
@@ -29,7 +33,7 @@ object SchemaUtils {
       // Extract collection inner type
       ArrayType(
         inferSparkTypeOf(
-          new SearchField(null, searchType.unsafelyExtractCollectionType)
+          new SearchField("array", searchType.unsafelyExtractCollectionType)
         ),
         containsNull = true
       )
@@ -91,17 +95,99 @@ object SchemaUtils {
    * @return true if the two types are compatible
    */
 
-  def areNaturallyCompatible(first: DataType, second: DataType): Boolean = {
+  def evaluateSparkTypesCompatibility(first: DataType, second: DataType): Boolean = {
 
     (first, second) match {
-      case (f: ArrayType, s: ArrayType) => areNaturallyCompatible(f.elementType, s.elementType)
-      case (f: StructType, s: StructType) => f.size.equals(s.size) &&
-        f.sortBy(_.name).zip(s.sortBy(_.name)).forall {
-          case (left, right) =>
-            left.name.equalsIgnoreCase(right.name) &&
-              areNaturallyCompatible(left.dataType, right.dataType)
+      case (f: ArrayType, s: ArrayType) => evaluateSparkTypesCompatibility(f.elementType, s.elementType)
+      case (f: StructType, s: StructType) => f.forall {
+        ff => s.exists {
+          ss => ss.name.equals(ff.name) &&
+            evaluateSparkTypesCompatibility(ff.dataType, ss.dataType)
         }
+      }
       case _ => first.equals(second)
     }
+  }
+
+  /**
+   * Evaluate the compatibility of a SearchField and a StructField.
+   *
+   * Those two entities are considered compatible if they have
+   *  - same field name
+   *  - compatible data type
+   * @param structField struct field
+   * @param searchField search field
+   * @return true for compatible fields
+   */
+
+  def evaluateFieldsCompatibility(structField: StructField, searchField: SearchField): Boolean = {
+
+    val (searchType, sparkType) = (searchField.getType, structField.dataType)
+    val compatibleDataType: Boolean = if (searchType.isAtomic) {
+
+      // They should be either naturally compatible or a suitable conversion rule should exist
+      evaluateSparkTypesCompatibility(
+        inferSparkTypeOf(searchField),
+        sparkType
+      ) || AtomicSchemaConversionRules.existsRuleFor(
+        sparkType,
+        searchType
+      )
+    } else if (searchType.isCollection) {
+
+      // Evaluate compatibility on the inner type
+      sparkType match {
+        case ArrayType(elementType, _) => evaluateFieldsCompatibility(
+          StructField("array", elementType),
+          new SearchField("array", searchType.unsafelyExtractCollectionType)
+        )
+        case _ => false
+      }
+
+    } else if (searchType.isComplex) {
+
+      // Evaluate compatibility for all subfields
+      sparkType match {
+        case StructType(sparkSubFields) =>
+
+          val searchSubFields: Seq[SearchField] = JavaScalaConverters.listToSeq(searchField.getFields)
+
+          // For each Spark subfield
+          // [1] a Search subfield with same name should exist
+          // [2] the Spark type and the Search type should be compatible
+          val forAllSparkSubFieldsExistsASearchSubFieldWithSameName: Boolean = sparkSubFields.forall {
+            spsField =>
+              searchSubFields.exists {
+                sesField => sesField.sameNameOf(spsField)
+              }
+          }
+
+          val allSubfieldsAreCompatible: Boolean = sparkSubFields.map {
+            spField =>
+              // Collect first matching (i.e. with same name) field
+              (spField, searchSubFields.collectFirst {
+                case seField if seField.sameNameOf(spField) => seField
+              })
+          }.collect {
+            // Collect cases where a matching field exists
+            case (spField, Some(seField)) => (spField, seField)
+          }.forall {
+            case (sparkSubField, searchSubField) =>
+              evaluateFieldsCompatibility(sparkSubField, searchSubField)
+          }
+
+          forAllSparkSubFieldsExistsASearchSubFieldWithSameName && allSubfieldsAreCompatible
+        case _ => false
+      }
+    } else if (searchType.isGeoPoint) {
+      evaluateSparkTypesCompatibility(
+        inferSparkTypeOf(searchField),
+        sparkType
+      )
+    } else {
+      false
+    }
+
+    searchField.sameNameOf(structField) && compatibleDataType
   }
 }
