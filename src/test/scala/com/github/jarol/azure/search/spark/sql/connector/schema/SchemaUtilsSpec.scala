@@ -100,6 +100,72 @@ class SchemaUtilsSpec
         }
       }
 
+      it("evaluate if all schema fields exist") {
+
+        val schema = Seq(
+          createStructField(first, DataTypes.StringType)
+        )
+
+        val firstSetOfSearchFields = Seq(
+          createSearchField(first, SearchFieldDataType.INT64)
+        )
+
+        val secondSetOfSearchFields = Seq(
+          createSearchField(second, SearchFieldDataType.STRING)
+        )
+
+        SchemaUtils.allSchemaFieldsExist(schema, firstSetOfSearchFields) shouldBe true
+        SchemaUtils.allSchemaFieldsExist(schema, secondSetOfSearchFields) shouldBe false
+        SchemaUtils.allSchemaFieldsExist(schema, Seq.empty) shouldBe false
+      }
+
+      it("return missing schema fields") {
+
+        val schema = Seq(
+          createStructField(first, DataTypes.TimestampType),
+          createStructField(third, DataTypes.DateType)
+        )
+
+        val searchFields = Seq(
+          createSearchField(third, SearchFieldDataType.BOOLEAN)
+        )
+
+        val actual = SchemaUtils.getMissingSchemaFields(schema, searchFields)
+        val expected = schema.collect {
+          case sp if !searchFields.exists {
+            se => se.getName.equalsIgnoreCase(sp.name)
+          } => sp.name
+        }
+
+        actual should have size expected.size
+        actual should contain theSameElementsAs expected
+      }
+
+      it("match namesake fields") {
+
+        val schema = Seq(
+          createStructField(first, DataTypes.StringType),
+          createStructField(second, DataTypes.IntegerType)
+        )
+
+        val searchFields = Seq(
+          createSearchField(first, SearchFieldDataType.COMPLEX)
+        )
+
+        val output = SchemaUtils.matchNamesakeFields(schema, searchFields)
+        val expectedSize = schema.count {
+          sp => searchFields.exists {
+            se => sp.name.equalsIgnoreCase(se.getName)
+          }
+        }
+
+        output.size shouldBe expectedSize
+        forAll(output.toSeq) {
+          case (k, v) =>
+            k.name shouldBe v.getName
+        }
+      }
+
       describe("evaluate Spark type compatibilities of") {
         it("atomic types") {
 
@@ -155,12 +221,12 @@ class SchemaUtilsSpec
       describe("evaluate as compatible") {
         it("two atomic fields with same name and compatible type") {
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createStructField(first, DataTypes.StringType),
             createSearchField(first, SearchFieldDataType.STRING)
           ) shouldBe true
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createStructField(first, DataTypes.DateType),
             createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET)
           ) shouldBe true
@@ -168,17 +234,17 @@ class SchemaUtilsSpec
 
         it("two collection fields with same name and compatible type") {
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createArrayField(first, DataTypes.IntegerType),
             createCollectionField(first, SearchFieldDataType.INT32)
           ) shouldBe true
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createArrayField(first, DataTypes.DateType),
             createCollectionField(first, SearchFieldDataType.DATE_TIME_OFFSET)
           ) shouldBe true
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createArrayField(first, DataTypes.IntegerType),
             createCollectionField(first, SearchFieldDataType.DOUBLE)
           ) shouldBe false
@@ -196,7 +262,7 @@ class SchemaUtilsSpec
 
           it("that have same number of subfields and all are compatible") {
 
-            SchemaUtils.evaluateFieldsCompatibility(
+            SchemaUtils.areCompatibleFields(
               createStructField(
                 first,
                 StructType(
@@ -212,7 +278,7 @@ class SchemaUtilsSpec
 
           it("when the Spark field has less subfields but all compatible") {
 
-            SchemaUtils.evaluateFieldsCompatibility(
+            SchemaUtils.areCompatibleFields(
               createStructField(
                 first,
                 StructType(
@@ -230,12 +296,12 @@ class SchemaUtilsSpec
       describe("evaluate as non-compatible") {
         it("two atomic fields with different name or non-compatible types") {
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createStructField(first, DataTypes.DateType),
             createSearchField(first, SearchFieldDataType.BOOLEAN)
           ) shouldBe false
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createStructField(third, DataTypes.BooleanType),
             createSearchField(second, SearchFieldDataType.BOOLEAN)
           ) shouldBe false
@@ -243,12 +309,12 @@ class SchemaUtilsSpec
 
         it("two collection types with different name or non-compatible inner type") {
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createArrayField(second, DataTypes.BooleanType),
             createCollectionField(first, SearchFieldDataType.BOOLEAN)
           ) shouldBe false
 
-          SchemaUtils.evaluateFieldsCompatibility(
+          SchemaUtils.areCompatibleFields(
             createArrayField(second, DataTypes.StringType),
             createCollectionField(second, SearchFieldDataType.BOOLEAN)
           ) shouldBe false
@@ -257,7 +323,7 @@ class SchemaUtilsSpec
         describe("two complex fields") {
           it("with different names") {
 
-            SchemaUtils.evaluateFieldsCompatibility(
+            SchemaUtils.areCompatibleFields(
               createStructField(
                 third,
                 StructType(
@@ -277,7 +343,7 @@ class SchemaUtilsSpec
 
           it("with more subfields on Spark side") {
 
-            SchemaUtils.evaluateFieldsCompatibility(
+            SchemaUtils.areCompatibleFields(
               createStructField(
                 first,
                 StructType(
@@ -295,53 +361,6 @@ class SchemaUtilsSpec
               )
             ) shouldBe false
           }
-        }
-      }
-
-      it("return missing schema fields") {
-
-        val schema = Seq(
-          createStructField(first, DataTypes.TimestampType),
-          createStructField(third, DataTypes.DateType)
-        )
-
-        val searchFields = Seq(
-          createSearchField(third, SearchFieldDataType.BOOLEAN)
-        )
-
-        val actual = SchemaUtils.getMissingSchemaFields(schema, searchFields)
-        val expected = schema.collect {
-          case sp if !searchFields.exists {
-            se => se.getName.equalsIgnoreCase(sp.name)
-          } => sp.name
-        }
-
-        actual should have size expected.size
-        actual should contain theSameElementsAs expected
-      }
-
-      it("match namesake fields") {
-
-        val schema = Seq(
-          createStructField(first, DataTypes.StringType),
-          createStructField(second, DataTypes.IntegerType)
-        )
-
-        val searchFields = Seq(
-          createSearchField(first, SearchFieldDataType.COMPLEX)
-        )
-
-        val output = SchemaUtils.matchNamesakeFields(schema, searchFields)
-        val expectedSize = schema.count {
-          sp => searchFields.exists {
-            se => sp.name.equalsIgnoreCase(se.getName)
-          }
-        }
-
-        output.size shouldBe expectedSize
-        forAll(output.toSeq) {
-          case (k, v) =>
-            k.name shouldBe v.getName
         }
       }
     }

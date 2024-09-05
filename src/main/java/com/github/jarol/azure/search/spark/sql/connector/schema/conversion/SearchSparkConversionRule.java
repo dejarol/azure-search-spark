@@ -4,7 +4,14 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType;
 import org.apache.spark.sql.types.DataType;
 
 /**
- * Rule for converting Search ecosystem dataTypes to Spark internal dataTypes
+ * A conversion rule from a Search dataType to Spark internal dataType
+ * <br>
+ * It defines
+ * <ul>
+ *     <li>the related Search data type</li>
+ *     <li>the related Spark data type</li>
+ *     <li>a converter from a Search object to a Spark internal object</li>
+ * </ul>
  */
 
 public interface SearchSparkConversionRule {

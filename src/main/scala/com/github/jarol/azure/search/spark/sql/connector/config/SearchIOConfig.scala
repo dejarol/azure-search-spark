@@ -66,13 +66,13 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
 
   final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(searchClient)
 
-  final def indexExist(name: String): Boolean = {
+  final def indexExist: Boolean = {
 
     withSearchIndexClientDo {
       sic =>
         StreamSupport
           .stream(sic.listIndexes().spliterator(), false)
-          .anyMatch(i => i.getName.equalsIgnoreCase(name))
+          .anyMatch(i => i.getName.equalsIgnoreCase(getIndex))
     }
   }
 

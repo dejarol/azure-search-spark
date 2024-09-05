@@ -1,6 +1,7 @@
-package com.github.jarol.azure.search.spark.sql.connector.read.partitioning;
+package com.github.jarol.azure.search.spark.sql.connector.read;
 
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
 

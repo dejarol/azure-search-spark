@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaCompatibilityException
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -17,16 +16,20 @@ class SearchScanBuilder(private val schema: StructType,
 
   /**
    * Build the scan
-   * @throws SchemaCompatibilityException if there's a schema incompatibility
+   * @throws ScanBuilderException if the Scan cannot be built (see [[ScanBuilderException]]'s documentation)
    * @return a scan to be used for Search DataSource
    */
 
-  @throws[SchemaCompatibilityException]
+  @throws[ScanBuilderException]
   override def build(): Scan = {
 
-    SearchScan.safeApply(schema, readConfig.getSearchIndexFields, readConfig) match {
-      case Left(value) => throw new SchemaCompatibilityException(value)
-      case Right(value) => value
+    if (!readConfig.indexExist) {
+      throw ScanBuilderException.causedByNonExistingIndex(readConfig.getIndex)
+    } else {
+      SearchScan.safeApply(schema, readConfig.getSearchIndexFields, readConfig) match {
+        case Left(value) => throw ScanBuilderException.causedBySchemaIncompatibility(value)
+        case Right(value) => value
+      }
     }
   }
 }

@@ -26,14 +26,14 @@ object InferSchema {
     val readConfig = ReadConfig(options)
     val indexName: String = readConfig.getIndex
 
-    if (readConfig.indexExist(indexName)) {
+    if (readConfig.indexExist) {
       inferSchemaForIndex(
         indexName,
         readConfig.getSearchIndexFields,
         readConfig.select
       )
     } else {
-      throw new InferSchemaException(indexName, "does not exist")
+      throw InferSchemaException.causedByNonExistingIndex(indexName)
     }
   }
 
@@ -54,7 +54,7 @@ object InferSchema {
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)
     if (nonHiddenFields.isEmpty) {
-      throw new InferSchemaException(name, "no retrievable field found")
+      throw InferSchemaException.causedByIndexWithoutRetrievableFields(name)
     } else {
       // Infer schema for all non-hidden and selected fields
       SchemaUtils.asStructType(

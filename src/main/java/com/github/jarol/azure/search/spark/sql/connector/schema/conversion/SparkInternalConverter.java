@@ -8,7 +8,7 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
 public interface SparkInternalConverter {
 
     /**
-     * Convert a Search document property to a Spark internal object
+     * Convert a Search data object to a Spark internal object
      * @param value search data object
      * @return a Spark internal object
      */

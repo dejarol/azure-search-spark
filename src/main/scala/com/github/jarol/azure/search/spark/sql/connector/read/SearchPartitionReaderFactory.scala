@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartition, UnexpectedPartitionTypeException}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.SparkInternalConverter
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}
