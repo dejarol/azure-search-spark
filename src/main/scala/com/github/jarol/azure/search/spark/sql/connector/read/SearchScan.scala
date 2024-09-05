@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.schema._
+import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion._
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
@@ -32,18 +32,18 @@ object SearchScan {
                 readConfig: ReadConfig): Either[String, SearchScan] = {
 
     // Retrieve the set of schema fields that do not exist on Search index
-    val missingSchemaFields: Seq[String] = getMissingSchemaFields(schema, searchFields)
+    val missingSchemaFields: Seq[String] = SchemaUtils.getMissingSchemaFields(schema, searchFields)
     if (missingSchemaFields.nonEmpty) {
       leftMessageForMissingFields(missingSchemaFields, readConfig.getIndex)
     } else {
 
       // Match each Spark field with its namesake Search field
       // and then compute the set of schema fields for which a conversion rule cannot be found
-      val sparkAndSearchFields: Map[StructField, SearchField] = matchSchemaFieldsWithNamesakeSearchFields(schema, searchFields)
+      val sparkAndSearchFields: Map[StructField, SearchField] = SchemaUtils.matchNamesakeFields(schema, searchFields)
       val convertersMap: Map[String, SparkInternalConverter] = getConvertersMap(sparkAndSearchFields)
       val schemaFieldsWithoutConversionRule: Map[StructField, SearchField] = sparkAndSearchFields.filterNot {
         case (k, _) => convertersMap.exists {
-          case (colName, _) => k.name.equalsIgnoreCase(colName)
+          case (fieldName, _) => k.name.equalsIgnoreCase(fieldName)
         }
       }
 
@@ -62,15 +62,6 @@ object SearchScan {
     }
   }
 
-  private def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
-
-    schema.collect {
-      case spField if !searchFields.exists {
-        seField => seField.sameNameOf(spField)
-      } => spField.name
-    }
-  }
-
   /**
    * Create a Left that will contain a message reporting non-existing schema fields
    * @param fields non-existing schema fields
@@ -85,19 +76,7 @@ object SearchScan {
     Left(s"$size schema fields ($fieldNames) do not exist on index $index")
   }
 
-  private def matchSchemaFieldsWithNamesakeSearchFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
 
-    schema.map {
-      spField => (
-        spField,
-        searchFields.collectFirst {
-          case seField if seField.sameNameOf(spField) => seField
-        }
-      )
-    }.collect {
-      case (k, Some(v)) => (k, v)
-    }.toMap
-  }
 
   private def getConvertersMap(fields: Map[StructField, SearchField]): Map[String, SparkInternalConverter] = {
 
@@ -161,7 +140,7 @@ object SearchScan {
           case StructType(sparkSubFields) =>
 
             val convertersMap: Map[String, SparkInternalConverter] = getConvertersMap(
-              matchSchemaFieldsWithNamesakeSearchFields(
+              SchemaUtils.matchNamesakeFields(
                 sparkSubFields,
                 JavaScalaConverters.listToSeq(searchField.getFields)
               )

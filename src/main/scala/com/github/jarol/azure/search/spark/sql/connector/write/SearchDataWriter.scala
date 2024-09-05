@@ -4,7 +4,6 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.{IndexAction, IndexActionType}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
@@ -20,11 +19,9 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
 
   private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(schema)
   private lazy val maybeActionGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn.map {
-    name =>
-      IndexActionTypeGetter(name, schema, writeConfig.overallAction)
+    IndexActionTypeGetter(_, schema, writeConfig.overallAction)
   }
 
-  private lazy val client = ClientFactory.searchClient(writeConfig)
   private var actionsBatch: Seq[IndexAction[SearchDocument]] = Seq.empty
 
   override def write(record: InternalRow): Unit = {
@@ -71,7 +68,10 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
           JavaScalaConverters.seqToList(actionsBatch)
         )
 
-      client.indexDocuments(documentsBatch)
+      writeConfig.withSearchClientDo {
+        _.indexDocuments(documentsBatch)
+      }
+
       actionsBatch = Seq.empty
     }
   }

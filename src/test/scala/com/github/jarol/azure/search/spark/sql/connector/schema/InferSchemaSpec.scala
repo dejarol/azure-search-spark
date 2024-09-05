@@ -27,7 +27,7 @@ class InferSchemaSpec
         it("when all index fields are hidden") {
 
           an[InferSchemaException] shouldBe thrownBy {
-            InferSchema.inferSchemaForExistingIndex(
+            InferSchema.inferSchemaForIndex(
               "index",
               Seq(hiddenField),
               None
@@ -67,7 +67,7 @@ class InferSchemaSpec
         it("only for non-hidden and selected fields") {
 
           // no selection provided
-          InferSchema.inferSchemaForExistingIndex(
+          InferSchema.inferSchemaForIndex(
             "index",
             searchFields,
             None
@@ -81,7 +81,7 @@ class InferSchemaSpec
             dateField.getName
           )
 
-          InferSchema.inferSchemaForExistingIndex(
+          InferSchema.inferSchemaForIndex(
             "index",
             searchFields,
             Some(selection)

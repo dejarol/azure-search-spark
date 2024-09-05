@@ -1,8 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
-import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
+import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig}
 import org.apache.spark.sql.types.StructType
 
@@ -24,28 +22,18 @@ object InferSchema {
   @throws[InferSchemaException]
   def inferSchema(options: Map[String, String]): StructType = {
 
-    // Retrieve all existing indexes
+    // Infer the schema if the index exists, throw an exception otherwise
     val readConfig = ReadConfig(options)
-    val existingIndexes: Seq[SearchIndex] = JavaScalaConverters.streamToSeq(
-      ClientFactory.searchIndexClient(readConfig)
-        .listIndexes().stream()
-    )
-
-    // Retrieve the requested index (if any)
     val indexName: String = readConfig.getIndex
-    existingIndexes.collectFirst {
-      case index if index.getName.equalsIgnoreCase(indexName) => index
-    } match {
 
-      // If it exists, infer its schema
-      case Some(value) => inferSchemaForExistingIndex(
+    if (readConfig.indexExist(indexName)) {
+      inferSchemaForIndex(
         indexName,
-        JavaScalaConverters.listToSeq(value.getFields),
+        readConfig.getSearchIndexFields,
         readConfig.select
       )
-
-      // Otherwise, throw an exception
-      case None => throw new InferSchemaException(indexName, "does not exist")
+    } else {
+      throw new InferSchemaException(indexName, "does not exist")
     }
   }
 
@@ -59,9 +47,9 @@ object InferSchema {
    */
 
   @throws[InferSchemaException]
-  protected[schema] def inferSchemaForExistingIndex(name: String,
-                                                    searchFields: Seq[SearchField],
-                                                    select: Option[Seq[String]]): StructType = {
+  protected[schema] def inferSchemaForIndex(name: String,
+                                            searchFields: Seq[SearchField],
+                                            select: Option[Seq[String]]): StructType = {
 
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)

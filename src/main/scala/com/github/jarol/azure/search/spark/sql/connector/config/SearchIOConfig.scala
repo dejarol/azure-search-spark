@@ -1,7 +1,17 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
+import com.azure.core.credential.AzureKeyCredential
+import com.azure.core.util.Context
+import com.azure.search.documents.SearchClient
+import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
+import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
+import com.azure.search.documents.models.SearchOptions
+import com.azure.search.documents.util.SearchPagedIterable
+import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+
+import java.util.stream.StreamSupport
 
 /**
  * Parent class for read/write configurations
@@ -20,6 +30,72 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
   override def getAPIkey: String = unsafelyGet(IOConfig.API_KEY_CONFIG)
 
   override def getIndex: String = unsafelyGet(IOConfig.INDEX_CONFIG)
+
+  protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
+    .endpoint(getEndpoint)
+    .credential(new AzureKeyCredential(getAPIkey))
+    .buildClient
+
+  protected final lazy val searchIndex: SearchIndex = searchIndexClient.getIndex(getIndex)
+  protected final lazy val searchClient: SearchClient = searchIndexClient.getSearchClient(getIndex)
+
+  /**
+   * Perform an action using this instance's [[SearchIndexClient]], and get the result
+   * @param function action to perform
+   * @tparam T action return type
+   * @return the action result
+   */
+
+  final def withSearchIndexClientDo[T](function: SearchIndexClient => T): T = function.apply(searchIndexClient)
+
+  /**
+   * Perform an action using this instance's [[SearchIndex]], and get the result
+   * @param function action to perform
+   * @tparam T action return type
+   * @return the action result
+   */
+
+  final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(searchIndex)
+
+  /**
+   * Perform an action using this instance's [[SearchClient]], and get the result
+   * @param function action to perform
+   * @tparam T action return type
+   * @return the action result
+   */
+
+  final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(searchClient)
+
+  final def indexExist(name: String): Boolean = {
+
+    withSearchIndexClientDo {
+      sic =>
+        StreamSupport
+          .stream(sic.listIndexes().spliterator(), false)
+          .anyMatch(i => i.getName.equalsIgnoreCase(name))
+    }
+  }
+
+  final def getSearchIndexFields: Seq[SearchField] = {
+
+    withSearchIndexDo {
+      si =>
+      JavaScalaConverters.listToSeq(
+        si.getFields
+      )
+    }
+  }
+
+  final def search(searchOptions: SearchOptions): SearchPagedIterable = {
+
+    withSearchClientDo {
+      sc => sc.search(
+        null,
+        searchOptions,
+        Context.NONE
+      )
+    }
+  }
 }
 
 object SearchIOConfig {

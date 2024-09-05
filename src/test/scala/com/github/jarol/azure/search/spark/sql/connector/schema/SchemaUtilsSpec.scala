@@ -297,6 +297,53 @@ class SchemaUtilsSpec
           }
         }
       }
+
+      it("return missing schema fields") {
+
+        val schema = Seq(
+          createStructField(first, DataTypes.TimestampType),
+          createStructField(third, DataTypes.DateType)
+        )
+
+        val searchFields = Seq(
+          createSearchField(third, SearchFieldDataType.BOOLEAN)
+        )
+
+        val actual = SchemaUtils.getMissingSchemaFields(schema, searchFields)
+        val expected = schema.collect {
+          case sp if !searchFields.exists {
+            se => se.getName.equalsIgnoreCase(sp.name)
+          } => sp.name
+        }
+
+        actual should have size expected.size
+        actual should contain theSameElementsAs expected
+      }
+
+      it("match namesake fields") {
+
+        val schema = Seq(
+          createStructField(first, DataTypes.StringType),
+          createStructField(second, DataTypes.IntegerType)
+        )
+
+        val searchFields = Seq(
+          createSearchField(first, SearchFieldDataType.COMPLEX)
+        )
+
+        val output = SchemaUtils.matchNamesakeFields(schema, searchFields)
+        val expectedSize = schema.count {
+          sp => searchFields.exists {
+            se => sp.name.equalsIgnoreCase(se.getName)
+          }
+        }
+
+        output.size shouldBe expectedSize
+        forAll(output.toSeq) {
+          case (k, v) =>
+            k.name shouldBe v.getName
+        }
+      }
     }
   }
 }

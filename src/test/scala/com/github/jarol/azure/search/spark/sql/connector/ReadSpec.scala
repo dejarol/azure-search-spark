@@ -1,30 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.models.SearchOptions
-import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
 import org.apache.spark.sql.Encoders
 
 import java.time.LocalDateTime
-import scala.collection.JavaConverters._
 
 class ReadSpec extends SparkSpec {
-
-  ignore("abc") {
-
-    val searchDocument = ClientFactory.doSearch(
-      new IOConfig {
-
-        override def getEndpoint: String = "https://searchsparkd01cs01.search.windows.net"
-        override def getAPIkey: String = "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR"
-        override def getIndex: String = "people"
-      },
-      new SearchOptions()
-    ).iterator().asScala.toSeq.head.getDocument(classOf[SearchDocument])
-
-    val a = 1
-  }
 
   it("a") {
 
@@ -103,9 +84,4 @@ class ReadSpec extends SparkSpec {
 
      */
   }
-}
-
-object ReadSpec {
-
-
 }

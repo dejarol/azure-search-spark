@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
-import com.github.jarol.azure.search.spark.sql.connector.clients.ClientFactory
 import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
@@ -69,9 +68,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   private def getFacetFieldType(name: String): SearchField = {
 
     // Retrieve the search field with given name
-    JavaScalaConverters.listToSeq(
-      ClientFactory.searchIndex(readConfig).getFields
-    ).collectFirst {
+    readConfig.getSearchIndexFields.collectFirst {
       case sf if sf.getName.equalsIgnoreCase(name) => sf
     } match {
       case Some(value) => value
@@ -104,8 +101,7 @@ object FacetedPartitioner {
 
     // Try to retrieve facet results, mapping the exception to a ConfigException
     Try {
-      ClientFactory.doSearch(
-        config,
+      config.search(
         new SearchOptions()
           .setFilter(config.filter)
           .setSelect(config.select)

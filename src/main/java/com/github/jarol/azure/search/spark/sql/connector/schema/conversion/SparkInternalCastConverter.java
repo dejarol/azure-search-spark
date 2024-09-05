@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
 
-public abstract class SparkInternalCastConverter<T>
+public class SparkInternalCastConverter<T>
         implements SparkInternalConverter {
 
     @Override

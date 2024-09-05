@@ -190,4 +190,42 @@ object SchemaUtils {
 
     searchField.sameNameOf(structField) && compatibleDataType
   }
+
+  /**
+   * Retrieve the name of schema fields that do not have a namesake Search fields
+   * @param schema schema fields
+   * @param searchFields search fields
+   * @return missing schema fields
+   */
+
+  def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
+
+    schema.collect {
+      case spField if !searchFields.exists {
+        seField => seField.sameNameOf(spField)
+      } => spField.name
+    }
+  }
+
+  /**
+   * Zip each schema field with the namesake Search field (if it exists).
+   * The output will contain only schema fields that have a Search counterpart
+   * @param schema schema
+   * @param searchFields Search fields
+   * @return a map with keys being schema fields and values being the namesake Search fields
+   */
+
+  def matchNamesakeFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
+
+    schema.map {
+      spField => (
+        spField,
+        searchFields.collectFirst {
+          case seField if seField.sameNameOf(spField) => seField
+        }
+      )
+    }.collect {
+      case (k, Some(v)) => (k, v)
+    }.toMap
+  }
 }
