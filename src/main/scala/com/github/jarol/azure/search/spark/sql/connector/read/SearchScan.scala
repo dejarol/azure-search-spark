@@ -27,11 +27,12 @@ class SearchScan private (private val schema: StructType,
 object SearchScan {
 
   /**
-   * Safely create a Scan instance
+   * Safely create a Scan instance. The Scan will be build only if
+   * Spark schema and Search schema are compatible
    * @param schema schema (either inferred or used-defined)
    * @param searchFields Search index fields
-   * @param readConfig
-   * @return
+   * @param readConfig read configuration
+   * @return either a string reporting the incompatibility among the schemas or the scan instance
    */
 
   def safeApply(schema: StructType,
