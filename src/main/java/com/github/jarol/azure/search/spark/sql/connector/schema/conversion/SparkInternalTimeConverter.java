@@ -31,9 +31,9 @@ public abstract class SparkInternalTimeConverter<T>
 
     /**
      * Convert an instance of {@link OffsetDateTime} to a Spark internal object
-     * @param offsetDateTime offset date time
+     * @param dateTime offset date time
      * @return a Spark internal object
      */
 
-    protected abstract T dateTimeToInternalObject(OffsetDateTime offsetDateTime);
+    protected abstract T dateTimeToInternalObject(OffsetDateTime dateTime);
 }

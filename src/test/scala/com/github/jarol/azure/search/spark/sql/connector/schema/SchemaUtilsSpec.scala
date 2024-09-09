@@ -2,15 +2,14 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.GeoPointRule
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory, StructFieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
 
 class SchemaUtilsSpec
   extends BasicSpec
-    with SearchFieldFactory
-    with StructFieldFactory
-    with Inspectors {
+    with FieldFactory
+      with Inspectors {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
 

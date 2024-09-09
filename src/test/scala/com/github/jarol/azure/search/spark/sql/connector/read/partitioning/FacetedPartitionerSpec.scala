@@ -2,13 +2,13 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, JavaScalaConverters, SearchFieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory, JavaScalaConverters}
 import org.scalatest.Inspectors
 
 class FacetedPartitionerSpec
   extends BasicSpec
     with Inspectors
-      with SearchFieldFactory {
+      with FieldFactory {
 
   /**
    * Compute the expected set of filters wrapped within output partitions

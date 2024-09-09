@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 case object GeoPointRule
   extends InferSchemaRule {
 
-  private val GEO_POINT_DEFAULT_STRUCT: StructType = StructType(
+  final val GEO_POINT_DEFAULT_STRUCT: StructType = StructType(
     Seq(
       StructField("type", DataTypes.StringType),
       StructField("coordinates", ArrayType(DataTypes.DoubleType))

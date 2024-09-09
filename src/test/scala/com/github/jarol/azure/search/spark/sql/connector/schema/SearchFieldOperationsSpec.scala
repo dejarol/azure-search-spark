@@ -1,13 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory, StructFieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldOperationsSpec
   extends BasicSpec
-    with SearchFieldFactory
-      with StructFieldFactory {
+    with FieldFactory {
 
   describe(anInstanceOf[SearchFieldOperations]) {
     describe(SHOULD) {

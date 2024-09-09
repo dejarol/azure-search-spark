@@ -1,12 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, SearchFieldFactory}
 import com.github.jarol.azure.search.spark.sql.connector.config.ConfigException
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
 
 class InferSchemaSpec
   extends BasicSpec
-    with SearchFieldFactory {
+    with FieldFactory {
 
   private lazy val (f1, f2, f3) = ("stringField", "intField", "dateField")
   private lazy val hiddenField = createSearchField("hidden", SearchFieldDataType.STRING).setHidden(true)

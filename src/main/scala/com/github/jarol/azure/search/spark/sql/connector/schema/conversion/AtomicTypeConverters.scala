@@ -61,11 +61,11 @@ object AtomicTypeConverters {
   case object DateTimeToTimestampConverter
     extends SparkInternalTimeConverter[java.lang.Long] {
 
-    override protected def dateTimeToInternalObject(offsetDateTime: OffsetDateTime): lang.Long = {
+    override protected def dateTimeToInternalObject(dateTime: OffsetDateTime): lang.Long = {
 
       ChronoUnit.MICROS.between(
         Instant.EPOCH,
-        offsetDateTime.toInstant
+        dateTime.toInstant
       )
     }
   }
@@ -77,8 +77,8 @@ object AtomicTypeConverters {
   case object DateTimeToDateConverter
     extends SparkInternalTimeConverter[Integer] {
 
-    override protected def dateTimeToInternalObject(offsetDateTime: OffsetDateTime): Integer = {
-      offsetDateTime.toLocalDate.toEpochDay.toInt
+    override protected def dateTimeToInternalObject(dateTime: OffsetDateTime): Integer = {
+      dateTime.toLocalDate.toEpochDay.toInt
     }
   }
 }
