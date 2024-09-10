@@ -20,7 +20,7 @@ trait SearchFieldTypeAssertion {
    * @return true if this instance's predicate should return true for simple types
    */
 
-  def expectedSimple: Boolean
+  def expectedAtomic: Boolean
 
   /**
    * Return the expected result of testing a complex [[SearchFieldDataType]] using this instance's predicate
@@ -50,11 +50,11 @@ object TypeAssertions {
    * Assertion for simple types
    */
 
-  case object Simple
+  case object Atomic
     extends SearchFieldTypeAssertion {
 
     override def predicate: SearchFieldDataType => Boolean = _.isAtomic
-    override def expectedSimple: Boolean = true
+    override def expectedAtomic: Boolean = true
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = false
     override def expectedGeoPoint: Boolean = false
@@ -66,7 +66,7 @@ object TypeAssertions {
 
   case object Collection extends SearchFieldTypeAssertion {
     override def predicate: SearchFieldDataType => Boolean = _.isCollection
-    override def expectedSimple: Boolean = false
+    override def expectedAtomic: Boolean = false
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = true
     override def expectedGeoPoint: Boolean = false
@@ -78,7 +78,7 @@ object TypeAssertions {
 
   case object Complex extends SearchFieldTypeAssertion {
     override def predicate: SearchFieldDataType => Boolean = _.isComplex
-    override def expectedSimple: Boolean = false
+    override def expectedAtomic: Boolean = false
     override def expectedComplex: Boolean = true
     override def expectedCollection: Boolean = false
     override def expectedGeoPoint: Boolean = false
@@ -86,7 +86,7 @@ object TypeAssertions {
 
   case object GeoPoint extends SearchFieldTypeAssertion {
     override def predicate: SearchFieldDataType => Boolean = _.isGeoPoint
-    override def expectedSimple: Boolean = false
+    override def expectedAtomic: Boolean = false
     override def expectedComplex: Boolean = false
     override def expectedCollection: Boolean = false
     override def expectedGeoPoint: Boolean = true

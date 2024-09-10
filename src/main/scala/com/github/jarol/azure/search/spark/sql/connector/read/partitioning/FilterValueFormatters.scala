@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
+import com.github.jarol.azure.search.spark.sql.connector.schema._
 
 object FilterValueFormatters {
 
@@ -19,18 +20,6 @@ object FilterValueFormatters {
     override def format(value: Any): String = s"'${String.valueOf(value)}'"
   }
 
-  private def isNumber(`type`: SearchFieldDataType): Boolean = {
-
-    Seq(
-      SearchFieldDataType.INT32,
-      SearchFieldDataType.INT64,
-      SearchFieldDataType.DOUBLE,
-      SearchFieldDataType.SINGLE
-    ).exists {
-      _.equals(`type`)
-    }
-  }
-
   /**
    * Retrieve the proper formatter for a given search field type
    * @param `type` search field type
@@ -41,11 +30,11 @@ object FilterValueFormatters {
   @throws[AzureSparkException]
   def forType(`type`: SearchFieldDataType): FilterValueFormatter = {
 
-    if (`type`.equals(SearchFieldDataType.STRING)) {
+    if (`type`.isString) {
       StringFormatter
-    } else if (isNumber(`type`)) {
+    } else if (`type`.isNumber) {
       NumericFormatter
-    } else if (`type`.equals(SearchFieldDataType.DATE_TIME_OFFSET)) {
+    } else if (`type`.isDateTime) {
       DateTimeFormatter
     } else {
       throw new AzureSparkException(f"Data type ${`type`} cannot not be formatted")

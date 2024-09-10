@@ -13,18 +13,50 @@ import scala.util.matching.Regex
 class SearchFieldTypeOperations(private val searchType: SearchFieldDataType) {
 
   /**
+   * Returns true if refers to a Search string type
+   * @return true for string types
+   */
+
+  final def isString: Boolean = searchType.equals(SearchFieldDataType.STRING)
+
+  /**
+   * Returns true if refers to a Search numeric type, i.e.
+   *  - int32
+   *  - int64
+   *  - double
+   *  - single
+   * @return true for numeric types
+   */
+
+  final def isNumber: Boolean = SearchFieldTypeOperations.NUMERIC_TYPES.contains(searchType)
+
+  /**
+   * Returns true if refers to a Search boolean type
+   * @return true for boolean types
+   */
+
+  final def isBoolean: Boolean = searchType.equals(SearchFieldDataType.BOOLEAN)
+
+  /**
+   * Returns true if refers to a Search dateTime type
+   * @return true for dateTime types
+   */
+
+  final def isDateTime: Boolean = searchType.equals(SearchFieldDataType.DATE_TIME_OFFSET)
+
+  /**
    * Return tru if this type is atomic (i.e. string, number, boolean or date)
    * @return true for atomic types
    */
 
-  def isAtomic: Boolean = SearchFieldTypeOperations.ATOMIC_TYPES.contains(searchType)
+  final def isAtomic: Boolean = isString || isNumber || isBoolean || isDateTime
 
   /**
    * Return true if this type is a collection
    * @return true for collection type
    */
 
-  def isCollection: Boolean = {
+  final def isCollection: Boolean = {
 
     SearchFieldTypeOperations.COLLECTION_PATTERN
       .findFirstMatchIn(searchType.toString)
@@ -36,21 +68,21 @@ class SearchFieldTypeOperations(private val searchType: SearchFieldDataType) {
    * @return true for complex types
    */
 
-  def isComplex: Boolean = searchType.equals(SearchFieldDataType.COMPLEX)
+  final def isComplex: Boolean = searchType.equals(SearchFieldDataType.COMPLEX)
 
   /**
    * Evaluate if this search field type is [[SearchFieldDataType.GEOGRAPHY_POINT]]
    * @return true if the search type is a geo point
    */
 
-  def isGeoPoint: Boolean = searchType.equals(SearchFieldDataType.GEOGRAPHY_POINT)
+  final def isGeoPoint: Boolean = searchType.equals(SearchFieldDataType.GEOGRAPHY_POINT)
 
   /**
    * Safely extract the inner type of this instance (if it's collection)
    * @return a non-empty value this instance refers to a collection type
    */
 
-  def safelyExtractCollectionType: Option[SearchFieldDataType] = {
+  final def safelyExtractCollectionType: Option[SearchFieldDataType] = {
 
    SearchFieldTypeOperations.COLLECTION_PATTERN
       .findFirstMatchIn(searchType.toString)
@@ -67,7 +99,7 @@ class SearchFieldTypeOperations(private val searchType: SearchFieldDataType) {
    */
 
   @throws[AzureSparkException]
-  def unsafelyExtractCollectionType: SearchFieldDataType = {
+  final def unsafelyExtractCollectionType: SearchFieldDataType = {
 
     safelyExtractCollectionType match {
       case Some(value) => value
@@ -80,13 +112,16 @@ private object SearchFieldTypeOperations {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 
-  protected[schema] val ATOMIC_TYPES: Set[SearchFieldDataType] = Set(
-    SearchFieldDataType.STRING,
+  private val NUMERIC_TYPES: Set[SearchFieldDataType] = Set(
     SearchFieldDataType.INT32,
     SearchFieldDataType.INT64,
     SearchFieldDataType.DOUBLE,
-    SearchFieldDataType.SINGLE,
+    SearchFieldDataType.SINGLE
+  )
+
+  protected[schema] val ATOMIC_TYPES: Set[SearchFieldDataType] = Set(
+    SearchFieldDataType.STRING,
     SearchFieldDataType.BOOLEAN,
     SearchFieldDataType.DATE_TIME_OFFSET
-  )
+  ) ++ NUMERIC_TYPES
 }

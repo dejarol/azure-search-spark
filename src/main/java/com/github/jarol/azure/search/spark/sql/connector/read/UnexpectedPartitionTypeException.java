@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.read;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public class UnexpectedPartitionTypeException
-        extends AzureSparkException {
+        extends IllegalArgumentException {
 
     /**
      * Create an instance for a partition class

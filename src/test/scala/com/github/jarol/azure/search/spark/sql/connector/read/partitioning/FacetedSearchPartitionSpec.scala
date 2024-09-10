@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory, JavaScalaConverters}
 import org.scalatest.Inspectors
 
-class FacetedPartitionerSpec
+class FacetedSearchPartitionSpec
   extends BasicSpec
     with Inspectors
       with FieldFactory {
@@ -63,13 +63,6 @@ class FacetedPartitionerSpec
 
   describe(`object`[FacetedPartitioner]) {
     describe(SHOULD) {
-      it("combine two filters into one") {
-
-        val (first, second) = ("first", "second")
-        FacetedPartitioner.combineFilters(first, None) shouldBe first
-        FacetedPartitioner.combineFilters(first, Some(second)) shouldBe f"$first and $second"
-      }
-
       describe("generate partitions") {
 
         val values = Seq("hello", "world")

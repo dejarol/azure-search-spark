@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.config;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
  */
 
 public class ConfigException
-        extends AzureSparkException {
+        extends IllegalArgumentException {
 
     static final String INVALID_VALUE_PREFIX = "Invalid value";
 

@@ -48,13 +48,18 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
       // case Left: throw handled exception
       case Left(value) => throw value
       // case Right: generate the partitions
-      case Right(value) => FacetedPartitioner.generatePartitions(
-        getFacetFieldType(facetFieldName),
-        JavaScalaConverters.listToSeq(value).map {
-          _.getAdditionalProperties.get("value")
-        },
-        readConfig
-      )
+      case Right(value) =>
+
+        val partitions = FacetedSearchPartition.createCollection(
+          readConfig.filter,
+          readConfig.select,
+          getFacetField(facetFieldName),
+          JavaScalaConverters.listToSeq(value).map {
+            _.getAdditionalProperties.get("value")
+          }
+        )
+
+        JavaScalaConverters.seqToList(partitions)
     }
   }
 
@@ -65,7 +70,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
    */
 
   @throws[AzureSparkException]
-  private def getFacetFieldType(name: String): SearchField = {
+  private def getFacetField(name: String): SearchField = {
 
     // Retrieve the search field with given name
     readConfig.getSearchIndexFields.collectFirst {
@@ -115,58 +120,5 @@ object FacetedPartitioner {
           throwable
         )
     }
-  }
-
-  /**
-   * Combine two filters into one using the <b>and</b> logical operator.
-   * The output filter will be the combination of the two (if the second is defined), otherwise only the first filter
-   * @param first first filter
-   * @param second second filter (optional)
-   * @return the combination of the teo filters
-   */
-
-  protected[partitioning] def combineFilters(first: String, second: Option[String]): String = {
-
-    second match {
-      case Some(value) => s"$first and $value"
-      case None => first
-    }
-  }
-
-  /**
-   * Generate a set of partitions exploiting values of a facetable field
-   * @param facetField facet field
-   * @param facets facet field values
-   * @param readConfig read config
-   * @return a collection of Search partitions
-   */
-
-  protected[partitioning] def generatePartitions(facetField: SearchField,
-                                                 facets: Seq[Any],
-                                                 readConfig: ReadConfig): util.List[SearchPartition] = {
-
-    val valueFormatter = FilterValueFormatters.forType(facetField.getType)
-    val facetFieldName: String = facetField.getName
-    val facetFormattedValues: Seq[String] = facets.map {
-      valueFormatter.format
-    }
-
-    val facetPartitionFilters: Seq[String] = facetFormattedValues.map {
-      value => s"$facetFieldName eq $value"
-    }
-
-    val nullOrNotInOtherFacets: String = s"$facetFieldName eq null or " +
-      s"not (${facetPartitionFilters.mkString(" or ")})"
-
-    val allSearchPartitions: Seq[SearchPartition] = (facetPartitionFilters :+ nullOrNotInOtherFacets)
-      .zipWithIndex.map { case (facetFilter, partitionId) =>
-        ScalaSearchPartition(
-          partitionId,
-          Some(combineFilters(facetFilter, readConfig.filter)),
-          readConfig.select
-        )
-    }
-
-    JavaScalaConverters.seqToList(allSearchPartitions)
   }
 }
