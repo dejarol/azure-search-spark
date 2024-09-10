@@ -35,7 +35,7 @@ object SparkInternalConverters {
       } else if (searchFieldType.isComplex) {
         converterForComplexType(sparkType, searchField)
       } else if (searchFieldType.isGeoPoint) {
-        converterForGeopoints(sparkType)
+        converterForGeoPoint(sparkType)
       } else {
         None
       }
@@ -136,7 +136,7 @@ object SparkInternalConverters {
    * @return a converter for geo points
    */
 
-  private def converterForGeopoints(sparkType: DataType): Option[SparkInternalConverter] = {
+  private def converterForGeoPoint(sparkType: DataType): Option[SparkInternalConverter] = {
 
     sparkType match {
       case StructType(subFields) =>

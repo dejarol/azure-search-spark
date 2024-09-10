@@ -11,6 +11,13 @@ import org.apache.spark.sql.connector.read.PartitionReader
 
 import java.util
 
+/**
+ * Partition reader for Search dataSource
+ * @param readConfig read configuration
+ * @param converters map with keys being document keys and values being converters from Search document properties to Spark internal objects
+ * @param searchPartition a search partition
+ */
+
 class SearchPartitionReader(private val readConfig: ReadConfig,
                             private val converters: Map[String, SparkInternalConverter],
                             private val searchPartition: SearchPartition)
@@ -26,10 +33,12 @@ class SearchPartitionReader(private val readConfig: ReadConfig,
 
   override def get(): InternalRow = {
 
-    documentConverter(
-      searchResultIterator.next()
-        .getDocument(classOf[SearchDocument])
-    )
+    // Retrieve next document and convert it to an InternalRow
+    val nextDocument: SearchDocument =  searchResultIterator
+      .next()
+      .getDocument(classOf[SearchDocument])
+
+    documentConverter.apply(nextDocument)
   }
 
   override def close(): Unit = {

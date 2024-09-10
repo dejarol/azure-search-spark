@@ -9,7 +9,7 @@ import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, Par
 /**
  * Partition reader factory for Search dataSource
  * @param readConfig read configuration
- * @param converters map with keys being document keys and values being converters from Search properties to Spark internal objects
+ * @param converters map with keys being document keys and values being converters from Search document properties to Spark internal objects
  */
 
 class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
