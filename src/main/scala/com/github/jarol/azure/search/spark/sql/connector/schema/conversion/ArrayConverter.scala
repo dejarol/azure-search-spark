@@ -3,6 +3,11 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import org.apache.spark.sql.catalyst.util.ArrayData
 
+/**
+ * Converter for arrays
+ * @param internalConverter converter for internal type
+ */
+
 case class ArrayConverter(private val internalConverter: SparkInternalConverter)
   extends SparkInternalConverter {
 

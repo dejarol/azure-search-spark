@@ -4,6 +4,11 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 import java.util
 
+/**
+ * Converter for complex (nested) objects
+ * @param conversions map with keys being nested attribute names and values being conversions to apply to nested attributes
+ */
+
 case class ComplexConverter(private val conversions: Map[String, SparkInternalConverter])
   extends SparkInternalConverter {
 

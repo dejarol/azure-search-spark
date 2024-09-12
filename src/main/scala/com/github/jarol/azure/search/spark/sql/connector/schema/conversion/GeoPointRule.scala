@@ -1,7 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{StructType, StructField, DataType, DataTypes, ArrayType}
+
+/**
+ * Conversion rule for geo points
+ */
 
 case object GeoPointRule
   extends InferSchemaRule {

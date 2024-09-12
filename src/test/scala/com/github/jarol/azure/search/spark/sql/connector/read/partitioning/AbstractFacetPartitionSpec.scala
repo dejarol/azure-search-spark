@@ -51,13 +51,22 @@ class AbstractFacetPartitionSpec
       it("create a collection of partitions") {
 
         val facetFieldName = "field"
-        val facetValues = Seq("v1", "v2")
-        AbstractFacetPartition.createCollection(
+        val facetValues = Seq("v1", "v2", "v3")
+        val actual = AbstractFacetPartition.createCollection(
           None,
           None,
           createSearchField(facetFieldName, SearchFieldDataType.STRING),
           facetValues
         )
+
+        actual should have size(facetValues.size + 1)
+        actual.count {
+          _.isInstanceOf[FacetValuePartition]
+        } shouldBe facetValues.size
+
+        actual.count {
+          _.isInstanceOf[FacetNullValuePartition]
+        } shouldBe 1
       }
     }
   }
