@@ -3,6 +3,9 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning;
 import com.azure.search.documents.models.SearchOptions;
 import org.apache.spark.sql.connector.read.InputPartition;
 
+import java.util.List;
+import java.util.Objects;
+
 /**
  * A Search partition
  */
@@ -23,12 +26,30 @@ public interface SearchPartition
      * @return the search filter
      */
 
-    String getFilter();
+    String getSearchFilter();
 
     /**
-     * Return the search options that will be used for retrieving documents that will belong to this partition
+     * Get the list of fields to be retrieved from Search documents.
+     * If null or empty, all possible fields will be retrieved
+     * @return list of fields to select
+     */
+
+    List<String> getSearchSelect();
+
+    /**
+     * Return the search options that will be used for retrieving documents belonging to this partition
      * @return search options for retrieving the partition documents
      */
 
-    SearchOptions getSearchOptions();
+    default SearchOptions getSearchOptions() {
+
+        List<String> select = getSearchSelect();
+        String[] selectArray = Objects.isNull(select) || select.isEmpty()?
+                null :
+                select.toArray(new String[0]);
+
+        return new SearchOptions()
+                .setFilter(getSearchFilter())
+                .setSelect(selectArray);
+    }
 }

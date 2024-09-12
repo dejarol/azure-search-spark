@@ -50,7 +50,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
       // case Right: generate the partitions
       case Right(value) =>
 
-        val partitions = FacetedSearchPartition.createCollection(
+        val partitions = AbstractFacetPartition.createCollection(
           readConfig.filter,
           readConfig.select,
           getFacetField(facetFieldName),
@@ -82,7 +82,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   }
 }
 
-object FacetedPartitioner {
+private object FacetedPartitioner {
 
   /**
    * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
