@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import com.github.jarol.azure.search.spark.sql.connector.utils.Generics
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
@@ -42,16 +41,14 @@ object IndexActionTypeGetter {
    * @return a index action getter
    */
 
-  @throws[AzureSparkException]
+  @throws[IllegalIndexActionTypeColumnException]
   def apply(name: String, schema: StructType, defaultAction: IndexActionType): IndexActionTypeGetter = {
 
     val indexOfActionColumn: Int = schema.zipWithIndex.collectFirst {
       case (field, i) if field.name.equalsIgnoreCase(name) &&
         field.dataType.equals(DataTypes.StringType) => i
     }.getOrElse {
-      throw new AzureSparkException(
-        s"Action column $name could not be found or it's not a string column"
-      )
+      throw new IllegalIndexActionTypeColumnException(name)
     }
 
     IndexActionTypeGetter(

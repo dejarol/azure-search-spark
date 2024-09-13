@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{ComplexConverter, SparkInternalConverter}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 case class ComplexConversionRule(private val fields: Seq[StructField],

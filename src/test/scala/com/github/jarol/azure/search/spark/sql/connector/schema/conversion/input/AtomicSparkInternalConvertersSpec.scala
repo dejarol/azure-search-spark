@@ -1,15 +1,15 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
 
-import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
 
-import java.time.temporal.ChronoUnit
 import java.time._
+import java.time.temporal.ChronoUnit
 
-class AtomicTypeConvertersSpec
+class AtomicSparkInternalConvertersSpec
   extends BasicSpec {
 
-  import AtomicTypeConverters._
+  import AtomicSparkInternalConverters._
 
   describe("Each atomic type converter") {
     describe(SHOULD) {
@@ -61,11 +61,11 @@ class AtomicTypeConvertersSpec
           val input: OffsetDateTime = OffsetDateTime.of(
             LocalDate.now(),
             LocalTime.now(),
-            ZoneOffset.UTC
+            Constants.UTC_OFFSET
           )
 
           val expected: Long = ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
-          DateTimeToTimestampConverter.toSparkInternalObject(input.format(SparkInternalTimeConverter.SEARCH_DATE_FORMATTER)) shouldBe expected
+          DateTimeToTimestampConverter.toSparkInternalObject(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
           DateTimeToTimestampConverter.toSparkInternalObject(null.asInstanceOf[String]) shouldBe null
         }
 
@@ -74,11 +74,11 @@ class AtomicTypeConvertersSpec
           val input: OffsetDateTime = OffsetDateTime.of(
             LocalDate.now(),
             LocalTime.now(),
-            ZoneOffset.UTC
+            Constants.UTC_OFFSET
           )
 
           val expected: Int = input.toLocalDate.toEpochDay.toInt
-          DateTimeToDateConverter.toSparkInternalObject(input.format(SparkInternalTimeConverter.SEARCH_DATE_FORMATTER)) shouldBe expected
+          DateTimeToDateConverter.toSparkInternalObject(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
           DateTimeToDateConverter.toSparkInternalObject(null.asInstanceOf[String]) shouldBe null
         }
       }

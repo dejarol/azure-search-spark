@@ -23,14 +23,14 @@ class IndexActionTypeGetterSpec
 
         it("a non existing column") {
 
-          an[AzureSparkException] shouldBe thrownBy {
+          an[IllegalIndexActionTypeColumnException] shouldBe thrownBy {
             IndexActionTypeGetter("hello", schema, IndexActionType.UPLOAD)
           }
         }
 
         it("a non-string column") {
 
-          an[AzureSparkException] shouldBe thrownBy {
+          an[IllegalIndexActionTypeColumnException] shouldBe thrownBy {
             IndexActionTypeGetter(dateColName, schema, IndexActionType.UPLOAD)
           }
         }

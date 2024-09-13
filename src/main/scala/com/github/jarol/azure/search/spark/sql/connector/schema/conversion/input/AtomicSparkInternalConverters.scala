@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
 
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -10,7 +10,7 @@ import java.time.{Instant, OffsetDateTime}
  * Converters for Search atomic types
  */
 
-object AtomicTypeConverters {
+object AtomicSparkInternalConverters {
 
   /**
    * Converter for strings (internally represented by [[UTF8String]]s)

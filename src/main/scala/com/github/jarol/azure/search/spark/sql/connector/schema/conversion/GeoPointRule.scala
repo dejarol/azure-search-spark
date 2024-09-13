@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import org.apache.spark.sql.types.{StructType, StructField, DataType, DataTypes, ArrayType}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{ArrayConverter, AtomicSparkInternalConverters, ComplexConverter, SparkInternalConverter}
+import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
 
 /**
  * Conversion rule for geo points
@@ -21,8 +22,8 @@ case object GeoPointRule
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
   override def converter(): SparkInternalConverter = ComplexConverter(
     Map(
-      "type" -> AtomicTypeConverters.StringConverter,
-      "coordinates" -> ArrayConverter(AtomicTypeConverters.DoubleConverter)
+      "type" -> AtomicSparkInternalConverters.StringConverter,
+      "coordinates" -> ArrayConverter(AtomicSparkInternalConverters.DoubleConverter)
     )
   )
 }

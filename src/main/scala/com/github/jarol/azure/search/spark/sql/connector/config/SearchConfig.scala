@@ -1,14 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
-import org.apache.spark.SparkConf
-
 import scala.util.Try
 
 /**
  * Parent class for all Search configurations
  * @param localOptions options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
  *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
- * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
+ * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[org.apache.spark.SparkConf]] (if any)
  */
 
 class SearchConfig(protected val localOptions: Map[String, String],

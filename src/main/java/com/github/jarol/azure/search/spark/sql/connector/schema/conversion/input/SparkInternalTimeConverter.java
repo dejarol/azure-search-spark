@@ -1,4 +1,6 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input;
+
+import com.github.jarol.azure.search.spark.sql.connector.Constants;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,8 +17,6 @@ import java.time.format.DateTimeFormatter;
 public abstract class SparkInternalTimeConverter<T>
         extends SparkInternalTransformConverter<T> {
 
-    public static final DateTimeFormatter SEARCH_DATE_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
-
     @Override
     protected final T transform(Object value) {
 
@@ -24,7 +24,7 @@ public abstract class SparkInternalTimeConverter<T>
         return dateTimeToInternalObject(
                 OffsetDateTime.parse(
                         (String) value,
-                        SEARCH_DATE_FORMATTER
+                        Constants.DATE_TIME_FORMATTER
                 )
         );
     }

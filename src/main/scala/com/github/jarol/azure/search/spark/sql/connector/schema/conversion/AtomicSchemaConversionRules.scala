@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{AtomicSparkInternalConverters, SparkInternalConverter}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 object AtomicSchemaConversionRules
@@ -11,7 +12,7 @@ object AtomicSchemaConversionRules
 
     override def sparkType(): DataType = DataTypes.DateType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
-    override def converter(): SparkInternalConverter = AtomicTypeConverters.DateTimeToDateConverter
+    override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.DateTimeToDateConverter
   }
 
   private case object DateTimeToStringRule
@@ -19,7 +20,7 @@ object AtomicSchemaConversionRules
 
     override def sparkType(): DataType = DataTypes.StringType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
-    override def converter(): SparkInternalConverter = AtomicTypeConverters.StringConverter
+    override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.StringConverter
   }
 
   override protected val ALL_RULES: Set[SearchSparkConversionRule] = Set(

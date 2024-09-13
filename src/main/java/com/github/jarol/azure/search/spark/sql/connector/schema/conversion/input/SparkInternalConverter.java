@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input;
 
 /**
  * A converter from a Search data object to a Spark internal object

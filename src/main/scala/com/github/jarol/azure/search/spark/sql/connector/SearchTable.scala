@@ -33,7 +33,7 @@ class SearchTable(private val tableSchema: StructType)
     new SearchScanBuilder(
       schema(),
       ReadConfig(
-        JavaScalaConverters.javaMapToScalaMap(options)
+        JavaScalaConverters.javaMapToScala(options)
       )
     )
   }
@@ -42,7 +42,7 @@ class SearchTable(private val tableSchema: StructType)
 
     new SearchWriteBuilder(
       WriteConfig(
-        JavaScalaConverters.javaMapToScalaMap(info.options())
+        JavaScalaConverters.javaMapToScala(info.options())
       ),
       info.schema()
     )

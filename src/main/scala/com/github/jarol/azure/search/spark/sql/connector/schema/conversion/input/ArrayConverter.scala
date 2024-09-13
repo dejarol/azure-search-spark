@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
 
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -9,9 +9,9 @@ import org.apache.spark.sql.catalyst.util.ArrayData
  */
 
 case class ArrayConverter(private val internalConverter: SparkInternalConverter)
-  extends SparkInternalConverter {
+  extends SparkInternalTransformConverter[ArrayData] {
 
-  override def toSparkInternalObject(value: Any): ArrayData = {
+  override def transform(value: Any): ArrayData = {
 
     val values: Seq[Any] = JavaScalaConverters
       .listToSeq(value.asInstanceOf[java.util.List[Object]])

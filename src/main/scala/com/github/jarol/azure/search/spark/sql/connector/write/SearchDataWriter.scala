@@ -51,9 +51,15 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
     SearchWriterCommitMessage(partitionId, taskId)
   }
 
-  override def abort(): Unit = {}
+  override def abort(): Unit = {
 
-  override def close(): Unit = {}
+    log.warn(s"Aborting writer for partition $partitionId")
+  }
+
+  override def close(): Unit = {
+
+    log.info(s"Closing writer for partition $partitionId")
+  }
 
   private def writeDocuments(): Unit = {
 

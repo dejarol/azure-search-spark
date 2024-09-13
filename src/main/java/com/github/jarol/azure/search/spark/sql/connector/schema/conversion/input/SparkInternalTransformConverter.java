@@ -1,4 +1,6 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -11,7 +13,7 @@ public abstract class SparkInternalTransformConverter<T>
         implements SparkInternalConverter {
 
     @Override
-    public final T toSparkInternalObject(Object value) {
+    public final @Nullable T toSparkInternalObject(Object value) {
 
        return Objects.isNull(value) ?
                null :

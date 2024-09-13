@@ -31,5 +31,15 @@ object JavaScalaConverters {
    * @return a scala immutable map
    */
 
-  def javaMapToScalaMap[K, V](map: util.Map[K, V]): Map[K, V] = map.asScala.toMap
+  def javaMapToScala[K, V](map: util.Map[K, V]): Map[K, V] = map.asScala.toMap
+
+  /**
+   * Convert a Scala map to a Java map
+   * @param map map
+   * @tparam K key type
+   * @tparam V value type
+   * @return a scala immutable map
+   */
+
+  def scalaMapToJava[K, V](map: Map[K, V]): util.Map[K, V] = map.asJava
 }

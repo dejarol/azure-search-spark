@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion._
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{SparkInternalConverter, SparkInternalConverters}
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.{StructField, StructType}
 

@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.SparkInternalConverter
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.SparkInternalConverter
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
 

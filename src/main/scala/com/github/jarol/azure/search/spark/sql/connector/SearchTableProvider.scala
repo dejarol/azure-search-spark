@@ -20,7 +20,7 @@ class SearchTableProvider
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
 
     InferSchema.inferSchema(
-      JavaScalaConverters.javaMapToScalaMap(options)
+      JavaScalaConverters.javaMapToScala(options)
     )
   }
 

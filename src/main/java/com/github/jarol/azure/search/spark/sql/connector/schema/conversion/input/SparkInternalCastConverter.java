@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion;
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input;
 
 public class SparkInternalCastConverter<T>
         implements SparkInternalConverter {

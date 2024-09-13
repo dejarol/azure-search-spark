@@ -1,6 +1,7 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.GeoPointRule
 import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
