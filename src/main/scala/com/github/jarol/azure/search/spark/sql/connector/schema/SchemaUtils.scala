@@ -78,7 +78,7 @@ object SchemaUtils {
    * @return the schema of the search index
    */
 
-  def asStructType(fields: Seq[SearchField]): StructType = {
+  final def asStructType(fields: Seq[SearchField]): StructType = {
 
     StructType(
       fields.map(asStructField)
@@ -95,7 +95,7 @@ object SchemaUtils {
    * @return true if the two types are compatible
    */
 
-  def evaluateSparkTypesCompatibility(first: DataType, second: DataType): Boolean = {
+  final def evaluateSparkTypesCompatibility(first: DataType, second: DataType): Boolean = {
 
     (first, second) match {
       case (f: ArrayType, s: ArrayType) => evaluateSparkTypesCompatibility(f.elementType, s.elementType)
@@ -118,7 +118,7 @@ object SchemaUtils {
    * @return true if for all schema fields a namesake Search field exist
    */
 
-  def allSchemaFieldsExist(schema: Seq[StructField], searchFields: Seq[SearchField]): Boolean = {
+  final def allSchemaFieldsExist(schema: Seq[StructField], searchFields: Seq[SearchField]): Boolean = {
 
     schema.forall {
       spField => searchFields.exists {
@@ -134,7 +134,7 @@ object SchemaUtils {
    * @return missing schema fields
    */
 
-  def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
+  final def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
 
     schema.collect {
       case spField if !searchFields.exists {
@@ -151,7 +151,7 @@ object SchemaUtils {
    * @return a map with keys being schema fields and values being the namesake Search fields
    */
 
-  def matchNamesakeFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
+  final def matchNamesakeFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
 
     schema.map {
       spField => (
@@ -174,7 +174,7 @@ object SchemaUtils {
    * @return true for compatible fields
    */
 
-  def areCompatibleFields(structField: StructField, searchField: SearchField): Boolean = {
+  final def areCompatibleFields(structField: StructField, searchField: SearchField): Boolean = {
 
     val (searchType, sparkType) = (searchField.getType, structField.dataType)
     val compatibleDataType: Boolean = if (searchType.isAtomic) {
