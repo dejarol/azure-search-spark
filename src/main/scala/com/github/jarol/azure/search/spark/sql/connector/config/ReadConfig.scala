@@ -1,5 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
+import com.azure.core.util.Context
+import com.azure.search.documents.models.SearchOptions
+import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, SinglePartitionPartitioner}
 
 /**
@@ -11,6 +14,23 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Sear
 case class ReadConfig(override protected val localOptions: Map[String, String],
                       override protected val globalOptions: Map[String, String])
   extends SearchIOConfig(localOptions, globalOptions) {
+
+  /**
+   * Execute a Search on target index
+   * @param searchOptions search options
+   * @return an iterable of Search results
+   */
+
+  final def search(searchOptions: SearchOptions): SearchPagedIterable = {
+
+    withSearchClientDo {
+      sc => sc.search(
+        null,
+        searchOptions,
+        Context.NONE
+      )
+    }
+  }
 
   /**
    * Get the filter to apply on index documents. The filter must follow OData syntax

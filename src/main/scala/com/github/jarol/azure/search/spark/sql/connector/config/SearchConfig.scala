@@ -1,5 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
+import org.apache.commons.lang3.StringUtils
+
 import scala.util.Try
 
 /**
@@ -109,6 +111,18 @@ class SearchConfig(protected val localOptions: Map[String, String],
       SearchConfig.allWithPrefix(localOptions, prefix),
       SearchConfig.allWithPrefix(globalOptions, prefix)
     )
+  }
+
+  protected[config] final def getOptionalStringList(key: String): Option[Seq[String]] = {
+
+    get(key).flatMap {
+      v =>
+        if (StringUtils.isBlank(v)) {
+          None
+        } else {
+          Some(v.split(",").map(_.trim))
+        }
+    }
   }
 }
 

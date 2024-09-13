@@ -1,7 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
+import com.azure.search.documents.SearchDocument
+import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.utils.Generics
+import com.github.jarol.azure.search.spark.sql.connector.write.CreateIndexOptions
 
 /**
  * Write configuration
@@ -12,6 +15,18 @@ import com.github.jarol.azure.search.spark.sql.connector.utils.Generics
 case class WriteConfig(override protected val localOptions: Map[String, String],
                        override protected val globalOptions: Map[String, String])
   extends SearchIOConfig(localOptions, globalOptions) {
+
+  /**
+   * Index a batch of documents on target index
+   * @param documents documents to index
+   */
+
+  final def indexDocuments(documents: IndexDocumentsBatch[SearchDocument]): Unit = {
+
+    withSearchClientDo {
+      _.indexDocuments(documents)
+    }
+  }
 
   /**
    * Get the batch size to be used for writing documents along partitions
@@ -55,6 +70,24 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
    */
 
   def actionColumn: Option[String] = get(WriteConfig.ACTION_COLUMN_CONFIG)
+
+  /**
+   * Return the names of the columns that should be converted to Geopoints when writing data
+   * @return column names that should be converted to Geopoints
+   */
+
+  def convertToGeoPoints: Option[Seq[String]] = getOptionalStringList(WriteConfig.CONVERT_AS_GEOPOINTS)
+
+  def createIndexOptions: CreateIndexOptions = {
+
+    val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
+    CreateIndexOptions(
+      getIndex,
+      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD),
+      createIndexConfig.getOptionalStringList(WriteConfig.FILTERABLE_FIELDS),
+      createIndexConfig.getOptionalStringList(WriteConfig.SORTABLE_FIELDS)
+    )
+  }
 }
 
 object WriteConfig {
@@ -64,6 +97,12 @@ object WriteConfig {
   final val ACTION_CONFIG = "action"
   final val ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
+  final val CONVERT_AS_GEOPOINTS = "convertAsGeopoints"
+
+  final val CREATE_INDEX_PREFIX = "createIndex"
+  final val KEY_FIELD = "keyField"
+  final val FILTERABLE_FIELDS = "filterableFields"
+  final val SORTABLE_FIELDS = "sortableFields"
 
   /**
    * Create an instance with options as local options
@@ -89,7 +128,8 @@ object WriteConfig {
 
     Generics.unsafeValueOfEnum[IndexActionType](
       value,
-      (v, s) => v.name().equalsIgnoreCase(s) || v.toString.equalsIgnoreCase(s)
+      (v, s) => v.name().equalsIgnoreCase(s) ||
+        v.toString.equalsIgnoreCase(s)
     )
   }
 }

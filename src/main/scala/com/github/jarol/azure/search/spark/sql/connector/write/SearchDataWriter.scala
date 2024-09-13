@@ -17,12 +17,12 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
   extends DataWriter[InternalRow]
     with Logging {
 
-  private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(schema)
+  private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(Map.empty)
   private lazy val maybeActionGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn.map {
     IndexActionTypeGetter(_, schema, writeConfig.overallAction)
   }
 
-  private var actionsBatch: Seq[IndexAction[SearchDocument]] = Seq.empty
+  private var actionsBuffer: Seq[IndexAction[SearchDocument]] = Seq.empty
 
   override def write(record: InternalRow): Unit = {
 
@@ -37,10 +37,10 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
       .setActionType(actionType)
 
     // Add the action to the batch
-    actionsBatch = actionsBatch :+ indexAction
+    actionsBuffer = actionsBuffer :+ indexAction
 
     // If the batch is full, write it
-    if (actionsBatch.size >= writeConfig.batchSize) {
+    if (actionsBuffer.size >= writeConfig.batchSize) {
       writeDocuments()
     }
   }
@@ -63,22 +63,23 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
 
   private def writeDocuments(): Unit = {
 
-    if (actionsBatch.nonEmpty) {
+    if (actionsBuffer.nonEmpty) {
 
-      log.info(s"Starting to write ${actionsBatch.size} document(s) to index ${writeConfig.getIndex}. " +
+      log.info(s"Starting to write ${actionsBuffer.size} document(s) to index ${writeConfig.getIndex}. " +
         s"PartitionId: $partitionId, " +
         s"TaskId: $taskId"
       )
-      val documentsBatch = new IndexDocumentsBatch[SearchDocument]
-        .addActions(
-          JavaScalaConverters.seqToList(actionsBatch)
-        )
 
-      writeConfig.withSearchClientDo {
-        _.indexDocuments(documentsBatch)
-      }
+      // Index documents
+      writeConfig.indexDocuments(
+        new IndexDocumentsBatch[SearchDocument]
+          .addActions(
+            JavaScalaConverters.seqToList(actionsBuffer)
+          )
+      )
 
-      actionsBatch = Seq.empty
+      // Clear the actions buffer
+      actionsBuffer = Seq.empty
     }
   }
 }

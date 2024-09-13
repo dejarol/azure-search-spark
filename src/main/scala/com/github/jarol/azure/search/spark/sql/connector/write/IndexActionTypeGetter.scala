@@ -37,8 +37,8 @@ object IndexActionTypeGetter {
    * @param name name of the column that should be used for fetching the action type
    * @param schema row schema
    * @param defaultAction default action to use
-   * @throws AzureSparkException if given column name does not exist within the schema or it's not a string column
-   * @return a index action getter
+   * @throws IllegalIndexActionTypeColumnException if given column name does not exist within the schema or it's not a string column
+   * @return an index action getter
    */
 
   @throws[IllegalIndexActionTypeColumnException]

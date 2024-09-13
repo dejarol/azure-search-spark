@@ -5,7 +5,7 @@ import org.apache.spark.sql.connector.write.{Write, WriteBuilder}
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
 /**
- * Write builder for Search services
+ * Write builder for Search dataSource
  * @param writeConfig write configuration
  * @param schema schema of input [[org.apache.spark.sql.DataFrame]] (retrieved by [[org.apache.spark.sql.connector.write.LogicalWriteInfo]])
  */
@@ -16,6 +16,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
 
   override def build(): Write = {
 
+    // TODO: remove this part, use IndexActionTypeGetter companion
     writeConfig.actionColumn.flatMap {
       SearchWriteBuilder.evaluateIndexActionColumn(_, schema)
     } match {

@@ -1,12 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.config
 
 import com.azure.core.credential.AzureKeyCredential
-import com.azure.core.util.Context
 import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
-import com.azure.search.documents.models.SearchOptions
-import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -66,6 +63,11 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
 
   final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(searchClient)
 
+  /**
+   * Evaluate if this instance's index exists
+   * @return true if the index exist
+   */
+
   final def indexExist: Boolean = {
 
     withSearchIndexClientDo {
@@ -76,23 +78,17 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
     }
   }
 
+  /**
+   * Get the list of Search index fields
+   * @return list of Search index fields
+   */
+
   final def getSearchIndexFields: Seq[SearchField] = {
 
     withSearchIndexDo {
       si =>
       JavaScalaConverters.listToSeq(
         si.getFields
-      )
-    }
-  }
-
-  final def search(searchOptions: SearchOptions): SearchPagedIterable = {
-
-    withSearchClientDo {
-      sc => sc.search(
-        null,
-        searchOptions,
-        Context.NONE
       )
     }
   }

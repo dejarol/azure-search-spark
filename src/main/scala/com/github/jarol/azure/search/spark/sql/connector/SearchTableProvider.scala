@@ -10,7 +10,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util
 
 /**
- * Table provider that provides a [[Table]] able to deal with Azure Cognitive Search indexes
+ * Table provider for Search dataSource
  */
 
 class SearchTableProvider

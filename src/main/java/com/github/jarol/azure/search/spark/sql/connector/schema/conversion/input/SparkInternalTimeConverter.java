@@ -3,7 +3,6 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.inpu
 import com.github.jarol.azure.search.spark.sql.connector.Constants;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Spark internal converter for time-related types, i.e.
