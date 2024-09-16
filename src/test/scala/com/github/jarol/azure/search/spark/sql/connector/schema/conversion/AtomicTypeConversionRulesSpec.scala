@@ -3,9 +3,10 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.SearchFieldTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
+import org.apache.spark.sql.types.DataTypes
 import org.scalatest.Inspectors
 
-class AtomicInferSchemaRulesSpec
+class AtomicTypeConversionRulesSpec
   extends BasicSpec
     with Inspectors {
 
@@ -16,19 +17,19 @@ class AtomicInferSchemaRulesSpec
     SearchFieldDataType.GEOGRAPHY_POINT
   )
 
-  describe(`object`[AtomicInferSchemaRules.type ]) {
+  describe(`object`[AtomicTypeConversionRules.type ]) {
     describe(SHOULD) {
       describe("retrieve the atomic inferred type") {
         it("safely") {
 
           forAll(atomicSearchTypes) {
             `type` =>
-              AtomicInferSchemaRules.safeInferredTypeOf(`type`) shouldBe defined
+              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe defined
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
-              AtomicInferSchemaRules.safeInferredTypeOf(`type`) shouldBe empty
+              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe empty
           }
         }
 
@@ -37,17 +38,30 @@ class AtomicInferSchemaRulesSpec
           forAll(atomicSearchTypes) {
             `type` =>
               noException shouldBe thrownBy {
-                AtomicInferSchemaRules.unsafeInferredTypeOf(`type`)
+                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
               }
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
               an[AzureSparkException] shouldBe thrownBy {
-                AtomicInferSchemaRules.unsafeInferredTypeOf(`type`)
+                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
               }
           }
         }
+      }
+
+      it("evaluate the existence of a conversion rule") {
+
+        AtomicTypeConversionRules.existsConversionRuleFor(
+          DataTypes.DateType,
+          SearchFieldDataType.DATE_TIME_OFFSET
+        ) shouldBe true
+
+        AtomicTypeConversionRules.existsConversionRuleFor(
+          DataTypes.TimestampType,
+          SearchFieldDataType.DATE_TIME_OFFSET
+        ) shouldBe false
       }
     }
   }

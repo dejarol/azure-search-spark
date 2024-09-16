@@ -27,7 +27,7 @@ object SchemaUtils {
 
     val searchType = searchField.getType
     if (searchType.isAtomic) {
-      AtomicInferSchemaRules.unsafeInferredTypeOf(searchType)
+      AtomicTypeConversionRules.unsafeInferredTypeOf(searchType)
     } else if (searchType.isCollection) {
 
       // Extract collection inner type
@@ -181,7 +181,7 @@ object SchemaUtils {
 
       // They should be either naturally compatible or a suitable conversion rule should exist
       evaluateSparkTypesCompatibility(inferSparkTypeOf(searchField), sparkType) ||
-        AtomicSchemaConversionRules.existsRuleFor(sparkType, searchType)
+        AtomicTypeConversionRules.existsConversionRuleFor(sparkType, searchType)
     } else if (searchType.isCollection) {
 
       // Evaluate compatibility on the inner type

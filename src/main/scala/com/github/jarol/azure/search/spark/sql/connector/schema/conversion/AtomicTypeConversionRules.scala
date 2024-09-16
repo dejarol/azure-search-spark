@@ -5,8 +5,11 @@ import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{AtomicSparkInternalConverters, SparkInternalConverter}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
-object AtomicInferSchemaRules
-  extends SearchSparkConversionRuleSet {
+object AtomicTypeConversionRules {
+
+  /**
+   * Inference rule for strings
+   */
 
   private case object StringRule
     extends InferSchemaRule {
@@ -15,12 +18,20 @@ object AtomicInferSchemaRules
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.StringConverter
   }
 
+  /**
+   * Inference rule for integers
+   */
+
   private case object Int32Rule
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.IntegerType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.INT32
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.Int32Converter
   }
+
+  /**
+   * Inference rule for longs
+   */
 
   private case object Int64Rule
     extends InferSchemaRule {
@@ -29,12 +40,20 @@ object AtomicInferSchemaRules
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.Int64Converter
   }
 
+  /**
+   * Inference rule for doubles
+   */
+
   private case object DoubleRule
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.DoubleType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DOUBLE
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.DoubleConverter
   }
+
+  /**
+   * Inference rule for floats
+   */
 
   private case object SingleRule
     extends InferSchemaRule {
@@ -43,12 +62,20 @@ object AtomicInferSchemaRules
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.SingleConverter
   }
 
+  /**
+   * Inference rule for boolean
+   */
+
   private case object BooleanRule
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.BooleanType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.BOOLEAN
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.BooleanConverter
   }
+
+  /**
+   * Inference for date times (timestamps)
+   */
 
   private case object DateTimeToTimestampRule
     extends InferSchemaRule {
@@ -57,14 +84,38 @@ object AtomicInferSchemaRules
     override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.DateTimeToTimestampConverter
   }
 
-  override protected val ALL_RULES: Set[SearchSparkConversionRule] = Set(
+  /**
+   * Schema conversion rule from date time to date
+   */
+
+  private case object DateTimeToDateRule
+    extends SchemaConversionRule {
+    override def sparkType(): DataType = DataTypes.DateType
+    override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
+    override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.DateTimeToDateConverter
+  }
+
+  /**
+   * Schema conversion rule from date time to string
+   */
+
+  private case object DateTimeToStringRule
+    extends SchemaConversionRule {
+    override def sparkType(): DataType = DataTypes.StringType
+    override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
+    override def converter(): SparkInternalConverter = AtomicSparkInternalConverters.StringConverter
+  }
+
+  private val ALL_RULES: Set[SearchSparkConversionRule] = Set(
     StringRule,
     Int32Rule,
     Int64Rule,
     DoubleRule,
     SingleRule,
     BooleanRule,
-    DateTimeToTimestampRule
+    DateTimeToTimestampRule,
+    DateTimeToDateRule,
+    DateTimeToStringRule
   )
 
   /**
@@ -72,23 +123,73 @@ object AtomicInferSchemaRules
    *
    * It will return a non-empty Option for atomic fields (i.e. strings, numbers, boolean and dates)
    * for which an [[InferSchemaRule]] with same search type exists
-   * @param `type` search field
+   * @param `type` search field type
    * @return a non-empty Option if the field is atomic and there exists an infer schema rule
    */
 
   final def safeInferredTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
 
-    safelyCollectRule(
-      _.searchType().equals(`type`),
-      _.sparkType()
-    )
+    ALL_RULES.collectFirst {
+      case rule: InferSchemaRule if rule.acceptsSearchType(`type`) =>
+        rule.sparkType()
+    }
   }
 
+  /**
+   * Unsafely retrieve the inferred Spark type of Search type
+   * @param `type` Search type
+   * @throws AzureSparkException if the Spark type could not be inferred
+   * @return the inferred Spark type
+   */
+
+  @throws[AzureSparkException]
   final def unsafeInferredTypeOf(`type`: SearchFieldDataType): DataType = {
 
     safeInferredTypeOf(`type`) match {
       case Some(value) => value
       case None => throw new AzureSparkException(s"Could not find equivalent atomic type for SearchType ${`type`}")
     }
+  }
+
+  /**
+   * Evaluate if a conversion rule between a Spark type and a Search type exists
+   * @param sparkType Spark type
+   * @param searchType Search type
+   * @return true for existing conversion rule
+   */
+
+  final def existsConversionRuleFor(sparkType: DataType, searchType: SearchFieldDataType): Boolean = {
+
+    ALL_RULES.exists {
+      rule => rule.useForSchemaConversion() &&
+        !rule.useForSchemaInference() &&
+        rule.acceptsTypes(sparkType, searchType)
+    }
+  }
+
+  /**
+   * Safely retrieve the converter (either from inference or conversion rules) from a Spark type to a Search type
+   * @param sparkType Spark type
+   * @param searchType Search type
+   * @return an optional converter
+   */
+
+  final def safeConverterForTypes(sparkType: DataType, searchType: SearchFieldDataType): Option[SparkInternalConverter] = {
+
+    // Converter from inference rules
+    val maybeInferredConverter = ALL_RULES.collectFirst {
+      case rule: InferSchemaRule
+        if rule.acceptsTypes(sparkType, searchType) => rule.converter()
+    }
+
+    // Converter from conversion rules
+    val maybeConversionConverter = ALL_RULES.collectFirst {
+      case rule: SchemaConversionRule
+        if rule.acceptsTypes(sparkType, searchType) => rule.converter()
+    }
+
+    // Inference rule takes precedence, if defined
+    maybeInferredConverter
+      .orElse(maybeConversionConverter)
   }
 }

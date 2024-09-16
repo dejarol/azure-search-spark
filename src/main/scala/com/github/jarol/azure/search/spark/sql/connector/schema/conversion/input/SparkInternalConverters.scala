@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.inpu
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.{AtomicInferSchemaRules, AtomicSchemaConversionRules, GeoPointRule}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.{AtomicTypeConversionRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
@@ -56,10 +56,7 @@ object SparkInternalConverters {
   private def converterForAtomicTypes(spark: DataType, search: SearchFieldDataType): Option[SparkInternalConverter] = {
 
     // For atomic types, there should exist either an inference rule or a conversion rule
-    AtomicInferSchemaRules.safeRuleForTypes(spark, search)
-      .orElse(
-        AtomicSchemaConversionRules.safeRuleForTypes(spark, search)
-    ).map(_.converter())
+    AtomicTypeConversionRules.safeConverterForTypes(spark, search)
   }
 
   /**
