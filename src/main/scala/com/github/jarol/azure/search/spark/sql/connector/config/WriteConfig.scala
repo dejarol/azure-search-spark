@@ -85,7 +85,8 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
       getIndex,
       createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD),
       createIndexConfig.getOptionalStringList(WriteConfig.FILTERABLE_FIELDS),
-      createIndexConfig.getOptionalStringList(WriteConfig.SORTABLE_FIELDS)
+      createIndexConfig.getOptionalStringList(WriteConfig.SORTABLE_FIELDS),
+      actionColumn
     )
   }
 }

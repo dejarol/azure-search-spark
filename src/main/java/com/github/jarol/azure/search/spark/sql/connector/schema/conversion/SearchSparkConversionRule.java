@@ -46,6 +46,17 @@ public interface SearchSparkConversionRule {
     boolean useForSchemaConversion();
 
     /**
+     * Evaluate if this instance accepts a Spark type
+     * @param other Spark type
+     * @return true if this instance's Spark type equals given type
+     */
+
+    default boolean acceptsSparkType(DataType other) {
+
+        return sparkType().equals(other);
+    }
+
+    /**
      * Evaluate if this instance accepts a SearchType
      * @param other SearchType
      * @return true if this instance's SearchType equals given type

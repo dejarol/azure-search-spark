@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
+import com.github.jarol.azure.search.spark.sql.connector.DataTypeException
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{AtomicSparkInternalConverters, SparkInternalConverter}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
@@ -127,7 +127,7 @@ object AtomicTypeConversionRules {
    * @return a non-empty Option if the field is atomic and there exists an infer schema rule
    */
 
-  final def safeInferredTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
+  final def safeInferredSparkTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
 
     ALL_RULES.collectFirst {
       case rule: InferSchemaRule if rule.acceptsSearchType(`type`) =>
@@ -138,16 +138,49 @@ object AtomicTypeConversionRules {
   /**
    * Unsafely retrieve the inferred Spark type of Search type
    * @param `type` Search type
-   * @throws AzureSparkException if the Spark type could not be inferred
+   * @throws DataTypeException if the Spark type could not be inferred
    * @return the inferred Spark type
    */
 
-  @throws[AzureSparkException]
-  final def unsafeInferredTypeOf(`type`: SearchFieldDataType): DataType = {
+  @throws[DataTypeException]
+  final def unsafeInferredSparkTypeOf(`type`: SearchFieldDataType): DataType = {
 
-    safeInferredTypeOf(`type`) match {
+    safeInferredSparkTypeOf(`type`) match {
       case Some(value) => value
-      case None => throw new AzureSparkException(s"Could not find equivalent atomic type for SearchType ${`type`}")
+      case None => throw new DataTypeException(s"Could not find infer Spark type for SearchType ${`type`}")
+    }
+  }
+
+  /**
+   * Safely retrieve the inferred Search dataType of a Spark type.
+   *
+   * It will return a non-empty Option for atomic fields (i.e. strings, numbers, boolean and dates)
+   * for which an [[InferSchemaRule]] with same search type exists
+   * @param `type` Spark type
+   * @return a non-empty Option if the field is atomic and there exists an infer schema rule
+   */
+
+  final def safeInferredSearchTypeOf(`type`: DataType): Option[SearchFieldDataType] = {
+
+    ALL_RULES.collectFirst {
+      case rule: InferSchemaRule if rule.acceptsSparkType(`type`) =>
+        rule.searchType()
+    }
+  }
+
+  /**
+   * Unsafely retrieve the inferred Search type of a Spark type
+   * @param `type` Search type
+   * @throws DataTypeException if the Search type could not be inferred
+   * @return the inferred Spark type
+   */
+
+  @throws[DataTypeException]
+  final def unsafeInferredSearchTypeOf(`type`: DataType): SearchFieldDataType = {
+
+    safeInferredSearchTypeOf(`type`) match {
+      case Some(value) => value
+      case None => throw new DataTypeException(s"Could not find infer Search type for Spark type ${`type`}")
     }
   }
 

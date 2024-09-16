@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, DataTypeException, FieldFactory}
 import org.scalatest.Inspectors
 
 class SearchFieldTypeOperationsSpec
@@ -29,50 +29,50 @@ class SearchFieldTypeOperationsSpec
 
   describe(anInstanceOf[SearchFieldTypeOperations]) {
     describe(SHOULD) {
-      describe("evaluate if a search type") {
-        it("is a string") {
+      describe("evaluate if a search type is") {
+        it("a string") {
 
           SearchFieldDataType.STRING.isString shouldBe true
           SearchFieldDataType.INT32.isString shouldBe false
         }
 
-        it("is a number") {
+        it("a number") {
 
-          SearchFieldDataType.STRING.isNumber shouldBe false
-          SearchFieldDataType.INT32.isNumber shouldBe true
-          SearchFieldDataType.INT64.isNumber shouldBe true
-          SearchFieldDataType.DOUBLE.isNumber shouldBe true
-          SearchFieldDataType.SINGLE.isNumber shouldBe true
+          SearchFieldDataType.STRING.isNumeric shouldBe false
+          SearchFieldDataType.INT32.isNumeric shouldBe true
+          SearchFieldDataType.INT64.isNumeric shouldBe true
+          SearchFieldDataType.DOUBLE.isNumeric shouldBe true
+          SearchFieldDataType.SINGLE.isNumeric shouldBe true
         }
 
-        it("is boolean") {
+        it("boolean") {
 
           SearchFieldDataType.STRING.isBoolean shouldBe false
           SearchFieldDataType.BOOLEAN.isBoolean shouldBe true
         }
 
-        it("is datetime") {
+        it("datetime") {
 
           SearchFieldDataType.INT32.isDateTime shouldBe false
           SearchFieldDataType.DATE_TIME_OFFSET.isDateTime shouldBe true
         }
 
-        it("is atomic") {
+        it("atomic") {
 
           runTypeAssertion(TypeAssertions.Atomic)
         }
 
-        it("is complex") {
+        it("complex") {
 
           runTypeAssertion(TypeAssertions.Complex)
         }
 
-        it("is a collection") {
+        it("a collection") {
 
           runTypeAssertion(TypeAssertions.Collection)
         }
 
-        it("is a geo point") {
+        it("a geo point") {
 
           runTypeAssertion(TypeAssertions.GeoPoint)
         }
@@ -82,16 +82,16 @@ class SearchFieldTypeOperationsSpec
 
         // Simple type
         val nonCollectionField = SearchFieldDataType.INT32
-        nonCollectionField.safelyExtractCollectionType shouldBe empty
-        an[AzureSparkException] shouldBe thrownBy {
-          nonCollectionField.unsafelyExtractCollectionType
+        nonCollectionField.safeCollectionInnerType shouldBe empty
+        a [DataTypeException] shouldBe thrownBy {
+          nonCollectionField.unsafeCollectionInnerType
         }
 
         // Collection type
         val expectedInnerType = SearchFieldDataType.DATE_TIME_OFFSET
         val collectionType = createCollectionType(expectedInnerType)
-        collectionType.safelyExtractCollectionType shouldBe Some(expectedInnerType)
-        collectionType.unsafelyExtractCollectionType shouldBe expectedInnerType
+        collectionType.safeCollectionInnerType shouldBe Some(expectedInnerType)
+        collectionType.unsafeCollectionInnerType shouldBe expectedInnerType
       }
     }
   }

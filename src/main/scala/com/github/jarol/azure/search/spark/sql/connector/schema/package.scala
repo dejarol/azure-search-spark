@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import org.apache.spark.sql.types.DataType
 
 import scala.language.implicitConversions
 
@@ -21,6 +22,14 @@ package object schema {
    */
 
   implicit def toSearchFieldOperations(field: SearchField): SearchFieldOperations = new SearchFieldOperations(field)
+
+  /**
+   * Create an instance of [[SparkTypeOperations]]
+   * @param dataType input data type
+   * @return an operations instance
+   */
+
+  implicit def toSparkTypeOperations(dataType: DataType): SparkTypeOperations = new SparkTypeOperations(dataType)
 
 }
 

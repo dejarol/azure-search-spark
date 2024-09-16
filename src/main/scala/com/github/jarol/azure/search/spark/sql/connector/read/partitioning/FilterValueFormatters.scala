@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException
+import com.github.jarol.azure.search.spark.sql.connector.DataTypeException
 import com.github.jarol.azure.search.spark.sql.connector.schema._
 
 object FilterValueFormatters {
@@ -27,17 +27,17 @@ object FilterValueFormatters {
    * @return a filter value formatter
    */
 
-  @throws[AzureSparkException]
+  @throws[DataTypeException]
   def forType(`type`: SearchFieldDataType): FilterValueFormatter = {
 
     if (`type`.isString) {
       StringFormatter
-    } else if (`type`.isNumber) {
+    } else if (`type`.isNumeric) {
       NumericFormatter
     } else if (`type`.isDateTime) {
       DateTimeFormatter
     } else {
-      throw new AzureSparkException(f"Data type ${`type`} cannot not be formatted")
+      throw new DataTypeException(f"Data type ${`type`} cannot not be formatted")
     }
   }
 }

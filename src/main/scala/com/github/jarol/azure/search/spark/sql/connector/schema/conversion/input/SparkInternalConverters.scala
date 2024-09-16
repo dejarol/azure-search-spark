@@ -71,7 +71,7 @@ object SparkInternalConverters {
   private def converterForArrayType(sparkType: DataType, searchType: SearchFieldDataType): Option[SparkInternalConverter] = {
 
     // Evaluate rule for the inner type
-    val searchInnerType = searchType.unsafelyExtractCollectionType
+    val searchInnerType = searchType.unsafeCollectionInnerType
     sparkType match {
       case ArrayType(sparkInternalType, _) => safeConverterFor(
         StructField("array", sparkInternalType),

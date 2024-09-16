@@ -16,6 +16,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
 
   override def build(): Write = {
 
+
     // TODO: remove this part, use IndexActionTypeGetter companion
     writeConfig.actionColumn.flatMap {
       SearchWriteBuilder.evaluateIndexActionColumn(_, schema)

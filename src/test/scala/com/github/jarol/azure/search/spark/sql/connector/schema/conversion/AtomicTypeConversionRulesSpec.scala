@@ -24,12 +24,12 @@ class AtomicTypeConversionRulesSpec
 
           forAll(atomicSearchTypes) {
             `type` =>
-              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe defined
+              AtomicTypeConversionRules.safeInferredSparkTypeOf(`type`) shouldBe defined
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
-              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe empty
+              AtomicTypeConversionRules.safeInferredSparkTypeOf(`type`) shouldBe empty
           }
         }
 
@@ -38,14 +38,14 @@ class AtomicTypeConversionRulesSpec
           forAll(atomicSearchTypes) {
             `type` =>
               noException shouldBe thrownBy {
-                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
+                AtomicTypeConversionRules.unsafeInferredSparkTypeOf(`type`)
               }
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
               an[AzureSparkException] shouldBe thrownBy {
-                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
+                AtomicTypeConversionRules.unsafeInferredSparkTypeOf(`type`)
               }
           }
         }

@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema
 
-import com.azure.search.documents.indexes.models.SearchField
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion._
-import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
 /**
@@ -18,22 +18,22 @@ object SchemaUtils {
   /**
    * Return the Spark equivalent [[DataType]] for a search field
    * @param searchField a search field
-   * @throws AzureSparkException if given search type is not supported
+   * @throws DataTypeException if given search type is not supported
    * @return the equivalent Spark data type for given search field
    */
 
-  @throws[AzureSparkException]
+  @throws[DataTypeException]
   final def inferSparkTypeOf(searchField: SearchField): DataType = {
 
     val searchType = searchField.getType
     if (searchType.isAtomic) {
-      AtomicTypeConversionRules.unsafeInferredTypeOf(searchType)
+      AtomicTypeConversionRules.unsafeInferredSparkTypeOf(searchType)
     } else if (searchType.isCollection) {
 
       // Extract collection inner type
       ArrayType(
         inferSparkTypeOf(
-          new SearchField("array", searchType.unsafelyExtractCollectionType)
+          new SearchField("array", searchType.unsafeCollectionInnerType)
         ),
         containsNull = true
       )
@@ -54,7 +54,7 @@ object SchemaUtils {
     } else if (searchType.isGeoPoint) {
       GeoPointRule.sparkType
     } else {
-      throw new AzureSparkException(f"Unsupported datatype $searchType")
+      throw new DataTypeException(f"Unsupported Search type $searchType")
     }
   }
 
@@ -188,7 +188,7 @@ object SchemaUtils {
       sparkType match {
         case ArrayType(elementType, _) => areCompatibleFields(
           StructField("array", elementType),
-          new SearchField("array", searchType.unsafelyExtractCollectionType)
+          new SearchField("array", searchType.unsafeCollectionInnerType)
         )
         case _ => false
       }
@@ -220,5 +220,32 @@ object SchemaUtils {
     }
 
     searchField.sameNameOf(structField) && compatibleDataType
+  }
+
+  final def inferSearchTypeFor(structField: StructField, convertAsGeoPoints: Option[Seq[String]]): SearchFieldDataType = {
+
+    val (name, dataType) = (structField.name, structField.dataType)
+    if (dataType.isAtomic) {
+      AtomicTypeConversionRules.unsafeInferredSearchTypeOf(dataType)
+    } else if (dataType.isCollection) {
+      SearchFieldDataType.collection(
+        inferSearchTypeFor(
+          StructField(s"$name._inner", dataType.unsafeCollectionInnerType),
+          convertAsGeoPoints
+        )
+      )
+    } else if (dataType.isStruct) {
+      convertAsGeoPoints match {
+        case Some(value) =>
+
+          val shouldBeConvertedAsGeoPoint = value.exists {
+            _.equalsIgnoreCase(structField.name)
+          }
+          if (shouldBeConvertedAsGeoPoint) SearchFieldDataType.GEOGRAPHY_POINT else SearchFieldDataType.COMPLEX
+        case None => SearchFieldDataType.COMPLEX
+      }
+    } else {
+      throw new DataTypeException(s"Unsupported Spark type ($dataType)")
+    }
   }
 }

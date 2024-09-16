@@ -53,21 +53,20 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
 
   override def abort(): Unit = {
 
-    log.warn(s"Aborting writer for partition $partitionId")
+    log.warn(s"Aborting writing task $taskId on partition $partitionId")
   }
 
   override def close(): Unit = {
 
-    log.info(s"Closing writer for partition $partitionId")
+    log.info(s"Closing writer task $taskId on partition $partitionId")
   }
 
   private def writeDocuments(): Unit = {
 
     if (actionsBuffer.nonEmpty) {
 
-      log.info(s"Starting to write ${actionsBuffer.size} document(s) to index ${writeConfig.getIndex}. " +
-        s"PartitionId: $partitionId, " +
-        s"TaskId: $taskId"
+      log.debug(s"Starting to write ${actionsBuffer.size} document(s) to index ${writeConfig.getIndex} " +
+        s"(partitionId: $partitionId, taskId: $taskId)"
       )
 
       // Index documents
