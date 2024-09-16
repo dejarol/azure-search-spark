@@ -63,17 +63,37 @@ class SparkTypeOperationsSpec
         }
       }
 
-      it("extract a collection inner type") {
+      describe("extract both safely and unsafely") {
+        it("the collection inner type") {
 
-        val innerType = DataTypes.DateType
-        val collectionType = createArrayType(innerType)
-        collectionType.safeCollectionInnerType shouldBe Some(innerType)
-        collectionType.unsafeCollectionInnerType shouldBe innerType
+          val innerType = DataTypes.DateType
+          val collectionType = createArrayType(innerType)
+          collectionType.safeCollectionInnerType shouldBe Some(innerType)
+          collectionType.unsafeCollectionInnerType shouldBe innerType
 
-        val nonCollectionType = DataTypes.BooleanType
-        nonCollectionType.safeCollectionInnerType shouldBe empty
-        a[DataTypeException] shouldBe thrownBy {
-          nonCollectionType.unsafeCollectionInnerType
+          val nonCollectionType = DataTypes.BooleanType
+          nonCollectionType.safeCollectionInnerType shouldBe empty
+          a[DataTypeException] shouldBe thrownBy {
+            nonCollectionType.unsafeCollectionInnerType
+          }
+        }
+
+        it("the type subfields") {
+
+          val subFields = Seq(
+            createStructField("first", DataTypes.StringType),
+            createStructField("second", DataTypes.DateType)
+          )
+
+          val structType = createStructType(subFields: _*)
+          structType.safeSubFields shouldBe defined
+          structType.safeSubFields.get should contain theSameElementsAs subFields
+          structType.unsafeSubFields should contain theSameElementsAs subFields
+
+          DataTypes.StringType.safeSubFields shouldBe empty
+          a [DataTypeException] shouldBe thrownBy {
+            DataTypes.StringType.unsafeSubFields
+          }
         }
       }
     }

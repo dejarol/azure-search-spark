@@ -127,27 +127,11 @@ object AtomicTypeConversionRules {
    * @return a non-empty Option if the field is atomic and there exists an infer schema rule
    */
 
-  final def safeInferredSparkTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
+  final def safeInferredTypeOf(`type`: SearchFieldDataType): Option[DataType] = {
 
     ALL_RULES.collectFirst {
       case rule: InferSchemaRule if rule.acceptsSearchType(`type`) =>
         rule.sparkType()
-    }
-  }
-
-  /**
-   * Unsafely retrieve the inferred Spark type of Search type
-   * @param `type` Search type
-   * @throws DataTypeException if the Spark type could not be inferred
-   * @return the inferred Spark type
-   */
-
-  @throws[DataTypeException]
-  final def unsafeInferredSparkTypeOf(`type`: SearchFieldDataType): DataType = {
-
-    safeInferredSparkTypeOf(`type`) match {
-      case Some(value) => value
-      case None => throw new DataTypeException(s"Could not find infer Spark type for SearchType ${`type`}")
     }
   }
 
@@ -160,11 +144,27 @@ object AtomicTypeConversionRules {
    * @return a non-empty Option if the field is atomic and there exists an infer schema rule
    */
 
-  final def safeInferredSearchTypeOf(`type`: DataType): Option[SearchFieldDataType] = {
+  final def safeInferredTypeOf(`type`: DataType): Option[SearchFieldDataType] = {
 
     ALL_RULES.collectFirst {
       case rule: InferSchemaRule if rule.acceptsSparkType(`type`) =>
         rule.searchType()
+    }
+  }
+
+  /**
+   * Unsafely retrieve the inferred Spark type of Search type
+   * @param `type` Search type
+   * @throws DataTypeException if the Spark type could not be inferred
+   * @return the inferred Spark type
+   */
+
+  @throws[DataTypeException]
+  final def unsafeInferredTypeOf(`type`: SearchFieldDataType): DataType = {
+
+    safeInferredTypeOf(`type`) match {
+      case Some(value) => value
+      case None => throw new DataTypeException(s"Could not find infer Spark type for SearchType ${`type`}")
     }
   }
 
@@ -176,9 +176,9 @@ object AtomicTypeConversionRules {
    */
 
   @throws[DataTypeException]
-  final def unsafeInferredSearchTypeOf(`type`: DataType): SearchFieldDataType = {
+  final def unsafeInferredTypeOf(`type`: DataType): SearchFieldDataType = {
 
-    safeInferredSearchTypeOf(`type`) match {
+    safeInferredTypeOf(`type`) match {
       case Some(value) => value
       case None => throw new DataTypeException(s"Could not find infer Search type for Spark type ${`type`}")
     }

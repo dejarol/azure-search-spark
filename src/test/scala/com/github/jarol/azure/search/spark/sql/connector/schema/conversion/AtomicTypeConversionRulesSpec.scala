@@ -2,13 +2,14 @@ package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.SearchFieldTypeOperations
-import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, DataTypeException, FieldFactory}
 import org.apache.spark.sql.types.DataTypes
 import org.scalatest.Inspectors
 
 class AtomicTypeConversionRulesSpec
   extends BasicSpec
-    with Inspectors {
+    with FieldFactory
+      with Inspectors {
 
   private lazy val atomicSearchTypes: Set[SearchFieldDataType] = SearchFieldTypeOperations.ATOMIC_TYPES
   private lazy val nonAtomicTypes: Seq[SearchFieldDataType] = Seq(
@@ -19,33 +20,22 @@ class AtomicTypeConversionRulesSpec
 
   describe(`object`[AtomicTypeConversionRules.type ]) {
     describe(SHOULD) {
-      describe("retrieve the atomic inferred type") {
-        it("safely") {
+      describe("retrieve inferred Spark type") {
+        it("both safely and unsafely") {
 
           forAll(atomicSearchTypes) {
             `type` =>
-              AtomicTypeConversionRules.safeInferredSparkTypeOf(`type`) shouldBe defined
-          }
-
-          forAll(nonAtomicTypes) {
-            `type` =>
-              AtomicTypeConversionRules.safeInferredSparkTypeOf(`type`) shouldBe empty
-          }
-        }
-
-        it("unsafely") {
-
-          forAll(atomicSearchTypes) {
-            `type` =>
+              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe defined
               noException shouldBe thrownBy {
-                AtomicTypeConversionRules.unsafeInferredSparkTypeOf(`type`)
+                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
               }
           }
 
           forAll(nonAtomicTypes) {
             `type` =>
-              an[AzureSparkException] shouldBe thrownBy {
-                AtomicTypeConversionRules.unsafeInferredSparkTypeOf(`type`)
+              AtomicTypeConversionRules.safeInferredTypeOf(`type`) shouldBe empty
+              a [DataTypeException] shouldBe thrownBy {
+                AtomicTypeConversionRules.unsafeInferredTypeOf(`type`)
               }
           }
         }
@@ -62,6 +52,43 @@ class AtomicTypeConversionRulesSpec
           DataTypes.TimestampType,
           SearchFieldDataType.DATE_TIME_OFFSET
         ) shouldBe false
+      }
+
+      describe("retrieve Search inferred type") {
+        it("both safely and unsafely") {
+
+          val (dType, expected) = (DataTypes.StringType, SearchFieldDataType.STRING)
+          AtomicTypeConversionRules.safeInferredTypeOf(dType) shouldBe Some(expected)
+          AtomicTypeConversionRules.unsafeInferredTypeOf(dType) shouldBe expected
+
+          val arrayType = createArrayType(DataTypes.IntegerType)
+          AtomicTypeConversionRules.safeInferredTypeOf(arrayType) shouldBe empty
+
+          a [DataTypeException] shouldBe thrownBy {
+
+            AtomicTypeConversionRules.unsafeInferredTypeOf(
+              createArrayType(DataTypes.IntegerType)
+            )
+          }
+        }
+      }
+
+      describe("safely retrieve the converter between a Spark type and a Search type") {
+        it("using inference rules") {
+
+          AtomicTypeConversionRules.safeConverterForTypes(
+            DataTypes.StringType,
+            SearchFieldDataType.STRING
+          ) shouldBe defined
+        }
+
+        it("using conversion rules") {
+
+          AtomicTypeConversionRules.safeConverterForTypes(
+            DataTypes.DateType,
+            SearchFieldDataType.DATE_TIME_OFFSET
+          ) shouldBe defined
+        }
       }
     }
   }

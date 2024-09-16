@@ -57,7 +57,7 @@ object InferSchema {
       throw InferSchemaException.causedByIndexWithoutRetrievableFields(name)
     } else {
       // Infer schema for all non-hidden and selected fields
-      SchemaUtils.asStructType(
+      SchemaUtils.toStructType(
         selectFields(
           nonHiddenFields,
           select

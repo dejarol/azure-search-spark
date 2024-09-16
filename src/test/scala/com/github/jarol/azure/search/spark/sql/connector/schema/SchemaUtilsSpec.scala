@@ -63,7 +63,7 @@ class SchemaUtilsSpec
             complexField
           ) shouldBe StructType(
             innerFields.map(
-              SchemaUtils.asStructField
+              SchemaUtils.toStructField
             )
           )
         }
@@ -91,10 +91,10 @@ class SchemaUtilsSpec
             complexField
           )
 
-          val schema = SchemaUtils.asStructType(searchFields)
+          val schema = SchemaUtils.toStructType(searchFields)
           schema should have size searchFields.size
           schema should contain theSameElementsAs searchFields.map(
-            SchemaUtils.asStructField
+            SchemaUtils.toStructField
           )
         }
       }
@@ -359,6 +359,40 @@ class SchemaUtilsSpec
                 )
               )
             ) shouldBe false
+          }
+        }
+      }
+
+      describe("retrieve the Search inferred type for a Spark") {
+        it("atomic type") {
+
+          SchemaUtils.inferSearchTypeFor(
+            createStructField(
+              "first",
+              DataTypes.TimestampType
+            ),
+            None
+          ) shouldBe SearchFieldDataType.DATE_TIME_OFFSET
+        }
+
+        describe("array type") {
+          it("with inner atomic type") {
+
+            val inputCollectionType = DataTypes.IntegerType
+            SchemaUtils.inferSearchTypeFor(
+              createStructField(
+                "first",
+                inputCollectionType
+              ),
+              None
+            ) shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.INT32
+            )
+          }
+
+          it("with inner struct type") {
+
+            // TODO
           }
         }
       }
