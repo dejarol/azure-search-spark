@@ -146,10 +146,16 @@ object AtomicTypeConversionRules {
 
   final def safeInferredTypeOf(`type`: DataType): Option[SearchFieldDataType] = {
 
-    ALL_RULES.collectFirst {
+    val maybeInferredType: Option[SearchFieldDataType] = ALL_RULES.collectFirst {
       case rule: InferSchemaRule if rule.acceptsSparkType(`type`) =>
         rule.searchType()
     }
+    val maybeConvertedType: Option[SearchFieldDataType] = ALL_RULES.collectFirst {
+      case rule: SchemaConversionRule if rule.acceptsSparkType(`type`) => rule.searchType()
+    }
+
+    maybeInferredType
+      .orElse(maybeConvertedType)
   }
 
   /**

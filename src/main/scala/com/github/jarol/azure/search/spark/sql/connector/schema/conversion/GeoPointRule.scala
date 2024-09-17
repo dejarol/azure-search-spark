@@ -11,10 +11,17 @@ import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, 
 case object GeoPointRule
   extends InferSchemaRule {
 
+  private final val TYPE_LABEL = "type"
+  private final val COORDINATES_LABEL = "coordinates"
+
+  /**
+   * Default schema for Geopoints in Spark
+   */
+
   final val GEO_POINT_DEFAULT_STRUCT: StructType = StructType(
     Seq(
-      StructField("type", DataTypes.StringType),
-      StructField("coordinates", ArrayType(DataTypes.DoubleType))
+      StructField(TYPE_LABEL, DataTypes.StringType),
+      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType))
     )
   )
 
@@ -22,8 +29,8 @@ case object GeoPointRule
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
   override def converter(): SparkInternalConverter = ComplexConverter(
     Map(
-      "type" -> AtomicSparkInternalConverters.StringConverter,
-      "coordinates" -> ArrayConverter(AtomicSparkInternalConverters.DoubleConverter)
+      TYPE_LABEL -> AtomicSparkInternalConverters.StringConverter,
+      COORDINATES_LABEL -> ArrayConverter(AtomicSparkInternalConverters.DoubleConverter)
     )
   )
 }

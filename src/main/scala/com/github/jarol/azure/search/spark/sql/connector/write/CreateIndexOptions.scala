@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType, SearchIndex}
+import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
 import org.apache.spark.sql.types.StructField
 
 case class CreateIndexOptions(name: String,
@@ -16,12 +17,8 @@ case class CreateIndexOptions(name: String,
       name => schema.filterNot {
         sf => sf.name.equalsIgnoreCase(name)
       }
-    }.getOrElse(schema).map {
-      sf => new SearchField(
-        sf.name,
-        SearchFieldDataType.INT32
-      )
-    }
+    }.getOrElse(schema).map(SchemaUtils.toSearchField)
+
     new SearchIndex(name)
       .setFields(
         JavaScalaConverters.seqToList(

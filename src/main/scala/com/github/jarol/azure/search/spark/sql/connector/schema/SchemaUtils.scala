@@ -219,36 +219,30 @@ object SchemaUtils {
   }
 
   @throws[DataTypeException]
-  final def inferSearchTypeFor(structField: StructField,
-                               convertAsGeoPoints: Option[Seq[String]]): SearchFieldDataType = {
+  final def inferSearchTypeFor(structField: StructField): SearchFieldDataType = {
 
-    val (name, dataType) = (structField.name, structField.dataType)
+    val dataType = structField.dataType
     if (dataType.isAtomic) {
       AtomicTypeConversionRules.unsafeInferredTypeOf(dataType)
     } else if (dataType.isCollection) {
       SearchFieldDataType.collection(
         inferSearchTypeFor(
-          StructField(s"$name._inner", dataType.unsafeCollectionInnerType),
-          convertAsGeoPoints
+          StructField("array", dataType.unsafeCollectionInnerType)
         )
       )
     } else if (dataType.isStruct) {
-      convertAsGeoPoints match {
-        case Some(value) =>
 
-          val shouldBeConvertedAsGeoPoint = value.exists {
-            _.equalsIgnoreCase(structField.name)
-          }
-          if (shouldBeConvertedAsGeoPoint) {
-            SearchFieldDataType.GEOGRAPHY_POINT
-          } else SearchFieldDataType.COMPLEX
-        case None => SearchFieldDataType.COMPLEX
-      }
+      // If compatible with GeoPoint, use Geography point Search data type
+      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
+      if (compatibleWithGeoPoint) {
+        SearchFieldDataType.GEOGRAPHY_POINT
+      } else SearchFieldDataType.COMPLEX
     } else {
       throw new DataTypeException(s"Unsupported Spark type ($dataType)")
     }
   }
 
+  @throws[DataTypeException]
   final def toSearchField(structField: StructField): SearchField = {
 
     val (name, dType) = (structField.name, structField.dataType)
@@ -261,16 +255,23 @@ object SchemaUtils {
       new SearchField(
         name,
         SearchFieldDataType.collection(
-        inferSearchTypeFor(structField, None)
+          inferSearchTypeFor(
+            StructField("array", dType.unsafeCollectionInnerType)
+          )
         )
       )
     } else if (dType.isStruct) {
 
-      val subFields = dType.unsafeSubFields.map(toSearchField)
-      new SearchField(
-        name,
-        SearchFieldDataType.COMPLEX
-      ).setFields(subFields: _*)
+      val inferredSearchType = inferSearchTypeFor(structField)
+      if (inferredSearchType.isGeoPoint) {
+        new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
+      } else {
+        val subFields = dType.unsafeSubFields.map(toSearchField)
+        new SearchField(
+          name,
+          SearchFieldDataType.COMPLEX
+        ).setFields(subFields: _*)
+      }
     } else {
       throw new DataTypeException(s"Unsupported Spark type ($dType)")
     }

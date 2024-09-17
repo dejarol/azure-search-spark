@@ -16,6 +16,12 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
 
   override def build(): Write = {
 
+    if (writeConfig.indexExist) {
+
+    } else {
+
+      writeConfig.createIndexOptions
+    }
 
     // TODO: remove this part, use IndexActionTypeGetter companion
     writeConfig.actionColumn.flatMap {

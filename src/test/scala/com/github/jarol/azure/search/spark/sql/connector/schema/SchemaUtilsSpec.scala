@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.GeoPointRule
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory, JavaScalaConverters}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
 
@@ -368,10 +368,9 @@ class SchemaUtilsSpec
 
           SchemaUtils.inferSearchTypeFor(
             createStructField(
-              "first",
+              first,
               DataTypes.TimestampType
-            ),
-            None
+            )
           ) shouldBe SearchFieldDataType.DATE_TIME_OFFSET
         }
 
@@ -381,10 +380,9 @@ class SchemaUtilsSpec
             val inputCollectionType = DataTypes.IntegerType
             SchemaUtils.inferSearchTypeFor(
               createStructField(
-                "first",
-                inputCollectionType
-              ),
-              None
+                first,
+                createArrayType(inputCollectionType)
+              )
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.INT32
             )
@@ -392,8 +390,91 @@ class SchemaUtilsSpec
 
           it("with inner struct type") {
 
-            // TODO
+            SchemaUtils.inferSearchTypeFor(
+              createStructField(
+                first,
+                createArrayType(
+                  createStructType(
+                    createStructField(second, DataTypes.StringType),
+                    createStructField(third, DataTypes.DateType)
+                  )
+                )
+              )
+            ) shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.COMPLEX
+            )
           }
+
+          it("with compatible geo point type") {
+
+            SchemaUtils.inferSearchTypeFor(
+              createStructField(
+                first,
+                createArrayType(GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
+              )
+            ) shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.GEOGRAPHY_POINT
+            )
+          }
+        }
+      }
+
+      describe("convert Struct fields to Search fields") {
+        it("for atomic types") {
+
+          val structField = createStructField(first, DataTypes.StringType)
+          val searchField = SchemaUtils.toSearchField(structField)
+
+          searchField.getName shouldBe structField.name
+          searchField.getType shouldBe SearchFieldDataType.STRING
+        }
+
+        it("for collection types") {
+
+          val structField = createArrayField(first, DataTypes.DateType)
+          val searchField = SchemaUtils.toSearchField(structField)
+
+          searchField.getName shouldBe structField.name
+          searchField.getType shouldBe SearchFieldDataType.collection(
+            SearchFieldDataType.DATE_TIME_OFFSET
+          )
+        }
+
+        it("for struct types") {
+
+          val structType = createStructType(
+            createStructField(first, DataTypes.IntegerType),
+            createStructField(second, DataTypes.DateType)
+          )
+
+          val structField = createStructField(third, structType)
+          val searchField = SchemaUtils.toSearchField(structField)
+
+          searchField.getName shouldBe structField.name
+          searchField.getType shouldBe SearchFieldDataType.COMPLEX
+
+          val expectedSubFields = Map(
+            first -> SearchFieldDataType.INT32,
+            second -> SearchFieldDataType.DATE_TIME_OFFSET
+          )
+
+          val innerFields = JavaScalaConverters.listToSeq(searchField.getFields)
+          forAll(innerFields) {
+            field =>
+              expectedSubFields.exists {
+                case (k, v) => field.getName.equals(k) && field.getType.equals(v)
+              } shouldBe true
+          }
+        }
+
+        it("for geo compatible struct types") {
+
+          val structType = GeoPointRule.GEO_POINT_DEFAULT_STRUCT
+          val structField = createStructField(third, structType)
+          val searchField = SchemaUtils.toSearchField(structField)
+
+          searchField.getName shouldBe structField.name
+          searchField.getType shouldBe SearchFieldDataType.GEOGRAPHY_POINT
         }
       }
     }
