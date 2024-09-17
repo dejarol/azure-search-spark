@@ -5,14 +5,15 @@ import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, Phys
 import org.apache.spark.sql.types.StructType
 
 class SearchBatchWrite(private val writeConfig: WriteConfig,
-                       private val schema: StructType)
+                       private val schema: StructType,
+                       private val indexActionTypeGetter: Option[IndexActionTypeGetter])
   extends BatchWrite {
 
   override def createBatchWriterFactory(info: PhysicalWriteInfo): DataWriterFactory = {
 
     new SearchWriterFactory(
       writeConfig,
-      schema
+      indexActionTypeGetter
     )
   }
 

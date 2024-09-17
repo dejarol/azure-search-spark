@@ -4,7 +4,7 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.utils.Generics
-import com.github.jarol.azure.search.spark.sql.connector.write.CreateIndexOptions
+import com.github.jarol.azure.search.spark.sql.connector.write.CreateSearchIndexOptions
 
 /**
  * Write configuration
@@ -78,14 +78,17 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
 
   def convertToGeoPoints: Option[Seq[String]] = getOptionalStringList(WriteConfig.CONVERT_AS_GEOPOINTS)
 
-  def createIndexOptions: CreateIndexOptions = {
+  def createIndexOptions: CreateSearchIndexOptions = {
 
     val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
-    CreateIndexOptions(
+    CreateSearchIndexOptions(
       getIndex,
       createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD),
       createIndexConfig.getOptionalStringList(WriteConfig.FILTERABLE_FIELDS),
       createIndexConfig.getOptionalStringList(WriteConfig.SORTABLE_FIELDS),
+      createIndexConfig.getOptionalStringList(WriteConfig.HIDDEN_FIELDS),
+      createIndexConfig.getOptionalStringList(WriteConfig.SEARCHABLE_FIELDS),
+      createIndexConfig.getOptionalStringList(WriteConfig.FACETABLE_FIELDS),
       actionColumn
     )
   }
@@ -104,6 +107,9 @@ object WriteConfig {
   final val KEY_FIELD = "keyField"
   final val FILTERABLE_FIELDS = "filterableFields"
   final val SORTABLE_FIELDS = "sortableFields"
+  final val HIDDEN_FIELDS = "hiddenFields"
+  final val SEARCHABLE_FIELDS = "searchableFields"
+  final val FACETABLE_FIELDS = "facetableFields"
 
   /**
    * Create an instance with options as local options

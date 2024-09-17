@@ -267,10 +267,8 @@ object SchemaUtils {
         new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
       } else {
         val subFields = dType.unsafeSubFields.map(toSearchField)
-        new SearchField(
-          name,
-          SearchFieldDataType.COMPLEX
-        ).setFields(subFields: _*)
+        new SearchField(name, SearchFieldDataType.COMPLEX)
+          .setFields(subFields: _*)
       }
     } else {
       throw new DataTypeException(s"Unsupported Spark type ($dType)")

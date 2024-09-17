@@ -8,19 +8,15 @@ import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
-import org.apache.spark.sql.types.StructType
 
 class SearchDataWriter(private val writeConfig: WriteConfig,
-                       private val schema: StructType,
+                       private val maybeActionGetter: Option[IndexActionTypeGetter],
                        private val partitionId: Int,
                        private val taskId: Long)
   extends DataWriter[InternalRow]
     with Logging {
 
   private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(Map.empty)
-  private lazy val maybeActionGetter: Option[IndexActionTypeGetter] = writeConfig.actionColumn.map {
-    IndexActionTypeGetter(_, schema, writeConfig.overallAction)
-  }
 
   private var actionsBuffer: Seq[IndexAction[SearchDocument]] = Seq.empty
 

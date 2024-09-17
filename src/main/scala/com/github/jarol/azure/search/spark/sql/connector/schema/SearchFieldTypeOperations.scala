@@ -59,11 +59,6 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    */
 
   final def isGeoPoint: Boolean = input.equals(SearchFieldDataType.GEOGRAPHY_POINT)
-
-  /**
-   * Safely extract the inner type of this instance (if it's collection)
-   * @return a non-empty value this instance refers to a collection type
-   */
 }
 
 private object SearchFieldTypeOperations {

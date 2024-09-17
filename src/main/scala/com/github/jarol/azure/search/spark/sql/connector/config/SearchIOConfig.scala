@@ -68,7 +68,7 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
    * @return true if the index exist
    */
 
-  final def indexExist: Boolean = {
+  final def indexExists: Boolean = {
 
     withSearchIndexClientDo {
       sic =>

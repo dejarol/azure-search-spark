@@ -26,7 +26,7 @@ object InferSchema {
     val readConfig = ReadConfig(options)
     val indexName: String = readConfig.getIndex
 
-    if (readConfig.indexExist) {
+    if (readConfig.indexExists) {
       inferSchemaForIndex(
         indexName,
         readConfig.getSearchIndexFields,

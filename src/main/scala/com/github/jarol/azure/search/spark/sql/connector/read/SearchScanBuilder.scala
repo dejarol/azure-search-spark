@@ -23,7 +23,7 @@ class SearchScanBuilder(private val schema: StructType,
   @throws[ScanBuilderException]
   override def build(): Scan = {
 
-    if (!readConfig.indexExist) {
+    if (!readConfig.indexExists) {
       throw ScanBuilderException.causedByNonExistingIndex(readConfig.getIndex)
     } else {
       SearchScan.safeApply(schema, readConfig.getSearchIndexFields, readConfig) match {
