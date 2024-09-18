@@ -78,7 +78,7 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
 
   def convertToGeoPoints: Option[Seq[String]] = getOptionalStringList(WriteConfig.CONVERT_AS_GEOPOINTS)
 
-  def createIndexOptions: SearchFieldsOptions = {
+  def searchFieldOptions: SearchFieldsOptions = {
 
     val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
     SearchFieldsOptions(

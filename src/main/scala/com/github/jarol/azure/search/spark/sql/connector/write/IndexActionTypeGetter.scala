@@ -37,7 +37,7 @@ object IndexActionTypeGetter {
    * @param name name of the column that should be used for fetching the action type
    * @param schema row schema
    * @param defaultAction default action to use
-   * @throws IllegalIndexActionTypeColumnException if given column name does not exist within the schema or it's not a string column
+   * @throws IllegalIndexActionTypeColumnException if given column name does not exist within the schema, or it's not a string column
    * @return an index action getter
    */
 

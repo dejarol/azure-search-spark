@@ -19,7 +19,12 @@ class SearchFieldsOptionsSpec
     createStructField(third, DataTypes.DateType)
   )
 
-  private def createOptionsForFeature(feature: SearchFieldFeature, list: Seq[String]): SearchFieldsOptions = {
+  private def createOptionsForFeature(
+                                       feature: SearchFieldFeature,
+                                       key: String,
+                                       list: Seq[String],
+                                       indexActionColumn: Option[String]
+                                     ): SearchFieldsOptions = {
 
     val (facetable, filterable, hidden, searchable, sortable): (OSS, OSS, OSS, OSS, OSS) = feature match {
       case SearchFieldFeature.FACETABLE => (Some(list), None, None, None, None)
@@ -31,13 +36,13 @@ class SearchFieldsOptionsSpec
     }
 
     SearchFieldsOptions(
-      "key",
+      key,
       filterableFields = filterable,
       sortableFields = sortable,
       hiddenFields = hidden,
       searchableFields = searchable,
       facetableFields = facetable,
-      None
+      indexActionColumn
     )
   }
 
@@ -48,10 +53,10 @@ class SearchFieldsOptionsSpec
    * @return a map with keys being field names and values being field themselves
    */
 
-  private def getSearchFields(
-                               options: SearchFieldsOptions,
-                               schema: Seq[StructField]
-                             ): Map[String, SearchField] = {
+  private def getSearchFieldsMap(
+                                  options: SearchFieldsOptions,
+                                  schema: Seq[StructField]
+                                ): Map[String, SearchField] = {
 
     options.schemaToSearchFields(schema)
       .map {
@@ -60,27 +65,31 @@ class SearchFieldsOptionsSpec
   }
 
   private def assertFeatureEnablingFor(
-                         feature: SearchFieldFeature,
-                         list: Seq[String],
-                         predicate: (SearchFieldsOptions, StructField) => Boolean
-                       ): Unit = {
+                                        feature: SearchFieldFeature,
+                                        key: String,
+                                        list: Seq[String],
+                                        predicate: (SearchFieldsOptions, StructField) => Boolean
+                                      ): Unit = {
 
-    val options = createOptionsForFeature(feature, list)
-    val inListPredicate: StructField => Boolean = sf => list.exists {
-      _.equalsIgnoreCase(sf.name)
+    val options = createOptionsForFeature(feature, key, list, None)
+    val featurePredicate: StructField => Boolean = feature match {
+      case SearchFieldFeature.KEY => _.name.equalsIgnoreCase(key)
+      case _ => sf =>
+        list.exists {
+          _.equalsIgnoreCase(sf.name)
+        }
     }
 
-    val fieldNotInList = schema.filterNot(inListPredicate)
-    val fieldInList = schema.filter(inListPredicate)
-    val searchFields = getSearchFields(options, schema)
-
-    forAll(fieldNotInList) {
+    val nonMatchingFields = schema.filterNot(featurePredicate)
+    val matchingFields = schema.filter(featurePredicate)
+    val searchFields = getSearchFieldsMap(options, schema)
+    forAll(nonMatchingFields) {
       sf =>
         predicate(options, sf) shouldBe false
         feature.isEnabled(searchFields(sf.name)) shouldBe false
     }
 
-    forAll(fieldInList) {
+    forAll(matchingFields) {
       sf =>
         predicate(options, sf) shouldBe true
         feature.isEnabled(searchFields(sf.name)) shouldBe true
@@ -93,15 +102,8 @@ class SearchFieldsOptionsSpec
 
         val indexActionColumn = fourth
         val input = schema :+ createStructField(indexActionColumn, DataTypes.StringType)
-        val actual = SearchFieldsOptions(
-            "key",
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(fourth)
-          ).maybeExcludeIndexActionColumn(schema)
+        val actual = createOptionsForFeature(SearchFieldFeature.SEARCHABLE, "key", Seq.empty, Some(fourth))
+          .maybeExcludeIndexActionColumn(schema)
 
         actual should not be empty
         val expectedFieldNames = input.collect {
@@ -117,6 +119,7 @@ class SearchFieldsOptionsSpec
 
           assertFeatureEnablingFor(
             SearchFieldFeature.FACETABLE,
+            "key",
             Seq(second),
             _.isFacetable(_)
           )
@@ -126,6 +129,7 @@ class SearchFieldsOptionsSpec
 
           assertFeatureEnablingFor(
             SearchFieldFeature.FILTERABLE,
+            "key",
             Seq(first),
             _.isFilterable(_)
           )
@@ -133,7 +137,42 @@ class SearchFieldsOptionsSpec
 
         it("hidden") {
 
-          // TODO
+          assertFeatureEnablingFor(
+            SearchFieldFeature.HIDDEN,
+            "key",
+            Seq(third),
+            _.isHidden(_)
+          )
+        }
+
+        it("key") {
+
+          assertFeatureEnablingFor(
+            SearchFieldFeature.KEY,
+            second,
+            Seq.empty,
+            _.isKey(_)
+          )
+        }
+
+        it("searchable") {
+
+          assertFeatureEnablingFor(
+            SearchFieldFeature.SEARCHABLE,
+            "key",
+            Seq(second),
+            _.isSearchable(_)
+          )
+        }
+
+        it("sortable") {
+
+          assertFeatureEnablingFor(
+            SearchFieldFeature.SORTABLE,
+            "key",
+            Seq(second),
+            _.isSortable(_)
+          )
         }
       }
     }

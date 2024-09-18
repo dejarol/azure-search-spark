@@ -68,7 +68,7 @@ object AtomicSearchConverters {
 
       OffsetDateTime.of(
         LocalDate.ofEpochDay(value.asInstanceOf[Int].toLong),
-        LocalTime.of(0, 0),
+        LocalTime.of(0, 0, 0, 0),
         Constants.UTC_OFFSET
       )
     }

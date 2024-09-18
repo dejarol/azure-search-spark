@@ -56,7 +56,7 @@ object SparkInternalConverters {
   private def converterForAtomicTypes(spark: DataType, search: SearchFieldDataType): Option[SparkInternalConverter] = {
 
     // For atomic types, there should exist either an inference rule or a conversion rule
-    AtomicTypeConversionRules.safeConverterForTypes(spark, search)
+    AtomicTypeConversionRules.safeSparkConverterForTypes(spark, search)
   }
 
   /**
@@ -97,7 +97,7 @@ object SparkInternalConverters {
     sparkType match {
       case StructType(sparkSubFields) =>
 
-        // Compute the converter to related to each subfield
+        // Compute the converter for to each subfield
         val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
         val convertersMap: Map[String, SparkInternalConverter] = SchemaUtils
           .matchNamesakeFields(sparkSubFields, searchSubFields)
@@ -149,7 +149,7 @@ object SparkInternalConverters {
         }
 
         if (allSubFieldsExist) {
-          Some(GeoPointRule.converter())
+          Some(GeoPointRule.sparkConverter())
         } else {
           None
         }

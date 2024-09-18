@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, BasicSpec}
+import com.github.jarol.azure.search.spark.sql.connector.BasicSpec
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
@@ -19,7 +19,7 @@ class IndexActionTypeGetterSpec
 
   describe(`object`[IndexActionTypeGetter]) {
     describe(SHOULD) {
-      describe(s"throw an ${nameOf[AzureSparkException]} for") {
+      describe(s"throw an exception for") {
 
         it("a non existing column") {
 

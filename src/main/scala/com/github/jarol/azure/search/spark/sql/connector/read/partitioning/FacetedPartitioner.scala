@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.config.{ConfigException, ReadConfig, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
-import com.github.jarol.azure.search.spark.sql.connector.{AzureSparkException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
 
 import java.util
 import scala.util.Try
@@ -65,11 +65,11 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   /** Retrieve the Search field with given name
    * @param name field name
-   * @throws AzureSparkException if field cannot be retrieved
+   * @throws NoSuchSearchFieldException if field cannot be retrieved
    * @return Search field with given name
    */
 
-  @throws[AzureSparkException]
+  @throws[NoSuchSearchFieldException]
   private def getFacetField(name: String): SearchField = {
 
     // Retrieve the search field with given name
@@ -77,7 +77,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
       case sf if sf.getName.equalsIgnoreCase(name) => sf
     } match {
       case Some(value) => value
-      case None => throw new AzureSparkException(s"Could not retrieve information for facet field $name")
+      case None => throw new NoSuchSearchFieldException(name)
     }
   }
 }

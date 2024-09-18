@@ -33,7 +33,7 @@ object InferSchema {
         readConfig.select
       )
     } else {
-      throw InferSchemaException.causedByNonExistingIndex(indexName)
+      throw InferSchemaException.forNonExistingIndex(indexName)
     }
   }
 
@@ -54,7 +54,7 @@ object InferSchema {
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)
     if (nonHiddenFields.isEmpty) {
-      throw InferSchemaException.causedByIndexWithoutRetrievableFields(name)
+      throw InferSchemaException.forIndexWithNoRetrievableFields(name)
     } else {
       // Infer schema for all non-hidden and selected fields
       SchemaUtils.toStructType(

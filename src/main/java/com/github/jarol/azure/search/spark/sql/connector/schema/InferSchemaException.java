@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import com.github.jarol.azure.search.spark.sql.connector.IndexDoesNotExistException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public class InferSchemaException
-        extends AzureSparkException {
+        extends RuntimeException {
 
     public static final String COULD_NOT_INFER_SCHEMA_PREFIX = "Could not infer schema for index";
 
@@ -41,7 +40,7 @@ public class InferSchemaException
      */
 
     @Contract("_ -> new")
-    public static @NotNull InferSchemaException causedByNonExistingIndex(
+    public static @NotNull InferSchemaException forNonExistingIndex(
             String name
     ) {
         return new InferSchemaException(
@@ -57,12 +56,12 @@ public class InferSchemaException
      */
 
     @Contract("_ -> new")
-    public static @NotNull InferSchemaException causedByIndexWithoutRetrievableFields(
+    public static @NotNull InferSchemaException forIndexWithNoRetrievableFields(
             String name
     ) {
         return new InferSchemaException(
                 name,
-                new AzureSparkException(
+                new IllegalStateException(
                         String.format("No retrievable field found for index %s", name)
                 )
         );

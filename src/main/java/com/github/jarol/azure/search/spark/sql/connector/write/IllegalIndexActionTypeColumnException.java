@@ -1,7 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.write;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
-
 /**
  * Exception throw when the column name used for retrieving the {@link com.azure.search.documents.models.IndexActionType}
  * from an {@link org.apache.spark.sql.catalyst.InternalRow}
@@ -12,7 +10,7 @@ import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
  */
 
 public class IllegalIndexActionTypeColumnException
-        extends AzureSparkException {
+        extends IllegalArgumentException {
 
   /**
    * Create an instance for a column name

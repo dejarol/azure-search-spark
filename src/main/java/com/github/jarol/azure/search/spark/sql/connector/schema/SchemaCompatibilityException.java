@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public class SchemaCompatibilityException
-        extends AzureSparkException {
+        extends IllegalStateException {
 
     /**
      * Create an instance

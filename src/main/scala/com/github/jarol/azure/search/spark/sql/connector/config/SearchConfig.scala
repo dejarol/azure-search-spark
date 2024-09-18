@@ -57,7 +57,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
   }
 
   /**
-   * Get the value of a key and transform it, or throw an exception if not found
+   * Get the value of a key, or throw an exception if not found
    * @param key key
    * @throws ConfigException if the key is not found
    * @return the value related to given key, converted using given converter

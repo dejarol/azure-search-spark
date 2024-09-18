@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.schema;
 
 import com.azure.search.documents.indexes.models.SearchField;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -105,7 +104,7 @@ public enum SearchFieldFeature {
      * @return true for enabled features
      */
 
-    public @NotNull Boolean isEnabled(
+    public boolean isEnabled(
             SearchField searchField
     ) {
 

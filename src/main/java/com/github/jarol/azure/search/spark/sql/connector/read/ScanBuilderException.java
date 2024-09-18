@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.read;
 
-import com.github.jarol.azure.search.spark.sql.connector.AzureSparkException;
 import com.github.jarol.azure.search.spark.sql.connector.IndexDoesNotExistException;
 import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaCompatibilityException;
 import org.apache.spark.sql.connector.read.Scan;
@@ -16,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public class ScanBuilderException
-        extends AzureSparkException {
+        extends RuntimeException {
 
   /**
    * Create an instance with a cause

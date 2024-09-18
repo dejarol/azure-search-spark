@@ -126,7 +126,7 @@ case class SearchFieldsOptions(
     // For each schema field
     maybeExcludeIndexActionColumn(schema).map {
       structField =>
-        // Collect the set of features to enable for this field
+        // Collect the set of features to enable
         val featuresToEnable: Seq[SearchFieldFeature] = featuresAndPredicates
           .collect {
             case (k, v) if v.apply(structField) => k

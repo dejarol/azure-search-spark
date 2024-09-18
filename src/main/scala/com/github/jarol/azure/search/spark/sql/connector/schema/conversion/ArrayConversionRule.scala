@@ -11,5 +11,5 @@ case class ArrayConversionRule(private val sparkInternal: DataType,
 
   override def sparkType(): DataType = ArrayType(sparkInternal)
   override def searchType(): SearchFieldDataType = SearchFieldDataType.collection(searchInternal)
-  override def converter(): SparkInternalConverter = ArrayConverter(internalConverter)
+  override def sparkConverter(): SparkInternalConverter = ArrayConverter(internalConverter)
 }

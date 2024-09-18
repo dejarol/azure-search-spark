@@ -10,5 +10,5 @@ case class ComplexConversionRule(private val fields: Seq[StructField],
 
   override def sparkType(): DataType = StructType(fields)
   override def searchType(): SearchFieldDataType = SearchFieldDataType.COMPLEX
-  override def converter(): SparkInternalConverter = ComplexConverter(converters)
+  override def sparkConverter(): SparkInternalConverter = ComplexConverter(converters)
 }
