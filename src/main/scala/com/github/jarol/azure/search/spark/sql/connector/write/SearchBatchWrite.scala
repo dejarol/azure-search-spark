@@ -3,7 +3,6 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
 import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.output.SearchPropertyConverter
 import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, PhysicalWriteInfo, WriterCommitMessage}
 import org.apache.spark.sql.types.{StructField, StructType}
 
@@ -41,7 +40,7 @@ object SearchBatchWrite {
       Left("a")
     } else {
 
-      val converters: Map[String, SearchPropertyConverter] =
+      Left("b")
     }
   }
 }

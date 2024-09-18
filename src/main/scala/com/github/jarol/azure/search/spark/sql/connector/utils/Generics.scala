@@ -46,9 +46,4 @@ object Generics {
       )
     }
   }
-
-  final def partialFunction[A, B](predicate: A => Boolean, function: A => B): PartialFunction[A, B] = {
-
-    case a: A if predicate(a) => function(a)
-  }
 }

@@ -37,8 +37,8 @@ case object GeoPointRule
 
   override def searchConverter(): SearchPropertyConverter = StructTypeConverter(
     Map(
-      TYPE_LABEL -> AtomicSearchConverters.StringConverter,
-      COORDINATES_LABEL -> CollectionConverter(AtomicSearchConverters.DoubleConverter)
+      StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicSearchConverters.StringConverter,
+      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionConverter(AtomicSearchConverters.DoubleConverter)
     )
   )
 }
