@@ -6,8 +6,6 @@ import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
 import org.apache.spark.sql.connector.write.{Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 
-import scala.util.Try
-
 /**
  * Write builder for Search dataSource
  * @param writeConfig write configuration
@@ -52,10 +50,14 @@ object SearchWriteBuilder {
                    schema: StructType
                  ): Either[IndexCreationException, SearchIndex] = {
 
+    Left(
+      new IndexCreationException("a", null)
+    )
+    /*
     Try {
       val createIndexOptions = writeConfig.createIndexOptions
       writeConfig.withSearchIndexClientDo {
-        _.createOrUpdateIndex(createIndexOptions.toSearchIndex(schema))
+        _.createOrUpdateIndex(createIndexOptions.toSearchFields(schema))
       }
     }.toEither.left.map(
       new IndexCreationException(
@@ -63,5 +65,7 @@ object SearchWriteBuilder {
         _
       )
     )
+
+     */
   }
 }
