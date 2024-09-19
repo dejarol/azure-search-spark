@@ -40,7 +40,7 @@ object SearchPropertyConverters {
       case ArrayType(elementType, _) => safeConverterFor(
         StructField("array", elementType),
         new SearchField("array", searchInnerType)
-      ).map(CollectionConverter)
+      ).map(ArrayConverter)
 
       case _ => None
     }

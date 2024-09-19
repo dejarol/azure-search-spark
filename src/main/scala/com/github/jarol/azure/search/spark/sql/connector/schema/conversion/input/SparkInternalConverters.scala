@@ -76,7 +76,7 @@ object SparkInternalConverters {
       case ArrayType(sparkInternalType, _) => safeConverterFor(
         StructField("array", sparkInternalType),
         new SearchField("array", searchInnerType)
-      ).map(ArrayConverter)
+      ).map(CollectionConverter)
       case _ => None
     }
   }

@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read;
 
 import com.github.jarol.azure.search.spark.sql.connector.IndexDoesNotExistException;
-import com.github.jarol.azure.search.spark.sql.connector.schema.SchemaCompatibilityException;
 import org.apache.spark.sql.connector.read.Scan;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +24,7 @@ public class ScanBuilderException
     public ScanBuilderException(
             @NotNull Throwable cause
     ) {
-        super(String.format("Failed to build dataSource %s. Reason: %s",
+        super(String.format("Failed to build dataSource scan %s. Reason: %s",
                 Scan.class.getSimpleName(),
                 cause.getMessage()),
                 cause
@@ -44,21 +43,6 @@ public class ScanBuilderException
     ) {
       return new ScanBuilderException(
               new IndexDoesNotExistException(name)
-      );
-    }
-
-  /**
-   * Create an instance caused by a schema incompatibility
-   * @param message detailed message
-   * @return an instance caused by a schema incompatibility
-   */
-
-    @Contract("_ -> new")
-    public static @NotNull ScanBuilderException causedBySchemaIncompatibility(
-            String message
-    ) {
-      return new ScanBuilderException(
-              new SchemaCompatibilityException(message)
       );
     }
 }

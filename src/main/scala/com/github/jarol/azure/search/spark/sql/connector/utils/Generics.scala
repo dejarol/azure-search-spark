@@ -10,7 +10,7 @@ object Generics {
    * @return the type class
    */
 
-  private final def classFromClassTag[C: ClassTag]: Class[C] = implicitly[ClassTag[C]].runtimeClass.asInstanceOf[Class[C]]
+  private def classFromClassTag[C: ClassTag]: Class[C] = implicitly[ClassTag[C]].runtimeClass.asInstanceOf[Class[C]]
 
   /**
    * Safely get the first value of an enum that matches a predicate

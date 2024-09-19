@@ -6,22 +6,22 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
 /**
- * Getter for retrieving an [[IndexActionType]] from a Spark internal row
+ * Supplier for retrieving an [[IndexActionType]] from a Spark internal row
  * @param actionColumnIndex index of the column to use for fetching the action type
  * @param default default action type (used when the value of the action column is null or cannot be mapped to an [[IndexActionType]])
  */
 
-case class IndexActionTypeGetter private(private val actionColumnIndex: Int,
-                                         private val default: IndexActionType)
-  extends (InternalRow => IndexActionType) {
+case class PerDocumentSupplier private(private val actionColumnIndex: Int,
+                                       private val default: IndexActionType)
+  extends IndexActionSupplier {
 
-  override def apply(v1: InternalRow): IndexActionType = {
+  override def get(row: InternalRow): IndexActionType = {
 
-    if (v1.isNullAt(actionColumnIndex)) {
+    if (row.isNullAt(actionColumnIndex)) {
       default
     } else {
       Generics.safeValueOfEnum[IndexActionType](
-        v1.getString(actionColumnIndex),
+        row.getString(actionColumnIndex),
         (e, s) => e.name().equalsIgnoreCase(s) || e.toString.equalsIgnoreCase(s)
       ).getOrElse(
         default
@@ -30,7 +30,7 @@ case class IndexActionTypeGetter private(private val actionColumnIndex: Int,
   }
 }
 
-object IndexActionTypeGetter {
+object PerDocumentSupplier {
 
   /**
    * Create a getter that will retrieve a per-document index action type from an internal row
@@ -41,19 +41,23 @@ object IndexActionTypeGetter {
    * @return an index action getter
    */
 
-  @throws[IllegalIndexActionTypeColumnException]
-  def apply(name: String, schema: StructType, defaultAction: IndexActionType): IndexActionTypeGetter = {
+  def safeApply(
+                 name: String,
+                 schema: StructType,
+                 defaultAction: IndexActionType
+               ): Either[Throwable, PerDocumentSupplier] = {
 
-    val indexOfActionColumn: Int = schema.zipWithIndex.collectFirst {
+    // Extract the index of action type column
+    val maybeIndexActionColumnIndex: Option[Int] = schema.zipWithIndex.collectFirst {
       case (field, i) if field.name.equalsIgnoreCase(name) &&
         field.dataType.equals(DataTypes.StringType) => i
-    }.getOrElse {
-      throw new IllegalIndexActionTypeColumnException(name)
     }
 
-    IndexActionTypeGetter(
-      indexOfActionColumn,
-      defaultAction
-    )
+    // If defined, create the supplier
+    maybeIndexActionColumnIndex.toRight().left.map {
+      _ => new IllegalIndexActionTypeColumnException(name)
+    }.right.map {
+      PerDocumentSupplier(_, defaultAction)
+    }
   }
 }

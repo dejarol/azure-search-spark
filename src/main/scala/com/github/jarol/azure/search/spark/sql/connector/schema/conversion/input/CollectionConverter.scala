@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
  * @param internalConverter converter for internal type
  */
 
-case class ArrayConverter(private val internalConverter: SparkInternalConverter)
+case class CollectionConverter(private val internalConverter: SparkInternalConverter)
   extends SparkInternalTransformConverter[ArrayData] {
 
   override def transform(value: Any): ArrayData = {

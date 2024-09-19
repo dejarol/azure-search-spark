@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.config.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.SparkInternalMappingSupplier
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -26,9 +27,9 @@ class SearchScanBuilder(private val schema: StructType,
     if (!readConfig.indexExists) {
       throw ScanBuilderException.causedByNonExistingIndex(readConfig.getIndex)
     } else {
-      SearchScan.safeApply(schema, readConfig.getSearchIndexFields, readConfig) match {
-        case Left(value) => throw ScanBuilderException.causedBySchemaIncompatibility(value)
-        case Right(value) => value
+      SparkInternalMappingSupplier.get(schema, readConfig.getSearchIndexFields, readConfig.getIndex) match {
+        case Left(value) => throw new ScanBuilderException(value)
+        case Right(value) => new SearchScan(schema, readConfig, value)
       }
     }
   }

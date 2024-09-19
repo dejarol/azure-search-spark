@@ -5,7 +5,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 
 import java.util
 
-case class CollectionConverter(private val arrayInternalConverter: SearchPropertyConverter)
+case class ArrayConverter(private val arrayInternalConverter: SearchPropertyConverter)
   extends SearchPropertyTransformConverter[util.List[Object]] {
 
   override protected def transform(value: Any): util.List[Object] = {

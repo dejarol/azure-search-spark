@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{ArrayConverter, AtomicSparkInternalConverters, ComplexConverter, SparkInternalConverter}
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.output.{AtomicSearchConverters, CollectionConverter, SearchPropertyConverter, StructTypeConverter}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input.{CollectionConverter, AtomicSparkInternalConverters, ComplexConverter, SparkInternalConverter}
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.output.{AtomicSearchConverters, ArrayConverter, SearchPropertyConverter, StructTypeConverter}
 import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
 
 /**
@@ -31,14 +31,14 @@ case object GeoPointRule
   override def sparkConverter(): SparkInternalConverter = ComplexConverter(
     Map(
       TYPE_LABEL -> AtomicSparkInternalConverters.StringConverter,
-      COORDINATES_LABEL -> ArrayConverter(AtomicSparkInternalConverters.DoubleConverter)
+      COORDINATES_LABEL -> CollectionConverter(AtomicSparkInternalConverters.DoubleConverter)
     )
   )
 
   override def searchConverter(): SearchPropertyConverter = StructTypeConverter(
     Map(
       StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicSearchConverters.StringConverter,
-      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionConverter(AtomicSearchConverters.DoubleConverter)
+      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(AtomicSearchConverters.DoubleConverter)
     )
   )
 }
