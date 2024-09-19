@@ -1,68 +1,13 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.output
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.GeoPointRule
-import com.github.jarol.azure.search.spark.sql.connector.{BasicSpec, FieldFactory}
+import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.{GeoPointRule, MappingSupplierSpec}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
-class SparkInternalConvertersSpec
-  extends BasicSpec
-    with FieldFactory {
+class SearchMappingSupplierSpec
+  extends MappingSupplierSpec[StructField, SearchPropertyConverter](SearchMappingSupplier) {
 
-  private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
-
-  /**
-   * Assert the existence of a [[SparkInternalConverter]] for given Spark and Search field
-   * @param structField Spark field
-   * @param searchField Search field
-   * @param shouldExists true for converter that should exist
-   */
-
-  private def assertConverterExistence(structField: StructField,
-                                       searchField: SearchField,
-                                       shouldExists: Boolean): Unit = {
-
-    val maybeConverter = SparkInternalConverters.safeConverterFor(
-      structField, searchField
-    )
-
-    if (shouldExists) {
-      maybeConverter shouldBe defined
-    } else {
-      maybeConverter shouldBe empty
-    }
-  }
-
-  /**
-   * Assert that no converter exists for given Spark and Search fields
-   * @param structField Spark field
-   * @param searchField Search field
-   */
-
-  private def assertNoConverterExists(structField: StructField, searchField: SearchField): Unit = {
-
-    assertConverterExistence(
-      structField,
-      searchField,
-      shouldExists = false
-    )
-  }
-
-  /**
-   * Assert that a converter exists for given Spark and Search fields
-   * @param structField Spark field
-   * @param searchField Search field
-   */
-
-  private def assertConverterExists(structField: StructField, searchField: SearchField): Unit = {
-
-    assertConverterExistence(
-      structField,
-      searchField, shouldExists = true
-    )
-  }
-
-  describe(`object`[SparkInternalConverters.type ]) {
+  describe(`object`[SearchMappingSupplier.type ]) {
     describe(SHOULD) {
       describe("retrieve a converter for atomic fields with same name and") {
         it("same type") {
@@ -184,6 +129,24 @@ class SparkInternalConvertersSpec
           )
         }
       }
+
+      describe("return a Left when there are") {
+        it("missing schema fields") {
+
+          assertMappingIsLeft(
+            Seq(createStructField(first, DataTypes.StringType)),
+            Seq(createSearchField(second, SearchFieldDataType.STRING))
+          )
+        }
+
+        it("incompatible fields") {
+
+          assertMappingIsLeft(
+            Seq(createStructField(first, DataTypes.StringType)),
+            Seq(createSearchField(first, SearchFieldDataType.INT32))
+          )
+        }
+      }
     }
 
     describe(SHOULD_NOT) {
@@ -274,3 +237,4 @@ class SparkInternalConvertersSpec
     }
   }
 }
+

@@ -1,29 +1,65 @@
-package com.github.jarol.azure.search.spark.sql.connector.schema.conversion.input
+package com.github.jarol.azure.search.spark.sql.connector.schema.conversion
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.schema.conversion.{AtomicTypeConversionRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
 /**
- * Entry point for retrieving converters from Search objects to Spark types
+ * Safe supplier of data converter from Spark ecosystem to Search ecosystem and vice versa
+ * @tparam K key type for internal mapping required by a complex converter
+ * @tparam V converter type
  */
 
-object SparkInternalConverters {
+trait SafeConverterSupplier[K, V] {
 
   /**
-   * Safely retrieve the conversion to apply for reading data from a SearchField
-   * <br>
-   * The converter will exist if the two fields
-   *  - have same name
-   *  - have a compatible data type
-   * @param structField Spark field
-   * @param searchField Search field
-   * @return an optional converter
+   * Create a converter for data collection
+   * @param internal internal converter (to use on collection inner objects)
+   * @return a converter for collections
    */
 
-  def safeConverterFor(structField: StructField, searchField: SearchField): Option[SparkInternalConverter] = {
+  protected def collectionConverter(internal: V): V
+
+  /**
+   * Create a converter for handling nested data objects
+   * @param internal nested object mapping
+   * @return a converter for handling nested data objects
+   */
+
+  protected def complexConverter(internal: Map[K, V]): V
+
+  /**
+   * Converter for GeoPoints
+   * @return converter for GeoPoints
+   */
+
+  protected def geoPointConverter: V
+
+  /**
+   * Get the key from a Struct field
+   * @param field field
+   * @return a key from this field
+   */
+
+  protected[conversion] def keyFrom(field: StructField): K
+
+  /**
+   * Get the name of a key
+   * @param key key
+   * @return key name
+   */
+
+  protected[conversion] def nameFrom(key: K): String
+
+  /**
+   * Safely retrieve the converter given the Spark and Search definition
+   * @param structField Spark field
+   * @param searchField Search field
+   * @return a non-empty converter if the fields have same and have compatible data types
+   */
+
+  final def getConverter(structField: StructField, searchField: SearchField): Option[V] = {
 
     val (sparkType, searchFieldType) = (structField.dataType, searchField.getType)
     if (!searchField.sameNameOf(structField)) {
@@ -53,11 +89,7 @@ object SparkInternalConverters {
    * @return an optional converter for given types
    */
 
-  private def converterForAtomicTypes(spark: DataType, search: SearchFieldDataType): Option[SparkInternalConverter] = {
-
-    // For atomic types, there should exist either an inference rule or a conversion rule
-    AtomicTypeConversionRules.safeSparkConverterForTypes(spark, search)
-  }
+  protected def converterForAtomicTypes(spark: DataType, search: SearchFieldDataType): Option[V]
 
   /**
    * Safely retrieve a converter for a collection type
@@ -68,15 +100,15 @@ object SparkInternalConverters {
    * @return a converter for collections
    */
 
-  private def converterForArrayType(sparkType: DataType, searchType: SearchFieldDataType): Option[SparkInternalConverter] = {
+  private def converterForArrayType(sparkType: DataType, searchType: SearchFieldDataType): Option[V] = {
 
     // Evaluate rule for the inner type
     val searchInnerType = searchType.unsafeCollectionInnerType
     sparkType match {
-      case ArrayType(sparkInternalType, _) => safeConverterFor(
+      case ArrayType(sparkInternalType, _) => getConverter(
         StructField("array", sparkInternalType),
         new SearchField("array", searchInnerType)
-      ).map(CollectionConverter)
+      ).map(collectionConverter)
       case _ => None
     }
   }
@@ -91,7 +123,7 @@ object SparkInternalConverters {
    * @return a converter for complex fields
    */
 
-  private def converterForComplexType(sparkType: DataType, searchField: SearchField): Option[SparkInternalConverter] = {
+  private def converterForComplexType(sparkType: DataType, searchField: SearchField): Option[V] = {
 
     // Build a rule that wraps subField conversion rules
     sparkType match {
@@ -99,10 +131,10 @@ object SparkInternalConverters {
 
         // Compute the converter for to each subfield
         val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
-        val convertersMap: Map[String, SparkInternalConverter] = SchemaUtils
+        val convertersMap: Map[K, V] = SchemaUtils
           .matchNamesakeFields(sparkSubFields, searchSubFields)
           .map {
-            case (k, v) => (k.name, safeConverterFor(k, v))
+            case (k, v) => (keyFrom(k), getConverter(k, v))
           }.collect {
             case (k, Some(v)) => (k, v)
           }
@@ -110,14 +142,15 @@ object SparkInternalConverters {
         // For each subfield, there should exist a search subfields with same name and a converter should exist
         val allSubFieldsExist = SchemaUtils.allSchemaFieldsExist(sparkSubFields, searchSubFields)
         val allSubFieldsHaveAConverter = sparkSubFields.forall {
-          subField => convertersMap.exists {
-            case (key, _) => key.equalsIgnoreCase(subField.name)
-          }
+          subField =>
+            convertersMap.exists {
+              case (key, _) => nameFrom(key).equalsIgnoreCase(subField.name)
+            }
         }
 
         // If so, create the Complex converter
         if (allSubFieldsExist && allSubFieldsHaveAConverter) {
-          Some(ComplexConverter(convertersMap))
+          Some(complexConverter(convertersMap))
         } else {
           None
         }
@@ -134,7 +167,7 @@ object SparkInternalConverters {
    * @return a converter for geo points
    */
 
-  private def converterForGeoPoint(sparkType: DataType): Option[SparkInternalConverter] = {
+  private def converterForGeoPoint(sparkType: DataType): Option[V] = {
 
     sparkType match {
       case StructType(subFields) =>
@@ -149,7 +182,7 @@ object SparkInternalConverters {
         }
 
         if (allSubFieldsExist) {
-          Some(GeoPointRule.sparkConverter())
+          Some(geoPointConverter)
         } else {
           None
         }

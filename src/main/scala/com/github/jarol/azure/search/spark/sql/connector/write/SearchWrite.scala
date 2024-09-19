@@ -26,7 +26,7 @@ class SearchWrite(
     // If defined, create the action supplier
     // If this latter is defined as well, create the batch write
 
-    SearchMappingSupplier.get(schema, indexFields, writeConfig.getIndex) match {
+    SearchMappingSupplier.getMapping(schema, indexFields, writeConfig.getIndex) match {
       case Left(exception) => throw new SearchWriteException(exception)
       case Right(converters) =>
 
