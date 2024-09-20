@@ -35,7 +35,7 @@ class GenericsSpec
           }
 
           a[NoSuchElementException] shouldBe thrownBy {
-            Generics.safeValueOfEnum[OperationType]("hello", enumPredicate) shouldBe empty
+            Generics.unsafeValueOfEnum[OperationType]("hello", enumPredicate)
           }
         }
       }

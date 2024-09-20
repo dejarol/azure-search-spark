@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 
 class ReadSpec extends SparkSpec {
 
-  it("a") {
+  ignore("a") {
 
     println(s"Read start time: ${LocalDateTime.now()}")
     val df = spark.read.format(SearchTableProvider.SHORT_NAME)

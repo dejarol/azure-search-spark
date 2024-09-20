@@ -10,7 +10,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 case class SimpleSearchPartition(override protected val partitionId: Int,
                                  override protected val inputFilter: Option[String],
                                  override protected val maybeSelect: Option[Seq[String]])
-  extends AbstractScalaSearchPartition(partitionId, inputFilter, maybeSelect) {
+  extends SearchPartitionTemplate(partitionId, inputFilter, maybeSelect) {
 
   override def getSearchFilter: String = inputFilter.orNull
 }

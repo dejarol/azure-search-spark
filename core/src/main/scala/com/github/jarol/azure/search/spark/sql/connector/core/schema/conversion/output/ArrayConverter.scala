@@ -5,6 +5,11 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 
 import java.util
 
+/**
+ * Converter for Spark arrays
+ * @param arrayInternalConverter converter for array internal objects
+ */
+
 case class ArrayConverter(private val arrayInternalConverter: SearchPropertyConverter)
   extends SearchPropertyTransformConverter[util.List[Object]] {
 

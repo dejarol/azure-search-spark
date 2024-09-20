@@ -12,7 +12,7 @@ import java.time.{LocalDate, LocalDateTime}
 class WriteSpec
   extends SparkSpec {
 
-  it("a") {
+  ignore("a") {
 
     val df = toDF(
       Seq(

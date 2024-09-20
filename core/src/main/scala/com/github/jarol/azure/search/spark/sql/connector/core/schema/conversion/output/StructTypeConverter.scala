@@ -6,6 +6,11 @@ import org.apache.spark.sql.types.StructField
 
 import java.util
 
+/**
+ * Converter for Spark internal rows
+ * @param converters converters to apply on internal row subfields
+ */
+
 case class StructTypeConverter(private val converters: Map[StructField, SearchPropertyConverter])
   extends SearchPropertyTransformConverter[util.Map[String,  Object]] {
 

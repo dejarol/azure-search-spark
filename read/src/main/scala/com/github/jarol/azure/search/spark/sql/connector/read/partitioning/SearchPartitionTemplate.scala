@@ -11,9 +11,9 @@ import java.util
  * @param maybeSelect optional list of index fields to select
  */
 
-abstract class AbstractScalaSearchPartition(protected val partitionId: Int,
-                                            protected val inputFilter: Option[String],
-                                            protected val maybeSelect: Option[Seq[String]])
+abstract class SearchPartitionTemplate(protected val partitionId: Int,
+                                       protected val inputFilter: Option[String],
+                                       protected val maybeSelect: Option[Seq[String]])
   extends SearchPartition {
 
   override final def getPartitionId: Int = partitionId

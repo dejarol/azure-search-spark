@@ -6,7 +6,7 @@ import org.apache.spark.SparkConf
 class SearchIOConfigSpec
   extends BasicSpec {
 
-  private lazy val (k1, v1, k2, v2, k3, v3) = ("k1", "v1", "k2", "v2", "k3", "v3")
+  private lazy val (k1, v1, k2, v2, v3) = ("k1", "v1", "k2", "v2", "v3")
 
   /**
    * Create an instance of [[SearchIOConfig]] by injecting two maps
@@ -89,17 +89,17 @@ class SearchIOConfigSpec
           createConfig(
             Map(IOConfig.API_KEY_CONFIG -> v1),
             Map.empty
-          ).getEndpoint shouldBe v1
+          ).getAPIkey shouldBe v1
 
           createConfig(
             Map.empty,
             Map(IOConfig.API_KEY_CONFIG -> v2),
-          ).getEndpoint shouldBe v2
+          ).getAPIkey shouldBe v2
 
           createConfig(
             Map(IOConfig.API_KEY_CONFIG -> v3),
             Map(IOConfig.API_KEY_CONFIG -> v2),
-          ).getEndpoint shouldBe v3
+          ).getAPIkey shouldBe v3
         }
 
         it("the index name") {
@@ -107,17 +107,17 @@ class SearchIOConfigSpec
           createConfig(
             Map(IOConfig.INDEX_CONFIG -> v1),
             Map.empty
-          ).getEndpoint shouldBe v1
+          ).getIndex shouldBe v1
 
           createConfig(
             Map.empty,
             Map(IOConfig.INDEX_CONFIG -> v2),
-          ).getEndpoint shouldBe v2
+          ).getIndex shouldBe v2
 
           createConfig(
             Map(IOConfig.INDEX_CONFIG -> v3),
             Map(IOConfig.INDEX_CONFIG -> v2),
-          ).getEndpoint shouldBe v3
+          ).getIndex shouldBe v3
         }
       }
     }

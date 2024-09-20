@@ -10,7 +10,7 @@ import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 class AtomicSearchConvertersSpec
   extends BasicSpec {
 
-  import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.AtomicSearchConverters._
+  import AtomicSearchConverters._
 
   describe(`object`[AtomicSearchConverters.type ]) {
     describe(SHOULD) {

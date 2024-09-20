@@ -6,7 +6,7 @@ import java.util
 
 /**
  * Converter for complex (nested) objects
- * @param conversions map with keys being nested attribute names and values being conversions to apply to nested attributes
+ * @param conversions conversions to apply on complex object subfields
  */
 
 case class ComplexConverter(private val conversions: Map[String, SparkInternalConverter])
