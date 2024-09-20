@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{JavaScalaConverters, schema}
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructField
 

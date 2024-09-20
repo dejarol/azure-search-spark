@@ -1,11 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import org.scalatest.Inspectors
 
 class WriteConfigSpec
-  extends ConfigSpec
+  extends BasicSpec
     with Inspectors {
+
+  private def writeConfig(locals: Map[String, String]): WriteConfig = WriteConfig(locals, Map.empty)
 
   private lazy val emptyConfig: WriteConfig = writeConfig(Map.empty)
 

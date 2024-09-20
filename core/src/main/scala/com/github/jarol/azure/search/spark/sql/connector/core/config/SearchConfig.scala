@@ -105,7 +105,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
    * @return a new instance of [[SearchConfig]]
    */
 
-  protected[config] final def getAllWithPrefix(prefix: String): SearchConfig = {
+  final def getAllWithPrefix(prefix: String): SearchConfig = {
 
     new SearchConfig(
       SearchConfig.allWithPrefix(localOptions, prefix),
@@ -113,7 +113,7 @@ class SearchConfig(protected val localOptions: Map[String, String],
     )
   }
 
-  protected[config] final def getOptionalStringList(key: String): Option[Seq[String]] = {
+  final def getOptionalStringList(key: String): Option[Seq[String]] = {
 
     get(key).flatMap {
       v =>

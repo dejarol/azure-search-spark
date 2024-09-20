@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.output
 
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.AtomicSearchConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants, schema}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.time.temporal.ChronoUnit

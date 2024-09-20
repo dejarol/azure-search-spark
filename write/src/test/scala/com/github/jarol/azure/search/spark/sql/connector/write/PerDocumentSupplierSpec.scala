@@ -2,6 +2,9 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.EitherValues
 
 class PerDocumentSupplierSpec

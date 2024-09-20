@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{AtomicTypeConversionRules, GeoPointRule}
 import com.github.jarol.azure.search.spark.sql.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 

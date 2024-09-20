@@ -1,8 +1,9 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema
+package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.write.InferSchemaException
 
 class InferSchemaSpec
   extends BasicSpec

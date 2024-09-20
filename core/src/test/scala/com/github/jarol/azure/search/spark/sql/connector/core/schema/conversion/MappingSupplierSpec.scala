@@ -20,7 +20,7 @@ abstract class MappingSupplierSpec[K, V](protected val supplier: SafeMappingSupp
   protected final lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
 
   /**
-   * Assert the existence of a [[SearchPropertyConverter]] for given Spark and Search field
+   * Assert the existence of a [[output.SearchPropertyConverter]] for given Spark and Search field
    * @param structField Spark field
    * @param searchField Search field
    * @param shouldExists true for converter that should exist

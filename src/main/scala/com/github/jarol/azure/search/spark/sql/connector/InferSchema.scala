@@ -1,7 +1,10 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema
+package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.write.InferSchemaException
 import org.apache.spark.sql.types.StructType
 
 /**
@@ -47,9 +50,9 @@ object InferSchema {
    */
 
   @throws[InferSchemaException]
-  protected[schema] def inferSchemaForIndex(name: String,
-                                            searchFields: Seq[SearchField],
-                                            select: Option[Seq[String]]): StructType = {
+  protected[connector] def inferSchemaForIndex(name: String,
+                                               searchFields: Seq[SearchField],
+                                               select: Option[Seq[String]]): StructType = {
 
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)
@@ -75,7 +78,7 @@ object InferSchema {
    */
 
   @throws[ConfigException]
-  protected[schema] def selectFields(allFields: Seq[SearchField], selection: Option[Seq[String]]): Seq[SearchField] = {
+  protected[connector] def selectFields(allFields: Seq[SearchField], selection: Option[Seq[String]]): Seq[SearchField] = {
 
     selection match {
 

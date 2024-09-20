@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldFeature, toSearchFieldOperations}
+import org.apache.spark.sql.types.StructField
 
 /**
  * Options for creating a Search index

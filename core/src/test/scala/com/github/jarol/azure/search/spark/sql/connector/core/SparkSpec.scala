@@ -11,11 +11,7 @@ trait SparkSpec
   protected final lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
     .appName(classOf[SparkSpec].getSimpleName)
-    .config(IOConfig.READ_PREFIX + IOConfig.END_POINT_CONFIG, "https://searchsparkd01cs01.search.windows.net")
-    .config(IOConfig.READ_PREFIX + IOConfig.API_KEY_CONFIG, "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR")
-    .config(IOConfig.WRITE_PREFIX + IOConfig.END_POINT_CONFIG, "https://searchsparkd01cs01.search.windows.net")
-    .config(IOConfig.WRITE_PREFIX + IOConfig.API_KEY_CONFIG, "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR")
-    //.config("spark.sql.shuffle.partitions", "1")
+    .config("spark.sql.shuffle.partitions", "1")
     .getOrCreate()
 
   /**

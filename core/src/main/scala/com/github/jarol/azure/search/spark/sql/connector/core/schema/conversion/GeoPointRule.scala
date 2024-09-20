@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicSparkInternalConverters, CollectionConverter, ComplexConverter, SparkInternalConverter}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{ArrayConverter, AtomicSearchConverters, SearchPropertyConverter, StructTypeConverter}
 import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}

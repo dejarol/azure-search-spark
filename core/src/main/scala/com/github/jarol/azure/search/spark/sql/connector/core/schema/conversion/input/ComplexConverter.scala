@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema
 import org.apache.spark.sql.catalyst.InternalRow
 
 import java.util

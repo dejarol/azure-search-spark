@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
+import org.apache.spark.sql.types.StructField
 
 /**
  * Assertion for testing the enabling process of a [[SearchFieldFeature]]
