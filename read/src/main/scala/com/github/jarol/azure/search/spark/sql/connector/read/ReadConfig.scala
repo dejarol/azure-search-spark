@@ -5,6 +5,7 @@ import com.azure.search.documents.models.SearchOptions
 import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig, UsageMode}
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, SinglePartitionPartitioner}
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Read configuration
@@ -12,8 +13,8 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Sear
  * @param globalOptions read options retrieved from the underlying [[org.apache.spark.SparkConf]]
  */
 
-case class ReadConfig(override protected val localOptions: Map[String, String],
-                      override protected val globalOptions: Map[String, String])
+case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[String],
+                      override protected val globalOptions: CaseInsensitiveMap[String])
   extends SearchIOConfig(localOptions, globalOptions) {
 
   /**
@@ -84,6 +85,21 @@ object ReadConfig {
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
   final val PARTITIONER_OPTIONS_FACET_CONFIG = "facet"
   final val PARTITIONER_OPTIONS_FACET_PARTITIONS = "query"
+
+  /**
+   * Create an instance from both local and global options
+   * @param locals local options
+   * @param globals global options
+   * @return a read config
+   */
+
+  def apply(locals: Map[String, String], globals: Map[String, String]): ReadConfig = {
+
+    ReadConfig(
+      CaseInsensitiveMap(locals),
+      CaseInsensitiveMap(globals)
+    )
+  }
 
   /**
    * Create an instance from given options, retrieving SparkConf-related options

@@ -7,6 +7,7 @@ import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientB
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 import java.util.stream.StreamSupport
 
@@ -17,10 +18,24 @@ import java.util.stream.StreamSupport
  * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
  */
 
-class SearchIOConfig(override protected val localOptions: Map[String, String],
-                     override protected val globalOptions: Map[String, String])
+class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[String],
+                     override protected val globalOptions: CaseInsensitiveMap[String])
   extends SearchConfig(localOptions, globalOptions)
     with IOConfig {
+
+  /**
+   * Alternative constructor
+   * @param locals local options
+   * @param globals global options
+   */
+
+  def this(locals: Map[String, String], globals: Map[String, String]) = {
+
+    this(
+      CaseInsensitiveMap(locals),
+      CaseInsensitiveMap(globals)
+    )
+  }
 
   override def getEndpoint: String = unsafelyGet(IOConfig.END_POINT_CONFIG)
 
@@ -28,13 +43,13 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
 
   override def getIndex: String = unsafelyGet(IOConfig.INDEX_CONFIG)
 
-  protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
+  private lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
     .endpoint(getEndpoint)
     .credential(new AzureKeyCredential(getAPIkey))
     .buildClient
 
-  protected final lazy val searchIndex: SearchIndex = searchIndexClient.getIndex(getIndex)
-  protected final lazy val searchClient: SearchClient = searchIndexClient.getSearchClient(getIndex)
+  private lazy val searchIndex: SearchIndex = searchIndexClient.getIndex(getIndex)
+  private lazy val searchClient: SearchClient = searchIndexClient.getSearchClient(getIndex)
 
   /**
    * Perform an action using this instance's [[SearchIndexClient]], and get the result
@@ -52,7 +67,7 @@ class SearchIOConfig(override protected val localOptions: Map[String, String],
    * @return the action result
    */
 
-  final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(searchIndex)
+  private final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(searchIndex)
 
   /**
    * Perform an action using this instance's [[SearchClient]], and get the result

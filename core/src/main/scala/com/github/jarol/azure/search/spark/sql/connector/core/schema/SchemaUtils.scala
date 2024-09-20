@@ -5,6 +5,8 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import com.github.jarol.azure.search.spark.sql.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 
+import java.util
+
 /**
  * Utilities for dealing with both Spark and Search types
  */
@@ -182,10 +184,21 @@ object SchemaUtils {
 
       // Evaluate compatibility on the inner type
       sparkType match {
-        case ArrayType(elementType, _) => areCompatibleFields(
-          StructField("array", elementType),
-          new SearchField("array", searchType.unsafeCollectionInnerType)
-        )
+        case ArrayType(elementType, _) =>
+
+          // TODO: test compatibility for complex collections
+          val searchInnerType = searchType.unsafeCollectionInnerType
+          if (searchInnerType.isComplex) {
+            elementType match {
+              case StructType(fields) => evaluateSubFieldsCompatibility(fields, searchField.getFields)
+              case _ => false
+            }
+          } else {
+            areCompatibleFields(
+              StructField("array", elementType),
+              new SearchField("array", searchType.unsafeCollectionInnerType)
+            )
+          }
         case _ => false
       }
 
@@ -194,16 +207,10 @@ object SchemaUtils {
       // Evaluate compatibility on subfields
       sparkType match {
         case StructType(sparkSubFields) =>
-
-          val searchSubFields: Seq[SearchField] = JavaScalaConverters.listToSeq(searchField.getFields)
-
-          // Subfields are compatible if for each
-          val allSubfieldsAreCompatible: Boolean = matchNamesakeFields(sparkSubFields, searchSubFields).forall {
-            case (sparkSubField, searchSubField) =>
-              areCompatibleFields(sparkSubField, searchSubField)
-          }
-
-          allSchemaFieldsExist(sparkSubFields, searchSubFields) && allSubfieldsAreCompatible
+          evaluateSubFieldsCompatibility(
+            sparkSubFields,
+            searchField.getFields
+          )
         case _ => false
       }
     } else if (searchType.isGeoPoint) {
@@ -216,6 +223,25 @@ object SchemaUtils {
     }
 
     searchField.sameNameOf(structField) && compatibleDataType
+  }
+
+  private def evaluateSubFieldsCompatibility(
+                                              sparkSubFields: Seq[StructField],
+                                              searchSubFields: util.List[SearchField]
+                                            ): Boolean = {
+
+    // Subfields are compatible if for each
+    val searchSubFieldsSeq = JavaScalaConverters.listToSeq(searchSubFields)
+    val allSubfieldsAreCompatible: Boolean = matchNamesakeFields(
+      sparkSubFields,
+      searchSubFieldsSeq
+    ).forall {
+      case (sparkSubField, searchSubField) =>
+        areCompatibleFields(sparkSubField, searchSubField)
+    }
+
+    allSchemaFieldsExist(sparkSubFields, searchSubFieldsSeq) &&
+      allSubfieldsAreCompatible
   }
 
   @throws[DataTypeException]
@@ -252,7 +278,18 @@ object SchemaUtils {
         AtomicTypeConversionRules.unsafeInferredTypeOf(dType)
       )
     } else if (dType.isCollection) {
-      new SearchField(
+
+      // TODO: test conversion for complex collections
+      val innerType = dType.unsafeCollectionInnerType
+      val maybeSearchSubFields: Option[Seq[SearchField]] = innerType match {
+        case StructType(subFields) => Some(
+          subFields.map(toSearchField)
+        )
+
+        case _ => None
+      }
+
+      val searchField = new SearchField(
         name,
         SearchFieldDataType.collection(
           inferSearchTypeFor(
@@ -260,6 +297,10 @@ object SchemaUtils {
           )
         )
       )
+
+      maybeSearchSubFields.map {
+        v => searchField.setFields(v: _*)
+      }.getOrElse(searchField)
     } else if (dType.isStruct) {
 
       val inferredSearchType = inferSearchTypeFor(structField)

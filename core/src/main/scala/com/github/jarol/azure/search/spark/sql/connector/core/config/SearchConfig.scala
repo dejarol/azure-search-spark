@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.config
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 import scala.util.Try
 
@@ -11,9 +12,23 @@ import scala.util.Try
  * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[org.apache.spark.SparkConf]] (if any)
  */
 
-class SearchConfig(protected val localOptions: Map[String, String],
-                   protected val globalOptions: Map[String, String])
+class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
+                   protected val globalOptions: CaseInsensitiveMap[String])
   extends Serializable {
+
+  /**
+   * Secondary constructor
+   * @param local local options
+   * @param global global options
+   */
+
+  def this(local: Map[String, String], global: Map[String, String]) = {
+
+    this(
+      CaseInsensitiveMap(local),
+      CaseInsensitiveMap(global)
+    )
+  }
 
   /**
    * Whether this config is empty or not (true only if both local and global options are empty)
@@ -30,13 +45,8 @@ class SearchConfig(protected val localOptions: Map[String, String],
 
   final def get(key: String): Option[String] = {
 
-    localOptions.collectFirst {
-      case (k, v) if k.equalsIgnoreCase(key) => v
-    }.orElse {
-      globalOptions.collectFirst {
-        case (k, v) if k.equalsIgnoreCase(key) => v
-      }
-    }
+    localOptions.get(key)
+      .orElse(globalOptions.get(key))
   }
 
   /**
@@ -160,9 +170,10 @@ object SearchConfig {
 
   protected[config] def allWithPrefix[V](original: Map[String, V], prefix: String): Map[String, V] = {
 
+    val lowerPrefix = prefix.toLowerCase
     original.collect {
-      case (k, v) if k.startsWith(prefix) =>
-        (k.stripPrefix(prefix), v)
+      case (k, v) if k.toLowerCase.startsWith(lowerPrefix) =>
+        (k.toLowerCase.stripPrefix(lowerPrefix), v)
     }
   }
 }

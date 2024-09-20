@@ -12,7 +12,7 @@ class ReadConfigSpec
    * @return a read config
    */
 
-  private def readConfig(local: Map[String, String]): ReadConfig = ReadConfig(local, Map.empty)
+  private def readConfig(local: Map[String, String]): ReadConfig = ReadConfig(local, Map.empty[String, String])
 
   private lazy val emptyConfig = readConfig(Map.empty)
 

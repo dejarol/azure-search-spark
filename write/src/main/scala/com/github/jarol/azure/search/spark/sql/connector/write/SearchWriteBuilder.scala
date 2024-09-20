@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -15,7 +16,8 @@ import scala.util.Try
 
 class SearchWriteBuilder(private val writeConfig: WriteConfig,
                          private val schema: StructType)
-  extends WriteBuilder {
+  extends WriteBuilder
+    with Logging {
 
   /**
    * Build the Write for this dataSource
@@ -36,7 +38,9 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
         schema
       ) match {
         case Left(value) => throw value
-        case Right(value) => JavaScalaConverters.listToSeq(value.getFields)
+        case Right(value) =>
+          log.info(s"Successfully created index ${writeConfig.getIndex}")
+          JavaScalaConverters.listToSeq(value.getFields)
       }
     }
 

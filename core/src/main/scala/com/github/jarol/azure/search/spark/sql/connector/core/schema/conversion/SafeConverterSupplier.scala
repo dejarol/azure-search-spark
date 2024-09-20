@@ -103,6 +103,8 @@ trait SafeConverterSupplier[K, V] {
   private def converterForArrayType(sparkType: DataType, searchType: SearchFieldDataType): Option[V] = {
 
     // Evaluate rule for the inner type
+
+    // TODO: add logic and test for handling complex collection types
     val searchInnerType = searchType.unsafeCollectionInnerType
     sparkType match {
       case ArrayType(sparkInternalType, _) => getConverter(

@@ -5,6 +5,7 @@ import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchIOConfig, UsageMode}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Write configuration
@@ -12,8 +13,8 @@ import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
  * @param globalOptions write options retrieved from the underlying [[org.apache.spark.SparkConf]]
  */
 
-case class WriteConfig(override protected val localOptions: Map[String, String],
-                       override protected val globalOptions: Map[String, String])
+case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[String],
+                       override protected val globalOptions: CaseInsensitiveMap[String])
   extends SearchIOConfig(localOptions, globalOptions) {
 
   /**
@@ -69,7 +70,7 @@ case class WriteConfig(override protected val localOptions: Map[String, String],
    * @return column name for document action
    */
 
-  def actionColumn: Option[String] = get(WriteConfig.ACTION_COLUMN_CONFIG)
+  def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
 
   /**
    * Return the names of the columns that should be converted to Geopoints when writing data
@@ -103,11 +104,11 @@ object WriteConfig {
   final val BATCH_SIZE_CONFIG = "batchSize"
   final val DEFAULT_BATCH_SIZE_VALUE = 1000
   final val ACTION_CONFIG = "action"
-  final val ACTION_COLUMN_CONFIG = "actionColumn"
+  final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
   final val CONVERT_AS_GEOPOINTS = "convertAsGeopoints"
 
-  final val CREATE_INDEX_PREFIX = "createIndex"
+  final val CREATE_INDEX_PREFIX = "createIndex."
   final val KEY_FIELD = "keyField"
   final val FILTERABLE_FIELDS = "filterableFields"
   final val SORTABLE_FIELDS = "sortableFields"
@@ -116,7 +117,22 @@ object WriteConfig {
   final val FACETABLE_FIELDS = "facetableFields"
 
   /**
-   * Create an instance with options as local options
+   * Create an instance from two single maps
+   * @param localOptions local options
+   * @param globalOptions global options
+   * @return a write config
+   */
+
+  def apply(localOptions: Map[String, String], globalOptions: Map[String, String]): WriteConfig = {
+
+    WriteConfig(
+      CaseInsensitiveMap(localOptions),
+      CaseInsensitiveMap(globalOptions)
+    )
+  }
+
+  /**
+   * Create an instance from some local options
    * @param options local options
    * @return a write config instance with given local options and global options retrieved from the underlying [[org.apache.spark.SparkConf]]
    */

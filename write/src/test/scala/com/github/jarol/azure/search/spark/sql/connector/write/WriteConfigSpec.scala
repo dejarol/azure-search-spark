@@ -2,13 +2,26 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import org.scalatest.Inspectors
 
 class WriteConfigSpec
   extends BasicSpec
     with Inspectors {
 
-  private def writeConfig(locals: Map[String, String]): WriteConfig = WriteConfig(locals, Map.empty)
+  /**
+   * Create a [[WriteConfig]]
+   * @param locals local options
+   * @return write config
+   */
+
+  private def writeConfig(locals: Map[String, String]): WriteConfig = WriteConfig(locals, Map.empty[String, String])
+
+  private def assertDefinedAndContaining(actual: Option[Seq[String]], expected: Seq[String]): Unit = {
+
+    actual shouldBe defined
+    actual.get should contain theSameElementsAs expected
+  }
 
   private lazy val emptyConfig: WriteConfig = writeConfig(Map.empty)
 
@@ -58,7 +71,7 @@ class WriteConfigSpec
           emptyConfig.actionColumn shouldBe empty
           writeConfig(
             Map(
-              WriteConfig.ACTION_COLUMN_CONFIG -> colName
+              WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> colName
             )
           ).actionColumn shouldBe Some(colName)
         }
@@ -91,6 +104,42 @@ class WriteConfigSpec
 
           actual shouldBe defined
           actual.get should contain theSameElementsAs expected
+        }
+
+        describe("retrieve search field options") {
+          it("throwing an exception for missing key fields") {
+
+            a[ConfigException] shouldBe thrownBy {
+              emptyConfig.searchFieldOptions
+            }
+          }
+
+          it("collecting informations about features to enable") {
+
+            val keyField = "hello"
+            val (facetable, filterable) = (Seq("f1"), Seq("f2"))
+            val (hidden, searchable, sortable) = (Seq("f3"), Seq("f4"), Seq("f5"))
+            val indexActionColumn = "world"
+            val options = writeConfig(
+              Map(
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.KEY_FIELD}" -> keyField,
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.FACETABLE_FIELDS}" -> facetable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.FILTERABLE_FIELDS}" -> filterable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.HIDDEN_FIELDS}" -> hidden.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.SEARCHABLE_FIELDS}" -> searchable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.SORTABLE_FIELDS}" -> sortable.mkString(","),
+                WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
+              )
+            ).searchFieldOptions
+
+            options.keyField shouldBe keyField
+            assertDefinedAndContaining(options.facetableFields, facetable)
+            assertDefinedAndContaining(options.filterableFields, filterable)
+            assertDefinedAndContaining(options.hiddenFields, hidden)
+            assertDefinedAndContaining(options.searchableFields, searchable)
+            assertDefinedAndContaining(options.sortableFields, sortable)
+            options.indexActionColumn shouldBe Some(indexActionColumn)
+          }
         }
       }
     }
