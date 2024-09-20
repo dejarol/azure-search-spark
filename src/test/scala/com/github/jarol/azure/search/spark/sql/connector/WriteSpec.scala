@@ -1,7 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.config.{IOConfig, WriteConfig}
+import com.github.jarol.azure.search.spark.sql.connector.config.WriteConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.SparkSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import org.apache.spark.sql.SaveMode
 
 import java.sql.{Date, Timestamp}

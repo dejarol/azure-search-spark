@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.config.IOConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.SparkSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import org.apache.spark.sql.Encoders
 
 import java.time.LocalDateTime

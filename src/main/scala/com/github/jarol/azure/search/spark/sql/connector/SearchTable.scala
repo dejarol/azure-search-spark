@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.config.{ReadConfig, WriteConfig}
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchScanBuilder
-import com.github.jarol.azure.search.spark.sql.connector.write.SearchWriteBuilder
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.read.{ReadConfig, SearchScanBuilder}
+import com.github.jarol.azure.search.spark.sql.connector.write.{SearchWriteBuilder, WriteConfig}
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
 import org.apache.spark.sql.connector.read.ScanBuilder
 import org.apache.spark.sql.connector.write.{LogicalWriteInfo, WriteBuilder}
@@ -10,6 +10,11 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import java.util
+
+/**
+ * [[Table]] implementation for Search dataSource
+ * @param tableSchema table schema (either inferred or user-provided)
+ */
 
 class SearchTable(private val tableSchema: StructType)
   extends Table
