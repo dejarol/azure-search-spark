@@ -19,7 +19,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
 
   private lazy val converterSupplier = SafeConverterSupplier(delegate)
 
-  private type Mapping = Map[K, V]
+  private type MaybeMapping = Either[SchemaCompatibilityException, Map[K, V]]
 
   /**
    * Safely create a mapping that will represent how to convert a Search document to a Spark internal row or vice versa.
@@ -31,11 +31,11 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
    * @return either a string reporting the incompatibility among the schemas or the conversion mapping
    */
 
-  final def getMapping(
-                        schema: Seq[StructField],
-                        searchFields: Seq[SearchField],
-                        indexName: String
-                      ): Either[SchemaCompatibilityException, Mapping] = {
+  final def get(
+                 schema: Seq[StructField],
+                 searchFields: Seq[SearchField],
+                 indexName: String
+               ): MaybeMapping = {
 
     // Retrieve the set of schema fields that do not exist on Search index
     if (!SchemaUtils.allSchemaFieldsExist(schema, searchFields)) {
@@ -89,7 +89,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
    * @return a Left instance
    */
 
-  private def exceptionForMissingFields(fields: Seq[String], index: String): Either[SchemaCompatibilityException, Mapping] = {
+  private def exceptionForMissingFields(fields: Seq[String], index: String): MaybeMapping = {
 
     Left(
       SchemaCompatibilityException.forMissingFields(
@@ -105,7 +105,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
    * @return a Left instance
    */
 
-  private def exceptionForNonCompatibleFields(fields: Map[StructField, SearchField]): Either[SchemaCompatibilityException, Mapping] = {
+  private def exceptionForNonCompatibleFields(fields: Map[StructField, SearchField]): MaybeMapping = {
 
     Left(
       SchemaCompatibilityException.forNonCompatibleFields(
@@ -122,7 +122,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
    * @return a Left instance
    */
 
-  private def exceptionForSchemaFieldsWithoutConverter(fields: Map[StructField, SearchField]): Either[SchemaCompatibilityException, Mapping] = {
+  private def exceptionForSchemaFieldsWithoutConverter(fields: Map[StructField, SearchField]):MaybeMapping = {
 
     Left(
       SchemaCompatibilityException.forSchemaFieldsWithoutConverter(

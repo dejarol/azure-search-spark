@@ -34,7 +34,7 @@ class SearchWrite(
     // If defined, create the action supplier
     // If this latter is defined as well, create the batch write
 
-    SafeMappingSupplier(WriteMappingType).getMapping(schema, indexFields, writeConfig.getIndex) match {
+    SafeMappingSupplier(WriteMappingType).get(schema, indexFields, writeConfig.getIndex) match {
       case Left(exception) => throw new SearchWriteException(exception)
       case Right(converters) =>
 
@@ -45,7 +45,7 @@ class SearchWrite(
             case Right(supplier) => supplier
           }
         }.getOrElse(
-          new ConstantActionSupplier(writeConfig.overallAction)
+          ConstantActionSupplier(writeConfig.overallAction)
         )
 
         // Create batch write

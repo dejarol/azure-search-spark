@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
-import com.azure.search.documents.indexes.models.SearchField
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations, toSparkTypeOperations}
 import org.apache.spark.sql.types.{DataType, StructField}
@@ -51,18 +51,20 @@ case class SafeConverterSupplier[K, V](private val delegate: MappingType[K, V]) 
 
   private def converterForArrayType(sparkType: DataType, searchField: SearchField): Option[V] = {
 
-    // Evaluate rule for the inner type
+    // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
     val (sparkInnerType, searchInnerType) = (sparkType.unsafeCollectionInnerType, searchField.getType.unsafeCollectionInnerType)
-    val maybeInternalConverter: Option[V] = if (sparkInnerType.isComplex && searchInnerType.isComplex) {
-      converterForComplexType(sparkInnerType, searchField)
+    val searchInnerField: SearchField = if (searchInnerType.isComplex) {
+      new SearchField("array", SearchFieldDataType.COMPLEX)
+        .setFields(searchField.getFields)
     } else {
-      get(
-        StructField("array", sparkInnerType),
-        new SearchField("array", searchInnerType)
-      )
+      new SearchField("array", searchInnerType)
     }
 
-    maybeInternalConverter.map(
+    // Get the converter recursively
+    get(
+      StructField("array", sparkInnerType),
+      searchInnerField
+    ).map(
       delegate.collectionConverter(sparkInnerType, searchField, _)
     )
   }

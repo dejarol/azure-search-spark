@@ -11,8 +11,7 @@ class SafeConverterSupplierSpec
   extends BasicSpec
     with FieldFactory {
 
-  private lazy val delegate: MappingType[String, ReadConverter] = ReadMappingType
-  private lazy val supplier = SafeConverterSupplier(delegate)
+  private lazy val supplier = SafeConverterSupplier(ReadMappingType)
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
 
 

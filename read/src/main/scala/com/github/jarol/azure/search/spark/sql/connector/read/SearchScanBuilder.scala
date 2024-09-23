@@ -27,7 +27,7 @@ class SearchScanBuilder(private val schema: StructType,
     if (!readConfig.indexExists) {
       throw ScanBuilderException.causedByNonExistingIndex(readConfig.getIndex)
     } else {
-      SafeMappingSupplier(ReadMappingType).getMapping(schema, readConfig.getSearchIndexFields, readConfig.getIndex) match {
+      SafeMappingSupplier(ReadMappingType).get(schema, readConfig.getSearchIndexFields, readConfig.getIndex) match {
         case Left(value) => throw new ScanBuilderException(value)
         case Right(value) => new SearchScan(schema, readConfig, value)
       }
