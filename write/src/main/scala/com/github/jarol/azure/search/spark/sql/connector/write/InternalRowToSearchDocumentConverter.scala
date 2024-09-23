@@ -18,6 +18,7 @@ case class InternalRowToSearchDocumentConverter(private val converters: Map[Stru
         )
       )
     }
+
     new SearchDocument(
       JavaScalaConverters.scalaMapToJava(
         properties

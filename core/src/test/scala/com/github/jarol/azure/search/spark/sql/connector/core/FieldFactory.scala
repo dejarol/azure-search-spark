@@ -78,6 +78,21 @@ trait FieldFactory {
   }
 
   /**
+   * Create a collection field with complex inner type
+   * @param name name
+   * @param subFields complex type subfields
+   * @return a search collection fields
+   */
+
+  protected final def createComplexCollectionField(name: String, subFields: SearchField*): SearchField = {
+
+    createCollectionField(
+      name,
+      SearchFieldDataType.COMPLEX
+    ).setFields(subFields: _*)
+  }
+
+  /**
    * Create a complex field
    * @param name field name
    * @param fields subFields

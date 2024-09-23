@@ -175,55 +175,54 @@ object SchemaUtils {
   final def areCompatibleFields(structField: StructField, searchField: SearchField): Boolean = {
 
     val (searchType, sparkType) = (searchField.getType, structField.dataType)
-    val compatibleDataType: Boolean = if (searchType.isAtomic) {
+    val compatibleDataType: Boolean = if (searchType.isAtomic && sparkType.isAtomic) {
 
       // They should be either naturally compatible or a suitable conversion rule should exist
       evaluateSparkTypesCompatibility(inferSparkTypeOf(searchField), sparkType) ||
         AtomicTypeConversionRules.existsConversionRuleFor(sparkType, searchType)
-    } else if (searchType.isCollection) {
 
-      // Evaluate compatibility on the inner type
-      sparkType match {
-        case ArrayType(elementType, _) =>
+    } else if (searchType.isCollection && sparkType.isCollection) {
 
-          // TODO: test compatibility for complex collections
-          val searchInnerType = searchType.unsafeCollectionInnerType
-          if (searchInnerType.isComplex) {
-            elementType match {
-              case StructType(fields) => evaluateSubFieldsCompatibility(fields, searchField.getFields)
-              case _ => false
-            }
-          } else {
-            areCompatibleFields(
-              StructField("array", elementType),
-              new SearchField("array", searchType.unsafeCollectionInnerType)
-            )
-          }
-        case _ => false
+      // Evaluate compatibility on inner types
+      // A special case is represented by collection of complex objects
+      val searchInnerType = searchType.unsafeCollectionInnerType
+      val sparkInnerType = sparkType.unsafeCollectionInnerType
+
+      // If both inner types are complex, evaluate subfields compatibility
+      if (searchInnerType.isComplex && sparkInnerType.isComplex) {
+        evaluateSubFieldsCompatibility(
+          sparkInnerType.unsafeSubFields,
+          searchField.getFields
+        )
+      } else {
+        // Otherwise, evaluate standard compatibility
+        areCompatibleFields(
+          StructField("array", sparkInnerType),
+          new SearchField("array", searchInnerType)
+        )
       }
 
-    } else if (searchType.isComplex) {
-
+    } else if (searchType.isComplex && sparkType.isComplex) {
       // Evaluate compatibility on subfields
-      sparkType match {
-        case StructType(sparkSubFields) =>
-          evaluateSubFieldsCompatibility(
-            sparkSubFields,
-            searchField.getFields
-          )
-        case _ => false
-      }
-    } else if (searchType.isGeoPoint) {
-      evaluateSparkTypesCompatibility(
-        inferSparkTypeOf(searchField),
-        sparkType
+      evaluateSubFieldsCompatibility(
+        sparkType.unsafeSubFields,
+        searchField.getFields
       )
+    } else if (searchType.isGeoPoint && sparkType.isComplex) {
+      evaluateSparkTypesCompatibility(GeoPointRule.sparkType, sparkType)
     } else {
       false
     }
 
     searchField.sameNameOf(structField) && compatibleDataType
   }
+
+  /**
+   * Evaluate the compatibility of two sets of Spark and Search subfields
+   * @param sparkSubFields Spark fields
+   * @param searchSubFields Search fields
+   * @return true for compatible set of fields
+   */
 
   private def evaluateSubFieldsCompatibility(
                                               sparkSubFields: Seq[StructField],
@@ -244,19 +243,23 @@ object SchemaUtils {
       allSubfieldsAreCompatible
   }
 
-  @throws[DataTypeException]
-  final def inferSearchTypeFor(structField: StructField): SearchFieldDataType = {
+  /**
+   * Infer the [[SearchFieldDataType]] for a Spark type
+   * @param dataType Spark type
+   * @throws DataTypeException for unsupported data types
+   * @return the inferred Search type
+   */
 
-    val dataType = structField.dataType
+  @throws[DataTypeException]
+  final def inferSearchTypeFor(dataType: DataType): SearchFieldDataType = {
+
     if (dataType.isAtomic) {
       AtomicTypeConversionRules.unsafeInferredTypeOf(dataType)
     } else if (dataType.isCollection) {
       SearchFieldDataType.collection(
-        inferSearchTypeFor(
-          StructField("array", dataType.unsafeCollectionInnerType)
-        )
+        inferSearchTypeFor(dataType.unsafeCollectionInnerType)
       )
-    } else if (dataType.isStruct) {
+    } else if (dataType.isComplex) {
 
       // If compatible with GeoPoint, use Geography point Search data type
       val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
@@ -267,6 +270,13 @@ object SchemaUtils {
       throw new DataTypeException(s"Unsupported Spark type ($dataType)")
     }
   }
+
+  /**
+   * Convert a Spark field into a Search field
+   * @param structField Spark fields
+   * @throws DataTypeException for Spark fields with unsupported types
+   * @return the equivalent Search field
+   */
 
   @throws[DataTypeException]
   final def toSearchField(structField: StructField): SearchField = {
@@ -279,31 +289,28 @@ object SchemaUtils {
       )
     } else if (dType.isCollection) {
 
-      // TODO: test conversion for complex collections
-      val innerType = dType.unsafeCollectionInnerType
-      val maybeSearchSubFields: Option[Seq[SearchField]] = innerType match {
-        case StructType(subFields) => Some(
-          subFields.map(toSearchField)
-        )
-
-        case _ => None
-      }
-
+      // If the inner type is complex, we should add subFields to newly created field
       val searchField = new SearchField(
         name,
         SearchFieldDataType.collection(
-          inferSearchTypeFor(
-            StructField("array", dType.unsafeCollectionInnerType)
-          )
+          inferSearchTypeFor(dType.unsafeCollectionInnerType)
         )
       )
 
+      // Optional subfields
+      val maybeSearchSubFields: Option[Seq[SearchField]] = dType
+        .unsafeCollectionInnerType
+        .safeSubFields.map {
+          v => v.map(toSearchField)
+      }
+
+      // Set subfields, if defined
       maybeSearchSubFields.map {
         v => searchField.setFields(v: _*)
       }.getOrElse(searchField)
-    } else if (dType.isStruct) {
+    } else if (dType.isComplex) {
 
-      val inferredSearchType = inferSearchTypeFor(structField)
+      val inferredSearchType = inferSearchTypeFor(dType)
       if (inferredSearchType.isGeoPoint) {
         new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
       } else {

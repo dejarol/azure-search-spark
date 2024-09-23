@@ -44,6 +44,24 @@ class SparkMappingSupplierSpec
             createCollectionField(third, SearchFieldDataType.DATE_TIME_OFFSET)
           )
         }
+
+        it("complex inner type") {
+
+          assertConverterExists(
+            createArrayField(
+              first,
+              createStructType(
+                createStructField(second, DataTypes.StringType),
+                createStructField(third, DataTypes.BooleanType)
+              )
+            ),
+            createComplexCollectionField(
+              first,
+              createSearchField(second, SearchFieldDataType.STRING),
+              createSearchField(third, SearchFieldDataType.BOOLEAN)
+            )
+          )
+        }
       }
 
       describe("complex fields with same name and") {

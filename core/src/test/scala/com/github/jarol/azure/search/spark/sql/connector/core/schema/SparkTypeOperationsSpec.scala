@@ -59,7 +59,7 @@ class SparkTypeOperationsSpec
           DataTypes.IntegerType.isCollection shouldBe false
           createStructType(
             createStructField("name", DataTypes.StringType)
-          ).isStruct shouldBe true
+          ).isComplex shouldBe true
         }
       }
 

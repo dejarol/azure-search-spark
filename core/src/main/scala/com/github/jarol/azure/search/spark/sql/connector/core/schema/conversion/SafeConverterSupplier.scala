@@ -2,8 +2,8 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations}
-import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations, toSparkTypeOperations}
+import org.apache.spark.sql.types.{DataType, StructField}
 
 /**
  * Safe supplier of data converter from Spark ecosystem to Search ecosystem and vice versa
@@ -19,7 +19,7 @@ trait SafeConverterSupplier[K, V] {
    * @return a converter for collections
    */
 
-  protected def collectionConverter(internal: V): V
+  protected def collectionConverter(sparkType: DataType, search: SearchField, internal: V): V
 
   /**
    * Create a converter for handling nested data objects
@@ -65,13 +65,13 @@ trait SafeConverterSupplier[K, V] {
     if (!searchField.sameNameOf(structField)) {
       None
     } else {
-      if (searchFieldType.isAtomic) {
+      if (sparkType.isAtomic && searchFieldType.isAtomic) {
         converterForAtomicTypes(sparkType, searchFieldType)
-      } else if (searchFieldType.isCollection) {
-        converterForArrayType(sparkType, searchFieldType)
-      } else if (searchFieldType.isComplex) {
+      } else if (sparkType.isCollection && searchFieldType.isCollection) {
+        converterForArrayType(sparkType, searchField)
+      } else if (sparkType.isComplex && searchFieldType.isComplex) {
         converterForComplexType(sparkType, searchField)
-      } else if (searchFieldType.isGeoPoint) {
+      } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
         converterForGeoPoint(sparkType)
       } else {
         None
@@ -96,23 +96,26 @@ trait SafeConverterSupplier[K, V] {
    * <br>
    * A converter will exist only if the collection inner types are compatible
    * @param sparkType Spark array inner type
-   * @param searchType Search collection inner type
+   * @param searchField Search collection inner type
    * @return a converter for collections
    */
 
-  private def converterForArrayType(sparkType: DataType, searchType: SearchFieldDataType): Option[V] = {
+  private def converterForArrayType(sparkType: DataType, searchField: SearchField): Option[V] = {
 
     // Evaluate rule for the inner type
-
-    // TODO: add logic and test for handling complex collection types
-    val searchInnerType = searchType.unsafeCollectionInnerType
-    sparkType match {
-      case ArrayType(sparkInternalType, _) => getConverter(
-        StructField("array", sparkInternalType),
+    val (sparkInnerType, searchInnerType) = (sparkType.unsafeCollectionInnerType, searchField.getType.unsafeCollectionInnerType)
+    val maybeInternalConverter: Option[V] = if (sparkInnerType.isComplex && searchInnerType.isComplex) {
+      converterForComplexType(sparkInnerType, searchField)
+    } else {
+      getConverter(
+        StructField("array", sparkInnerType),
         new SearchField("array", searchInnerType)
-      ).map(collectionConverter)
-      case _ => None
+      )
     }
+
+    maybeInternalConverter.map(
+      collectionConverter(sparkInnerType, searchField, _)
+    )
   }
 
   /**
@@ -128,35 +131,32 @@ trait SafeConverterSupplier[K, V] {
   private def converterForComplexType(sparkType: DataType, searchField: SearchField): Option[V] = {
 
     // Build a rule that wraps subField conversion rules
-    sparkType match {
-      case StructType(sparkSubFields) =>
+    val sparkSubFields = sparkType.unsafeSubFields
+    val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
 
-        // Compute the converter for to each subfield
-        val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
-        val convertersMap: Map[K, V] = SchemaUtils
-          .matchNamesakeFields(sparkSubFields, searchSubFields)
-          .map {
-            case (k, v) => (keyFrom(k), getConverter(k, v))
-          }.collect {
-            case (k, Some(v)) => (k, v)
-          }
+    // Compute the converter for to each subfield
+    val convertersMap: Map[K, V] = SchemaUtils
+      .matchNamesakeFields(sparkSubFields, searchSubFields)
+      .map {
+        case (k, v) => (keyFrom(k), getConverter(k, v))
+      }.collect {
+        case (k, Some(v)) => (k, v)
+      }
 
-        // For each subfield, there should exist a search subfields with same name and a converter should exist
-        val allSubFieldsExist = SchemaUtils.allSchemaFieldsExist(sparkSubFields, searchSubFields)
-        val allSubFieldsHaveAConverter = sparkSubFields.forall {
-          subField =>
-            convertersMap.exists {
-              case (key, _) => nameFrom(key).equalsIgnoreCase(subField.name)
-            }
+    // For each subfield, there should exist a search subfields with same name and a converter should exist
+    val allSubFieldsExist = SchemaUtils.allSchemaFieldsExist(sparkSubFields, searchSubFields)
+    val allSubFieldsHaveAConverter = sparkSubFields.forall {
+      subField =>
+        convertersMap.exists {
+          case (key, _) => nameFrom(key).equalsIgnoreCase(subField.name)
         }
+    }
 
-        // If so, create the Complex converter
-        if (allSubFieldsExist && allSubFieldsHaveAConverter) {
-          Some(complexConverter(convertersMap))
-        } else {
-          None
-        }
-      case _ => None
+    // If so, create the Complex converter
+    if (allSubFieldsExist && allSubFieldsHaveAConverter) {
+      Some(complexConverter(convertersMap))
+    } else {
+      None
     }
   }
 
@@ -171,25 +171,19 @@ trait SafeConverterSupplier[K, V] {
 
   private def converterForGeoPoint(sparkType: DataType): Option[V] = {
 
-    sparkType match {
-      case StructType(subFields) =>
+    val allSubFieldsExist = sparkType.unsafeSubFields.forall {
+      sf => GeoPointRule.GEO_POINT_DEFAULT_STRUCT.exists {
+        geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
+          sf.dataType,
+          geoSf.dataType
+        )
+      }
+    }
 
-        val allSubFieldsExist = subFields.forall {
-          sf => GeoPointRule.GEO_POINT_DEFAULT_STRUCT.exists {
-            geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
-              sf.dataType,
-              geoSf.dataType
-            )
-          }
-        }
-
-        if (allSubFieldsExist) {
-          Some(geoPointConverter)
-        } else {
-          None
-        }
-
-      case _=> None
+    if (allSubFieldsExist) {
+      Some(geoPointConverter)
+    } else {
+      None
     }
   }
 }

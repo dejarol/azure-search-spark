@@ -54,6 +54,13 @@ abstract class DataTypeOperations[T](protected val input: T,
   def isCollection: Boolean
 
   /**
+   * Return true if this type represents a complex object (i.e. it defines some subfields)
+   * @return true for complex objects
+   */
+
+  def isComplex: Boolean
+
+  /**
    * Safely extract the inner collection type (if it's collection)
    * @return a non-empty value if this instance refers to a collection type
    */

@@ -1,10 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
-import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointRule
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
+
+import java.util
 
 class SchemaUtilsSpec
   extends BasicSpec
@@ -12,6 +14,25 @@ class SchemaUtilsSpec
       with Inspectors {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
+
+  /**
+   * Assert that all Search fields exist within the expected field set
+   * @param actual actual set of fields
+   * @param expected expected set of fields (keys are names, values are data types)
+   */
+
+  private def assertExistAll(
+                              actual: util.List[SearchField],
+                              expected: Map[String, SearchFieldDataType]
+                            ): Unit = {
+
+    forAll(actual) {
+      f => expected.exists {
+        case (name, sType) => f.getName.equalsIgnoreCase(name) &&
+          f.getType.equals(sType)
+      } shouldBe true
+    }
+  }
 
   describe(`object`[SchemaUtils.type ]) {
     describe(SHOULD) {
@@ -231,22 +252,41 @@ class SchemaUtilsSpec
           ) shouldBe true
         }
 
-        it("two collection fields with same name and compatible type") {
+        describe("two collection fields with same name and compatible type") {
+          it("atomic case") {
 
-          SchemaUtils.areCompatibleFields(
-            createArrayField(first, DataTypes.IntegerType),
-            createCollectionField(first, SearchFieldDataType.INT32)
-          ) shouldBe true
+            SchemaUtils.areCompatibleFields(
+              createArrayField(first, DataTypes.IntegerType),
+              createCollectionField(first, SearchFieldDataType.INT32)
+            ) shouldBe true
 
-          SchemaUtils.areCompatibleFields(
-            createArrayField(first, DataTypes.DateType),
-            createCollectionField(first, SearchFieldDataType.DATE_TIME_OFFSET)
-          ) shouldBe true
+            SchemaUtils.areCompatibleFields(
+              createArrayField(first, DataTypes.DateType),
+              createCollectionField(first, SearchFieldDataType.DATE_TIME_OFFSET)
+            ) shouldBe true
 
-          SchemaUtils.areCompatibleFields(
-            createArrayField(first, DataTypes.IntegerType),
-            createCollectionField(first, SearchFieldDataType.DOUBLE)
-          ) shouldBe false
+            SchemaUtils.areCompatibleFields(
+              createArrayField(first, DataTypes.IntegerType),
+              createCollectionField(first, SearchFieldDataType.DOUBLE)
+            ) shouldBe false
+          }
+
+          it("complex case") {
+
+            SchemaUtils.areCompatibleFields(
+              createArrayField(first,
+                createStructType(
+                  createStructField(second, DataTypes.DateType),
+                  createStructField(third, DataTypes.StringType)
+                )
+              ),
+              createComplexCollectionField(
+                first,
+                createSearchField(second, SearchFieldDataType.DATE_TIME_OFFSET),
+                createSearchField(third, SearchFieldDataType.STRING)
+              )
+            ) shouldBe true
+          }
         }
 
         describe("two complex fields") {
@@ -366,12 +406,7 @@ class SchemaUtilsSpec
       describe("retrieve the Search inferred type for a Spark") {
         it("atomic type") {
 
-          SchemaUtils.inferSearchTypeFor(
-            createStructField(
-              first,
-              DataTypes.TimestampType
-            )
-          ) shouldBe SearchFieldDataType.DATE_TIME_OFFSET
+          SchemaUtils.inferSearchTypeFor(DataTypes.TimestampType) shouldBe SearchFieldDataType.DATE_TIME_OFFSET
         }
 
         describe("array type") {
@@ -379,10 +414,7 @@ class SchemaUtilsSpec
 
             val inputCollectionType = DataTypes.IntegerType
             SchemaUtils.inferSearchTypeFor(
-              createStructField(
-                first,
-                createArrayType(inputCollectionType)
-              )
+              createArrayType(inputCollectionType)
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.INT32
             )
@@ -391,13 +423,10 @@ class SchemaUtilsSpec
           it("with inner struct type") {
 
             SchemaUtils.inferSearchTypeFor(
-              createStructField(
-                first,
-                createArrayType(
-                  createStructType(
-                    createStructField(second, DataTypes.StringType),
-                    createStructField(third, DataTypes.DateType)
-                  )
+              createArrayType(
+                createStructType(
+                  createStructField(second, DataTypes.StringType),
+                  createStructField(third, DataTypes.DateType)
                 )
               )
             ) shouldBe SearchFieldDataType.collection(
@@ -408,10 +437,7 @@ class SchemaUtilsSpec
           it("with compatible geo point type") {
 
             SchemaUtils.inferSearchTypeFor(
-              createStructField(
-                first,
-                createArrayType(GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
-              )
+              createArrayType(GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
             )
@@ -420,7 +446,7 @@ class SchemaUtilsSpec
       }
 
       describe("convert Struct fields to Search fields") {
-        it("for atomic types") {
+        it("atomic types") {
 
           val structField = createStructField(first, DataTypes.StringType)
           val searchField = SchemaUtils.toSearchField(structField)
@@ -429,15 +455,42 @@ class SchemaUtilsSpec
           searchField.getType shouldBe SearchFieldDataType.STRING
         }
 
-        it("for collection types") {
+        describe("collection types") {
+          it("with atomic inner type") {
 
-          val structField = createArrayField(first, DataTypes.DateType)
-          val searchField = SchemaUtils.toSearchField(structField)
+            val structField = createArrayField(first, DataTypes.DateType)
+            val searchField = SchemaUtils.toSearchField(structField)
 
-          searchField.getName shouldBe structField.name
-          searchField.getType shouldBe SearchFieldDataType.collection(
-            SearchFieldDataType.DATE_TIME_OFFSET
-          )
+            searchField.getName shouldBe structField.name
+            searchField.getType shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.DATE_TIME_OFFSET
+            )
+          }
+
+          it("with complex inner type") {
+
+            val structField = createArrayField(
+              first,
+              createStructType(
+                createStructField(second, DataTypes.IntegerType),
+                createStructField(third, DataTypes.BooleanType)
+              )
+            )
+
+            val searchField = SchemaUtils.toSearchField(structField)
+            searchField.getName shouldBe structField.name
+            searchField.getType shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.COMPLEX
+            )
+
+            assertExistAll(
+              searchField.getFields,
+              Map(
+                second -> SearchFieldDataType.INT32,
+                third -> SearchFieldDataType.BOOLEAN
+              )
+            )
+          }
         }
 
         it("for struct types") {
@@ -453,18 +506,13 @@ class SchemaUtilsSpec
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.COMPLEX
 
-          val expectedSubFields = Map(
-            first -> SearchFieldDataType.INT32,
-            second -> SearchFieldDataType.DATE_TIME_OFFSET
+          assertExistAll(
+            searchField.getFields,
+            Map(
+              first -> SearchFieldDataType.INT32,
+              second -> SearchFieldDataType.DATE_TIME_OFFSET
+            )
           )
-
-          val innerFields = JavaScalaConverters.listToSeq(searchField.getFields)
-          forAll(innerFields) {
-            field =>
-              expectedSubFields.exists {
-                case (k, v) => field.getName.equals(k) && field.getType.equals(v)
-              } shouldBe true
-          }
         }
 
         it("for geo compatible struct types") {

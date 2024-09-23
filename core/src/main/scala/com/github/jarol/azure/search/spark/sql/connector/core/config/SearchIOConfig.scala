@@ -43,13 +43,17 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
 
   override def getIndex: String = unsafelyGet(IOConfig.INDEX_CONFIG)
 
-  private lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
-    .endpoint(getEndpoint)
-    .credential(new AzureKeyCredential(getAPIkey))
-    .buildClient
+  private def getSearchIndexClient: SearchIndexClient = {
 
-  private lazy val searchIndex: SearchIndex = searchIndexClient.getIndex(getIndex)
-  private lazy val searchClient: SearchClient = searchIndexClient.getSearchClient(getIndex)
+    new SearchIndexClientBuilder()
+      .endpoint(getEndpoint)
+      .credential(new AzureKeyCredential(getAPIkey))
+      .buildClient
+  }
+
+  private def getSearchIndex: SearchIndex = getSearchIndexClient.getIndex(getIndex)
+
+  private def getSearchClient: SearchClient = getSearchIndexClient.getSearchClient(getIndex)
 
   /**
    * Perform an action using this instance's [[SearchIndexClient]], and get the result
@@ -58,7 +62,7 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
    * @return the action result
    */
 
-  final def withSearchIndexClientDo[T](function: SearchIndexClient => T): T = function.apply(searchIndexClient)
+  final def withSearchIndexClientDo[T](function: SearchIndexClient => T): T = function.apply(getSearchIndexClient)
 
   /**
    * Perform an action using this instance's [[SearchIndex]], and get the result
@@ -67,7 +71,7 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
    * @return the action result
    */
 
-  private final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(searchIndex)
+  private final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(getSearchIndex)
 
   /**
    * Perform an action using this instance's [[SearchClient]], and get the result
@@ -76,7 +80,7 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
    * @return the action result
    */
 
-  final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(searchClient)
+  final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(getSearchClient)
 
   /**
    * Evaluate if this instance's index exists

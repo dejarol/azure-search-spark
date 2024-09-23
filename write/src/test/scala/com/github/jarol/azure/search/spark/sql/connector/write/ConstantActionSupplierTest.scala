@@ -12,7 +12,7 @@ class ConstantActionSupplierTest
       it("supply a constant value") {
 
         val default = IndexActionType.MERGE
-        new ConstantActionSupplier(
+        ConstantActionSupplier(
           default
         ).get(
           InternalRow(Seq.empty: _*)

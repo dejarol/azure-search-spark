@@ -41,24 +41,24 @@ class SparkTypeOperations(override protected val input: DataType)
     }
   }
 
+  /**
+   * Return true for struct types
+   * @return true for struct types
+   */
+
+  override def isComplex: Boolean = {
+
+    input match {
+      case _: StructType => true
+      case _ => false
+    }
+  }
+
   override def safeCollectionInnerType: Option[DataType] = {
 
     input match {
       case ArrayType(elementType, _) => Some(elementType)
       case _ => None
-    }
-  }
-
-  /**
-   * Evaluate if this type is a struct type
-   * @return true for struct types
-   */
-
-  final def isStruct: Boolean = {
-
-    input match {
-      case _: StructType => true
-      case _ => false
     }
   }
 

@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicSparkInternalConverters, CollectionConverter, ComplexConverter, SparkInternalConverter}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{ArrayConverter, AtomicSearchConverters, SearchPropertyConverter, StructTypeConverter}
-import org.apache.spark.sql.types.{ArrayType, DataType, DataTypes, StructField, StructType}
+import org.apache.spark.sql.types._
 
 /**
  * Conversion rule for geo points
@@ -38,7 +38,7 @@ case object GeoPointRule
   override def searchConverter(): SearchPropertyConverter = StructTypeConverter(
     Map(
       StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicSearchConverters.StringConverter,
-      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(AtomicSearchConverters.DoubleConverter)
+      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicSearchConverters.DoubleConverter)
     )
   )
 }

@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import org.apache.spark.sql.catalyst.util.ArrayData
+import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String
 
 class ArrayConverterSpec
@@ -13,6 +14,7 @@ class ArrayConverterSpec
 
         val input = Seq("hello", "world")
         val output = ArrayConverter(
+          DataTypes.StringType,
           AtomicSearchConverters.StringConverter
         ).toSearchProperty(
           ArrayData.toArrayData(
