@@ -10,14 +10,14 @@ import java.time.{Instant, OffsetDateTime}
  * Converters for Search atomic types
  */
 
-object AtomicSparkInternalConverters {
+object AtomicReadConverters {
 
   /**
    * Converter for strings (internally represented by [[UTF8String]]s)
    */
 
   case object StringConverter
-    extends SparkInternalTransformConverter[UTF8String] {
+    extends ReadTransformConverter[UTF8String] {
 
     override protected def transform(value: Any): UTF8String = {
       UTF8String.fromString(value.asInstanceOf[String])
@@ -28,38 +28,38 @@ object AtomicSparkInternalConverters {
    * Converter for integers
    */
 
-  case object Int32Converter extends SparkInternalCastConverter[java.lang.Integer]
+  case object Int32Converter extends ReadCastConverter[java.lang.Integer]
 
   /**
    * Converter for longs
    */
 
-  case object Int64Converter extends SparkInternalCastConverter[java.lang.Long]
+  case object Int64Converter extends ReadCastConverter[java.lang.Long]
 
   /**
    * Converter for doubles
    */
 
-  case object DoubleConverter extends SparkInternalCastConverter[java.lang.Double]
+  case object DoubleConverter extends ReadCastConverter[java.lang.Double]
 
   /**
    * Converter for floats
    */
 
-  case object SingleConverter extends SparkInternalCastConverter[java.lang.Float]
+  case object SingleConverter extends ReadCastConverter[java.lang.Float]
 
   /**
    * Converter for booleans
    */
 
-  case object BooleanConverter extends SparkInternalCastConverter[java.lang.Boolean]
+  case object BooleanConverter extends ReadCastConverter[java.lang.Boolean]
 
   /**
    * Converter for timestamp (internally represented as microsecond since epoch)
    */
 
   case object DateTimeToTimestampConverter
-    extends SparkInternalTimeConverter[java.lang.Long] {
+    extends ReadTimeConverter[java.lang.Long] {
 
     override protected def dateTimeToInternalObject(dateTime: OffsetDateTime): lang.Long = {
 
@@ -75,7 +75,7 @@ object AtomicSparkInternalConverters {
    */
 
   case object DateTimeToDateConverter
-    extends SparkInternalTimeConverter[Integer] {
+    extends ReadTimeConverter[Integer] {
 
     override protected def dateTimeToInternalObject(dateTime: OffsetDateTime): Integer = {
       dateTime.toLocalDate.toEpochDay.toInt

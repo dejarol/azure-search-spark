@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.SparkInternalConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.StructType
 
@@ -13,7 +13,7 @@ import org.apache.spark.sql.types.StructType
 
 class SearchScan(private val schema: StructType,
                  private val readConfig: ReadConfig,
-                 private val converters: Map[String, SparkInternalConverter])
+                 private val converters: Map[String, ReadConverter])
   extends Scan {
 
   override def readSchema(): StructType = schema

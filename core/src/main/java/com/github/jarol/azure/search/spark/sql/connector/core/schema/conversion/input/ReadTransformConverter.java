@@ -9,8 +9,8 @@ import java.util.Objects;
  * @param <T> Spark internal object type
  */
 
-public abstract class SparkInternalTransformConverter<T>
-        implements SparkInternalConverter {
+public abstract class ReadTransformConverter<T>
+        implements ReadConverter {
 
     @Override
     public final @Nullable T toSparkInternalObject(Object value) {

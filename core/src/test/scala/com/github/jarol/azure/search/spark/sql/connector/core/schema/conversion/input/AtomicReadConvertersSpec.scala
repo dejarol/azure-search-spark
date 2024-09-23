@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema.input
+package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
@@ -6,10 +6,10 @@ import org.apache.spark.unsafe.types.UTF8String
 import java.time._
 import java.time.temporal.ChronoUnit
 
-class AtomicSparkInternalConvertersSpec
+class AtomicReadConvertersSpec
   extends BasicSpec {
 
-  import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.AtomicSparkInternalConverters._
+  import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.AtomicReadConverters._
 
   describe("Each atomic type converter") {
     describe(SHOULD) {

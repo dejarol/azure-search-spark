@@ -9,8 +9,8 @@ import java.util
  * @param conversions conversions to apply on complex object subfields
  */
 
-case class ComplexConverter(private val conversions: Map[String, SparkInternalConverter])
-  extends SparkInternalConverter {
+case class ComplexConverter(private val conversions: Map[String, ReadConverter])
+  extends ReadConverter {
 
   override def toSparkInternalObject(value: Any): InternalRow = {
 

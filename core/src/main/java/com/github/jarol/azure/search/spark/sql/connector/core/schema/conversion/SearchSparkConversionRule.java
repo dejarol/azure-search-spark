@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion;
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType;
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.SparkInternalConverter;
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchPropertyConverter;
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter;
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter;
 import org.apache.spark.sql.types.DataType;
 
 /**
@@ -86,12 +86,12 @@ public interface SearchSparkConversionRule {
      * @return rule's Spark converter instance
      */
 
-    SparkInternalConverter sparkConverter();
+    ReadConverter readConverter();
 
     /**
      * Get this instance's Search converter
      * @return rule's Search converter instance
      */
 
-    SearchPropertyConverter searchConverter();
+    WriteConverter writeConverter();
 }

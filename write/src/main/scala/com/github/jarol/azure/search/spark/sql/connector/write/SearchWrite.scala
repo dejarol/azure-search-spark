@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchMappingSupplier
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SafeMappingSupplier
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteMappingType
 import org.apache.spark.sql.connector.write.{BatchWrite, Write}
 import org.apache.spark.sql.types.StructType
 
@@ -33,7 +34,7 @@ class SearchWrite(
     // If defined, create the action supplier
     // If this latter is defined as well, create the batch write
 
-    SearchMappingSupplier.getMapping(schema, indexFields, writeConfig.getIndex) match {
+    SafeMappingSupplier(WriteMappingType).getMapping(schema, indexFields, writeConfig.getIndex) match {
       case Left(exception) => throw new SearchWriteException(exception)
       case Right(converters) =>
 

@@ -12,8 +12,8 @@ import java.util
  */
 
 case class ArrayConverter(private val arrayInternalType: DataType,
-                          private val arrayInternalConverter: SearchPropertyConverter)
-  extends SearchPropertyTransformConverter[util.List[Object]] {
+                          private val arrayInternalConverter: WriteConverter)
+  extends WriteTransformConverter[util.List[Object]] {
 
   override protected def transform(value: Any): util.List[Object] = {
 

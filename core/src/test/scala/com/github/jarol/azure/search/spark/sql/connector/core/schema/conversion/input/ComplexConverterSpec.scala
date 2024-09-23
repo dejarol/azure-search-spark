@@ -22,8 +22,8 @@ class ComplexConverterSpec
 
         val output = ComplexConverter(
           Map(
-            k1 -> AtomicSparkInternalConverters.StringConverter,
-            k2 -> AtomicSparkInternalConverters.Int32Converter
+            k1 -> AtomicReadConverters.StringConverter,
+            k2 -> AtomicReadConverters.Int32Converter
           )
         ).toSparkInternalObject(
           input

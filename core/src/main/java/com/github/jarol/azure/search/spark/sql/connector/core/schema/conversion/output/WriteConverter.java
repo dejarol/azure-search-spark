@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 
 @FunctionalInterface
-public interface SearchPropertyConverter
+public interface WriteConverter
         extends Serializable {
 
     /**

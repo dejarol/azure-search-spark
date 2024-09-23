@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchResult
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.SparkInternalConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
@@ -18,7 +18,7 @@ import java.util
  */
 
 class SearchPartitionReader(private val readConfig: ReadConfig,
-                            private val converters: Map[String, SparkInternalConverter],
+                            private val converters: Map[String, ReadConverter],
                             private val searchPartition: SearchPartition)
   extends PartitionReader[InternalRow]
     with Logging {

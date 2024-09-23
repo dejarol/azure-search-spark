@@ -5,7 +5,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
  */
 
 @FunctionalInterface
-public interface SparkInternalConverter {
+public interface ReadConverter {
 
     /**
      * Convert a Search data object to a Spark internal object

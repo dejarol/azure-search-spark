@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchPropertyConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, PhysicalWriteInfo, WriterCommitMessage}
 import org.apache.spark.sql.types.StructField
@@ -15,7 +15,7 @@ import org.apache.spark.sql.types.StructField
 
 class SearchBatchWrite(
                         private val writeConfig: WriteConfig,
-                        private val converters: Map[StructField, SearchPropertyConverter],
+                        private val converters: Map[StructField, WriteConverter],
                         private val indexActionSupplier: IndexActionSupplier
                       )
   extends BatchWrite

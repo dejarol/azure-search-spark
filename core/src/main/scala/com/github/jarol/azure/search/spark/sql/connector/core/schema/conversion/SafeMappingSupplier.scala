@@ -15,8 +15,9 @@ import org.apache.spark.sql.types.StructField
  * @tparam V mapping value type
  */
 
-trait SafeMappingSupplier[K, V]
-  extends SafeConverterSupplier[K, V] {
+case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
+
+  private lazy val converterSupplier = SafeConverterSupplier(delegate)
 
   private type Mapping = Map[K, V]
 
@@ -60,7 +61,7 @@ trait SafeMappingSupplier[K, V]
 
         // Retrieve a converter for each schema field
         val converters: Map[K, V] = sparkAndNamesakeSearchFields.map {
-          case (k, v) => (keyFrom(k), getConverter(k, v))
+          case (k, v) => (delegate.keyOf(k), converterSupplier.get(k, v))
         }.collect {
           case (k, Some(v)) => (k, v)
         }
@@ -68,7 +69,7 @@ trait SafeMappingSupplier[K, V]
         // Detect those schema fields for which a converter could not be found
         val schemaFieldsWithoutConverter: Map[StructField, SearchField] = sparkAndNamesakeSearchFields.filterNot {
           case (structField, _) => converters.exists {
-            case (key, _) => nameFrom(key).equalsIgnoreCase(structField.name)
+            case (key, _) => delegate.keyName(key).equalsIgnoreCase(structField.name)
           }
         }
 

@@ -15,7 +15,7 @@ class ArrayConverterSpec
         val input = Seq("hello", "world")
         val output = ArrayConverter(
           DataTypes.StringType,
-          AtomicSearchConverters.StringConverter
+          AtomicWriteConverters.StringConverter
         ).toSearchProperty(
           ArrayData.toArrayData(
             input.map(UTF8String.fromString)

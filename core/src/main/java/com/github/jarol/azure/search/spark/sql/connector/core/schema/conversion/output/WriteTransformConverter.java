@@ -9,8 +9,8 @@ import java.util.Objects;
  * @param <T> output transformation type
  */
 
-public abstract class SearchPropertyTransformConverter<T>
-        implements SearchPropertyConverter {
+public abstract class WriteTransformConverter<T>
+        implements WriteConverter {
 
     @Override
     public final @Nullable T toSearchProperty(Object value) {

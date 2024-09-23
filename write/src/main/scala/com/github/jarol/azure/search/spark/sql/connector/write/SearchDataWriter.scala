@@ -4,7 +4,7 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexAction
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchPropertyConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
@@ -20,7 +20,7 @@ import org.apache.spark.sql.types.StructField
  */
 
 class SearchDataWriter(private val writeConfig: WriteConfig,
-                       private val converters: Map[StructField, SearchPropertyConverter],
+                       private val converters: Map[StructField, WriteConverter],
                        private val actionSupplier: IndexActionSupplier,
                        private val partitionId: Int,
                        private val taskId: Long)

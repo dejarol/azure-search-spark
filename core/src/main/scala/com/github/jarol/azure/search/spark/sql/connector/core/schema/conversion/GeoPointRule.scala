@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicSparkInternalConverters, CollectionConverter, ComplexConverter, SparkInternalConverter}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{ArrayConverter, AtomicSearchConverters, SearchPropertyConverter, StructTypeConverter}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output._
 import org.apache.spark.sql.types._
 
 /**
@@ -28,17 +28,17 @@ case object GeoPointRule
 
   override def sparkType: DataType = GEO_POINT_DEFAULT_STRUCT
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
-  override def sparkConverter(): SparkInternalConverter = ComplexConverter(
+  override def readConverter(): ReadConverter = ComplexConverter(
     Map(
-      TYPE_LABEL -> AtomicSparkInternalConverters.StringConverter,
-      COORDINATES_LABEL -> CollectionConverter(AtomicSparkInternalConverters.DoubleConverter)
+      TYPE_LABEL -> AtomicReadConverters.StringConverter,
+      COORDINATES_LABEL -> CollectionConverter(AtomicReadConverters.DoubleConverter)
     )
   )
 
-  override def searchConverter(): SearchPropertyConverter = StructTypeConverter(
+  override def writeConverter(): WriteConverter = StructTypeConverter(
     Map(
-      StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicSearchConverters.StringConverter,
-      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicSearchConverters.DoubleConverter)
+      StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicWriteConverters.StringConverter,
+      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
     )
   )
 }

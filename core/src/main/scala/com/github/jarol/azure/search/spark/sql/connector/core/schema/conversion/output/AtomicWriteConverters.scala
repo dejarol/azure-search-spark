@@ -11,14 +11,14 @@ import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
  * Atomic converters from Spark internal objects to Search document properties
  */
 
-object AtomicSearchConverters {
+object AtomicWriteConverters {
 
   /**
    * Converter for strings
    */
 
   case object StringConverter
-    extends SearchPropertyTransformConverter[String] {
+    extends WriteTransformConverter[String] {
     override protected def transform(value: Any): String = {
 
       new String(
@@ -32,38 +32,38 @@ object AtomicSearchConverters {
    * Converter for integers
    */
 
-  case object Int32Converter extends SearchPropertyCastConverter[java.lang.Integer]
+  case object Int32Converter extends WriteCastConverter[java.lang.Integer]
 
   /**
    * Converter for longs
    */
 
-  case object Int64Converter extends SearchPropertyCastConverter[java.lang.Long]
+  case object Int64Converter extends WriteCastConverter[java.lang.Long]
 
   /**
    * Converter for doubles
    */
 
-  case object DoubleConverter extends SearchPropertyCastConverter[java.lang.Double]
+  case object DoubleConverter extends WriteCastConverter[java.lang.Double]
 
   /**
    * Converter for floats
    */
 
-  case object SingleConverter extends SearchPropertyCastConverter[java.lang.Float]
+  case object SingleConverter extends WriteCastConverter[java.lang.Float]
 
   /**
    * Converter for booleans
    */
 
-  case object BooleanConverter extends SearchPropertyCastConverter[java.lang.Boolean]
+  case object BooleanConverter extends WriteCastConverter[java.lang.Boolean]
 
   /**
    * Converter for dates
    */
 
   case object DateToDatetimeConverter
-    extends SearchPropertyTimeConverter {
+    extends WriteTimeConverter {
     override protected def toOffsetDateTime(value: Any): OffsetDateTime = {
 
       OffsetDateTime.of(
@@ -79,7 +79,7 @@ object AtomicSearchConverters {
    */
 
   case object TimestampToDatetimeConverter
-    extends SearchPropertyTimeConverter {
+    extends WriteTimeConverter {
     override protected def toOffsetDateTime(value: Any): OffsetDateTime = {
 
       Instant.EPOCH.plus(

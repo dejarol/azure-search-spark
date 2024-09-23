@@ -5,17 +5,17 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 
 /**
  * Converter for Search collections
- * @param internalConverter converter for collection internal objects
+ * @param internal converter for collection internal objects
  */
 
-case class CollectionConverter(private val internalConverter: SparkInternalConverter)
-  extends SparkInternalTransformConverter[ArrayData] {
+case class CollectionConverter(private val internal: ReadConverter)
+  extends ReadTransformConverter[ArrayData] {
 
   override protected def transform(value: Any): ArrayData = {
 
     val values: Seq[Any] = JavaScalaConverters
       .listToSeq(value.asInstanceOf[java.util.List[Object]])
-      .map(internalConverter.toSparkInternalObject)
+      .map(internal.toSparkInternalObject)
 
     ArrayData.toArrayData(values)
   }

@@ -20,8 +20,8 @@ class StructTypeConverterSpec
         val input = InternalRow(values: _*)
         val output = StructTypeConverter(
           Map(
-            createStructField(k1, DataTypes.IntegerType) -> AtomicSearchConverters.Int32Converter,
-            createStructField(k2, DataTypes.DoubleType) -> AtomicSearchConverters.DoubleConverter
+            createStructField(k1, DataTypes.IntegerType) -> AtomicWriteConverters.Int32Converter,
+            createStructField(k2, DataTypes.DoubleType) -> AtomicWriteConverters.DoubleConverter
           )
         ).toSearchProperty(input)
 

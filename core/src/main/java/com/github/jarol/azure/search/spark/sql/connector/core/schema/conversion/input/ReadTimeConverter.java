@@ -13,8 +13,8 @@ import java.time.OffsetDateTime;
  * @param <T> converter output type
  */
 
-public abstract class SparkInternalTimeConverter<T>
-        extends SparkInternalTransformConverter<T> {
+public abstract class ReadTimeConverter<T>
+        extends ReadTransformConverter<T> {
 
     @Override
     protected final T transform(Object value) {

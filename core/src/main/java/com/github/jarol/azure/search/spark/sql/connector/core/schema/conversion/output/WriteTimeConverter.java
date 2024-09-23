@@ -9,8 +9,8 @@ import java.time.OffsetDateTime;
  * Converter from Spark internal time types to Search datetime type
  */
 
-public abstract class SearchPropertyTimeConverter
-        extends SearchPropertyTransformConverter<String> {
+public abstract class WriteTimeConverter
+        extends WriteTransformConverter<String> {
 
     @Override
     final protected @NotNull String transform(Object value) {

@@ -76,7 +76,7 @@ class AtomicTypeConversionRulesSpec
       describe("safely retrieve the converter between a Spark type and a Search type") {
         it("using inference rules") {
 
-          AtomicTypeConversionRules.safeSparkConverterForTypes(
+          AtomicTypeConversionRules.safeReadConverterForTypes(
             DataTypes.StringType,
             SearchFieldDataType.STRING
           ) shouldBe defined
@@ -84,7 +84,7 @@ class AtomicTypeConversionRulesSpec
 
         it("using conversion rules") {
 
-          AtomicTypeConversionRules.safeSparkConverterForTypes(
+          AtomicTypeConversionRules.safeReadConverterForTypes(
             DataTypes.DateType,
             SearchFieldDataType.DATE_TIME_OFFSET
           ) shouldBe defined

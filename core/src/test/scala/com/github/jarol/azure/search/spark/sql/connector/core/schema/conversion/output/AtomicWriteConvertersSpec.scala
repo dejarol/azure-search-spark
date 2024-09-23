@@ -1,18 +1,17 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema.output
+package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.AtomicSearchConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 
-class AtomicSearchConvertersSpec
+class AtomicWriteConvertersSpec
   extends BasicSpec {
 
-  import AtomicSearchConverters._
+  import AtomicWriteConverters._
 
-  describe(`object`[AtomicSearchConverters.type ]) {
+  describe(`object`[AtomicWriteConverters.type ]) {
     describe(SHOULD) {
       describe("provide a converter for") {
         it("strings") {
