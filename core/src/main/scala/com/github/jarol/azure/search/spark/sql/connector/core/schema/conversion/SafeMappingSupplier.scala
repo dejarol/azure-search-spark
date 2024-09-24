@@ -11,15 +11,12 @@ import org.apache.spark.sql.types.StructField
  * The output mapping will be a map with
  *  - keys being Spark column identifiers
  *  - values being converters for extracting data from either SearchDocuments or Spark internal rows
- * @tparam K mapping key type
- * @tparam V mapping value type
+ * @tparam C converter type
  */
 
-case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
+abstract class SafeMappingSupplier[C](protected val delegate: SafeConverterSupplier[C]) {
 
-  private lazy val converterSupplier = SafeConverterSupplier(delegate)
-
-  private type MaybeMapping = Either[SchemaCompatibilityException, Map[K, V]]
+  private type MaybeMapping = Either[SchemaCompatibilityException, Map[StructField, C]]
 
   /**
    * Safely create a mapping that will represent how to convert a Search document to a Spark internal row or vice versa.
@@ -60,8 +57,8 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
       } else {
 
         // Retrieve a converter for each schema field
-        val converters: Map[K, V] = sparkAndNamesakeSearchFields.map {
-          case (k, v) => (delegate.keyOf(k), converterSupplier.get(k, v))
+        val converters: Map[StructField, C] = sparkAndNamesakeSearchFields.map {
+          case (k, v) => (k, delegate.get(k, v))
         }.collect {
           case (k, Some(v)) => (k, v)
         }
@@ -69,7 +66,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
         // Detect those schema fields for which a converter could not be found
         val schemaFieldsWithoutConverter: Map[StructField, SearchField] = sparkAndNamesakeSearchFields.filterNot {
           case (structField, _) => converters.exists {
-            case (key, _) => delegate.keyName(key).equalsIgnoreCase(structField.name)
+            case (key, _) => key.name.equalsIgnoreCase(structField.name)
           }
         }
 
@@ -122,7 +119,7 @@ case class SafeMappingSupplier[K, V](private val delegate: MappingType[K, V]) {
    * @return a Left instance
    */
 
-  private def exceptionForSchemaFieldsWithoutConverter(fields: Map[StructField, SearchField]):MaybeMapping = {
+  private def exceptionForSchemaFieldsWithoutConverter(fields: Map[StructField, SearchField]): MaybeMapping = {
 
     Left(
       SchemaCompatibilityException.forSchemaFieldsWithoutConverter(
