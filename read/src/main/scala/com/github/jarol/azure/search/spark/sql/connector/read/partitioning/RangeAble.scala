@@ -20,7 +20,7 @@ trait RangeAble[T, D] {
 
   protected def tryFromString(value: String): Try[T]
 
-  private def computeBounds(lower: T, upper: T, numPartitions: Int): Seq[T] = {
+  final def computeBounds(lower: T, upper: T, numPartitions: Int): Seq[T] = {
 
     val delta = getDelta(lower, upper)
     val stride = getStride(delta, math.max(numPartitions - 2, 1))
