@@ -13,7 +13,7 @@ public abstract class WriteTransformConverter<T>
         implements WriteConverter {
 
     @Override
-    public final @Nullable T toSearchProperty(Object value) {
+    public final @Nullable T apply(Object value) {
 
         // Transform the object if not null
         return Objects.isNull(value) ?

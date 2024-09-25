@@ -25,7 +25,7 @@ class ComplexConverterSpec
             k1 -> AtomicReadConverters.StringConverter,
             k2 -> AtomicReadConverters.Int32Converter
           )
-        ).toSparkInternalObject(
+        ).apply(
           input
         )
 

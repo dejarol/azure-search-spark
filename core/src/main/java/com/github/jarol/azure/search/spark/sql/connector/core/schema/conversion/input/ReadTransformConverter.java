@@ -13,7 +13,7 @@ public abstract class ReadTransformConverter<T>
         implements ReadConverter {
 
     @Override
-    public final @Nullable T toSparkInternalObject(Object value) {
+    public final @Nullable T apply(Object value) {
 
        return Objects.isNull(value) ?
                null :

@@ -23,7 +23,7 @@ class StructTypeConverterSpec
             createStructField(k1, DataTypes.IntegerType) -> AtomicWriteConverters.Int32Converter,
             createStructField(k2, DataTypes.DoubleType) -> AtomicWriteConverters.DoubleConverter
           )
-        ).toSearchProperty(input)
+        ).apply(input)
 
         output should contain key k1
         output.get(k1) shouldBe values.head

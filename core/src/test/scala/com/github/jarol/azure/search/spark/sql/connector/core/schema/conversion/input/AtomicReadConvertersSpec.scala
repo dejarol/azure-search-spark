@@ -17,43 +17,43 @@ class AtomicReadConvertersSpec
         it("string") {
 
           val input = "hello"
-          StringConverter.toSparkInternalObject(input) shouldBe UTF8String.fromString(input)
-          StringConverter.toSparkInternalObject(null.asInstanceOf[String]) shouldBe null
+          StringConverter.apply(input) shouldBe UTF8String.fromString(input)
+          StringConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 
         it("int") {
 
           val input: Integer = 23
-          Int32Converter.toSparkInternalObject(input) shouldBe input
-          Int32Converter.toSparkInternalObject(null.asInstanceOf[Integer]) shouldBe null
+          Int32Converter.apply(input) shouldBe input
+          Int32Converter.apply(null.asInstanceOf[Integer]) shouldBe null
         }
 
         it("long") {
 
           val input: java.lang.Long = 23
-          Int64Converter.toSparkInternalObject(input) shouldBe input
-          Int64Converter.toSparkInternalObject(null.asInstanceOf[java.lang.Long]) shouldBe null
+          Int64Converter.apply(input) shouldBe input
+          Int64Converter.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
         }
 
         it("double") {
 
           val input: java.lang.Double = 3.14
-          DoubleConverter.toSparkInternalObject(input) shouldBe input
-          DoubleConverter.toSparkInternalObject(null.asInstanceOf[java.lang.Long]) shouldBe null
+          DoubleConverter.apply(input) shouldBe input
+          DoubleConverter.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
         }
 
         it("float") {
 
           val input: java.lang.Float = 3.14f
-          SingleConverter.toSparkInternalObject(input) shouldBe input
-          SingleConverter.toSparkInternalObject(null.asInstanceOf[java.lang.Long]) shouldBe null
+          SingleConverter.apply(input) shouldBe input
+          SingleConverter.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
         }
 
         it("boolean") {
 
           val input: java.lang.Boolean = false
-          BooleanConverter.toSparkInternalObject(input) shouldBe input
-          BooleanConverter.toSparkInternalObject(null.asInstanceOf[java.lang.Boolean]) shouldBe null
+          BooleanConverter.apply(input) shouldBe input
+          BooleanConverter.apply(null.asInstanceOf[java.lang.Boolean]) shouldBe null
         }
 
         it("timestamp") {
@@ -65,8 +65,8 @@ class AtomicReadConvertersSpec
           )
 
           val expected: Long = ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
-          DateTimeToTimestampConverter.toSparkInternalObject(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
-          DateTimeToTimestampConverter.toSparkInternalObject(null.asInstanceOf[String]) shouldBe null
+          DateTimeToTimestampConverter.apply(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
+          DateTimeToTimestampConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 
         it("dates") {
@@ -78,8 +78,24 @@ class AtomicReadConvertersSpec
           )
 
           val expected: Int = input.toLocalDate.toEpochDay.toInt
-          DateTimeToDateConverter.toSparkInternalObject(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
-          DateTimeToDateConverter.toSparkInternalObject(null.asInstanceOf[String]) shouldBe null
+          DateTimeToDateConverter.apply(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
+          DateTimeToDateConverter.apply(null.asInstanceOf[String]) shouldBe null
+        }
+
+        it("int to long") {
+
+          val input = 123
+          val actual = Int32ToLongConverter.apply(input)
+          actual shouldBe a[java.lang.Long]
+          actual shouldBe input.toLong
+        }
+
+        it("long to int") {
+
+          val input = 123
+          val actual = Int64ToIntConverter.apply(input.toLong)
+          actual shouldBe a[java.lang.Integer]
+          actual shouldBe input
         }
       }
     }

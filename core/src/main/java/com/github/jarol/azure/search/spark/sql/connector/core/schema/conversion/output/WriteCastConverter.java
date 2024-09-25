@@ -4,7 +4,7 @@ public class WriteCastConverter<T>
         implements WriteConverter {
 
     @Override
-    public final T toSearchProperty(Object value) {
+    public final T apply(Object value) {
         //noinspection unchecked
         return (T) value;
     }

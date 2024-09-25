@@ -16,7 +16,7 @@ class ArrayConverterSpec
         val output = ArrayConverter(
           DataTypes.StringType,
           AtomicWriteConverters.StringConverter
-        ).toSearchProperty(
+        ).apply(
           ArrayData.toArrayData(
             input.map(UTF8String.fromString)
           )

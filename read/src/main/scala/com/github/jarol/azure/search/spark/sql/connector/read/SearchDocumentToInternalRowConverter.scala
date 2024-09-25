@@ -10,7 +10,7 @@ case class SearchDocumentToInternalRowConverter(private val converters: Map[Stri
   override def apply(v1: SearchDocument): InternalRow = {
 
     val values: Seq[Any] = converters.map {
-      case (name, converter) => converter.toSparkInternalObject(v1.get(name))
+      case (name, converter) => converter.apply(v1.get(name))
     }.toSeq
     InternalRow(values: _*)
   }

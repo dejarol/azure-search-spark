@@ -15,7 +15,7 @@ class CollectionConverterSpec
         val input = Seq("hello", "world")
         val output = CollectionConverter(
           AtomicReadConverters.StringConverter
-        ).toSparkInternalObject(
+        ).apply(
           JavaScalaConverters.seqToList(input)
         )
 

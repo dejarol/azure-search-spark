@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core
 
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object JavaScalaConverters {
 

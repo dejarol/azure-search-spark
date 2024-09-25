@@ -20,7 +20,7 @@ case class StructTypeConverter(private val converters: Map[StructField, WriteCon
     val scalaMap: Map[String, Object] = converters.zipWithIndex.map {
       case ((structField, converter), index) => (
         structField.name,
-        converter.toSearchProperty(
+        converter.apply(
           internalRow.get(index, structField.dataType)
         )
       )

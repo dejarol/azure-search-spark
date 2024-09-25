@@ -16,5 +16,5 @@ public interface WriteConverter
      * @return a Search document property
      */
 
-    Object toSearchProperty(Object value);
+    Object apply(Object value);
 }

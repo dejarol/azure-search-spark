@@ -4,7 +4,7 @@ public class ReadCastConverter<T>
         implements ReadConverter {
 
     @Override
-    public final T toSparkInternalObject(Object value) {
+    public final T apply(Object value) {
 
         //noinspection unchecked
         return (T) value;

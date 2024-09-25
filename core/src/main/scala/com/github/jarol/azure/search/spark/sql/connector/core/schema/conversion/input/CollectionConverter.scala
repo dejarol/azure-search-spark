@@ -15,7 +15,7 @@ case class CollectionConverter(private val internal: ReadConverter)
 
     val values: Seq[Any] = JavaScalaConverters
       .listToSeq(value.asInstanceOf[java.util.List[Object]])
-      .map(internal.toSparkInternalObject)
+      .map(internal.apply)
 
     ArrayData.toArrayData(values)
   }

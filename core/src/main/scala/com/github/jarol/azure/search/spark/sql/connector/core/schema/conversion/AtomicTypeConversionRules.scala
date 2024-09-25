@@ -113,7 +113,24 @@ object AtomicTypeConversionRules {
     override def sparkType(): DataType = DataTypes.StringType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
     override def readConverter(): ReadConverter = AtomicReadConverters.StringConverter
-    override def writeConverter(): WriteConverter = AtomicWriteConverters.StringConverter
+    override def writeConverter(): WriteConverter = AtomicWriteConverters.StringToDatetimeConverter
+  }
+
+  private case object Int32ToLongRule
+    extends SchemaConversionRule {
+
+    override def sparkType(): DataType = DataTypes.LongType
+    override def searchType(): SearchFieldDataType = SearchFieldDataType.INT32
+    override def readConverter(): ReadConverter = AtomicReadConverters.Int32ToLongConverter
+    override def writeConverter(): WriteConverter = AtomicWriteConverters.LongToInt32Converter
+  }
+
+  private case object Int64ToIntRule
+    extends SchemaConversionRule {
+    override def sparkType(): DataType = DataTypes.IntegerType
+    override def searchType(): SearchFieldDataType = SearchFieldDataType.INT64
+    override def readConverter(): ReadConverter = AtomicReadConverters.Int64ToIntConverter
+    override def writeConverter(): WriteConverter = AtomicWriteConverters.IntegerToInt64Converter
   }
 
   private lazy val ALL_RULES: Set[SearchSparkConversionRule] = Set(
@@ -125,7 +142,9 @@ object AtomicTypeConversionRules {
     BooleanRule,
     DateTimeToTimestampRule,
     DateTimeToDateRule,
-    DateTimeToStringRule
+    DateTimeToStringRule,
+    Int32ToLongRule,
+    Int64ToIntRule
   )
 
   private lazy val INFERENCE_RULES: Set[InferSchemaRule] = ALL_RULES.collect {

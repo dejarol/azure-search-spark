@@ -20,7 +20,7 @@ case class ArrayConverter(private val arrayInternalType: DataType,
     JavaScalaConverters.seqToList(
       value.asInstanceOf[ArrayData]
         .toSeq(arrayInternalType)
-        .map(arrayInternalConverter.toSearchProperty)
+        .map(arrayInternalConverter.apply)
     )
   }
 }

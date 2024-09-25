@@ -1,11 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input;
 
+import java.io.Serializable;
+
 /**
  * A converter from a Search data object to a Spark internal object
  */
 
 @FunctionalInterface
-public interface ReadConverter {
+public interface ReadConverter
+        extends Serializable {
 
     /**
      * Convert a Search data object to a Spark internal object
@@ -13,5 +16,5 @@ public interface ReadConverter {
      * @return a Spark internal object
      */
 
-    Object toSparkInternalObject(Object value);
+    Object apply(Object value);
 }

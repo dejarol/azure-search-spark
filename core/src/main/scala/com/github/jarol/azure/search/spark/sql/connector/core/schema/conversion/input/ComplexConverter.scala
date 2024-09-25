@@ -12,11 +12,11 @@ import java.util
 case class ComplexConverter(private val conversions: Map[String, ReadConverter])
   extends ReadConverter {
 
-  override def toSparkInternalObject(value: Any): InternalRow = {
+  override def apply(value: Any): InternalRow = {
 
     val searchDocument: util.Map[String, Object] = value.asInstanceOf[util.Map[String, Object]]
     val values: Seq[Any] = conversions.map {
-      case (k, converter) => converter.toSparkInternalObject(searchDocument.get(k))
+      case (k, converter) => converter.apply(searchDocument.get(k))
     }.toSeq
 
     InternalRow(values: _*)

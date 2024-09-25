@@ -14,7 +14,7 @@ case class InternalRowToSearchDocumentConverter(private val converters: Map[Stru
     val properties: Map[String, Object] = converters.zipWithIndex.map {
       case ((structField, converter), index) => (
         structField.name,
-        converter.toSearchProperty(v1.get(index, structField.dataType)
+        converter.apply(v1.get(index, structField.dataType)
         )
       )
     }
