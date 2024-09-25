@@ -1,14 +1,13 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Time
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.lang
 import java.nio.charset.StandardCharsets
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime}
-import scala.util.Try
+import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 
 /**
  * Atomic converters from Spark internal objects to Search document properties
@@ -98,57 +97,9 @@ object AtomicWriteConverters {
     override protected def transform(value: Any): String = {
 
       val string = value.asInstanceOf[String]
-      tryFromOffsetDateTime(string)
-        .orElse(tryFromDateTimeWithoutOffset(string))
-        .orElse(tryFromDate(string))
+      Time.safelyToOffsetDatetime(string).toOption
         .map(_.format(Constants.DATE_TIME_FORMATTER))
         .orNull
-    }
-
-    /**
-     * Try to convert a string that represents a zoned date time to a [[OffsetDateTime]]
-     * @param value input value
-     * @return a non-empty [[Option]] if given string can be parsed as a [[OffsetDateTime]]
-     */
-
-    private def tryFromOffsetDateTime(value: String): Option[OffsetDateTime] = {
-
-      Try {
-        OffsetDateTime
-          .parse(value, Constants.DATE_TIME_FORMATTER)
-      }.toOption
-    }
-
-    /**
-     * Try to convert a string that represents an un-zoned date time to a [[OffsetDateTime]]
-     * @param value input value
-     * @return a non-empty [[Option]] if given string can be parsed as a [[OffsetDateTime]]
-     */
-
-    private def tryFromDateTimeWithoutOffset(value: String): Option[OffsetDateTime] = {
-
-      Try {
-        LocalDateTime
-          .parse(value, Constants.DATE_TIME_FORMATTER)
-          .atOffset(Constants.UTC_OFFSET)
-      }.toOption
-    }
-
-    /**
-     * Try to convert a string that represents a date to a [[OffsetDateTime]]
-     * @param value input value
-     * @return a non-empty [[Option]] if given string can be parsed as a [[OffsetDateTime]]
-     */
-
-    private def tryFromDate(value: String): Option[OffsetDateTime] = {
-
-      Try {
-        OffsetDateTime.of(
-          LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE),
-          LocalTime.MIDNIGHT,
-          Constants.UTC_OFFSET
-        )
-      }.toOption
     }
   }
 

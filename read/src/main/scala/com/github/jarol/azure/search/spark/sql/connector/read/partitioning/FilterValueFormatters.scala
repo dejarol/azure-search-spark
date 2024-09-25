@@ -37,7 +37,7 @@ object FilterValueFormatters {
     } else if (`type`.isDateTime) {
       DateTimeFormatter
     } else {
-      throw new DataTypeException(f"Data type ${`type`} cannot not be formatted")
+      throw new DataTypeException(f"No formatter defined for data type ${`type`}")
     }
   }
 }

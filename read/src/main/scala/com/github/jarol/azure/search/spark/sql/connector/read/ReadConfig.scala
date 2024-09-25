@@ -83,8 +83,11 @@ object ReadConfig {
   final val PARTITIONER_CONFIG = "partitioner"
   final val SELECT_CONFIG = "select"
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
-  final val PARTITIONER_OPTIONS_FACET_CONFIG = "facet"
-  final val PARTITIONER_OPTIONS_FACET_PARTITIONS = "query"
+  final val FACET_CONFIG = "facet"
+  final val NUM_PARTITIONS_CONFIG = "numPartitions"
+  final val PARTITION_FIELD_CONFIG = "partitionField"
+  final val LOWER_BOUND_CONFIG = "lowerBound"
+  final val UPPER_BOUND_CONFIG = "upperBound"
 
   /**
    * Create an instance from both local and global options

@@ -6,6 +6,11 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructField
 
+/**
+ * Converter for mapping an [[InternalRow]] to a [[SearchDocument]]
+ * @param converters converters for retrieving document values from an internal row
+ */
+
 case class InternalRowToSearchDocumentConverter(private val converters: Map[StructField, WriteConverter])
   extends (InternalRow => SearchDocument) {
 

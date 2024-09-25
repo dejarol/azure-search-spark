@@ -15,13 +15,14 @@ import scala.util.Try
  * Faceted partitioner.
  *
  * Given a field <b>f1</b> which is filterable and facetable, it will generate partitions according to the following behavior
- *  - if a value of <b>n</b> is given for [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]], it will generate <b>n</b> partitions
- *  where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
- *  most frequent value of field  <b>f1</b>,
- *  and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
+ *  - if a value of <b>n</b> is given for [[ReadConfig.NUM_PARTITIONS_CONFIG]], it will generate <b>n</b> partitions
+ *    where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
+ *    most frequent value of field  <b>f1</b>,
+ *    and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
  *  - otherwise, the number of partitions will be the default number of facets returned by the Azure Search API
  *
  * Suitable for cases where there exists a filterable and facetable field with few distinct values
+ *
  * @param readConfig read configuration
  */
 
@@ -30,10 +31,11 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   /**
    * Generate a number of partitions equal to
-   *  - the value related to key [[ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS]]
+   *  - the value related to key [[ReadConfig.NUM_PARTITIONS_CONFIG]]
    *  - the number of default facets retrieved by the Azure Search API
    *
    * Each partition should contain o non-overlapping filter
+   *
    * @throws ConfigException if facet field is not facetable and retrievable
    * @return a collection of Search partitions
    */
@@ -42,8 +44,8 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): util.List[SearchPartition] = {
 
     val partitionerOptions: SearchConfig = readConfig.partitionerOptions
-    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG)
-    val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.PARTITIONER_OPTIONS_FACET_PARTITIONS, Integer.parseInt)
+    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_CONFIG)
+    val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt)
 
     // Retrieve facet result and generate partitions
     FacetedPartitioner.getFacetResults(readConfig, facetFieldName, facetPartitions) match {
@@ -118,7 +120,7 @@ private object FacetedPartitioner {
     }.toEither.left.map {
       throwable =>
         new ConfigException(
-          ReadConfig.PARTITIONER_OPTIONS_FACET_CONFIG,
+          ReadConfig.FACET_CONFIG,
           facet,
           throwable
         )
