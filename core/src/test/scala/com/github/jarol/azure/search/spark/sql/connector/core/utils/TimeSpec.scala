@@ -5,7 +5,6 @@ import org.scalatest.TryValues
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime, OffsetDateTime}
-import scala.util.Success
 
 class TimeSpec
   extends BasicSpec
@@ -31,14 +30,6 @@ class TimeSpec
 
             Time.tryFromTimestamp(
               s"${input.format(noMillisFmt)}.000"
-            ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
-          }
-
-          it("with 'T' separating date from time") {
-
-            val tFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-            Time.tryFromTimestamp(
-              s"${input.format(tFmt)}.000"
             ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
           }
         }

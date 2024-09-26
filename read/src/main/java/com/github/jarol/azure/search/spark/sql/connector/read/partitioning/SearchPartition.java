@@ -44,7 +44,7 @@ public interface SearchPartition
     default SearchOptions getSearchOptions() {
 
         List<String> select = getSearchSelect();
-        String[] selectArray = Objects.isNull(select) || select.isEmpty()?
+        String[] selectArray = Objects.isNull(select) || select.isEmpty() ?
                 null :
                 select.toArray(new String[0]);
 

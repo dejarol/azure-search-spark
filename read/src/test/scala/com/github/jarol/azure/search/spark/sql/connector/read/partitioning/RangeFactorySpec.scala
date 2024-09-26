@@ -1,7 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.scalatest.Inspectors
+
+import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 
 class RangeFactorySpec
   extends BasicSpec
@@ -24,19 +27,105 @@ class RangeFactorySpec
           }
         }
 
-        describe("for dates when") {
-          it("a date is provided") {
-            // TODO: test
-          }
+        it("for dates") {
 
-          it("a timestamp is provided") {
-            // TODO: test
+          val(lower, upper, partitions) = (OffsetDateTime.now().minusWeeks(1), OffsetDateTime.now(), 10)
+          val bounds = RangeFactory.Date.createRange(lower, upper, partitions)
+          bounds.head shouldBe lower
+          bounds.last should be <= upper
+          bounds shouldBe sorted
+          forAll(bounds.tail.dropRight(1)) {
+            v =>
+              v should be > lower
+              v should be < upper
           }
         }
 
         it("for doubles") {
 
-          // TODO: test
+          val (lower, upper, partitions) = (1.0, 20.0, 2)
+          val bounds = RangeFactory.Double.createRange(lower, upper, partitions)
+          bounds.head shouldBe lower
+          bounds.last should be <= upper
+          bounds shouldBe sorted
+          forAll(bounds.tail.dropRight(1)) {
+            v =>
+              v should be > lower
+              v should be < upper
+          }
+        }
+      }
+
+      describe("provide a range only when") {
+        it("all conditions hold") {
+
+          RangeFactory.Int.createPartitionBounds(
+            String.valueOf(1),
+            String.valueOf(10),
+            5
+          ) shouldBe 'right
+        }
+
+        describe("for dates") {
+          it("two dates are given") {
+
+            val upper = LocalDate.now()
+            RangeFactory.Date.createPartitionBounds(
+              upper.minusMonths(1).format(DateTimeFormatter.ISO_LOCAL_DATE),
+              upper.format(DateTimeFormatter.ISO_LOCAL_DATE),
+              7
+            ) shouldBe 'right
+          }
+
+          it("two timestamps are given") {
+
+            val upper = LocalDateTime.now()
+            RangeFactory.Date.createPartitionBounds(
+              upper.minusMonths(1).format(Constants.TIMESTAMP_FORMATTER),
+              upper.format(Constants.TIMESTAMP_FORMATTER),
+              7
+            ) shouldBe 'right
+          }
+        }
+      }
+    }
+
+    describe(SHOULD_NOT) {
+      describe("create a range of string values when") {
+        it("lower bound is not valid") {
+
+          RangeFactory.Int.createPartitionBounds(
+            "hello",
+            String.valueOf(10),
+            3
+          ) shouldBe 'left
+        }
+
+        it("upper bound is not valid") {
+
+          RangeFactory.Int.createPartitionBounds(
+            String.valueOf(1),
+            "hello",
+            3
+          ) shouldBe 'left
+        }
+
+        it("lower bound is greater than upper bound") {
+
+          RangeFactory.Int.createPartitionBounds(
+            String.valueOf(10),
+            String.valueOf(1),
+            3
+          ) shouldBe 'left
+        }
+
+        it("num partitions is lower than 2") {
+
+          RangeFactory.Int.createPartitionBounds(
+            String.valueOf(1),
+            String.valueOf(10),
+            1
+          ) shouldBe 'left
         }
       }
     }

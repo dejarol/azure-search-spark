@@ -31,6 +31,6 @@ public final class Constants {
 
         UTC_OFFSET = ZoneOffset.UTC;
         DATETIME_OFFSET_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
-        TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd['T'][ ]HH:mm:ss[.SSS]");
+        TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS]");
     }
 }

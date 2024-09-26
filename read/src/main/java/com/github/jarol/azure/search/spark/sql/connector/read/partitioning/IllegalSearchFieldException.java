@@ -28,13 +28,19 @@ public class IllegalSearchFieldException
         );
     }
 
+    /**
+     * Create an instance for {@link SearchField} not enabled for a {@link SearchFieldFeature}
+     * @param name field name
+     * @param feature expected enabled feature
+     * @return an instance
+     */
+
     @Contract("_, _ -> new")
     public static @NotNull IllegalSearchFieldException notEnabledFor(
             String name,
             @NotNull SearchFieldFeature feature
     ) {
 
-        // TODO: Javadoc
         return new IllegalSearchFieldException(
                 name,
                 String.format("not %s", feature.description()
@@ -42,22 +48,33 @@ public class IllegalSearchFieldException
         );
     }
 
+    /**
+     * Create an instance for a non-existing field
+     * @param name field name
+     * @return an instance
+     */
+
     @Contract("_ -> new")
     public static @NotNull IllegalSearchFieldException nonExisting(
             String name
     ) {
-        // TODO: Javadoc
         return new IllegalSearchFieldException(
                 name,
                 "does not exist"
         );
     }
 
+    /**
+     * Create an instance for a {@link SearchField} whose type is not eligible for being a partitioning field
+     * @param searchField Search field
+     * @return an instance
+     */
+
     @Contract("_ -> new")
     public static @NotNull IllegalSearchFieldException fieldTypeNotEligibleForPartitioning(
             @NotNull SearchField searchField
     ) {
-        // TODO: Javadoc
+
         return new IllegalSearchFieldException(
                 searchField.getName(),
                 String.format(

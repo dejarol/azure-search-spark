@@ -175,7 +175,7 @@ trait RangeFactory[T, D] {
         new ConfigException(
           ReadConfig.NUM_PARTITIONS_CONFIG,
           numPartitions,
-          "Should be greater than 1"
+          "should be greater than 1"
         )
       )
     } else {
