@@ -18,6 +18,7 @@ public enum SearchFieldFeature {
      */
 
     FACETABLE(
+            "facetable",
             SearchField::setFacetable,
             SearchField::isFacetable
     ),
@@ -27,6 +28,7 @@ public enum SearchFieldFeature {
      */
 
     FILTERABLE(
+            "filterable",
             SearchField::setFilterable,
             SearchField::isFilterable
     ),
@@ -36,6 +38,7 @@ public enum SearchFieldFeature {
      */
 
     HIDDEN(
+            "hidden",
             SearchField::setHidden,
             SearchField::isHidden
     ),
@@ -44,7 +47,7 @@ public enum SearchFieldFeature {
      * Feature for enabling a field as document's key
      */
 
-    KEY(
+    KEY("key",
             SearchField::setKey,
             SearchField::isKey
     ),
@@ -54,6 +57,7 @@ public enum SearchFieldFeature {
      */
 
     SEARCHABLE(
+            "searchable",
             SearchField::setSearchable,
             SearchField::isSearchable
     ),
@@ -63,26 +67,41 @@ public enum SearchFieldFeature {
      */
 
     SORTABLE(
+            "sortable",
             SearchField::setSortable,
             SearchField::isSortable
     );
 
+    private final String description;
     private final BiFunction<SearchField, Boolean, SearchField> enablingFunction;
     private final Function<SearchField, Boolean> featurePredicate;
 
     /**
      * Create an instance
+     * @param description feature description
      * @param enablingFunction function for enabling or disabling a feature on a Search field
      * @param featurePredicate predicate for evaluating if the feature is enabled
      */
 
     @Contract(pure = true)
     SearchFieldFeature(
+            String description,
             BiFunction<SearchField, Boolean, SearchField> enablingFunction,
             Function<SearchField, Boolean> featurePredicate
     ) {
+        this.description = description;
         this.enablingFunction = enablingFunction;
         this.featurePredicate = featurePredicate;
+    }
+
+    /**
+     * Get this feature description
+     * @return description
+     */
+
+    @Contract(pure = true)
+    public String description() {
+        return description;
     }
 
     /**
@@ -104,7 +123,7 @@ public enum SearchFieldFeature {
      * @return true for enabled features
      */
 
-    public boolean isEnabled(
+    public boolean isEnabledOnField(
             SearchField searchField
     ) {
 

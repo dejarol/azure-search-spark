@@ -59,6 +59,15 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    */
 
   final def isGeoPoint: Boolean = input.equals(SearchFieldDataType.GEOGRAPHY_POINT)
+
+  /**
+   * Evaluate if this type is a candidate for partitioning.
+   * <br>
+   * Only numeric (but not single) or date time types are candidates
+   * @return true for numeric (but not single) or date time types
+   */
+
+  final def isCandidateForPartitioning: Boolean = isDateTime || (isNumeric && !input.equals(SearchFieldDataType.SINGLE))
 }
 
 private object SearchFieldTypeOperations {

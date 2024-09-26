@@ -95,12 +95,12 @@ class SearchFieldsOptionsSpec
     val searchFields = getSearchFieldsMap(options, schema)
     forAll(nonMatchingFields) {
       sf =>
-        feature.isEnabled(searchFields(sf.name)) shouldBe false
+        feature.isEnabledOnField(searchFields(sf.name)) shouldBe false
     }
 
     forAll(matchingFields) {
       sf =>
-        feature.isEnabled(searchFields(sf.name)) shouldBe true
+        feature.isEnabledOnField(searchFields(sf.name)) shouldBe true
     }
   }
 

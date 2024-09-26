@@ -93,6 +93,22 @@ class SearchFieldTypeOperationsSpec
         collectionType.safeCollectionInnerType shouldBe Some(expectedInnerType)
         collectionType.unsafeCollectionInnerType shouldBe expectedInnerType
       }
+
+      it("evaluate if a type is candidate for partitioning") {
+
+        SearchFieldDataType.STRING.isCandidateForPartitioning shouldBe false
+        SearchFieldDataType.SINGLE.isCandidateForPartitioning shouldBe false
+        forAll(
+          Seq(
+            SearchFieldDataType.INT32,
+            SearchFieldDataType.INT64,
+            SearchFieldDataType.DOUBLE,
+            SearchFieldDataType.DATE_TIME_OFFSET
+          )
+        ) {
+          tp => tp.isCandidateForPartitioning shouldBe true
+        }
+      }
     }
   }
 }

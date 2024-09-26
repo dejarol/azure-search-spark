@@ -31,4 +31,12 @@ class SearchFieldOperations(private val field: SearchField) {
         feature.enable(field)
     }
   }
+
+  /**
+   * Evaluate if a feature is enabled on this field
+   * @param feature feature
+   * @return true for enabled features
+   */
+
+  final def isEnabledFor(feature: SearchFieldFeature): Boolean = feature.isEnabledOnField(field)
 }

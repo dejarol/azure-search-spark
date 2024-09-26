@@ -62,14 +62,14 @@ class AtomicWriteConvertersSpec
             LocalTime.MIDNIGHT,
             Constants.UTC_OFFSET
           )
-          val expected = input.format(Constants.DATE_TIME_FORMATTER)
+          val expected = input.format(Constants.DATETIME_OFFSET_FORMATTER)
           DateToDatetimeConverter.apply(input.toLocalDate.toEpochDay.toInt) shouldBe expected
         }
 
         it("timestamp") {
 
           val input = OffsetDateTime.now(Constants.UTC_OFFSET)
-          val expected = input.format(Constants.DATE_TIME_FORMATTER)
+          val expected = input.format(Constants.DATETIME_OFFSET_FORMATTER)
           TimestampToDatetimeConverter.apply(
             ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
           ) shouldBe expected
@@ -80,7 +80,7 @@ class AtomicWriteConvertersSpec
           it("datetimes with offset") {
 
             val input = OffsetDateTime.now(Constants.UTC_OFFSET)
-              .format(Constants.DATE_TIME_FORMATTER)
+              .format(Constants.DATETIME_OFFSET_FORMATTER)
 
             StringToDatetimeConverter.apply(input) shouldBe input
           }
@@ -88,9 +88,9 @@ class AtomicWriteConvertersSpec
           it("datetimes without offset") {
 
             val now = LocalDateTime.now()
-            val input = now.format(Constants.DATE_TIME_FORMATTER)
+            val input = now.format(Constants.DATETIME_OFFSET_FORMATTER)
 
-            val expected = now.atOffset(Constants.UTC_OFFSET).format(Constants.DATE_TIME_FORMATTER)
+            val expected = now.atOffset(Constants.UTC_OFFSET).format(Constants.DATETIME_OFFSET_FORMATTER)
             StringToDatetimeConverter.apply(input) shouldBe expected
           }
 
@@ -100,7 +100,7 @@ class AtomicWriteConvertersSpec
             val input = now.format(DateTimeFormatter.ISO_LOCAL_DATE)
             val expected = OffsetDateTime
               .of(now, LocalTime.MIDNIGHT, Constants.UTC_OFFSET)
-              .format(Constants.DATE_TIME_FORMATTER)
+              .format(Constants.DATETIME_OFFSET_FORMATTER)
 
             StringToDatetimeConverter.apply(input) shouldBe expected
           }

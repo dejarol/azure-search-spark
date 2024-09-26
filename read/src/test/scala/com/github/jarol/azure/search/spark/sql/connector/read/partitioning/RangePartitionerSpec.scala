@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.scalatest.{EitherValues, Inspectors}
 
 class RangePartitionerSpec
@@ -10,48 +11,114 @@ class RangePartitionerSpec
       with EitherValues
         with Inspectors {
 
+  private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
+  private lazy val validTypes = Seq(
+    SearchFieldDataType.INT32,
+    SearchFieldDataType.INT64,
+    SearchFieldDataType.DOUBLE,
+    SearchFieldDataType.DATE_TIME_OFFSET
+  )
+
   describe(`object`[RangePartitioner]) {
     describe(SHOULD) {
-      describe("return an exception for") {
-        it("missing partition fields") {
+      describe("evaluate if an existing field") {
+        describe("is candidate for partitioning returning") {
+          it("a Right for valid cases") {
 
-          RangePartitioner.maybePartitionFieldType(
-            Seq.empty,
-            "first"
-          ).left.value shouldBe a[NoSuchSearchFieldException]
-        }
+            forAll(
+              validTypes
+            ) {
+              tp =>
 
-        it("partition fields with invalid data type") {
+                val field = SearchFieldFeature.FILTERABLE.enable(
+                  createSearchField("first", tp)
+                )
 
-          val fieldName = "first"
-          RangePartitioner.maybePartitionFieldType(
-            Seq(
-              createSearchField(fieldName, SearchFieldDataType.COMPLEX)
-            ),
-            fieldName
-          ).left.value shouldBe a[DataTypeException]
+                SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe true
+                RangePartitioner.evaluateExistingCandidate(field) shouldBe 'right
+            }
+          }
+
+          describe("a Left for") {
+            it("non filterable fields") {
+
+              forAll(
+                validTypes
+              ) {
+                tp =>
+
+                  val field = createSearchField("first", tp)
+                  SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe false
+                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
+              }
+            }
+
+            it("non-numeric or date time fields") {
+
+              forAll(
+                Seq(
+                  SearchFieldDataType.SINGLE,
+                  SearchFieldDataType.STRING,
+                  SearchFieldDataType.COMPLEX
+                )
+              ) {
+                tp =>
+                  val field = SearchFieldFeature.FILTERABLE.enable(
+                    createSearchField("first", tp)
+                  )
+
+                  SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe true
+                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
+              }
+            }
+          }
         }
       }
 
-      it("return the partition field type for valid partition fields") {
+      describe("safely retrieve a partition field") {
 
-        val fieldName = "name"
-        forAll(
-          Seq(
-            SearchFieldDataType.INT32,
-            SearchFieldDataType.INT64,
-            SearchFieldDataType.DOUBLE,
-            SearchFieldDataType.SINGLE,
-            SearchFieldDataType.DATE_TIME_OFFSET
-          )
-        ) {
-          tp => RangePartitioner
-            .maybePartitionFieldType(
-              Seq(
-                createSearchField(fieldName, tp)
-              ),
-              fieldName
-            ).right.value shouldBe tp
+        val fields = Seq(
+          SearchFieldFeature.FILTERABLE.enable(createSearchField(first, SearchFieldDataType.INT32)),
+          SearchFieldFeature.FILTERABLE.enable(createSearchField(second, SearchFieldDataType.STRING)),
+          createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
+        )
+
+        describe("returning a Right for") {
+
+          it("existing, filterable and type-wise valid fields") {
+
+            RangePartitioner.getPartitionField(
+              fields,
+              first
+            ) shouldBe 'right
+          }
+        }
+
+        describe("returning a Left for") {
+          it("non existing fields") {
+
+            RangePartitioner.getPartitionField(
+              fields,
+              fourth
+            ) shouldBe 'left
+
+          }
+
+          it("non filterable fields") {
+
+            RangePartitioner.getPartitionField(
+              fields,
+              third
+            ) shouldBe 'left
+          }
+
+          it("type-wise illegal fields") {
+
+            RangePartitioner.getPartitionField(
+              fields,
+              second
+            ) shouldBe 'left
+          }
         }
       }
     }

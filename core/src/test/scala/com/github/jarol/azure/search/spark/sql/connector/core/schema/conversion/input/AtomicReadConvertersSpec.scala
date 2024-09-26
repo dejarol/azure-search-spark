@@ -65,7 +65,7 @@ class AtomicReadConvertersSpec
           )
 
           val expected: Long = ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
-          DateTimeToTimestampConverter.apply(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
+          DateTimeToTimestampConverter.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
           DateTimeToTimestampConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 
@@ -78,7 +78,7 @@ class AtomicReadConvertersSpec
           )
 
           val expected: Int = input.toLocalDate.toEpochDay.toInt
-          DateTimeToDateConverter.apply(input.format(Constants.DATE_TIME_FORMATTER)) shouldBe expected
+          DateTimeToDateConverter.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
           DateTimeToDateConverter.apply(null.asInstanceOf[String]) shouldBe null
         }
 

@@ -5,6 +5,7 @@ import org.scalatest.TryValues
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime, OffsetDateTime}
+import scala.util.Success
 
 class TimeSpec
   extends BasicSpec
@@ -13,28 +14,40 @@ class TimeSpec
   describe(`object`[Time.type ]) {
     describe(SHOULD) {
       describe(s"safely convert a string to an ${nameOf[OffsetDateTime]} when") {
-        it("it has on offset") {
+        describe("it represents a timestamp") {
 
-          val input = OffsetDateTime.now(Constants.UTC_OFFSET)
-          Time.tryFromOffsetDateTime(
-            input.format(Constants.DATE_TIME_FORMATTER)
-          ).success.value shouldBe input
+          val noMillisFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+          val (year, month, day, hour, minutes, second) = (2024, 9, 26, 12, 0, 0)
+          val input = LocalDateTime.of(year, month, day, hour, minutes, second)
 
-        }
+          it("without milliseconds") {
 
-        it("it does not have any offset") {
+            Time.tryFromTimestamp(
+              s"${input.format(noMillisFmt)}"
+            ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
+          }
 
-          val input = LocalDateTime.now()
-          Time.tryFromDateTimeWithoutOffset(
-            input.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-          ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
+          it("with milliseconds") {
+
+            Time.tryFromTimestamp(
+              s"${input.format(noMillisFmt)}.000"
+            ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
+          }
+
+          it("with 'T' separating date from time") {
+
+            val tFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+            Time.tryFromTimestamp(
+              s"${input.format(tFmt)}.000"
+            ).success.value shouldBe input.atOffset(Constants.UTC_OFFSET)
+          }
         }
 
         it("it's a simple date") {
 
           val input = LocalDate.now()
           Time.tryFromDate(
-            input.format(DateTimeFormatter.ISO_LOCAL_DATE)
+           input.format(DateTimeFormatter.ISO_LOCAL_DATE)
           ).success.value shouldBe OffsetDateTime.of(
             input,
             LocalTime.MIDNIGHT,

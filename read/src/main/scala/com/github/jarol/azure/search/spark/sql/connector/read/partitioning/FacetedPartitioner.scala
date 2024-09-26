@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 
@@ -69,20 +69,20 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   /** Retrieve the Search field with given name
    * @param name field name
-   * @throws NoSuchSearchFieldException if field cannot be retrieved
+   * @throws IllegalSearchFieldException if field cannot be retrieved
    * @return Search field with given name
    */
 
-  @throws[NoSuchSearchFieldException]
+  @throws[IllegalSearchFieldException]
   private def getFacetField(name: String): SearchField = {
 
     // Retrieve the search field with given name
     readConfig.getSearchIndexFields.collectFirst {
       case sf if sf.getName.equalsIgnoreCase(name) &&
-        SearchFieldFeature.FACETABLE.isEnabled(sf) => sf
+        sf.isEnabledFor(SearchFieldFeature.FACETABLE) => sf
     } match {
       case Some(value) => value
-      case None => throw new NoSuchSearchFieldException(name)
+      case None => throw IllegalSearchFieldException.nonExisting(name)
     }
   }
 }

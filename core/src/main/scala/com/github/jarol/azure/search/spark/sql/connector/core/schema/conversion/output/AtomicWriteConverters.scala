@@ -97,8 +97,9 @@ object AtomicWriteConverters {
     override protected def transform(value: Any): String = {
 
       val string = value.asInstanceOf[String]
-      Time.safelyToOffsetDatetime(string).toOption
-        .map(_.format(Constants.DATE_TIME_FORMATTER))
+      Time.tryFromDate(string)
+        .orElse(Time.tryFromTimestamp(string)).toOption
+        .map(_.format(Constants.DATETIME_OFFSET_FORMATTER))
         .orNull
     }
   }

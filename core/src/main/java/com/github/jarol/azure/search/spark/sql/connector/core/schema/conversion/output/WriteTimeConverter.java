@@ -18,7 +18,7 @@ public abstract class WriteTimeConverter
         // Convert the Spark internal object to date time
         // and then format it as a string
         return toOffsetDateTime(value)
-                .format(Constants.DATE_TIME_FORMATTER);
+                .format(Constants.DATETIME_OFFSET_FORMATTER);
     }
 
     /**

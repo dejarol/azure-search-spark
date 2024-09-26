@@ -83,6 +83,23 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
   }
 
   /**
+   * Get the value of a key, or throw an exception if not found
+   * @param key key
+   * @throws ConfigException if the key is not found
+   * @return the value related to given key, converted using given converter
+   */
+
+  @throws[ConfigException]
+  final def unsafelyGetAs[T](key: String, conversion: String => T): T = {
+
+    SearchConfig.convertOrThrow[T](
+      key,
+      unsafelyGet(key),
+      conversion
+    )
+  }
+
+  /**
    * Get the value of a key, or a default
    * @param key key
    * @param defaultValue default value

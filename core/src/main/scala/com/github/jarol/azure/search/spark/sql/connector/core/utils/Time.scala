@@ -9,30 +9,16 @@ import scala.util.Try
 object Time {
 
   /**
-   * Try to convert a string that represents a zoned date time to a [[OffsetDateTime]]
-   * @param value input value
-   * @return a non-empty [[Option]] if given string can be parsed as a [[OffsetDateTime]]
-   */
-
-  final def tryFromOffsetDateTime(value: String): Try[OffsetDateTime] = {
-
-    Try {
-      OffsetDateTime
-        .parse(value, Constants.DATE_TIME_FORMATTER)
-    }
-  }
-
-  /**
    * Try to convert a string that represents an un-zoned date time to a [[OffsetDateTime]]
    * @param value input value
    * @return a non-empty [[Option]] if given string can be parsed as a [[OffsetDateTime]]
    */
 
-  final def tryFromDateTimeWithoutOffset(value: String): Try[OffsetDateTime] = {
+  final def tryFromTimestamp(value: String): Try[OffsetDateTime] = {
 
     Try {
       LocalDateTime
-        .parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        .parse(value, Constants.TIMESTAMP_FORMATTER)
         .atOffset(Constants.UTC_OFFSET)
     }
   }
@@ -52,12 +38,5 @@ object Time {
         Constants.UTC_OFFSET
       )
     }
-  }
-
-  final def safelyToOffsetDatetime(value: String): Try[OffsetDateTime] = {
-
-    tryFromOffsetDateTime(value)
-      .orElse(tryFromDateTimeWithoutOffset(value))
-      .orElse(tryFromDate(value))
   }
 }

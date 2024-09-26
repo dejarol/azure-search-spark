@@ -23,7 +23,7 @@ public abstract class ReadTimeConverter<T>
         return dateTimeToInternalObject(
                 OffsetDateTime.parse(
                         (String) value,
-                        Constants.DATE_TIME_FORMATTER
+                        Constants.DATETIME_OFFSET_FORMATTER
                 )
         );
     }

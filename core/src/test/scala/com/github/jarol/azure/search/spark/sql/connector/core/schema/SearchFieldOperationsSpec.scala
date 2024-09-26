@@ -11,33 +11,43 @@ class SearchFieldOperationsSpec
       with Inspectors {
 
   private lazy val first = "first"
-  private lazy val searchField = createSearchField(first, SearchFieldDataType.STRING)
 
   describe(anInstanceOf[SearchFieldOperations]) {
     describe(SHOULD) {
       it(s"evaluate if the field has the same name with respect to a ${nameOf[StructField]}") {
 
+        val searchField = createSearchField(first, SearchFieldDataType.STRING)
         searchField
           .sameNameOf(
             createStructField(first, DataTypes.IntegerType)
           ) shouldBe true
       }
 
-      it("enable some field properties") {
+      it("enable some field features") {
 
+        val searchField = createSearchField(first, SearchFieldDataType.STRING)
         val features = Seq(
           SearchFieldFeature.KEY,
           SearchFieldFeature.FILTERABLE
         )
 
         forAll(features) {
-          _.isEnabled(searchField) shouldBe false
+          _.isEnabledOnField(searchField) shouldBe false
         }
 
         val enabledField = searchField.enableFeatures(features: _*)
         forAll(features) {
-          _.isEnabled(enabledField) shouldBe true
+          _.isEnabledOnField(enabledField) shouldBe true
         }
+      }
+
+      it("evaluate if a feature is enabled") {
+
+        val searchField = createSearchField(first, SearchFieldDataType.STRING)
+        val feature = SearchFieldFeature.KEY
+        searchField.isEnabledFor(feature) shouldBe false
+        val enabled = searchField.enableFeatures(feature)
+        enabled.isEnabledFor(feature) shouldBe true
       }
     }
   }
