@@ -10,7 +10,12 @@ object Generics {
    * @return the type class
    */
 
-  private def classFromClassTag[C: ClassTag]: Class[C] = implicitly[ClassTag[C]].runtimeClass.asInstanceOf[Class[C]]
+  private def classFromClassTag[C: ClassTag]: Class[C] = {
+
+    implicitly[ClassTag[C]]
+      .runtimeClass
+      .asInstanceOf[Class[C]]
+  }
 
   /**
    * Safely get the first value of an enum that matches a predicate
@@ -22,8 +27,10 @@ object Generics {
 
   final def safeValueOfEnum[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): Option[E] = {
 
-    classFromClassTag[E].getEnumConstants.collectFirst {
-      case e if predicate(e, value) => e
+    classFromClassTag[E]
+      .getEnumConstants
+      .collectFirst {
+        case e if predicate(e, value) => e
     }
   }
 

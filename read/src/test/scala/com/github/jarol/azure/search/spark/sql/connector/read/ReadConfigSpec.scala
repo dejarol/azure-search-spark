@@ -51,13 +51,13 @@ class ReadConfigSpec
           val partitionerOptions = readConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> "filter",
-              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.FACET_CONFIG -> facet,
+              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.FACET_FIELD_CONFIG -> facet,
               ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.NUM_PARTITIONS_CONFIG -> s"$partitions"
             )
           ).partitionerOptions
 
           partitionerOptions.get(ReadConfig.FILTER_CONFIG) shouldBe empty
-          partitionerOptions.get( ReadConfig.FACET_CONFIG) shouldBe defined
+          partitionerOptions.get( ReadConfig.FACET_FIELD_CONFIG) shouldBe defined
           partitionerOptions.get(ReadConfig.NUM_PARTITIONS_CONFIG) shouldBe defined
         }
 

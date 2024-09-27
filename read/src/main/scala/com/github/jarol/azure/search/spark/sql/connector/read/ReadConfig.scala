@@ -83,7 +83,7 @@ object ReadConfig {
   final val PARTITIONER_CONFIG = "partitioner"
   final val SELECT_CONFIG = "select"
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
-  final val FACET_CONFIG = "facet"
+  final val FACET_FIELD_CONFIG = "facetField"
   final val NUM_PARTITIONS_CONFIG = "numPartitions"
   final val PARTITION_FIELD_CONFIG = "partitionField"
   final val LOWER_BOUND_CONFIG = "lowerBound"

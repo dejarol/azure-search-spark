@@ -62,10 +62,10 @@ object RangePartition {
    */
 
   def createCollection(
-                      inputFilter: Option[String],
-                      maybeSelect: Option[Seq[String]],
-                      fieldName: String,
-                      values: Seq[String]
+                        inputFilter: Option[String],
+                        maybeSelect: Option[Seq[String]],
+                        fieldName: String,
+                        values: Seq[String]
                       ): Seq[RangePartition] = {
 
     val lowerValues: Seq[Option[String]] = None +: values.map(Some(_))

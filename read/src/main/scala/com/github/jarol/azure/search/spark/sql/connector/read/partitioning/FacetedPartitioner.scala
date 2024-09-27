@@ -36,7 +36,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
    *
    * Each partition should contain o non-overlapping filter
    *
-   * @throws ConfigException if facet field is not facetable and retrievable
+   * @throws ConfigException if facet field is not facetable and filterable
    * @return a collection of Search partitions
    */
 
@@ -44,50 +44,131 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): util.List[SearchPartition] = {
 
     val partitionerOptions: SearchConfig = readConfig.partitionerOptions
-    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_CONFIG)
+    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_FIELD_CONFIG)
     val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt)
 
-    // Retrieve facet result and generate partitions
-    FacetedPartitioner.getFacetResults(readConfig, facetFieldName, facetPartitions) match {
-      // case Left: throw handled exception
+    // Either a ConfigException or facet results
+    val either: Either[ConfigException, (SearchField, Seq[FacetResult])] = for {
+      facetableField <- FacetedPartitioner.getCandidateFacetField(facetFieldName, readConfig.getSearchIndexFields)
+      partitions <- FacetedPartitioner.evaluatePartitionNumber(facetPartitions)
+      facets <- FacetedPartitioner.getFacetResults(readConfig, facetableField.getName, partitions)
+    } yield (facetableField, facets)
+
+    either match {
       case Left(value) => throw value
-      // case Right: generate the partitions
-      case Right(value) =>
-
-        val partitions = AbstractFacetPartition.createCollection(
-          readConfig.filter,
-          readConfig.select,
-          getFacetField(facetFieldName),
-          JavaScalaConverters.listToSeq(value).map {
-            _.getAdditionalProperties.get("value")
-          }
-        )
-
-        JavaScalaConverters.seqToList(partitions)
+      case Right((field, facets)) => getPartitionList(field, facets)
     }
   }
 
-  /** Retrieve the Search field with given name
-   * @param name field name
-   * @throws IllegalSearchFieldException if field cannot be retrieved
-   * @return Search field with given name
+  /**
+   * Get the partition list
+   * @param field facetable Search field
+   * @param facets field facets
+   * @return a list of [[SearchPartition]]
    */
 
-  @throws[IllegalSearchFieldException]
-  private def getFacetField(name: String): SearchField = {
+  private def getPartitionList(
+                                field: SearchField,
+                                facets: Seq[FacetResult]
+                              ): util.List[SearchPartition] = {
 
-    // Retrieve the search field with given name
-    readConfig.getSearchIndexFields.collectFirst {
-      case sf if sf.getName.equalsIgnoreCase(name) &&
-        sf.isEnabledFor(SearchFieldFeature.FACETABLE) => sf
-    } match {
-      case Some(value) => value
-      case None => throw IllegalSearchFieldException.nonExisting(name)
-    }
+    val partitions = AbstractFacetPartition.createCollection(
+      readConfig.filter,
+      readConfig.select,
+      field,
+      facets.map(_.getAdditionalProperties.get("value"))
+    )
+
+    JavaScalaConverters.seqToList(partitions)
   }
 }
 
 private object FacetedPartitioner {
+
+  /**
+   * Get candidate field for faceting
+   * <br>
+   * A field is eligible for faceting if
+   *  - it exists
+   *  - it's both facetable and filterable
+   *
+   * If any of the previous conditions do not hold, a [[ConfigException]] will be returned
+   * @param name name
+   * @param fields collection of Search fields
+   * @return either a [[ConfigException]] or the candidate field
+   */
+
+  private[partitioning] def getCandidateFacetField(
+                                                    name: String,
+                                                    fields: Seq[SearchField]
+                                                  ): Either[ConfigException, SearchField] = {
+
+    // Collect the namesake field and evaluate it (if any)
+    val maybeExistingField = fields.collectFirst {
+      case sf if sf.getName.equalsIgnoreCase(name) => sf
+    }.toRight().left.map {
+      _ => IllegalSearchFieldException.nonExisting(name)
+    }.right.flatMap(evaluateExistingCandidate)
+
+    // Map left side to a ConfigException
+    maybeExistingField.left.map {
+      cause => new ConfigException(
+        ReadConfig.FACET_FIELD_CONFIG,
+        name,
+        cause
+      )
+    }
+  }
+
+  /**
+   * Evaluate if an existing Search field is a good candidate for faceting
+   * <br>
+   A field is eligible for faceting if it's both facetable and filterable
+   * @param candidate candidate field
+   * @return either a [[ConfigException]] or the candidate
+   */
+
+  private[partitioning] def evaluateExistingCandidate(candidate: SearchField): Either[IllegalSearchFieldException, SearchField] = {
+
+    val facetable = candidate.isEnabledFor(SearchFieldFeature.FACETABLE)
+    val filterable = candidate.isEnabledFor(SearchFieldFeature.FILTERABLE)
+    if (facetable && filterable) {
+      Right(candidate)
+    } else {
+      val nonEnabledFeature = if (!facetable) SearchFieldFeature.FACETABLE else SearchFieldFeature.FILTERABLE
+      Left(
+        IllegalSearchFieldException.notEnabledFor(
+          candidate.getName,
+          nonEnabledFeature
+        )
+      )
+    }
+  }
+
+  /**
+   * Evaluate if the provided partition number is valid
+   * @param partitions partition number (optional)
+   * @return either a [[ConfigException]] or the input itself
+   */
+
+  private[partitioning] def evaluatePartitionNumber(partitions: Option[Int]): Either[ConfigException, Option[Int]] = {
+
+    partitions match {
+      case Some(value) =>
+        if (value > 1) {
+          Right(partitions)
+        } else {
+          Left(
+            new ConfigException(
+              ReadConfig.NUM_PARTITIONS_CONFIG,
+              value,
+              "should be greater than 1"
+            )
+          )
+        }
+      case None => Right(partitions)
+    }
+  }
 
   /**
    * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
@@ -100,7 +181,7 @@ private object FacetedPartitioner {
 
   private def getFacetResults(config: ReadConfig,
                               facetField: String,
-                              count: Option[Int]): Either[ConfigException, util.List[FacetResult]] = {
+                              count: Option[Int]): Either[ConfigException, Seq[FacetResult]] = {
 
     // Compose the facet
     // [a] if query param is defined, facet = join facetField and query param using comma
@@ -120,10 +201,10 @@ private object FacetedPartitioner {
     }.toEither.left.map {
       throwable =>
         new ConfigException(
-          ReadConfig.FACET_CONFIG,
+          ReadConfig.FACET_FIELD_CONFIG,
           facet,
           throwable
         )
-    }
+    }.right.map(JavaScalaConverters.listToSeq)
   }
 }
