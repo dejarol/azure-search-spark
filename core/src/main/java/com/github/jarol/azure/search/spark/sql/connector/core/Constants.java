@@ -9,6 +9,8 @@ import java.time.format.DateTimeFormatter;
 
 public final class Constants {
 
+    public static final int PARTITION_DOCUMENT_LIMIT = 100000;
+
     /**
      * Default ZoneOffset for Search date times and Spark internal time types
      */

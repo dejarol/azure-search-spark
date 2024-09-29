@@ -1,11 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
-
-import java.util
 
 /**
  * Batch for Search dataSource
@@ -22,12 +21,25 @@ class SearchBatch(private val readConfig: ReadConfig,
 
     // Retrieve the partitioner instance and create the input partitions
     val partitioner = readConfig.partitioner
-    val partitionsList: util.List[SearchPartition] = partitioner.createPartitions()
-    log.info(s"Generated ${partitionsList.size()} partition(s) using ${partitioner.getClass.getName}")
+    val partitionsList: Seq[SearchPartition] = JavaScalaConverters.listToSeq(partitioner.createPartitions())
+    log.info(s"Generated ${partitionsList.size} partition(s) using ${partitioner.getClass.getName}")
 
-    partitionsList
-      .stream()
-      .toArray((value: Int) => Array.ofDim(value))
+    // Filter the generated partitions
+    val invalidPartitions = partitionsList.filter {
+      partition => readConfig.withSearchClientDo {
+        partition.getCountPerPartition
+      } > Constants.PARTITION_DOCUMENT_LIMIT
+    }
+
+    if (invalidPartitions.nonEmpty) {
+      throw SearchBatchException.forInvalidPartitions(
+        JavaScalaConverters.seqToList(
+          invalidPartitions
+        )
+      )
+    } else {
+      partitionsList.toArray
+    }
   }
 
   override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, converters)

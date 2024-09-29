@@ -1,5 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.scalatest.EitherValues
 
@@ -7,6 +9,8 @@ class FacetedPartitionerSpec
   extends BasicSpec
     with FieldFactory
       with EitherValues {
+
+  private lazy val first = "first"
 
   describe(`object`[FacetedPartitioner]) {
     describe(SHOULD) {
@@ -41,19 +45,45 @@ class FacetedPartitionerSpec
         describe("returning a Right for") {
           it("an existing facetable and filterable field") {
 
-            // TODO: test
+            FacetedPartitioner.getCandidateFacetField(
+              first,
+              Seq(
+                createSearchField(first, SearchFieldDataType.STRING)
+                  .enableFeatures(
+                    SearchFieldFeature.FACETABLE,
+                    SearchFieldFeature.FILTERABLE
+                  )
+              )
+            ) shouldBe 'right
           }
         }
 
         describe("a Left for") {
           it("non-existing field") {
 
-            // TODO: test
+            FacetedPartitioner.getCandidateFacetField(
+              first,
+              Seq.empty
+            ) shouldBe 'left
           }
 
           it("a non-filterable or facetable field") {
 
-            // TODO: test
+            FacetedPartitioner.getCandidateFacetField(
+              first,
+              Seq(
+                createSearchField(first, SearchFieldDataType.STRING)
+                  .enableFeatures(SearchFieldFeature.FACETABLE)
+              )
+            ) shouldBe 'left
+
+            FacetedPartitioner.getCandidateFacetField(
+              first,
+              Seq(
+                createSearchField(first, SearchFieldDataType.STRING)
+                  .enableFeatures(SearchFieldFeature.FILTERABLE)
+              )
+            ) shouldBe 'left
           }
         }
       }

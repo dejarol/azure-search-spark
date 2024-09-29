@@ -1,9 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.core.util.Context
 import com.azure.search.documents.models.SearchOptions
 import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig, UsageMode}
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, SinglePartitionPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
@@ -26,11 +26,7 @@ case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[St
   final def search(searchOptions: SearchOptions): SearchPagedIterable = {
 
     withSearchClientDo {
-      sc => sc.search(
-        null,
-        searchOptions,
-        Context.NONE
-      )
+      sc => SearchUtils.getSearchPagedIterable(sc, searchOptions)
     }
   }
 

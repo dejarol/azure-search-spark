@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * Search partition generator.
- * It will be used for generating input partitions that for parallel data read
+ * It will be used for generating input partitions for parallel data read
  */
 
 @FunctionalInterface

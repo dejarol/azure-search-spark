@@ -9,7 +9,6 @@ import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 
 import java.util
-import scala.util.Try
 
 /**
  * Faceted partitioner.
@@ -51,8 +50,13 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     val either: Either[ConfigException, (SearchField, Seq[FacetResult])] = for {
       facetableField <- FacetedPartitioner.getCandidateFacetField(facetFieldName, readConfig.getSearchIndexFields)
       partitions <- FacetedPartitioner.evaluatePartitionNumber(facetPartitions)
-      facets <- FacetedPartitioner.getFacetResults(readConfig, facetableField.getName, partitions)
-    } yield (facetableField, facets)
+    } yield (
+      facetableField,
+      getFacetResults(
+        facetableField.getName,
+        partitions
+      )
+    )
 
     either match {
       case Left(value) => throw value
@@ -81,9 +85,39 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
     JavaScalaConverters.seqToList(partitions)
   }
+
+  /**
+   * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
+   * (i.e. number of documents with such field value) for the n most frequent values of a search field
+   * @param facetField name of facetable field
+   * @param partitions number of values to retrieve. If not provided, the default search value will be used
+   * @return a collection of [[FacetResult]]
+   */
+
+  private def getFacetResults(
+                               facetField: String,
+                               partitions: Option[Int]
+                             ): Seq[FacetResult] = {
+
+    // Compose the facet
+    // [a] if query param is defined, facet = join facetField and query param using comma
+    // [b] if query params is empty facet = facetField
+    val facet: String = partitions.map {
+      value => s"$facetField,count:${value - 1}"
+    }.getOrElse(facetField)
+
+    val facets = readConfig.search(
+        new SearchOptions()
+          .setFilter(readConfig.filter)
+          .setSelect(readConfig.select)
+          .setFacets(facet)
+      ).getFacets.get(facetField)
+
+    JavaScalaConverters.listToSeq(facets)
+  }
 }
 
-private object FacetedPartitioner {
+object FacetedPartitioner {
 
   /**
    * Get candidate field for faceting
@@ -128,7 +162,7 @@ private object FacetedPartitioner {
    * @return either a [[ConfigException]] or the candidate
    */
 
-  private[partitioning] def evaluateExistingCandidate(candidate: SearchField): Either[IllegalSearchFieldException, SearchField] = {
+  private def evaluateExistingCandidate(candidate: SearchField): Either[IllegalSearchFieldException, SearchField] = {
 
     val facetable = candidate.isEnabledFor(SearchFieldFeature.FACETABLE)
     val filterable = candidate.isEnabledFor(SearchFieldFeature.FILTERABLE)
@@ -168,43 +202,5 @@ private object FacetedPartitioner {
         }
       case None => Right(partitions)
     }
-  }
-
-  /**
-   * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
-   * (i.e. number of documents with such field value) for the n most frequent values of a search field
-   * @param config read configuration
-   * @param facetField name of facetable field
-   * @param count number of values to retrieve. If not provided, the default search value will be used
-   * @return either a [[ConfigException]] if selected facet field does not exist or it's not facetable, or a list of [[FacetResult]]
-   */
-
-  private def getFacetResults(config: ReadConfig,
-                              facetField: String,
-                              count: Option[Int]): Either[ConfigException, Seq[FacetResult]] = {
-
-    // Compose the facet
-    // [a] if query param is defined, facet = join facetField and query param using comma
-    // [b] if query params is empty facet = facetField
-    val facet: String = count.map {
-      partitions => s"$facetField,count:${partitions - 1}"
-    }.getOrElse(facetField)
-
-    // Try to retrieve facet results, mapping the exception to a ConfigException
-    Try {
-      config.search(
-        new SearchOptions()
-          .setFilter(config.filter)
-          .setSelect(config.select)
-          .setFacets(facet)
-      ).getFacets.get(facetField)
-    }.toEither.left.map {
-      throwable =>
-        new ConfigException(
-          ReadConfig.FACET_FIELD_CONFIG,
-          facet,
-          throwable
-        )
-    }.right.map(JavaScalaConverters.listToSeq)
   }
 }
