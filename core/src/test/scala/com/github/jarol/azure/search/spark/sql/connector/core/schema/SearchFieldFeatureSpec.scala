@@ -24,7 +24,7 @@ class SearchFieldFeatureSpec
     // After enabling, it should be true
     feature.isEnabledOnField(field) shouldBe false
     feature.isEnabledOnField(
-      feature.enable(field)
+      feature.enableOnField(field)
     ) shouldBe true
   }
 

@@ -110,7 +110,7 @@ public enum SearchFieldFeature {
      * @return input search field with this feature enabled
      */
 
-    public SearchField enable(
+    public SearchField enableOnField(
             SearchField searchField
     ) {
 

@@ -1,12 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input;
 
 public class ReadCastConverter<T>
-        implements ReadConverter {
+        extends ReadTransformConverter<T> {
 
+    @SuppressWarnings("unchecked")
     @Override
-    public final T apply(Object value) {
-
-        //noinspection unchecked
+    protected T transform(Object value) {
         return (T) value;
     }
 }

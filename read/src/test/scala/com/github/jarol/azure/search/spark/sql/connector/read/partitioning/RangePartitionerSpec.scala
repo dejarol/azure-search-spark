@@ -30,7 +30,7 @@ class RangePartitionerSpec
             ) {
               tp =>
 
-                val field = SearchFieldFeature.FILTERABLE.enable(
+                val field = SearchFieldFeature.FILTERABLE.enableOnField(
                   createSearchField("first", tp)
                 )
 
@@ -63,7 +63,7 @@ class RangePartitionerSpec
                 )
               ) {
                 tp =>
-                  val field = SearchFieldFeature.FILTERABLE.enable(
+                  val field = SearchFieldFeature.FILTERABLE.enableOnField(
                     createSearchField("first", tp)
                   )
 
@@ -78,8 +78,8 @@ class RangePartitionerSpec
       describe("safely retrieve a partition field") {
 
         val fields = Seq(
-          SearchFieldFeature.FILTERABLE.enable(createSearchField(first, SearchFieldDataType.INT32)),
-          SearchFieldFeature.FILTERABLE.enable(createSearchField(second, SearchFieldDataType.STRING)),
+          SearchFieldFeature.FILTERABLE.enableOnField(createSearchField(first, SearchFieldDataType.INT32)),
+          SearchFieldFeature.FILTERABLE.enableOnField(createSearchField(second, SearchFieldDataType.STRING)),
           createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
         )
 

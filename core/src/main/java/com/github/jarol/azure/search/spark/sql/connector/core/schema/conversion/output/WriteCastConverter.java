@@ -1,11 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output;
 
 public class WriteCastConverter<T>
-        implements WriteConverter {
+        extends WriteTransformConverter<T> {
 
+    @SuppressWarnings("unchecked")
     @Override
-    public final T apply(Object value) {
-        //noinspection unchecked
+    protected T transform(Object value) {
         return (T) value;
     }
 }

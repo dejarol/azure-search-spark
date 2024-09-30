@@ -28,7 +28,7 @@ class SearchFieldOperations(private val field: SearchField) {
 
     features.foldLeft(field) {
       case (field, feature) =>
-        feature.enable(field)
+        feature.enableOnField(field)
     }
   }
 
