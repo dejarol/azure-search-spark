@@ -13,9 +13,8 @@ import java.util.stream.StreamSupport
 
 /**
  * Parent class for read/write configurations
- * @param localOptions options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
- *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
- * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[SparkConf]] (if any)
+ * @param localOptions  options passed to the dataSource
+ * @param globalOptions options retrieved from the underlying Spark configuration
  */
 
 class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[String],
@@ -24,9 +23,9 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
     with IOConfig {
 
   /**
-   * Alternative constructor
-   * @param locals local options
-   * @param globals global options
+   * Create a new instance from two simple maps
+   * @param locals options passed to the dataSource
+   * @param globals options from the underlying Spark configuration
    */
 
   def this(locals: Map[String, String], globals: Map[String, String]) = {
@@ -122,7 +121,7 @@ object SearchIOConfig {
    * @return all key-value pairs whose keys start with given mode prefix
    */
 
-  protected[config] def allConfigsForMode(sparkConf: SparkConf, mode: UsageMode): Map[String, String] = {
+  private[config] def allConfigsForMode(sparkConf: SparkConf, mode: UsageMode): Map[String, String] = {
 
    sparkConf
       .getAllWithPrefix(mode.prefix())

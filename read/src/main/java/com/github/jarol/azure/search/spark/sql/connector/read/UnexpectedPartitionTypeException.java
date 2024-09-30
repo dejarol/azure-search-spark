@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Exception returned when an unexpected {@link InputPartition} (other than {@link SearchPartition})
- * is provided to a dataSource {@link org.apache.spark.sql.connector.read.PartitionReaderFactory}
+ * is provided to this dataSource's {@link org.apache.spark.sql.connector.read.PartitionReaderFactory}
  */
 
 public class UnexpectedPartitionTypeException

@@ -9,8 +9,8 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Read configuration
- * @param localOptions options passed to the [[org.apache.spark.sql.DataFrameReader]]
- * @param globalOptions read options retrieved from the underlying [[org.apache.spark.SparkConf]]
+ * @param localOptions  read options passed to the dataSource
+ * @param globalOptions read options retrieved from the underlying Spark configuration
  */
 
 case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[String],
@@ -69,7 +69,7 @@ case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[St
    * @return index fields to select
    */
 
-  def select: Option[Seq[String]] = getOptionalStringList(ReadConfig.SELECT_CONFIG)
+  def select: Option[Seq[String]] = getAsList(ReadConfig.SELECT_CONFIG)
 }
 
 object ReadConfig {

@@ -9,8 +9,8 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Write configuration
- * @param localOptions options passed to either a [[org.apache.spark.sql.DataFrameWriter]]
- * @param globalOptions write options retrieved from the underlying [[org.apache.spark.SparkConf]]
+ * @param localOptions  write options passed to the dataSource
+ * @param globalOptions write options retrieved from the underlying Spark configuration
  */
 
 case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[String],
@@ -73,13 +73,6 @@ case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[S
   def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
 
   /**
-   * Return the names of the columns that should be converted to Geopoints when writing data
-   * @return column names that should be converted to Geopoints
-   */
-
-  def convertToGeoPoints: Option[Seq[String]] = getOptionalStringList(WriteConfig.CONVERT_AS_GEOPOINTS)
-
-  /**
    * Get the set of options for defining Search fields for target index
    * @return options for defining fields on target Search index
    */
@@ -89,11 +82,11 @@ case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[S
     val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
     SearchFieldsOptions(
       createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD),
-      createIndexConfig.getOptionalStringList(WriteConfig.FILTERABLE_FIELDS),
-      createIndexConfig.getOptionalStringList(WriteConfig.SORTABLE_FIELDS),
-      createIndexConfig.getOptionalStringList(WriteConfig.HIDDEN_FIELDS),
-      createIndexConfig.getOptionalStringList(WriteConfig.SEARCHABLE_FIELDS),
-      createIndexConfig.getOptionalStringList(WriteConfig.FACETABLE_FIELDS),
+      createIndexConfig.getAsList(WriteConfig.FILTERABLE_FIELDS),
+      createIndexConfig.getAsList(WriteConfig.SORTABLE_FIELDS),
+      createIndexConfig.getAsList(WriteConfig.HIDDEN_FIELDS),
+      createIndexConfig.getAsList(WriteConfig.SEARCHABLE_FIELDS),
+      createIndexConfig.getAsList(WriteConfig.FACETABLE_FIELDS),
       actionColumn
     )
   }
@@ -106,7 +99,6 @@ object WriteConfig {
   final val ACTION_CONFIG = "action"
   final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
-  final val CONVERT_AS_GEOPOINTS = "convertAsGeopoints"
 
   final val CREATE_INDEX_PREFIX = "createIndex."
   final val KEY_FIELD = "keyField"

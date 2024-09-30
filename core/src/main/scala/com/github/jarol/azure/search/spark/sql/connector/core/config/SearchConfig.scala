@@ -7,9 +7,8 @@ import scala.util.Try
 
 /**
  * Parent class for all Search configurations
- * @param localOptions options passed to either a [[org.apache.spark.sql.DataFrameReader]] (when used in [[UsageMode.READ]])
- *                or [[org.apache.spark.sql.DataFrameWriter]] (when used in [[UsageMode.WRITE]])
- * @param globalOptions all options related to the config usage mode, retrieved from the underlying [[org.apache.spark.SparkConf]] (if any)
+ * @param localOptions options passed to the dataSource
+ * @param globalOptions options retrieved from the underlying Spark configuration
  */
 
 class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
@@ -140,7 +139,13 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
     )
   }
 
-  final def getOptionalStringList(key: String): Option[Seq[String]] = {
+  /**
+   * Get the value of a key as list of non-empty strings
+   * @param key key
+   * @return a non-empty collection of strings if the original value is not blank
+   */
+
+  final def getAsList(key: String): Option[Seq[String]] = {
 
     get(key).flatMap {
       v =>
@@ -166,7 +171,7 @@ object SearchConfig {
    */
 
   @throws[ConfigException]
-  protected[config] final def convertOrThrow[T](key: String, value: String, conversion: String => T): T = {
+  private[config] final def convertOrThrow[T](key: String, value: String, conversion: String => T): T = {
 
     Try {
       conversion(value)
@@ -185,7 +190,7 @@ object SearchConfig {
    * @return a new map with matching entries, with prefix-stripped keys
    */
 
-  protected[config] def allWithPrefix[V](original: Map[String, V], prefix: String): Map[String, V] = {
+  private[config] def allWithPrefix[V](original: Map[String, V], prefix: String): Map[String, V] = {
 
     val lowerPrefix = prefix.toLowerCase
     original.collect {

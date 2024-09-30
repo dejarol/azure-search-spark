@@ -76,36 +76,6 @@ class WriteConfigSpec
           ).actionColumn shouldBe Some(colName)
         }
 
-        it("the columns to convert to GeoPoints") {
-
-          emptyConfig.convertToGeoPoints shouldBe empty
-
-          // Empty strings
-          // [a]
-          writeConfig(
-            Map(
-              WriteConfig.CONVERT_AS_GEOPOINTS -> ""
-            )
-          ).convertToGeoPoints shouldBe empty
-
-          // [b]
-          writeConfig(
-            Map(
-              WriteConfig.CONVERT_AS_GEOPOINTS -> " "
-            )
-          ).convertToGeoPoints shouldBe empty
-
-          val expected = Seq("c1", "c2")
-          val actual = writeConfig(
-            Map(
-              WriteConfig.CONVERT_AS_GEOPOINTS -> expected.mkString(",")
-            )
-          ).convertToGeoPoints
-
-          actual shouldBe defined
-          actual.get should contain theSameElementsAs expected
-        }
-
         describe("retrieve search field options") {
           it("throwing an exception for missing key fields") {
 

@@ -173,6 +173,29 @@ class SearchConfigSpec
         subConfig.unsafelyGet(k1) shouldBe v1
         subConfig.unsafelyGet(k2) shouldBe v2
       }
+
+      it("split a value into a list") {
+
+        createConfig(
+          Map(k1 -> ""),
+          Map.empty
+        ).getAsList(k1) shouldBe empty
+
+        createConfig(
+          Map(k1 -> " "),
+          Map.empty
+        ).getAsList(k1) shouldBe empty
+
+        val values = Seq("hello ", "world")
+        val actual = createConfig(
+          Map(k1 -> values.mkString(",")),
+          Map.empty
+        ).getAsList(k1)
+
+        val expected = values.map(_.trim)
+        actual shouldBe defined
+        actual.get should contain theSameElementsAs expected
+      }
     }
   }
 }

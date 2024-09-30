@@ -24,9 +24,6 @@ ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
 
-Compile / doc / javacOptions ++= Seq("-notimestamp", "-linksource")
-Compile / doc / scalacOptions := Seq("-groups", "-implicits")
-
 ThisBuild / assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
 ThisBuild / assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false)
 
