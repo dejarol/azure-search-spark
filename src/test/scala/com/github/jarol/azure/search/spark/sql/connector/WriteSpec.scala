@@ -98,49 +98,51 @@ object WriteSpec {
     val now = LocalDateTime.now()
     val twoMonthsAgo = now.minusMonths(2).`with`(TemporalAdjusters.firstDayOfMonth())
     val deltaInMinutes = ChronoUnit.MINUTES.between(twoMonthsAgo, now)
-    val date = twoMonthsAgo.plus((math.random() * deltaInMinutes).toLong, ChronoUnit.MINUTES)
-    val address = if (math.random() >= 0.95) {
-      None
-    } else {
-
-      val location = if (math.random() >= 0.95) {
-        None
-      } else {
-        Some(
-          Location("Point", Seq(math.random() * 90, math.random() * 90))
-        )
-      }
-      Some(
-        Address(
-          "SAN FRANCISCO",
-          util.Random.nextInt(n),
-          location
-        )
-      )
-    }
-
-    val references = if (math.random() >= 0.95) {
-      None
-    } else {
-      Some(
-        (1 to util.Random.nextInt(3)).map {
-          _ =>
-            Reference(
-              UUID.randomUUID().toString.toUpperCase,
-              util.Random.nextInt(100),
-              if (math.random() >= 0.95) None else Some(
-                Date.valueOf(
-                  twoMonthsAgo.plus((deltaInMinutes * math.random()).toLong, ChronoUnit.MINUTES)
-                    .toLocalDate
-                )
-              )
-            )
-          }
-      )
-    }
 
     (0 until n).map {
       _ =>
+
+        val date = twoMonthsAgo.plus((math.random() * deltaInMinutes).toLong, ChronoUnit.MINUTES)
+        val address = if (math.random() >= 0.95) {
+          None
+        } else {
+
+          val location = if (math.random() >= 0.95) {
+            None
+          } else {
+            Some(
+              Location("Point", Seq(math.random() * 90, math.random() * 90))
+            )
+          }
+          Some(
+            Address(
+              "SAN FRANCISCO",
+              util.Random.nextInt(n),
+              location
+            )
+          )
+        }
+
+        val references = if (math.random() >= 0.95) {
+          None
+        } else {
+          Some(
+            (1 to util.Random.nextInt(3)).map {
+              _ =>
+                Reference(
+                  UUID.randomUUID().toString.toUpperCase,
+                  util.Random.nextInt(100),
+                  if (math.random() >= 0.95) None else Some(
+                    Date.valueOf(
+                      twoMonthsAgo.plus((deltaInMinutes * math.random()).toLong, ChronoUnit.MINUTES)
+                        .toLocalDate
+                    )
+                  )
+                )
+            }
+          )
+        }
+
         Model(
           UUID.randomUUID().toString.toUpperCase,
           Date.valueOf(date.toLocalDate),
