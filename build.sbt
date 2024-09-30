@@ -1,5 +1,3 @@
-name := "azure-search-spark-connector"
-
 lazy val scala212 = "2.12.18"
 lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
@@ -8,18 +6,27 @@ lazy val compileTestDependency = "test->test;compile->compile"
 ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
-ThisBuild / javacOptions ++= "-source" :: "1.8" ::
-  "-target" :: "1.8" :: Nil
-ThisBuild / scalacOptions ++= "-target:jvm-1.8" ::
-  "-Ywarn-unused:implicits" ::
-  "-Ywarn-unused:imports" ::
-  "-Ywarn-unused:locals" ::
-  "-Ywarn-unused:params" ::
-  "-Ywarn-unused:privates" :: Nil
+ThisBuild / javacOptions ++= Seq(
+  "-source", "1.8",
+  "-target", "1.8"
+)
+
+ThisBuild / scalacOptions ++= Seq(
+  "-target:jvm-1.8",
+  "-Ywarn-unused:implicits",
+  "-Ywarn-unused:imports",
+  "-Ywarn-unused:locals",
+  "-Ywarn-unused:params",
+  "-Ywarn-unused:privates"
+)
 
 ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
+
+Compile / doc / javacOptions ++= Seq("-notimestamp", "-linksource")
+Compile / doc / scalacOptions := Seq("-groups", "-implicits")
+
 ThisBuild / assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
 ThisBuild / assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false)
 
@@ -41,8 +48,10 @@ lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
 lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 
 lazy val root = (project in file("."))
+  .enablePlugins(ScalaUnidocPlugin)
   .settings(
     crossScalaVersions := Nil,
+    name := "azure-search-spark-connector",
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL

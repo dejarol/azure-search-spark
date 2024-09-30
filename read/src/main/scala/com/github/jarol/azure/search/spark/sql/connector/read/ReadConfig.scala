@@ -50,10 +50,9 @@ case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[St
       ReadConfig.PARTITIONER_CONFIG,
       SinglePartitionPartitioner(this),
       s => {
-        ClassHelper.createInstance(
-          Class.forName(s).asInstanceOf[Class[SearchPartitioner]],
-          this
-        )
+        Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
+          .getConstructor(classOf[ReadConfig])
+          .newInstance(this)
       }
     )
   }

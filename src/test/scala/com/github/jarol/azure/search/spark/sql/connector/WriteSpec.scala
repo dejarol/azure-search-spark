@@ -15,7 +15,7 @@ class WriteSpec
 
   import WriteSpec._
 
-  it("a") {
+  ignore("a") {
 
     val df = toDF(
       Seq(

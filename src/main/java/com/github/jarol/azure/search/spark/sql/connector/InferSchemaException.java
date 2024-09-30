@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.write;
+package com.github.jarol.azure.search.spark.sql.connector;
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException;
 import org.jetbrains.annotations.Contract;

@@ -83,7 +83,7 @@ public interface SearchPartition
      * @return iterator fo {@link SearchResult}(s)
      */
 
-    default Iterator<SearchResult> getSearchResults(
+    default Iterator<SearchResult> getPartitionResults(
             @NotNull SearchClient client
     ) {
 

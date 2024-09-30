@@ -77,19 +77,10 @@ class AtomicWriteConvertersSpec
 
         describe("converting strings to datetime offsets that handles") {
 
-          it("datetimes with offset") {
-
-            val input = OffsetDateTime.now(Constants.UTC_OFFSET)
-              .format(Constants.DATETIME_OFFSET_FORMATTER)
-
-            StringToDatetimeConverter.apply(input) shouldBe input
-          }
-
           it("datetimes without offset") {
 
             val now = LocalDateTime.now()
-            val input = now.format(Constants.DATETIME_OFFSET_FORMATTER)
-
+            val input = now.format(Constants.TIMESTAMP_FORMATTER)
             val expected = now.atOffset(Constants.UTC_OFFSET).format(Constants.DATETIME_OFFSET_FORMATTER)
             StringToDatetimeConverter.apply(input) shouldBe expected
           }

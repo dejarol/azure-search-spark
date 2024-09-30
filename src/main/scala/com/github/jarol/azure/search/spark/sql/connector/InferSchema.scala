@@ -4,7 +4,6 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.write.InferSchemaException
 import org.apache.spark.sql.types.StructType
 
 /**

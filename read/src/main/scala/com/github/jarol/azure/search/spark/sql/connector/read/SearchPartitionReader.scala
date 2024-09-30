@@ -24,7 +24,7 @@ class SearchPartitionReader(private val readConfig: ReadConfig,
     with Logging {
 
   private lazy val documentConverter: SearchDocumentToInternalRowConverter = SearchDocumentToInternalRowConverter(converters)
-  private lazy val searchResultIterator: util.Iterator[SearchResult] = readConfig.withSearchClientDo(searchPartition.getSearchResults)
+  private lazy val searchResultIterator: util.Iterator[SearchResult] = readConfig.withSearchClientDo(searchPartition.getPartitionResults)
 
   override def next(): Boolean = searchResultIterator.hasNext
 
