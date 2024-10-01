@@ -29,6 +29,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
   override def build(): Write = {
 
     val targetIndexFields: Seq[SearchField] = if (writeConfig.indexExists) {
+      log.info(s"Index ${writeConfig.getIndex} already exists")
       writeConfig.getSearchIndexFields
     } else {
 

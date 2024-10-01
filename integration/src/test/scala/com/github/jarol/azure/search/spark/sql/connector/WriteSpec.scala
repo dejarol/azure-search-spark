@@ -12,8 +12,8 @@ class WriteSpec
 
   describe(s"Datasource '${SearchTableProvider.SHORT_NAME}'") {
     describe(SHOULD) {
-      describe("create an index if it does not exist") {
-        it("with as many fields as many dataframe columns") {
+      describe("create an index (if it does not exist)") {
+        it("with as many fields as many columns") {
 
           val indexName = "simple-beans"
           val documents: Seq[SimpleBean] = Seq(
@@ -32,7 +32,7 @@ class WriteSpec
           val expectedSearchFieldNames = schemaOfCaseClass[SimpleBean].fields.map(_.name)
           val actualFieldNames = getIndexFields(indexName).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          dropIndex(indexName)
+          dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
         }
 
@@ -60,7 +60,7 @@ class WriteSpec
 
           val actualFieldNames = getIndexFields(indexName).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          dropIndex(indexName)
+          dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
         }
       }
