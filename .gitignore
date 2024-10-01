@@ -6,3 +6,4 @@ target/*
 core/target/*
 read/target/*
 write/target/*
+integration/target/*

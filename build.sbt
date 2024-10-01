@@ -31,7 +31,6 @@ ThisBuild / assembly / assemblyOption := (assembly / assemblyOption).value.withI
 lazy val sparkVersion = "3.3.0"
 lazy val azureSearchVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
-
 lazy val scalaTestVersion = "3.2.16"
 
 // Compile dependencies
@@ -44,6 +43,45 @@ lazy val azureCoreOkHttp = "com.azure" % "azure-core-http-okhttp" % azureCoreOkH
 lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
 lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 
+// Core project
+lazy val core = (project in file("core"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    libraryDependencies ++= Seq(
+      sparkCore,
+      sparkSQL,
+      azureSearchClient,
+      azureCoreOkHttp,
+      scalactic,
+      scalaTest
+    )
+  )
+
+// Read project
+lazy val read = (project in file("read"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    libraryDependencies ++= Seq(
+      sparkCore,
+      sparkSQL
+    )
+  ).dependsOn(
+    core % compileTestDependency
+  )
+
+// Write project
+lazy val write = (project in file("write"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    libraryDependencies ++= Seq(
+      sparkCore,
+      sparkSQL
+    )
+  ).dependsOn(
+    core % compileTestDependency
+  )
+
+// Root project
 lazy val root = (project in file("."))
   .enablePlugins(ScalaUnidocPlugin)
   .settings(
@@ -61,37 +99,14 @@ lazy val root = (project in file("."))
     write % compileTestDependency
   )
 
-lazy val write = (project in file("write"))
+// Integration tests
+lazy val integration = (project in file("integration"))
+  .dependsOn(root % compileTestDependency)
   .settings(
     crossScalaVersions := supportedScalaVersions,
+    publish / skip := true,
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL
-    )
-  ).dependsOn(
-    core % compileTestDependency
-  )
-
-lazy val read = (project in file("read"))
-  .settings(
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies ++= Seq(
-      sparkCore,
-      sparkSQL
-    )
-  ).dependsOn(
-    core % compileTestDependency
-  )
-
-lazy val core = (project in file("core"))
-  .settings(
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies ++= Seq(
-      sparkCore,
-      sparkSQL,
-      azureSearchClient,
-      azureCoreOkHttp,
-      scalactic,
-      scalaTest
     )
   )

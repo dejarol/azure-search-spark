@@ -1,5 +1,6 @@
-package com.github.jarol.azure.search.spark.sql.connector.core
+package com.github.jarol.azure.search.spark.sql.connector
 
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Encoders, Row, SparkSession}
 
@@ -11,7 +12,6 @@ trait SparkSpec
   protected final lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
     .appName(classOf[SparkSpec].getSimpleName)
-    .config("spark.sql.shuffle.partitions", "1")
     .getOrCreate()
 
   /**

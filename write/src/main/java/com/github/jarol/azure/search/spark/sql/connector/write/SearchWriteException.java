@@ -17,7 +17,7 @@ public class SearchWriteException
     public SearchWriteException(
             @NotNull Throwable cause
     ) {
-        super(String.format("Cannot build dataSource write. Reason %s",
+        super(String.format("Cannot build dataSource write. Reason: %s",
                 cause.getMessage()),
                 cause
         );
