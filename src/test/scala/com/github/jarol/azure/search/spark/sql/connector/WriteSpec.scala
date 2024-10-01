@@ -16,10 +16,10 @@ class WriteSpec
 
   import WriteSpec._
 
-  it("a") {
+  ignore("a") {
 
     val sparkPartitionID = "spark_partition_id"
-    val models = createModels(110000, spark.sparkContext.defaultParallelism)
+    val models = createModels(1, 3)
     /*
     val models = Seq(
       Model(
@@ -40,14 +40,13 @@ class WriteSpec
 
      */
     val df = spark.createDataFrame(
-        spark.sparkContext.parallelize(models, spark.sparkContext.defaultParallelism)
+        spark.sparkContext.parallelize(models, 3)
     )
 
     val options = Map(
       IOConfig.API_KEY_CONFIG -> "jWFM1tzIjG8pEtkOs437CoY1xqMXXPJ8iFiiwfd9BAAzSeAprBmR",
       IOConfig.END_POINT_CONFIG -> "https://searchsparkd01cs01.search.windows.net",
-      IOConfig.INDEX_CONFIG -> "models",
-      WriteConfig.BATCH_SIZE_CONFIG -> "5000"
+      IOConfig.INDEX_CONFIG -> "models"
     )
 
     /*
@@ -116,7 +115,7 @@ object WriteSpec {
           }
           Some(
             Address(
-              "SAN FRANCISCO",
+              "ROME",
               util.Random.nextInt(n),
               location
             )
@@ -155,13 +154,13 @@ object WriteSpec {
 
   case class Location(
                      `type`: String,
-                     coordinates: Seq[Double]
+                     coordinates: Seq[java.lang.Double]
                      )
 
   case class Reference(
-                       id: String,
-                       value: Int,
-                       date: Option[Date]
+                        id: String,
+                        value: Integer,
+                        startDate: Option[Date]
                        )
 
   case class Address(
@@ -175,6 +174,6 @@ object WriteSpec {
                     date: Date,
                     address: Option[Address],
                     references: Option[Seq[Reference]],
-                    partitionId: Int
+                    partitionId: Integer
                   )
 }

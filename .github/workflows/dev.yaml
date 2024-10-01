@@ -1,0 +1,26 @@
+name: dev
+on:
+  push:
+    branches:
+      - feature/*
+      - bugfix/*
+      - development/*
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Git Checkout'
+        uses: 'actions/checkout@v3'
+      - name: 'Set up JDK and sbt'
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+      - name: 'Clean, test'
+        run: sbt clean test
+      - name: 'IT test'
+        run: sbt IntegrationTest / test
+        env:
+          AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
+          AZURE_SEARCH_API_KEY: ${{ secrets.AZURE_SEARCH_API_KEY }}
+      

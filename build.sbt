@@ -48,7 +48,7 @@ lazy val root = (project in file("."))
   .enablePlugins(ScalaUnidocPlugin)
   .settings(
     crossScalaVersions := Nil,
-    name := "azure-search-spark-connector",
+    name := "azure-search-spark",
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL
