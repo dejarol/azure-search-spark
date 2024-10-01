@@ -8,6 +8,10 @@ import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 
+/**
+ * Trait to mix in for integration tests that require the interaction with a Search service
+ */
+
 trait SearchSpec
   extends BasicSpec {
 
@@ -20,9 +24,27 @@ trait SearchSpec
       .credential(KEY_CREDENTIALS)
       .buildClient
 
+  /**
+   * Get a Search index
+   * @param name index name
+   * @return a [[SearchIndex]] instance
+   */
+
   protected final def getSearchIndex(name: String): SearchIndex = searchIndexClient.getIndex(name)
 
+  /**
+   * Get a client for search documents within an index
+   * @param name index name
+   * @return a [[SearchClient]] instance
+   */
+
   protected final def getSearchClient(name: String): SearchClient = searchIndexClient.getSearchClient(name)
+
+  /**
+   * Evaluate if an index exists
+   * @param name name
+   * @return true for existing indexes
+   */
 
   protected final def indexExists(name: String): Boolean = {
 
@@ -32,6 +54,12 @@ trait SearchSpec
    )
   }
 
+  /**
+   * Count the documents within an index (approximately)
+   * @param name index name
+   * @return approximate number of documents within an index
+   */
+
   protected final def countDocumentsForIndex(name: String): Long = {
 
     SearchUtils.getSearchPagedIterable(
@@ -40,17 +68,23 @@ trait SearchSpec
     ).getTotalCount
   }
 
-  protected final def dropIndex(name: String): Unit = {
-
-    searchIndexClient.deleteIndex(name)
-  }
+  /**
+   * Drop an index, if it exists
+   * @param name name of the index to drop
+   */
 
   protected final def dropIndexIfExists(name: String): Unit = {
 
     if (indexExists(name)) {
-      dropIndex(name)
+      searchIndexClient.deleteIndex(name)
     }
   }
+
+  /**
+   * Get the list of field defined by an index
+   * @param name index name
+   * @return a collection with defined index fields
+   */
 
   protected final def getIndexFields(name: String): Seq[SearchField] = {
 

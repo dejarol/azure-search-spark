@@ -6,6 +6,10 @@ import org.apache.spark.sql.{DataFrame, Encoders, Row, SparkSession}
 
 import scala.reflect.runtime.universe.TypeTag
 
+/**
+ * Trait to mixin for Spark-based tests
+ */
+
 trait SparkSpec
   extends BasicSpec {
 
@@ -89,18 +93,5 @@ trait SparkSpec
       spark.sparkContext.emptyRDD[Row],
       schema
     )
-  }
-
-  /**
-   * Convert a [[DataFrame]] to a collection of case classes
-   * @param dataFrame input dataFrame
-   * @tparam A case class type
-   * @return dataFrame records converted to given type and gathered into a [[Seq]]
-   */
-
-  protected final def toSeqOf[A <: Product : TypeTag](dataFrame: DataFrame): Seq[A] = {
-
-    import spark.implicits._
-    dataFrame.as[A].collect()
   }
 }
