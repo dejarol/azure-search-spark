@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
 import org.apache.spark.sql.connector.write.{BatchWrite, Write}
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
  * [[Write]] implementation for Search dataSource
@@ -28,11 +28,19 @@ class SearchWrite(
   @throws[SearchWriteException]
   override def toBatch: BatchWrite = {
 
+    // Exclude index action column from mapping, if defined
+    val schemaToMap: Seq[StructField] = writeConfig.actionColumn match {
+      case Some(value) => schema.filterNot {
+        _.name.equalsIgnoreCase(value)
+      }
+      case None => schema
+    }
+
     // Safely retrieve the converters map
     // If defined, create the action supplier
     // If this latter is defined as well, create the batch write
 
-    WriteMappingSupplier.get(schema, indexFields, writeConfig.getIndex) match {
+    WriteMappingSupplier.get(schemaToMap, indexFields, writeConfig.getIndex) match {
       case Left(exception) => throw new SearchWriteException(exception)
       case Right(converters) =>
 
