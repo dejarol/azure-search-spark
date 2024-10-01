@@ -4,7 +4,7 @@ on:
     branches:
       - feature/*
       - bugfix/*
-      - development/*
+      - development
 jobs:
   dev:
     runs-on: ubuntu-latest
