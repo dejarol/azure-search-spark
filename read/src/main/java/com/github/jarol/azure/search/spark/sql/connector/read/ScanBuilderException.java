@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read;
 
-import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException;
+import com.github.jarol.azure.search.spark.sql.connector.core.NoSuchIndexException;
 import org.apache.spark.sql.connector.read.Scan;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +42,7 @@ public class ScanBuilderException
             String name
     ) {
       return new ScanBuilderException(
-              new IndexDoesNotExistException(name)
+              new NoSuchIndexException(name)
       );
     }
 }
