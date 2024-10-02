@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector;
 
-import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,22 +29,6 @@ public class InferSchemaException
         super(String.format("%s %s. Reason: (%s)",
                 COULD_NOT_INFER_SCHEMA_PREFIX, name, cause.getMessage()),
                 cause
-        );
-    }
-
-    /**
-     * Create an instance caused by a non-existing index
-     * @param name index name
-     * @return an instance
-     */
-
-    @Contract("_ -> new")
-    public static @NotNull InferSchemaException forNonExistingIndex(
-            String name
-    ) {
-        return new InferSchemaException(
-                name,
-                new IndexDoesNotExistException(name)
         );
     }
 

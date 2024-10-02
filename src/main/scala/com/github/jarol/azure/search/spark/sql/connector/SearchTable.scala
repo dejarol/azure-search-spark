@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.core.{JavaScalaConverters, NoSuchIndexException}
 import com.github.jarol.azure.search.spark.sql.connector.read.{ReadConfig, SearchScanBuilder}
 import com.github.jarol.azure.search.spark.sql.connector.write.{SearchWriteBuilder, WriteConfig}
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
@@ -35,12 +35,18 @@ class SearchTable(private val tableSchema: StructType)
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
-    new SearchScanBuilder(
-      schema(),
-      ReadConfig(
-        JavaScalaConverters.javaMapToScala(options)
-      )
+    val readConfig = ReadConfig(
+      JavaScalaConverters.javaMapToScala(options)
     )
+
+    if (readConfig.indexExists) {
+      new SearchScanBuilder(
+        schema(),
+        readConfig
+      )
+    } else {
+      throw new NoSuchIndexException(readConfig.getIndex)
+    }
   }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {

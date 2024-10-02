@@ -13,33 +13,6 @@ import org.apache.spark.sql.types.StructType
 object InferSchema {
 
   /**
-   * Infer the schema by reading options provided to a [[org.apache.spark.sql.DataFrameReader]]
-   * @param options options passed to the reader via [[org.apache.spark.sql.DataFrameReader.option]] method
-   * @throws InferSchemaException if schema cannot be inferred due to
-   *                              - a non-existing index
-   *                              - a non-retrievable index (i.e. an index whose fields are all hidden)
-   * @return the schema of target Search index
-   */
-
-  @throws[InferSchemaException]
-  def inferSchema(options: Map[String, String]): StructType = {
-
-    // Infer the schema if the index exists, throw an exception otherwise
-    val readConfig = ReadConfig(options)
-    val indexName: String = readConfig.getIndex
-
-    if (readConfig.indexExists) {
-      inferSchemaForIndex(
-        indexName,
-        readConfig.getSearchIndexFields,
-        readConfig.select
-      )
-    } else {
-      throw InferSchemaException.forNonExistingIndex(indexName)
-    }
-  }
-
-  /**
    * Infer the schema of an existing Search index
    * @param name index name
    * @param searchFields index search fields
@@ -49,9 +22,11 @@ object InferSchema {
    */
 
   @throws[InferSchemaException]
-  protected[connector] def inferSchemaForIndex(name: String,
-                                               searchFields: Seq[SearchField],
-                                               select: Option[Seq[String]]): StructType = {
+  def forIndex(
+                           name: String,
+                           searchFields: Seq[SearchField],
+                           select: Option[Seq[String]]
+                         ): StructType = {
 
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)
