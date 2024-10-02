@@ -15,7 +15,7 @@ case class InternalRowToSearchDocumentConverter(private val converters: Map[Stru
   extends (InternalRow => SearchDocument) {
 
   override def apply(v1: InternalRow): SearchDocument = {
-
+    
     val properties: Map[String, Object] = converters.zipWithIndex.map {
       case ((structField, converter), index) => (
         structField.name,
