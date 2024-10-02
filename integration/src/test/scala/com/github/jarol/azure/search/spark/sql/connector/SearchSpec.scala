@@ -41,6 +41,25 @@ trait SearchSpec
   protected final def getSearchClient(name: String): SearchClient = searchIndexClient.getSearchClient(name)
 
   /**
+   * Create an index with given name and fields
+   * @param name name
+   * @param fields fields
+   */
+
+  protected final def createIndex(
+                                   name: String,
+                                   fields: Seq[SearchField]
+                                 ): Unit = {
+
+    searchIndexClient.createIndex(
+      new SearchIndex(
+        name,
+        JavaScalaConverters.seqToList(fields)
+      )
+    )
+  }
+
+  /**
    * Evaluate if an index exists
    * @param name name
    * @return true for existing indexes

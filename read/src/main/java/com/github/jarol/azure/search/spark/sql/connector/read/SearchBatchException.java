@@ -44,7 +44,7 @@ public class SearchBatchException
                 "Found %s partition(s) breaking the limit of %s documents per partition (%s). " +
                         "Try to change the partitioner options",
                 searchPartitions.size(),
-                Constants.PARTITION_DOCUMENT_LIMIT,
+                Constants.DOCUMENTS_PER_PARTITION_LIMIT,
                 partitionDescription
         );
 

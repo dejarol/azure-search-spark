@@ -17,6 +17,7 @@ class SearchBatch(private val readConfig: ReadConfig,
   extends Batch
     with Logging {
 
+  @throws[SearchBatchException]
   override def planInputPartitions(): Array[InputPartition] = {
 
     // Retrieve the partitioner instance and create the input partitions
@@ -28,7 +29,7 @@ class SearchBatch(private val readConfig: ReadConfig,
     val invalidPartitions = partitionsList.filter {
       partition => readConfig.withSearchClientDo {
         partition.getCountPerPartition
-      } > Constants.PARTITION_DOCUMENT_LIMIT
+      } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
     }
 
     if (invalidPartitions.nonEmpty) {
