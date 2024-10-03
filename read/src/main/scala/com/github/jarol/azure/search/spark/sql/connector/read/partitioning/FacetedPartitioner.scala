@@ -43,7 +43,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): util.List[SearchPartition] = {
 
     val partitionerOptions: SearchConfig = readConfig.partitionerOptions
-    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_FIELD_CONFIG)
+    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
     val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt)
 
     // Either a ConfigException or facet results
@@ -146,7 +146,7 @@ object FacetedPartitioner {
 
     // Map left side to a ConfigException
     maybeExistingField.left.map {
-      cause => new ConfigException(
+      cause => ConfigException.forIllegalOptionValue(
         ReadConfig.FACET_FIELD_CONFIG,
         name,
         cause
@@ -193,9 +193,9 @@ object FacetedPartitioner {
           Right(partitions)
         } else {
           Left(
-            new ConfigException(
+            ConfigException.forIllegalOptionValue(
               ReadConfig.NUM_PARTITIONS_CONFIG,
-              value,
+              s"$value",
               "should be greater than 1"
             )
           )

@@ -12,13 +12,12 @@ class SearchConfigSpec
   private lazy val keyPrefix = "some.key.prefix."
 
   /**
-   * Create an instance of [[SearchConfig]] by injecting two maps
-   * @param m1 local options
-   * @param m2 global (SparkConf) options
+   * Create an instance of [[SearchConfig]] by injecting a simple map
+   * @param options dataSource options
    * @return an instance of [[SearchConfig]]
    */
 
-  private def createConfig(m1: Map[String, String], m2: Map[String, String]): SearchConfig = new SearchConfig(m1, m2)
+  private def createCfg(options: Map[String, String]): SearchConfig = new SearchConfig(options)
 
   describe(`object`[SearchConfig]) {
     describe(SHOULD) {
@@ -66,35 +65,31 @@ class SearchConfigSpec
       describe("get a value") {
 
         val map = Map(k1 -> v1)
-        val emptyConfig = createConfig(Map.empty, Map.empty)
-        val configWithOptions = createConfig(map, Map.empty)
-        val configWithSparkOptions = createConfig(Map.empty, map)
+        val emptyConfig = createCfg(Map.empty)
+        val nonEmptyConfig = createCfg(map)
 
         it("safely") {
 
           emptyConfig.get(k1) shouldBe empty
-          configWithOptions.get(k1) shouldBe Some(v1)
-          configWithOptions.get(k1.toUpperCase) shouldBe Some(v1)
-          configWithSparkOptions.get(k1) shouldBe Some(v1)
-          configWithSparkOptions.get(k1.toUpperCase) shouldBe Some(v1)
+          nonEmptyConfig.get(k1) shouldBe Some(v1)
+          nonEmptyConfig.get(k1.toUpperCase) shouldBe Some(v1)
+          nonEmptyConfig.get(k2) shouldBe empty
         }
 
         it("unsafely") {
 
           a [ConfigException] shouldBe thrownBy {
-            emptyConfig.unsafelyGet(k1)
+            emptyConfig.unsafelyGet(k1, None, None)
           }
 
-          configWithOptions.unsafelyGet(k1) shouldBe v1
-          configWithSparkOptions.unsafelyGet(k1) shouldBe v1
+          nonEmptyConfig.unsafelyGet(k1, None, None) shouldBe v1
         }
 
         it("providing a default value") {
 
           val default = "defaultValue"
           emptyConfig.getOrDefault(k1, default) shouldBe default
-          configWithOptions.getOrDefault(k2, default) shouldBe default
-          configWithSparkOptions.getOrDefault(k2, default) shouldBe default
+          nonEmptyConfig.getOrDefault(k2, default) shouldBe default
         }
       }
 
@@ -102,12 +97,11 @@ class SearchConfigSpec
         it("safely") {
 
           val (now, formatter) = (LocalDate.now(), DateTimeFormatter.ISO_LOCAL_DATE)
-          val config = createConfig(
+          val config = createCfg(
             Map(
               k1 -> now.format(formatter),
               k3 -> v3
-            ),
-            Map.empty
+            )
           )
 
           val conversion: String => LocalDate = s => LocalDate.parse(s, formatter)
@@ -118,9 +112,8 @@ class SearchConfigSpec
         it("or a default") {
 
           val default = 1
-          val config = createConfig(
-            Map(k1 -> v1),
-            Map.empty
+          val config = createCfg(
+            Map(k1 -> v1)
           )
 
           config.get(k2) shouldBe empty
@@ -130,9 +123,8 @@ class SearchConfigSpec
         it("converting the actual value if present") {
 
           val (existingValue, default) = (123, 1)
-          val config = createConfig(
-            Map(k1 -> String.valueOf(existingValue)),
-            Map.empty
+          val config = createCfg(
+            Map(k1 -> String.valueOf(existingValue))
           )
 
           config.get(k1) shouldBe defined
@@ -142,9 +134,8 @@ class SearchConfigSpec
         it("eventually throwing an exception for invalid configs") {
 
           val conversion: String => LocalDate = LocalDate.parse
-          val config = createConfig(
-            Map(k1 -> "hello"),
-            Map.empty
+          val config = createCfg(
+            Map(k1 -> "hello")
           )
 
           config.get(k1) shouldBe defined
@@ -160,36 +151,34 @@ class SearchConfigSpec
 
       it("collect all options starting with a prefix in a new config") {
 
-        val config = createConfig(
+        val config = createCfg(
           Map(
-            keyPrefix + k1 -> v1
-          ),
-          Map(
-            keyPrefix + k2 -> v2
+            keyPrefix + k1 -> v1,
+            keyPrefix + k2 -> v2,
+            k3 -> v3
           )
         )
 
         val subConfig = config.getAllWithPrefix(keyPrefix)
-        subConfig.unsafelyGet(k1) shouldBe v1
-        subConfig.unsafelyGet(k2) shouldBe v2
+        subConfig.unsafelyGet(k1, None, None) shouldBe v1
+        subConfig.unsafelyGet(k2, None, None) shouldBe v2
+        subConfig.get(keyPrefix + k3) shouldBe empty
+        subConfig.get(k3) shouldBe empty
       }
 
       it("split a value into a list") {
 
-        createConfig(
-          Map(k1 -> ""),
-          Map.empty
+        createCfg(
+          Map(k1 -> "")
         ).getAsList(k1) shouldBe empty
 
-        createConfig(
-          Map(k1 -> " "),
-          Map.empty
+        createCfg(
+          Map(k1 -> " ")
         ).getAsList(k1) shouldBe empty
 
         val values = Seq("hello ", "world")
-        val actual = createConfig(
-          Map(k1 -> values.mkString(",")),
-          Map.empty
+        val actual = createCfg(
+          Map(k1 -> values.mkString(","))
         ).getAsList(k1)
 
         val expected = values.map(_.trim)

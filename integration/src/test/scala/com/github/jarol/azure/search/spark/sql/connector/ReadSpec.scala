@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldFeature}
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models.SimpleBean
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
-import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
+import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SaveMode}
 
 import java.time.LocalDate
@@ -26,13 +26,13 @@ class ReadSpec
       case (k, Some(v)) => (k, v)
     }
 
-    val reader = spark.read.format(SearchTableProvider.SHORT_NAME)
+    val reader = spark.read.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(name))
       .options(extraOptions)
 
     schema match {
-      case Some(value) => reader.schema(value).load()
-      case None => reader.load()
+      case Some(value) => reader.schema(value).load(name)
+      case None => reader.load(name)
     }
   }
 
@@ -53,33 +53,6 @@ class ReadSpec
 
           dropIndexIfExists(indexName)
         }
-
-        it("there's a schema incompatibility") {
-
-          val indexName = "simple-beans"
-          val fields = schemaOfCaseClass[SimpleBean].map(SchemaUtils.toSearchField).map {
-            sf => if (sf.getName.equalsIgnoreCase("id")) {
-              SearchFieldFeature.KEY.enableOnField(sf)
-            } else {
-              sf
-            }
-          }
-
-          dropIndexIfExists(indexName)
-          createIndex(indexName, fields)
-          indexExists(indexName) shouldBe true
-          val schema = schemaOfCaseClass[SimpleBean]
-            .add(StructField("value", DataTypes.IntegerType))
-
-          val df = readIndex(
-              indexName,
-              None,
-              None,
-              Some(schema)
-            )
-
-          dropIndexIfExists(indexName)
-        }
       }
 
       ignore("read documents from a Search index") {
@@ -93,7 +66,7 @@ class ReadSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(input).write.format(SearchTableProvider.SHORT_NAME)
+          toDF(input).write.format(Constants.DATASOURCE_NAME)
             .options(optionsForAuthAndIndex(indexName))
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.FILTERABLE_FIELDS, "id")
@@ -131,7 +104,7 @@ class ReadSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(input).write.format(SearchTableProvider.SHORT_NAME)
+          toDF(input).write.format(Constants.DATASOURCE_NAME)
             .options(optionsForAuthAndIndex(indexName))
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.FILTERABLE_FIELDS, "id")

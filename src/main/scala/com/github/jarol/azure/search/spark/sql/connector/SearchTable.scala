@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{JavaScalaConverters, NoSuchIndexException}
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.read.{ReadConfig, SearchScanBuilder}
 import com.github.jarol.azure.search.spark.sql.connector.write.{SearchWriteBuilder, WriteConfig}
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
@@ -13,17 +13,17 @@ import java.util
 
 /**
  * [[Table]] implementation for Search dataSource
- * @param tableSchema table schema (either inferred or user-provided)
+ * @param _schema table schema (either inferred or user-provided)
  */
 
-class SearchTable(private val tableSchema: StructType)
+class SearchTable(private val _schema: StructType)
   extends Table
     with SupportsRead
       with SupportsWrite {
 
   override def name(): String = "AzureSearchTable()"
 
-  override def schema(): StructType = tableSchema
+  override def schema(): StructType = _schema
 
   override def capabilities(): util.Set[TableCapability] = {
 
@@ -35,18 +35,12 @@ class SearchTable(private val tableSchema: StructType)
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
-    val readConfig = ReadConfig(
-      JavaScalaConverters.javaMapToScala(options)
-    )
-
-    if (readConfig.indexExists) {
-      new SearchScanBuilder(
-        schema(),
-        readConfig
+    new SearchScanBuilder(
+      schema(),
+      ReadConfig(
+        JavaScalaConverters.javaMapToScala(options)
       )
-    } else {
-      throw new NoSuchIndexException(readConfig.getIndex)
-    }
+    )
   }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
