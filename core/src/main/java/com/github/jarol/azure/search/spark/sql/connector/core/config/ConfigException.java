@@ -15,12 +15,13 @@ import java.util.function.Supplier;
 public class ConfigException
         extends IllegalArgumentException {
 
-    static final String INVALID_VALUE_PREFIX = "Illegal value";
-    static Supplier<String> LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER;
-    static Supplier<String> PATH_OR_INDEX_SUPPLIER;
+    static final String INVALID_VALUE_PREFIX;
+    static final Supplier<String> LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER;
+    static final Supplier<String> PATH_OR_INDEX_SUPPLIER;
 
     static {
 
+        INVALID_VALUE_PREFIX = "Illegal value";
         LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER = () -> String.format("This option should be provided either to Spark %s/Writer " +
                         "or configured at the session level prefixed by 'spark.datasource.%s.'",
                 DataFrameReader.class.getSimpleName(),

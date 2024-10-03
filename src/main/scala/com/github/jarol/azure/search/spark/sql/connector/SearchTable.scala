@@ -13,17 +13,20 @@ import java.util
 
 /**
  * [[Table]] implementation for Search dataSource
- * @param _schema table schema (either inferred or user-provided)
+ * @param tableSchema table schema (either inferred or user-provided)
  */
 
-class SearchTable(private val _schema: StructType)
+class SearchTable(
+                   private val tableSchema: StructType,
+                   private val tableName: String
+                 )
   extends Table
     with SupportsRead
       with SupportsWrite {
 
-  override def name(): String = "AzureSearchTable()"
+  override def name(): String = s"AzureSearchTable($tableName)"
 
-  override def schema(): StructType = _schema
+  override def schema(): StructType = tableSchema
 
   override def capabilities(): util.Set[TableCapability] = {
 
