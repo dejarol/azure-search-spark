@@ -65,9 +65,9 @@ object InferSchema {
         }
 
         if (selectedFields.isEmpty) {
-          throw new ConfigException(
+          throw ConfigException.forIllegalOptionValue(
             ReadConfig.SELECT_CONFIG,
-            value,
+            value.mkString(","),
             s"Selected fields (${value.mkString(",")} do not exist"
           )
         } else selectedFields

@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 class SearchIOConfigSpec
   extends BasicSpec {
 
-  private lazy val endpoint = "v1"
+  private lazy val defaultValue = "v1"
   private lazy val emptyConfig = new SearchIOConfig(Map.empty[String, String])
 
   /**
@@ -21,25 +21,39 @@ class SearchIOConfigSpec
       describe("retrieve") {
         it("the azure endpoint") {
 
-          emptyConfig.getEndpoint
+          a [ConfigException] shouldBe thrownBy {
+            emptyConfig.getEndpoint
+          }
 
           createConfig(
-            Map(IOConfig.END_POINT_CONFIG -> endpoint)
-          ).getEndpoint shouldBe endpoint
+            Map(IOConfig.END_POINT_CONFIG -> defaultValue)
+          ).getEndpoint shouldBe defaultValue
         }
 
         it("the api key") {
 
+          a [ConfigException] shouldBe thrownBy {
+            emptyConfig.getAPIkey
+          }
+
           createConfig(
-            Map(IOConfig.API_KEY_CONFIG -> endpoint)
-          ).getAPIkey shouldBe endpoint
+            Map(IOConfig.API_KEY_CONFIG -> defaultValue)
+          ).getAPIkey shouldBe defaultValue
         }
 
         it("the index name") {
 
+          a [ConfigException] shouldBe thrownBy {
+            emptyConfig.getIndex
+          }
+
           createConfig(
-            Map(IOConfig.INDEX_CONFIG -> endpoint)
-          ).getIndex shouldBe endpoint
+            Map(IOConfig.INDEX_CONFIG -> defaultValue)
+          ).getIndex shouldBe defaultValue
+
+          createConfig(
+            Map("path" -> defaultValue)
+          ).getIndex shouldBe defaultValue
         }
       }
     }

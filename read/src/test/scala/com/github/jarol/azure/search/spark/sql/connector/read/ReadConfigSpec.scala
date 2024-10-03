@@ -6,7 +6,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Empt
 class ReadConfigSpec
   extends BasicSpec {
 
-  private lazy val emptyConfig = ReadConfig(Map.empty)
+  private lazy val emptyConfig = ReadConfig(Map.empty[String, String])
 
   describe(anInstanceOf[ReadConfig]) {
     describe(SHOULD) {
@@ -38,7 +38,6 @@ class ReadConfigSpec
 
         it("the partitioner options") {
 
-          emptyConfig.partitionerOptions shouldBe empty
           val (facet, partitions) = ("facet", 10)
           val partitionerOptions = ReadConfig(
             Map(

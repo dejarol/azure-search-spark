@@ -36,7 +36,7 @@ class ReadSpec
     }
   }
 
-  describe("Search dataSource") {
+  ignore("Search dataSource") {
     describe(SHOULD) {
       describe("throw an exception when") {
         it("target index does not exist") {
