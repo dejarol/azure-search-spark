@@ -69,7 +69,7 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
 
     get(key) match {
       case Some(value) => value
-      case None => throw SearchConfig.exceptionForMissingKey(key, prefix, supplier)
+      case None => throw SearchConfig.exceptionForMissingOption(key, prefix, supplier)
     }
   }
 
@@ -118,7 +118,11 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
    */
 
   @throws[ConfigException]
-  protected[config] final def getOrDefaultAs[T](key: String, defaultValue: T, conversion: String => T): T = {
+  protected[config] final def getOrDefaultAs[T](
+                                                 key: String,
+                                                 defaultValue: T,
+                                                 conversion: String => T
+                                               ): T = {
 
     get(key).map {
       SearchConfig.convertOrThrow[T](key, _, conversion)
@@ -159,12 +163,19 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
 
 object SearchConfig {
 
-  @throws[ConfigException]
-  private[config] def exceptionForMissingKey(
-                                              key: String,
-                                              prefix: Option[String],
-                                              supplier: Option[Supplier[String]]
-                                            ): ConfigException = {
+  /**
+   * Create a [[ConfigException]] for a missing key
+   * @param key key
+   * @param prefix key prefix
+   * @param supplier message supplier
+   * @return an exception instance
+   */
+
+  private[config] def exceptionForMissingOption(
+                                                 key: String,
+                                                 prefix: Option[String],
+                                                 supplier: Option[Supplier[String]]
+                                               ): ConfigException = {
 
     ConfigException.forMissingOption(
       key,

@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
+import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters, NoSuchIndexException}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import org.apache.spark.sql.connector.catalog.{SessionConfigSupport, Table, TableProvider}
@@ -44,13 +45,28 @@ class SearchTableProvider
     }
   }
 
+  /**
+   * Get the table for a Search index
+   * @param schema table schema
+   * @param partitioning partitioning
+   * @param properties properties
+   * @return a [[SearchTable]]
+   */
+
   override def getTable(
                          schema: StructType,
                          partitioning: Array[Transform],
                          properties: util.Map[String, String]
                        ): Table = {
 
-    new SearchTable(schema)
+    val config = new SearchIOConfig(
+      JavaScalaConverters.javaMapToScala(properties)
+    )
+
+    new SearchTable(
+      schema,
+      config.getIndex
+    )
   }
 
   override def shortName(): String = Constants.DATASOURCE_NAME

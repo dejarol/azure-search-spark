@@ -4,6 +4,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models.SimpleBean
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
+import org.apache.spark.sql.catalyst.analysis.NoSuchIndexException
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SaveMode}
 
@@ -44,12 +45,14 @@ class ReadSpec
           val indexName = "non-existing"
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          readIndex(
-            indexName,
-            None,
-            None,
-            None
-          )
+          a [NoSuchIndexException] shouldBe thrownBy {
+            readIndex(
+              indexName,
+              None,
+              None,
+              None
+            )
+          }
 
           dropIndexIfExists(indexName)
         }

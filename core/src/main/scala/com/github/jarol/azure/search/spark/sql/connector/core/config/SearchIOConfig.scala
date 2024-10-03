@@ -24,7 +24,50 @@ class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String
 
   def this(dsOptions: Map[String, String]) = this(CaseInsensitiveMap(dsOptions))
 
-  private def unsafelyGetDatasourceConfiguration(key: String): String = {
+  /**
+   * Get the target Search endpoint, at either local of config level
+   * @return the target Search endpoint
+   */
+
+  override def getEndpoint: String = unsafelyGetLocalOrSessionConfiguration(IOConfig.END_POINT_CONFIG)
+
+  /**
+   * Get the target Search API key, at either local of config level
+   * @return the target Search API key
+   */
+
+  override def getAPIkey: String = unsafelyGetLocalOrSessionConfiguration(IOConfig.API_KEY_CONFIG)
+
+  /**
+   * Retrieve the target index name, by looking for the value of options
+   *  - 'path' (defined if the user specified the option or passed an argument to DataframeReader/Writer load/save method
+   *  - 'index' (defined if the user specified the option)
+   * @return the target Search index name
+   */
+
+  override def getIndex: String = {
+
+    get("path")
+      .orElse(get(IOConfig.INDEX_CONFIG))
+      .getOrElse {
+        throw SearchConfig.exceptionForMissingOption(
+          "path",
+          None,
+          Some(ConfigException.PATH_OR_INDEX_SUPPLIER)
+        )
+      }
+  }
+
+  /**
+   * Special method for retrieving a mandatory option that could be set
+   * either locally (by passing it to DataframeReader/Writer) or at the session level
+   * @param key mandatory option
+   * @throws ConfigException if the option misses
+   * @return the option value
+   */
+
+  @throws[ConfigException]
+  private def unsafelyGetLocalOrSessionConfiguration(key: String): String = {
 
     unsafelyGet(
       key,
@@ -33,22 +76,10 @@ class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String
     )
   }
 
-  override def getEndpoint: String = unsafelyGetDatasourceConfiguration(IOConfig.END_POINT_CONFIG)
-
-  override def getAPIkey: String = unsafelyGetDatasourceConfiguration(IOConfig.API_KEY_CONFIG)
-
-  override def getIndex: String = {
-
-    get("path")
-      .orElse(get(IOConfig.INDEX_CONFIG))
-      .getOrElse {
-        throw SearchConfig.exceptionForMissingKey(
-          "path",
-          None,
-          Some(ConfigException.PATH_OR_INDEX_SUPPLIER)
-        )
-      }
-  }
+  /**
+   * Create a [[SearchIndexClient]] for creating, deleting, updating, or configure a search index
+   * @return a Search index client
+   */
 
   private def getSearchIndexClient: SearchIndexClient = {
 
@@ -58,7 +89,19 @@ class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String
       .buildClient
   }
 
+  /**
+   * Get a [[SearchIndex]] definition
+   * @return the definition of a Search index
+   */
+
   private def getSearchIndex: SearchIndex = getSearchIndexClient.getIndex(getIndex)
+
+  /**
+   * Get a [[SearchClient]] for
+   *  - searching your indexed documents
+   *  - adding, updating or deleting documents from an index
+   * @return a Search index
+   */
 
   private def getSearchClient: SearchClient = getSearchIndexClient.getSearchClient(getIndex)
 
