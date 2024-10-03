@@ -9,21 +9,13 @@ class WriteConfigSpec
   extends BasicSpec
     with Inspectors {
 
-  /**
-   * Create a [[WriteConfig]]
-   * @param locals local options
-   * @return write config
-   */
-
-  private def writeConfig(locals: Map[String, String]): WriteConfig = WriteConfig(locals, Map.empty[String, String])
-
   private def assertDefinedAndContaining(actual: Option[Seq[String]], expected: Seq[String]): Unit = {
 
     actual shouldBe defined
     actual.get should contain theSameElementsAs expected
   }
 
-  private lazy val emptyConfig: WriteConfig = writeConfig(Map.empty)
+  private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
 
   describe(anInstanceOf[WriteConfig]) {
     describe(SHOULD) {
@@ -32,7 +24,7 @@ class WriteConfigSpec
 
           val batchSize = 25
           emptyConfig.batchSize shouldBe WriteConfig.DEFAULT_BATCH_SIZE_VALUE
-          writeConfig(
+          WriteConfig(
             Map(
               WriteConfig.BATCH_SIZE_CONFIG -> s"$batchSize"
             )
@@ -59,7 +51,7 @@ class WriteConfigSpec
           forAll(configMaps) {
             configMap =>
 
-              val wConfig = writeConfig(configMap)
+              val wConfig = WriteConfig(configMap)
               wConfig.maybeUserSpecifiedAction shouldBe Some(action)
               wConfig.overallAction shouldBe action
           }
@@ -69,7 +61,7 @@ class WriteConfigSpec
 
           val colName = "actionCol"
           emptyConfig.actionColumn shouldBe empty
-          writeConfig(
+          WriteConfig(
             Map(
               WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> colName
             )
@@ -90,7 +82,7 @@ class WriteConfigSpec
             val (facetable, filterable) = (Seq("f1"), Seq("f2"))
             val (hidden, searchable, sortable) = (Seq("f3"), Seq("f4"), Seq("f5"))
             val indexActionColumn = "world"
-            val options = writeConfig(
+            val options = WriteConfig(
               Map(
                 s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.KEY_FIELD}" -> keyField,
                 s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.FACETABLE_FIELDS}" -> facetable.mkString(","),

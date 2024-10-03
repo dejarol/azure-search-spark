@@ -23,10 +23,10 @@ object InferSchema {
 
   @throws[InferSchemaException]
   def forIndex(
-                           name: String,
-                           searchFields: Seq[SearchField],
-                           select: Option[Seq[String]]
-                         ): StructType = {
+                name: String,
+                searchFields: Seq[SearchField],
+                select: Option[Seq[String]]
+              ): StructType = {
 
     // If there's no retrievable field, throw an exception
     val nonHiddenFields: Seq[SearchField] = searchFields.filterNot(_.isHidden)

@@ -6,15 +6,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{Empt
 class ReadConfigSpec
   extends BasicSpec {
 
-  /**
-   * Create an instance of [[ReadConfig]]
-   * @param local local options
-   * @return a read config
-   */
-
-  private def readConfig(local: Map[String, String]): ReadConfig = ReadConfig(local, Map.empty[String, String])
-
-  private lazy val emptyConfig = readConfig(Map.empty)
+  private lazy val emptyConfig = ReadConfig(Map.empty)
 
   describe(anInstanceOf[ReadConfig]) {
     describe(SHOULD) {
@@ -23,7 +15,7 @@ class ReadConfigSpec
 
           val expected = "filterValue"
           emptyConfig.filter shouldBe empty
-          readConfig(
+          ReadConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> expected
             )
@@ -34,7 +26,7 @@ class ReadConfigSpec
 
           val expected = Seq("f1", "f2")
           emptyConfig.select shouldBe empty
-          val actual: Option[Seq[String]] = readConfig(
+          val actual: Option[Seq[String]] = ReadConfig(
             Map(
               ReadConfig.SELECT_CONFIG -> expected.mkString(",")
             )
@@ -48,7 +40,7 @@ class ReadConfigSpec
 
           emptyConfig.partitionerOptions shouldBe empty
           val (facet, partitions) = ("facet", 10)
-          val partitionerOptions = readConfig(
+          val partitionerOptions = ReadConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> "filter",
               ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.FACET_FIELD_CONFIG -> facet,
@@ -69,7 +61,7 @@ class ReadConfigSpec
 
           it("a user provided partitioner") {
 
-            val config = readConfig(
+            val config = ReadConfig(
               Map(
                 ReadConfig.PARTITIONER_CONFIG -> classOf[EmptyPartitioner].getName
               )

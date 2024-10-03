@@ -1,80 +1,123 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.config;
 
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
+import org.apache.spark.sql.DataFrameReader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+import java.util.function.Supplier;
+
 /**
- * Exception related to datasource configuration issues
+ * Exception for datasource configuration issues
  */
 
 public class ConfigException
         extends IllegalArgumentException {
 
-    static final String INVALID_VALUE_PREFIX = "Invalid value";
+    static final String INVALID_VALUE_PREFIX = "Illegal value";
+    static Supplier<String> LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER;
+    static Supplier<String> PATH_OR_INDEX_SUPPLIER;
 
-    /**
-     * Create an instance
-     * @param key configuration key
-     * @param value configuration value
-     * @param message error message
-     * @param cause exception cause
-     */
+    static {
 
-    private ConfigException(
-            String key,
-            Object value,
-            String message,
-            @Nullable Throwable cause
-    ) {
-        super(String.format(
-                "%s (%s) for configuration '%s'. Reason: %s",
-                        INVALID_VALUE_PREFIX,
-                        value,
-                        key,
-                        message
-                ),
-                cause
+        LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER = () -> String.format("This option should be provided either to Spark %s/Writer " +
+                        "or configured at the session level prefixed by 'spark.datasource.%s.'",
+                DataFrameReader.class.getSimpleName(),
+                Constants.DATASOURCE_NAME
+        );
+
+        PATH_OR_INDEX_SUPPLIER = () -> String.format("The index name should be provided either as option 'path' " +
+                        "or option '%s' to Spark %s/Writer or passed as argument to their load()/save() methods",
+                IOConfig.INDEX_CONFIG,
+                DataFrameReader.class.getSimpleName()
         );
     }
 
     /**
-     * Create an instance with a customized message for a key-value pair
-     * @param key key
-     * @param value value
-     * @param message message
+     * Create an instance
+     * @param message message supplier
+     * @param cause cause
      */
 
-    public ConfigException(
-            String key,
-            Object value,
-            String message
+    private ConfigException(
+            @NotNull Supplier<String> message,
+            @Nullable Throwable cause
     ) {
-        this(key, value, message, null);
+        super(message.get(), cause);
     }
 
     /**
-     * Create an instance
+     * Create an instance for a missing option
+     * @param key option key
+     * @param prefix key prefix
+     * @param extraInfoSupplier supplier for extending exception message
+     * @return an instance
+     */
+
+   public static @NotNull ConfigException forMissingOption(
+           String key,
+           @Nullable String prefix,
+           @Nullable Supplier<String> extraInfoSupplier
+   ) {
+
+        String prefixPlusKey = Objects.isNull(prefix) ? key : prefix.concat(key);
+        String extraInfo = Objects.isNull(extraInfoSupplier) ? "": ". ".concat(extraInfoSupplier.get());
+        Supplier<String> messageSupplier = () -> String.format(
+                "Missing required option '%s'%s",
+                prefixPlusKey,
+                extraInfo
+        );
+
+        return new ConfigException(
+                messageSupplier,
+                null
+        );
+   }
+
+    /**
+     * Create an instance for an option with an illegal value
      * @param key configuration key
      * @param value configuration value
      * @param cause exception cause
      */
 
-    public ConfigException(
-            String key,
-            Object value,
-            @NotNull Throwable cause
-    ) {
-        this(key, value, cause.getMessage(), cause);
-    }
+   public static @NotNull ConfigException forIllegalOptionValue(
+           String key,
+           String value,
+           @NotNull Throwable cause
+   ) {
+
+       Supplier<String> supplier = () -> String.format(
+               "Illegal value for option '%s' (%s). Reason: %s",
+               key, value, cause.getMessage()
+       );
+       return new ConfigException(
+               supplier,
+               cause
+       );
+   }
 
     /**
-     * Create an instance with custom message
-     * @param message exception message
+     * Create an instance for an option with an illegal value
+     * @param key configuration key
+     * @param value configuration value
+     * @param reason reason
      */
 
-    public ConfigException(
-            String message
+    public static @NotNull ConfigException forIllegalOptionValue(
+            String key,
+            String value,
+            String reason
     ) {
-        super(message);
+
+        Supplier<String> supplier = () -> String.format(
+                "Illegal value for option '%s' (%s). Reason: %s",
+                key, value, reason
+        );
+        return new ConfigException(
+                supplier,
+                null
+        );
     }
 }

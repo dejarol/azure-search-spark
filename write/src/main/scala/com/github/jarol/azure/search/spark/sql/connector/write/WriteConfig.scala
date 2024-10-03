@@ -3,19 +3,17 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchIOConfig, UsageMode}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Write configuration
- * @param localOptions  write options passed to the dataSource
- * @param globalOptions write options retrieved from the underlying Spark configuration
+ * @param dsOptions  write options passed to the dataSource
  */
 
-case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[String],
-                       override protected val globalOptions: CaseInsensitiveMap[String])
-  extends SearchIOConfig(localOptions, globalOptions) {
+case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[String])
+  extends SearchIOConfig(dsOptions) {
 
   /**
    * Index a batch of documents on target index
@@ -81,7 +79,7 @@ case class WriteConfig(override protected val localOptions: CaseInsensitiveMap[S
 
     val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
     SearchFieldsOptions(
-      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD),
+      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD, Some(WriteConfig.CREATE_INDEX_PREFIX), None),
       createIndexConfig.getAsList(WriteConfig.FILTERABLE_FIELDS),
       createIndexConfig.getAsList(WriteConfig.SORTABLE_FIELDS),
       createIndexConfig.getAsList(WriteConfig.HIDDEN_FIELDS),
@@ -109,31 +107,15 @@ object WriteConfig {
   final val FACETABLE_FIELDS = "facetableFields"
 
   /**
-   * Create an instance from two single maps
-   * @param localOptions local options
-   * @param globalOptions global options
+   * Create an instance from a simple map
+   * @param dsOptions local options
    * @return a write config
    */
 
-  def apply(localOptions: Map[String, String], globalOptions: Map[String, String]): WriteConfig = {
+  def apply(dsOptions: Map[String, String]): WriteConfig = {
 
     WriteConfig(
-      CaseInsensitiveMap(localOptions),
-      CaseInsensitiveMap(globalOptions)
-    )
-  }
-
-  /**
-   * Create an instance from some local options
-   * @param options local options
-   * @return a write config instance with given local options and global options retrieved from the underlying [[org.apache.spark.SparkConf]]
-   */
-
-  def apply(options: Map[String, String]): WriteConfig = {
-
-    WriteConfig(
-      options,
-      SearchIOConfig.allConfigsFromActiveSessionForMode(UsageMode.WRITE)
+      CaseInsensitiveMap(dsOptions)
     )
   }
 
