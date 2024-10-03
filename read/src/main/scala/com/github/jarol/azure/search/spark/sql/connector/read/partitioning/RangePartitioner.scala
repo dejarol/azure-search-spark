@@ -67,7 +67,7 @@ object RangePartitioner {
 
     // Map the left side to a ConfigException
     maybeConfigExceptionCauseOrFieldType.left.map {
-      cause => new ConfigException(
+      cause => ConfigException.forIllegalOptionValue(
         ReadConfig.PARTITION_FIELD_CONFIG,
         name,
         cause
