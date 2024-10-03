@@ -3,38 +3,28 @@ package com.github.jarol.azure.search.spark.sql.connector.core.config
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
+import java.util.function.Supplier
 import scala.util.Try
 
 /**
  * Parent class for all Search configurations
- * @param localOptions options passed to the dataSource
- * @param globalOptions options retrieved from the underlying Spark configuration
+ * @param dsOptions options passed to the dataSource
  */
 
-class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
-                   protected val globalOptions: CaseInsensitiveMap[String])
+class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
   extends Serializable {
 
   /**
-   * Secondary constructor
-   * @param local local options
-   * @param global global options
+   * Create an instance from a simple map
+   * @param dsOptions local options
    */
 
-  def this(local: Map[String, String], global: Map[String, String]) = {
+  def this(dsOptions: Map[String, String]) = {
 
     this(
-      CaseInsensitiveMap(local),
-      CaseInsensitiveMap(global)
+      CaseInsensitiveMap(dsOptions)
     )
   }
-
-  /**
-   * Whether this config is empty or not (true only if both local and global options are empty)
-   * @return config emptiness flag
-   */
-
-  final def isEmpty: Boolean = localOptions.isEmpty && globalOptions.isEmpty
 
   /**
    * Safely get the value of a key by inspecting local options and then [[org.apache.spark.SparkConf]] options
@@ -42,11 +32,7 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
    * @return the optional value related to given key
    */
 
-  final def get(key: String): Option[String] = {
-
-    localOptions.get(key)
-      .orElse(globalOptions.get(key))
-  }
+  final def get(key: String): Option[String] = dsOptions.get(key)
 
   /**
    * Safely get a typed value for a key
@@ -68,32 +54,46 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
   /**
    * Get the value of a key, or throw an exception if not found
    * @param key key
+   * @param prefix optional key prefix
+   * @param supplier optional message supplier for better exception explanation
    * @throws ConfigException if the key is not found
    * @return the value related to given key, converted using given converter
    */
 
   @throws[ConfigException]
-  final def unsafelyGet(key: String): String = {
+  final def unsafelyGet(
+                         key: String,
+                         prefix: Option[String],
+                         supplier: Option[Supplier[String]]
+                       ): String = {
 
     get(key) match {
       case Some(value) => value
-      case None => throw new ConfigException(s"Missing required option $key")
+      case None => throw SearchConfig.exceptionForMissingKey(key, prefix, supplier)
     }
   }
 
   /**
-   * Get the value of a key, or throw an exception if not found
+   * Get the value of a key as a typed value by applying a conversion
    * @param key key
-   * @throws ConfigException if the key is not found
+   * @param conversion conversion
+   * @param prefix optional key prefix
+   * @param supplier optional message supplier
+   * @throws ConfigException if the key is not found or the conversion fails
    * @return the value related to given key, converted using given converter
    */
 
   @throws[ConfigException]
-  final def unsafelyGetAs[T](key: String, conversion: String => T): T = {
+  final def unsafelyGetAs[T](
+                              key: String,
+                              conversion: String => T,
+                              prefix: Option[String],
+                              supplier: Option[Supplier[String]]
+                            ): T = {
 
     SearchConfig.convertOrThrow[T](
       key,
-      unsafelyGet(key),
+      unsafelyGet(key, prefix, supplier),
       conversion
     )
   }
@@ -134,8 +134,7 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
   final def getAllWithPrefix(prefix: String): SearchConfig = {
 
     new SearchConfig(
-      SearchConfig.allWithPrefix(localOptions, prefix),
-      SearchConfig.allWithPrefix(globalOptions, prefix)
+      SearchConfig.allWithPrefix(dsOptions, prefix)
     )
   }
 
@@ -160,6 +159,20 @@ class SearchConfig(protected val localOptions: CaseInsensitiveMap[String],
 
 object SearchConfig {
 
+  @throws[ConfigException]
+  private[config] def exceptionForMissingKey(
+                                              key: String,
+                                              prefix: Option[String],
+                                              supplier: Option[Supplier[String]]
+                                            ): ConfigException = {
+
+    ConfigException.forMissingOption(
+      key,
+      prefix.orNull,
+      supplier.orNull
+    )
+  }
+
   /**
    * Convert the value related to a key, throwing a [[ConfigException]] if conversion fails
    * @param key key
@@ -176,7 +189,7 @@ object SearchConfig {
     Try {
       conversion(value)
     }.toEither match {
-      case Left(exception) => throw new ConfigException(key, value, exception)
+      case Left(exception) => throw ConfigException.forIllegalOptionValue(key, value, exception)
       case Right(value) => value
     }
   }

@@ -15,7 +15,7 @@ case class RangePartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): util.List[SearchPartition] = {
 
     val partitionerOptions = readConfig.partitionerOptions
-    val partitionFieldName = partitionerOptions.unsafelyGet(ReadConfig.PARTITION_FIELD_CONFIG)
+    val partitionFieldName = partitionerOptions.unsafelyGet(ReadConfig.PARTITION_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
 
     // Get either a ConfigException reporting illegal configurations, or the collection of range value
     val either: Either[ConfigException, Seq[String]] = for {
@@ -125,10 +125,10 @@ object RangePartitioner {
    * @return either a [[ConfigException]] or the range values
    */
 
-  protected[partitioning] def getPartitionRangeValues(
-                                                       partitioningField: SearchField,
-                                                       options: SearchConfig
-                                                     ): Either[ConfigException, Seq[String]] = {
+  private def getPartitionRangeValues(
+                                       partitioningField: SearchField,
+                                       options: SearchConfig
+                                     ): Either[ConfigException, Seq[String]] = {
 
     val rangeFactory = partitioningField.getType match {
       case SearchFieldDataType.DATE_TIME_OFFSET => RangeFactory.Date
@@ -138,9 +138,9 @@ object RangePartitioner {
     }
 
     rangeFactory.createPartitionBounds(
-      options.unsafelyGet(ReadConfig.LOWER_BOUND_CONFIG),
-      options.unsafelyGet(ReadConfig.UPPER_BOUND_CONFIG),
-      options.unsafelyGetAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt)
+      options.unsafelyGet(ReadConfig.LOWER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
+      options.unsafelyGet(ReadConfig.UPPER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
+      options.unsafelyGetAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
     )
   }
 }

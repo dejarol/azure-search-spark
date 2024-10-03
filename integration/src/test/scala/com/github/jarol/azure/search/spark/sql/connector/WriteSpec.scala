@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.models.IndexActionType
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models.{ActionTypeBean, SimpleBean}
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.SaveMode
@@ -10,7 +11,7 @@ import java.time.LocalDate
 class WriteSpec
   extends SearchSparkSpec {
 
-  describe(s"Datasource '${SearchTableProvider.SHORT_NAME}'") {
+  describe(s"Search dataSource") {
     describe(SHOULD) {
       describe("create an index (if it does not exist)") {
         it("with as many fields as many columns") {
@@ -22,7 +23,7 @@ class WriteSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(documents).write.format(SearchTableProvider.SHORT_NAME)
+          toDF(documents).write.format(Constants.DATASOURCE_NAME)
             .options(optionsForAuthAndIndex(indexName))
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
             .mode(SaveMode.Append)
@@ -46,7 +47,7 @@ class WriteSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(documents).write.format(SearchTableProvider.SHORT_NAME)
+          toDF(documents).write.format(Constants.DATASOURCE_NAME)
             .options(optionsForAuthAndIndex(indexName))
             .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
             .option(WriteConfig.INDEX_ACTION_COLUMN_CONFIG, indexActionColumn)

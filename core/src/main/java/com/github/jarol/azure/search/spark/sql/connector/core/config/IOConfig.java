@@ -9,10 +9,6 @@ import java.io.Serializable;
 public interface IOConfig
         extends Serializable {
 
-    String PREFIX = "spark.azure.search.";
-    String READ_PREFIX = PREFIX + "read.";
-    String WRITE_PREFIX = PREFIX + "write.";
-
     String END_POINT_CONFIG = "endpoint";
     String API_KEY_CONFIG = "apiKey";
     String INDEX_CONFIG = "index";

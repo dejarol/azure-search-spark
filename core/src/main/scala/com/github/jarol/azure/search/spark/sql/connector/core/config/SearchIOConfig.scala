@@ -6,40 +6,49 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
-import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Parent class for read/write configurations
- * @param localOptions  options passed to the dataSource
- * @param globalOptions options retrieved from the underlying Spark configuration
+ * @param dsOptions  options passed to the dataSource
  */
 
-class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[String],
-                     override protected val globalOptions: CaseInsensitiveMap[String])
-  extends SearchConfig(localOptions, globalOptions)
+class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String])
+  extends SearchConfig(dsOptions)
     with IOConfig {
 
   /**
-   * Create a new instance from two simple maps
-   * @param locals options passed to the dataSource
-   * @param globals options from the underlying Spark configuration
+   * Create a new instance from a simple map
+   * @param dsOptions options passed to the dataSource
    */
 
-  def this(locals: Map[String, String], globals: Map[String, String]) = {
+  def this(dsOptions: Map[String, String]) = this(CaseInsensitiveMap(dsOptions))
 
-    this(
-      CaseInsensitiveMap(locals),
-      CaseInsensitiveMap(globals)
+  private def unsafelyGetDatasourceConfiguration(key: String): String = {
+
+    unsafelyGet(
+      key,
+      None,
+      Some(ConfigException.LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER)
     )
   }
 
-  override def getEndpoint: String = unsafelyGet(IOConfig.END_POINT_CONFIG)
+  override def getEndpoint: String = unsafelyGetDatasourceConfiguration(IOConfig.END_POINT_CONFIG)
 
-  override def getAPIkey: String = unsafelyGet(IOConfig.API_KEY_CONFIG)
+  override def getAPIkey: String = unsafelyGetDatasourceConfiguration(IOConfig.API_KEY_CONFIG)
 
-  override def getIndex: String = unsafelyGet(IOConfig.INDEX_CONFIG)
+  override def getIndex: String = {
+
+    get("path")
+      .orElse(get(IOConfig.INDEX_CONFIG))
+      .getOrElse {
+        throw SearchConfig.exceptionForMissingKey(
+          "path",
+          None,
+          Some(ConfigException.PATH_OR_INDEX_SUPPLIER)
+        )
+      }
+  }
 
   private def getSearchIndexClient: SearchIndexClient = {
 
@@ -105,37 +114,6 @@ class SearchIOConfig(override protected val localOptions: CaseInsensitiveMap[Str
       JavaScalaConverters.listToSeq(
         si.getFields
       )
-    }
-  }
-}
-
-object SearchIOConfig {
-
-  /**
-   * Extract all options from given SparkConf that starts with the prefix of a usage mode
-   * @param sparkConf an instance of [[SparkConf]]
-   * @param mode usage mode
-   * @return all key-value pairs whose keys start with given mode prefix
-   */
-
-  private[config] def allConfigsForMode(sparkConf: SparkConf, mode: UsageMode): Map[String, String] = {
-
-   sparkConf
-      .getAllWithPrefix(mode.prefix())
-      .toMap
-  }
-
-  /**
-   * Retrieve all options related to a mode from the active SparkSession (if any)
-   * @param mode usage mode
-   * @return an empty Map if no [[SparkSession]] is active, all options related to the mode otherwise
-   */
-
-  def allConfigsFromActiveSessionForMode(mode: UsageMode): Map[String, String] = {
-
-    SparkSession.getActiveSession match {
-      case Some(value) => allConfigsForMode(value.sparkContext.getConf, mode)
-      case None => Map.empty
     }
   }
 }

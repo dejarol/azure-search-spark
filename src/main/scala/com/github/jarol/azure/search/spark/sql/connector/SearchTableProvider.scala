@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{NoSuchIndexException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters, NoSuchIndexException}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
+import org.apache.spark.sql.connector.catalog.{SessionConfigSupport, Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.sources.DataSourceRegister
 import org.apache.spark.sql.types.StructType
@@ -16,7 +16,8 @@ import java.util
 
 class SearchTableProvider
   extends TableProvider
-    with DataSourceRegister {
+    with SessionConfigSupport
+      with DataSourceRegister {
 
   /**
    * Infer the schema for a target Search index
@@ -52,17 +53,9 @@ class SearchTableProvider
     new SearchTable(schema)
   }
 
-  override def shortName(): String = SearchTableProvider.SHORT_NAME
+  override def shortName(): String = Constants.DATASOURCE_NAME
 
-  override def supportsExternalMetadata(): Boolean = true
+  override def supportsExternalMetadata() = true
 
-}
-
-object SearchTableProvider {
-
-  /**
-   * Datasource format
-   */
-
-  final val SHORT_NAME: String = "azuresearch"
+  override def keyPrefix(): String = Constants.DATASOURCE_NAME
 }

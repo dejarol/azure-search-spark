@@ -2,20 +2,18 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.models.SearchOptions
 import com.azure.search.documents.util.SearchPagedIterable
-import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig, UsageMode}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, SinglePartitionPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Read configuration
- * @param localOptions  read options passed to the dataSource
- * @param globalOptions read options retrieved from the underlying Spark configuration
+ * @param dsOptions  read options passed to the dataSource
  */
 
-case class ReadConfig(override protected val localOptions: CaseInsensitiveMap[String],
-                      override protected val globalOptions: CaseInsensitiveMap[String])
-  extends SearchIOConfig(localOptions, globalOptions) {
+case class ReadConfig(override protected val dsOptions: CaseInsensitiveMap[String])
+  extends SearchIOConfig(dsOptions) {
 
   /**
    * Execute a Search on target index
@@ -85,32 +83,15 @@ object ReadConfig {
   final val UPPER_BOUND_CONFIG = "upperBound"
 
   /**
-   * Create an instance from both local and global options
-   * @param locals local options
-   * @param globals global options
+   * Create an instance from a simple map
+   * @param dsOptions dataSource options
    * @return a read config
    */
 
-  def apply(locals: Map[String, String], globals: Map[String, String]): ReadConfig = {
+  def apply(dsOptions: Map[String, String]): ReadConfig = {
 
     ReadConfig(
-      CaseInsensitiveMap(locals),
-      CaseInsensitiveMap(globals)
-    )
-  }
-
-  /**
-   * Create an instance from given options, retrieving SparkConf-related options
-   * from the underlying active [[org.apache.spark.sql.SparkSession]] (if any)
-   * @param options options passed via [[org.apache.spark.sql.DataFrameReader.option]] method
-   * @return an instance of [[ReadConfig]]
-   */
-
-  def apply(options: Map[String, String]): ReadConfig = {
-
-    ReadConfig(
-      options,
-      SearchIOConfig.allConfigsFromActiveSessionForMode(UsageMode.READ)
+      CaseInsensitiveMap(dsOptions)
     )
   }
 }

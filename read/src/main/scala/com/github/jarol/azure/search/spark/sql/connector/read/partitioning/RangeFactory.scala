@@ -136,7 +136,7 @@ trait RangeFactory[T, D] {
    tryFromString(value)
      .toEither.left.map {
       exception =>
-        new ConfigException(key, value, exception)
+        ConfigException.forIllegalOptionValue(key, value, exception)
     }
   }
 
@@ -151,7 +151,7 @@ trait RangeFactory[T, D] {
 
     if (ordering.lt(upper, lower)) {
       Left(
-        new ConfigException(
+        ConfigException.forIllegalOptionValue(
           ReadConfig.LOWER_BOUND_CONFIG,
           asString(lower),
           "Lower bound cannot be greater than upper bound"
@@ -172,9 +172,9 @@ trait RangeFactory[T, D] {
 
     if (numPartitions <= 1) {
       Left(
-        new ConfigException(
+        ConfigException.forIllegalOptionValue(
           ReadConfig.NUM_PARTITIONS_CONFIG,
-          numPartitions,
+          s"$numPartitions",
           "should be greater than 1"
         )
       )
