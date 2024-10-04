@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaCompatibilityException, SchemaUtils}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import org.apache.spark.sql.types.StructField
 
 /**

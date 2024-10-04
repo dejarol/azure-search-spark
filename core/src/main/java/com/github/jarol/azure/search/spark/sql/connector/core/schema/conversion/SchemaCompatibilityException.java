@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema;
+package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion;
 
 import com.azure.search.documents.indexes.models.SearchField;
 import org.apache.spark.sql.types.StructField;
