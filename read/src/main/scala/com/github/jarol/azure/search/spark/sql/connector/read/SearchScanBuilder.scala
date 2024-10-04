@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
+import org.apache.spark.sql.catalyst.analysis.NoSuchIndexException
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -15,24 +16,17 @@ class SearchScanBuilder(private val schema: StructType,
 
   /**
    * Build the scan
-   * @throws ScanBuilderException if the Scan cannot be built (see [[ScanBuilderException]]'s documentation)
+   * @throws NoSuchIndexException if the target index does not exist
    * @return a scan to be used for Search DataSource
    */
 
-  @throws[ScanBuilderException]
+  @throws[NoSuchIndexException]
   override def build(): Scan = {
 
     if (!readConfig.indexExists) {
-      throw ScanBuilderException.causedByNonExistingIndex(readConfig.getIndex)
+      throw new NoSuchIndexException(readConfig.getIndex)
     } else {
-      ReadMappingSupplier.get(schema, readConfig.getSearchIndexFields, readConfig.getIndex) match {
-        case Left(value) => throw new ScanBuilderException(value)
-        case Right(value) =>
-          val converters = value.map {
-            case (k, v) => (k.name, v)
-          }
-          new SearchScan(schema, readConfig, converters)
-      }
+      new SearchScan(schema, readConfig)
     }
   }
 }

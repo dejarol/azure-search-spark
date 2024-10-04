@@ -1,18 +1,17 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}
+import org.apache.spark.sql.types.StructType
 
 /**
  * Partition reader factory for Search dataSource
  * @param readConfig read configuration
- * @param converters map with keys being document keys and values being converters from Search document properties to Spark internal objects
  */
 
 class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
-                                   private val converters: Map[String, ReadConverter])
+                                   private val schema: StructType)
   extends PartitionReaderFactory {
 
   /**
@@ -23,10 +22,20 @@ class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
    */
 
   @throws[UnexpectedPartitionTypeException]
+  @throws[]
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
     partition match {
-      case sp: SearchPartition => new SearchPartitionReader(readConfig, converters, sp)
+      case sp: SearchPartition =>
+        val documentConverter = SearchDocumentToInternalRowConverter.build(
+          schema,
+          readConfig.getSearchIndexFields
+        ) match {
+          case Left(value) => throw value
+          case Right(value) => value
+        }
+
+        new SearchPartitionReader(readConfig, documentConverter, sp)
       case _ => throw new UnexpectedPartitionTypeException(partition.getClass)
     }
   }

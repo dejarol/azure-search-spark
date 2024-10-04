@@ -1,19 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.ReadConverter
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
+import org.apache.spark.sql.types.StructType
 
 /**
  * Batch for Search dataSource
  * @param readConfig read configuration
- * @param converters map with keys being document keys and values being converters from Search document properties to Spark internal objects
  */
 
 class SearchBatch(private val readConfig: ReadConfig,
-                  private val converters: Map[String, ReadConverter])
+                  private val schema: StructType)
   extends Batch
     with Logging {
 
@@ -43,5 +42,5 @@ class SearchBatch(private val readConfig: ReadConfig,
     }
   }
 
-  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, converters)
+  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, schema)
 }
