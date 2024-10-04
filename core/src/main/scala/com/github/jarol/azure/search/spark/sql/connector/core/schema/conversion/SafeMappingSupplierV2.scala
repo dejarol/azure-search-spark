@@ -2,31 +2,35 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, toSearchFieldOperations, toSearchTypeOperations, toSparkTypeOperations}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema._
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations._
 import org.apache.spark.sql.types.{DataType, StructField}
 
 import java.util
 
 trait SafeMappingSupplierV2[A] {
 
-  private type TOutput = Either[SchemaCompatibilityException, Map[FieldAdapter, A]]
+  private type TOutput = Either[Seq[MappingViolation], Map[FieldAdapter, A]]
 
-  def buildMapping(
+  def build(
              schema: Seq[StructField],
-             searchFields: Seq[SearchField],
-             indexName: String
+             searchFields: Seq[SearchField]
            ): TOutput = {
 
-    if (!SchemaUtils.allSchemaFieldsExist(schema, searchFields)) {
-      exceptionForMissingFields(
-        SchemaUtils.getMissingSchemaFields(schema, searchFields),
-        indexName
-      )
+    val eitherViolationOrConverter = maybeComplexObjectMapping(schema, searchFields, None)
+    val violations = eitherViolationOrConverter.values.collect {
+      case Left(v) => v
+    }.toSeq
+
+    if (violations.nonEmpty) {
+      Left(violations)
     } else {
-      maybeComplexObjectMapping(schema, searchFields, None)
-        .left.map {
-          new SchemaCompatibilityException(_)
+
+      Right(
+        eitherViolationOrConverter.collect {
+          case (k, Right(v)) => (k, v)
         }
+      )
     }
   }
 
@@ -34,69 +38,62 @@ trait SafeMappingSupplierV2[A] {
                                          schema: Seq[StructField],
                                          searchFields: Seq[SearchField],
                                          prefix: Option[String]
-                                       ): Either[String, Map[FieldAdapter, A]] = {
+                                       ): Map[FieldAdapter, Either[MappingViolation, A]] = {
 
-    // Match each Spark field with its namesake Search field
-    val schemaAndSearchFields = SchemaUtils.matchNamesakeFields(schema, searchFields)
-    val converters = schemaAndSearchFields.map {
-      case (k, v) => (new FieldAdapter(k), getConverterFor(k, v, prefix))
-    }.collect {
-      case (k, Right(v)) => (k, v)
-    }
+    schema.map {
+      schemaField =>
+        (
+          new FieldAdapter(schemaField),
+          searchFields.collectFirst {
+            case sef if sef.sameNameOf(schemaField) => sef
+          }.toRight(schemaField).left.map {
+            sf => new MissingField(sf, prefix.orNull)
+          }.flatMap {
+            searchField =>
+              getConverterFor(schemaField, searchField, prefix)
+          }
+        )
+    }.toMap
+  }
 
-    val incompatibleFields = schemaAndSearchFields.keySet.map(_.name)
-      .diff(converters.keySet.map(_.name))
+  private def getConverterFor(
+                               schemaField: StructField,
+                               searchField: SearchField,
+                               prefix: Option[String]
+                             ): Either[MappingViolation, A] = {
 
-    if (incompatibleFields.nonEmpty) {
-      Left("")
+    // Depending on Spark and Search types, detect the converter (if any)
+    val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
+    if (sparkType.isAtomic && searchFieldType.isAtomic) {
+      // atomic types
+      eitherViolationOrMappingForAtomic(schemaField, searchField, prefix)
+    } else if (sparkType.isCollection && searchFieldType.isCollection) {
+      // array types
+      eitherViolationOrConverterForArrays(sparkType, searchField, prefix)
+    } else if (sparkType.isComplex && searchFieldType.isComplex) {
+      // complex types
+      eitherViolationOrConverterForComplex(schemaField, searchField, prefix)
+    } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
+      // geo points
+      eitherViolationOrConverterForGeoPoints(schemaField, prefix)
     } else {
-      Right(converters)
+      Left(
+        new IncompatibleType(schemaField, searchField, prefix.orNull)
+      )
     }
   }
 
-  /**
-   * Create a Left that will contain a message reporting non-existing schema fields
-   *
-   * @param fields non-existing schema fields
-   * @param index  index name
-   * @return a Left instance
-   */
-
-  private def exceptionForMissingFields(
-                                         fields: Seq[String],
-                                         index: String
-                                       ): TOutput = {
-
-    Left(
-      SchemaCompatibilityException.forMissingFields(
-        index,
-        JavaScalaConverters.seqToList(fields)
-      )
-    )
-  }
-
-  protected def getConverterFor(
-                                 schemaField: StructField,
-                                 searchField: SearchField,
-                                 prefix: Option[String]
-                               ): Either[String, A] = {
+  private def eitherViolationOrMappingForAtomic(
+                                                 schemaField: StructField,
+                                                 searchField: SearchField,
+                                                 prefix: Option[String]
+                                               ): Either[MappingViolation, A] = {
 
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
-    if (!searchField.sameNameOf(schemaField)) {
-      Left("different name")
-    } else {
-      if (sparkType.isAtomic && searchFieldType.isAtomic) {
-        forAtomicTypes(sparkType, searchFieldType)
-      } else if (sparkType.isCollection && searchFieldType.isCollection) {
-        converterForArrayType(sparkType, searchField, prefix)
-      } else if (sparkType.isComplex && searchFieldType.isComplex) {
-        converterForComplexType(sparkType, searchField, prefix.map(_.concat(searchField.getName)))
-      } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
-        converterForGeoPoint(sparkType)
-      } else {
-        Left("boh!")
+    forAtomicTypes(sparkType, searchFieldType)
+      .toRight().left.map {
+        _ => new IncompatibleType(schemaField, searchField, prefix.orNull)
       }
-    }
   }
 
   /**
@@ -109,7 +106,7 @@ trait SafeMappingSupplierV2[A] {
    * @return an optional converter for given types
    */
 
-  protected def forAtomicTypes(spark: DataType, search: SearchFieldDataType): Either[String, A]
+  protected def forAtomicTypes(spark: DataType, search: SearchFieldDataType): Option[A]
 
   /**
    * Safely retrieve a converter for a collection type
@@ -120,11 +117,11 @@ trait SafeMappingSupplierV2[A] {
    * @return a converter for collections
    */
 
-  private def converterForArrayType(
+  private def eitherViolationOrConverterForArrays(
                                      sparkType: DataType,
                                      searchField: SearchField,
                                      prefix: Option[String]
-                                   ): Either[String, A] = {
+                                   ): Either[MappingViolation, A] = {
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
     val (sparkInnerType, searchInnerType) = (sparkType.unsafeCollectionInnerType, searchField.getType.unsafeCollectionInnerType)
@@ -142,9 +139,30 @@ trait SafeMappingSupplierV2[A] {
       StructField("array", sparkInnerType),
       searchArrayFieldMaybeWithSubFields,
       prefix.map(_.concat(searchField.getName))
-    ).map(
+    ).left.map {
+      new ArrayViolation(searchField, _, prefix.orNull)
+    }.map(
       forCollection(sparkInnerType, searchField, _)
     )
+  }
+
+  private def eitherViolationOrConverterForComplex(
+                                                    schemaField: StructField,
+                                                    searchField: SearchField,
+                                                    prefix: Option[String]
+                                                  ): Either[IncompatibleNestedField, A] = {
+
+    converterForComplexType(
+      schemaField.dataType,
+      searchField,
+      prefix.map(_.concat(searchField.getName))
+    ).left.map {
+      v => new IncompatibleNestedField(
+        schemaField,
+        JavaScalaConverters.seqToList(v),
+        prefix.orNull
+      )
+    }
   }
 
   /**
@@ -169,13 +187,31 @@ trait SafeMappingSupplierV2[A] {
                                        sparkType: DataType,
                                        searchField: SearchField,
                                        prefix: Option[String]
-                                     ): Either[String, A] = {
+                                     ): Either[Seq[MappingViolation], A] = {
 
     // Build a rule that wraps subField conversion rules
-    val sparkSubFields = sparkType.unsafeSubFields
-    val searchSubFields = JavaScalaConverters.listToSeq(searchField.getFields)
-    maybeComplexObjectMapping(sparkSubFields, searchSubFields, prefix)
-      .map(forComplex)
+    val maybeSubfieldMapping = maybeComplexObjectMapping(
+      sparkType.unsafeSubFields,
+      JavaScalaConverters.listToSeq(searchField.getFields),
+      prefix
+    )
+
+    val violations = maybeSubfieldMapping.values.collect {
+      case Left(v) => v
+    }.toSeq
+
+    if (violations.nonEmpty) {
+      Left(violations)
+    } else {
+
+      val internal = maybeSubfieldMapping.collect {
+        case (k, Right(v)) => (k, v)
+      }
+
+      Right(
+        forComplex(internal)
+      )
+    }
   }
 
   /**
@@ -191,13 +227,16 @@ trait SafeMappingSupplierV2[A] {
    * <br>
    * A converter will exist if and only if given Spark types is compatible with the default geopoint schema
    * (look at [[GeoPointRule.GEO_POINT_DEFAULT_STRUCT]])
-   * @param sparkType spark type
+   * @param schemaField spark type
    * @return a converter for geo points
    */
 
-  private def converterForGeoPoint(sparkType: DataType): Either[String, A] = {
+  private def eitherViolationOrConverterForGeoPoints(
+                                                      schemaField: StructField,
+                                                      prefix: Option[String]
+                                                    ): Either[MappingViolation, A] = {
 
-    val allSubFieldsExist = sparkType.unsafeSubFields.forall {
+    val allSubFieldsExist = schemaField.dataType.unsafeSubFields.forall {
       sf => GeoPointRule.GEO_POINT_DEFAULT_STRUCT.exists {
         geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
           sf.dataType,
@@ -206,10 +245,12 @@ trait SafeMappingSupplierV2[A] {
       }
     }
 
-    if (allSubFieldsExist) {
-      Right(forGeoPoint)
+    (if (allSubFieldsExist) {
+      Some(forGeoPoint)
     } else {
-      Left("geoPoint!")
+      None
+    }).toRight().left.map {
+      _ => new NotSuitableAsGeoPoint(schemaField, prefix.orNull)
     }
   }
 

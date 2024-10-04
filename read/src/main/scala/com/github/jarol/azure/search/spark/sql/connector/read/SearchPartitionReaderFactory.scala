@@ -22,20 +22,11 @@ class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
    */
 
   @throws[UnexpectedPartitionTypeException]
-  @throws[]
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
     partition match {
       case sp: SearchPartition =>
-        val documentConverter = SearchDocumentToInternalRowConverter.build(
-          schema,
-          readConfig.getSearchIndexFields
-        ) match {
-          case Left(value) => throw value
-          case Right(value) => value
-        }
-
-        new SearchPartitionReader(readConfig, documentConverter, sp)
+        new SearchPartitionReader(readConfig, null, sp)
       case _ => throw new UnexpectedPartitionTypeException(partition.getClass)
     }
   }
