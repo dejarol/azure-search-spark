@@ -17,4 +17,14 @@ public interface ReadConverter
      */
 
     Object apply(Object value);
+
+    default ReadConverter compose(ReadConverter before) {
+
+        return (Object value) -> apply(before.apply(value));
+    }
+
+    default ReadConverter andThen(ReadConverter after) {
+
+        return (Object value) -> after.apply(apply(value));
+    }
 }

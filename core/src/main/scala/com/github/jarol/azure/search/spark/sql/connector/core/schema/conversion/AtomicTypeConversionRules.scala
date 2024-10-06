@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.DataTypeException
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicReadConverters, ReadConverter}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicReadConverters, ReadCastConverter, ReadConverter, ReadTimeConverter, ReadTransformConverter}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{AtomicWriteConverters, WriteConverter}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
@@ -16,7 +16,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.StringType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.STRING
-    override def readConverter(): ReadConverter = AtomicReadConverters.StringConverter
+    override def readConverter(): ReadConverter = ReadTransformConverter.UTF8_STRING
     override def writeConverter(): WriteConverter = AtomicWriteConverters.StringConverter
   }
 
@@ -28,7 +28,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.IntegerType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.INT32
-    override def readConverter(): ReadConverter = AtomicReadConverters.Int32Converter
+    override def readConverter(): ReadConverter = ReadCastConverter.INT32
     override def writeConverter(): WriteConverter = AtomicWriteConverters.Int32Converter
   }
 
@@ -40,7 +40,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.LongType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.INT64
-    override def readConverter(): ReadConverter = AtomicReadConverters.Int64Converter
+    override def readConverter(): ReadConverter = ReadCastConverter.INT64
     override def writeConverter(): WriteConverter = AtomicWriteConverters.Int64Converter
   }
 
@@ -52,7 +52,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.DoubleType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DOUBLE
-    override def readConverter(): ReadConverter = AtomicReadConverters.DoubleConverter
+    override def readConverter(): ReadConverter = ReadCastConverter.DOUBLE
     override def writeConverter(): WriteConverter = AtomicWriteConverters.DoubleConverter
   }
 
@@ -64,7 +64,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.FloatType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.SINGLE
-    override def readConverter(): ReadConverter = AtomicReadConverters.SingleConverter
+    override def readConverter(): ReadConverter = ReadCastConverter.SINGLE
     override def writeConverter(): WriteConverter = AtomicWriteConverters.SingleConverter
   }
 
@@ -76,7 +76,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.BooleanType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.BOOLEAN
-    override def readConverter(): ReadConverter = AtomicReadConverters.BooleanConverter
+    override def readConverter(): ReadConverter = ReadCastConverter.BOOLEAN
     override def writeConverter(): WriteConverter = AtomicWriteConverters.BooleanConverter
   }
 
@@ -88,7 +88,7 @@ object AtomicTypeConversionRules {
     extends InferSchemaRule {
     override def sparkType(): DataType = DataTypes.TimestampType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
-    override def readConverter(): ReadConverter = AtomicReadConverters.DateTimeToTimestampConverter
+    override def readConverter(): ReadConverter = ReadTimeConverter.TIMESTAMP
     override def writeConverter(): WriteConverter = AtomicWriteConverters.TimestampToDatetimeConverter
   }
 
@@ -100,7 +100,7 @@ object AtomicTypeConversionRules {
     extends SchemaConversionRule {
     override def sparkType(): DataType = DataTypes.DateType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
-    override def readConverter(): ReadConverter = AtomicReadConverters.DateTimeToDateConverter
+    override def readConverter(): ReadConverter = ReadTimeConverter.DATE
     override def writeConverter(): WriteConverter = AtomicWriteConverters.DateToDatetimeConverter
   }
 
@@ -112,7 +112,7 @@ object AtomicTypeConversionRules {
     extends SchemaConversionRule {
     override def sparkType(): DataType = DataTypes.StringType
     override def searchType(): SearchFieldDataType = SearchFieldDataType.DATE_TIME_OFFSET
-    override def readConverter(): ReadConverter = AtomicReadConverters.StringConverter
+    override def readConverter(): ReadConverter = ReadTransformConverter.UTF8_STRING
     override def writeConverter(): WriteConverter = AtomicWriteConverters.StringToDatetimeConverter
   }
 
