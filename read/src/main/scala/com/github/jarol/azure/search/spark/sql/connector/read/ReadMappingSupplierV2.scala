@@ -1,9 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicReadConverters, CollectionConverter, ComplexConverter, ReadConverter}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema._
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointRule, SafeMappingSupplierV2}
-import org.apache.spark.sql.types.{DataType, DataTypes}
+import org.apache.spark.sql.types.{DataType, DataTypes, NumericType}
 
 object ReadMappingSupplierV2
   extends SafeMappingSupplierV2[ReadConverter] {
@@ -13,10 +14,60 @@ object ReadMappingSupplierV2
                                          search: SearchFieldDataType
                                        ): Option[ReadConverter] = {
 
-    (search, spark) match {
-      case (SearchFieldDataType.STRING, DataTypes.StringType) |
-           (SearchFieldDataType.DATE_TIME_OFFSET, DataTypes.StringType) => Some(AtomicReadConverters.StringConverter)
+    spark match {
+      case DataTypes.StringType => forString(search)
+      case numeric: NumericType => forNumericTypes(numeric, search)
+      case DataTypes.BooleanType => forBoolean(search)
+      case DataTypes.DateType => forDate(search)
+      case DataTypes.TimestampType => forTimestamp(search)
       case _ => None
+    }
+  }
+
+  private def forString(searchType: SearchFieldDataType): Option[ReadConverter] = {
+
+    if (searchType.isString || searchType.isDateTime) {
+      Some(ReadTransformConverter.UTF8_STRING)
+    } else if (searchType.isNumeric || searchType.isBoolean) {
+      Some(ReadTransformConverter.STRING_VALUE_OF
+        .andThen(ReadTransformConverter.UTF8_STRING)
+      )
+    } else {
+      None
+    }
+  }
+
+  private def forNumericTypes(numericType: NumericType, dataType: SearchFieldDataType): Option[ReadConverter] = {
+
+    None
+  }
+
+  private def forBoolean(searchType: SearchFieldDataType): Option[ReadConverter] = {
+
+    if (searchType.isString) {
+      Some(ReadTransformConverter.STRING_VALUE_OF)
+    } else if (searchType.isBoolean) {
+      Some(ReadCastConverter.BOOLEAN)
+    } else {
+      None
+    }
+  }
+
+  private def forDate(searchType: SearchFieldDataType): Option[ReadConverter] = {
+
+    if (searchType.isDateTime) {
+      Some(ReadTimeConverter.DATE)
+    } else {
+      None
+    }
+  }
+
+  private def forTimestamp(searchType: SearchFieldDataType): Option[ReadConverter] = {
+
+    if (searchType.isDateTime) {
+      Some(ReadTimeConverter.TIMESTAMP)
+    } else {
+      None
     }
   }
 
