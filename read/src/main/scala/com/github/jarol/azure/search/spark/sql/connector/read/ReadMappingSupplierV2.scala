@@ -9,9 +9,9 @@ import org.apache.spark.sql.types.{DataType, DataTypes, NumericType}
 object ReadMappingSupplierV2
   extends SafeMappingSupplierV2[ReadConverter] {
 
-  override protected def forAtomicTypes(
-                                         spark: DataType,
-                                         search: SearchFieldDataType
+  override protected[read] def forAtomicTypes(
+                                               spark: DataType,
+                                               search: SearchFieldDataType
                                        ): Option[ReadConverter] = {
 
     spark match {
@@ -37,9 +37,24 @@ object ReadMappingSupplierV2
     }
   }
 
-  private def forNumericTypes(numericType: NumericType, dataType: SearchFieldDataType): Option[ReadConverter] = {
+  private def forNumericTypes(numericType: NumericType, searchType: SearchFieldDataType): Option[ReadConverter] = {
 
-    None
+    if (searchType.isNumeric) {
+
+      val numericMappingSupplier: Option[NumericCastingSupplier] = numericType match {
+        case DataTypes.IntegerType => Some(NumericCastingSupplier.Integer)
+        case DataTypes.LongType => Some(NumericCastingSupplier.Long)
+        case DataTypes.DoubleType => Some(NumericCastingSupplier.Double)
+        case DataTypes.FloatType => Some(NumericCastingSupplier.Float)
+        case _ => None
+      }
+
+      numericMappingSupplier.flatMap {
+        _.get(searchType)
+      }
+    } else {
+      None
+    }
   }
 
   private def forBoolean(searchType: SearchFieldDataType): Option[ReadConverter] = {

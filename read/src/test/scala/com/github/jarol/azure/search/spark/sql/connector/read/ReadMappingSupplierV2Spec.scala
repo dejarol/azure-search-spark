@@ -6,6 +6,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations.{IncompatibleNestedField, IncompatibleType}
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.DataTypes
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.EitherValues
 
 class ReadMappingSupplierV2Spec
@@ -13,11 +14,40 @@ class ReadMappingSupplierV2Spec
     with FieldFactory
       with EitherValues {
 
-  private lazy val indexName = "people"
   private lazy val (first, second, third) = ("first", "second", "third")
 
   describe(`object`[ReadMappingSupplierV2.type ]) {
     describe(SHOULD) {
+      describe("return a converter for reading") {
+        describe("strings from") {
+          it("strings") {
+
+            val result = ReadMappingSupplierV2.forAtomicTypes(
+              DataTypes.StringType,
+              SearchFieldDataType.STRING
+            )
+
+            result shouldBe defined
+
+            val value = "hello"
+            val output = result.get.apply(value)
+            output shouldBe a[UTF8String]
+            output.toString shouldBe value
+          }
+
+          it("numbers") {
+
+            // TODO
+
+          }
+
+          it("booleans") {
+
+            // TODO
+          }
+        }
+      }
+
       describe("return a Right for") {
 
       }
