@@ -22,8 +22,8 @@ class ComplexConverterSpec
 
         val output = ComplexConverter(
           Map(
-            k1 -> AtomicReadConverters.StringConverter,
-            k2 -> AtomicReadConverters.Int32Converter
+            k1 -> ReadTransformConverter.UTF8_STRING,
+            k2 -> ReadCastConverter.INT32
           )
         ).apply(
           input

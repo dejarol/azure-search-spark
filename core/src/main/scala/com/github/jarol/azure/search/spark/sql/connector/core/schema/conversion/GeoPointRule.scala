@@ -30,8 +30,8 @@ case object GeoPointRule
   override def searchType: SearchFieldDataType = SearchFieldDataType.GEOGRAPHY_POINT
   override def readConverter(): ReadConverter = ComplexConverter(
     Map(
-      TYPE_LABEL -> AtomicReadConverters.StringConverter,
-      COORDINATES_LABEL -> CollectionConverter(AtomicReadConverters.DoubleConverter)
+      TYPE_LABEL -> ReadTransformConverter.UTF8_STRING,
+      COORDINATES_LABEL -> CollectionConverter(ReadCastConverter.DOUBLE)
     )
   )
 

@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{AtomicReadConverters, CollectionConverter, ComplexConverter, ReadConverter}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{GeoPointRule, SafeConverterSupplierSpec}
 import org.apache.spark.sql.types.DataTypes
 
@@ -14,7 +14,7 @@ class ReadConverterSupplierSpec
         describe("atomic fields with same name and") {
           it("same type") {
 
-            assertConverterExistsAndIsA[AtomicReadConverters.StringConverter.type](
+            assertConverterExistsAndIsA[ReadTransformConverter.UTF8_STRING.type](
               createStructField(first, DataTypes.StringType),
               createSearchField(first, SearchFieldDataType.STRING)
             )
@@ -22,7 +22,7 @@ class ReadConverterSupplierSpec
 
           it("compatible type") {
 
-            assertConverterExistsAndIsA[AtomicReadConverters.DateTimeToDateConverter.type](
+            assertConverterExistsAndIsA[ReadTimeConverter.DATE.type](
               createStructField(first, DataTypes.DateType),
               createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET)
             )
