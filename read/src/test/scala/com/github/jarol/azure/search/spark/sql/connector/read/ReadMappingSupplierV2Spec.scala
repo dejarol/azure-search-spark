@@ -2,49 +2,143 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolation.ViolationType
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations.{IncompatibleNestedField, IncompatibleType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations._
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
-import org.apache.spark.sql.types.DataTypes
+import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
-import org.scalatest.EitherValues
+import org.scalatest.{EitherValues, Inspectors}
+
+import scala.reflect.ClassTag
 
 class ReadMappingSupplierV2Spec
   extends BasicSpec
     with FieldFactory
-      with EitherValues {
+      with EitherValues
+        with Inspectors {
 
   private lazy val (first, second, third) = ("first", "second", "third")
+
+  /**
+   * Assert that a converter between two atomic types exists and reads data correctly
+   * @param searchType Search type
+   * @param dataType Spark type
+   * @param value test value
+   * @param transform expected input-output transformation
+   * @tparam TInput input type
+   * @tparam TOutput output type
+   */
+
+  private def assertAtomicMappingExists[TInput, TOutput: ClassTag](
+                                                                    searchType: SearchFieldDataType,
+                                                                    dataType: DataType,
+                                                                    value: TInput,
+                                                                    transform: TInput => TOutput
+                                                                  ): Unit = {
+
+    val result = ReadMappingSupplierV2.forAtomicTypes(dataType, searchType)
+    result shouldBe defined
+
+    val output = result.get.apply(value)
+    output shouldBe a[TOutput]
+    output shouldBe transform(value)
+  }
 
   describe(`object`[ReadMappingSupplierV2.type ]) {
     describe(SHOULD) {
       describe("return a converter for reading") {
         describe("strings from") {
-          it("strings") {
+          it("string fields") {
 
-            val result = ReadMappingSupplierV2.forAtomicTypes(
+            assertAtomicMappingExists[String, UTF8String](
+              SearchFieldDataType.STRING,
               DataTypes.StringType,
-              SearchFieldDataType.STRING
+              "hello",
+              UTF8String.fromString
+            )
+          }
+
+          it("numeric fields") {
+
+            assertAtomicMappingExists[Integer, UTF8String](
+              SearchFieldDataType.INT32,
+              DataTypes.StringType,
+              123,
+              v => UTF8String.fromString(
+                String.valueOf(v)
+              )
             )
 
-            result shouldBe defined
+            assertAtomicMappingExists[Long, UTF8String](
+              SearchFieldDataType.INT64,
+              DataTypes.StringType,
+              123,
+              v => UTF8String.fromString(
+                String.valueOf(v)
+              )
+            )
 
-            val value = "hello"
-            val output = result.get.apply(value)
-            output shouldBe a[UTF8String]
-            output.toString shouldBe value
+            assertAtomicMappingExists[Double, UTF8String](
+              SearchFieldDataType.DOUBLE,
+              DataTypes.StringType,
+              3.14,
+              v => UTF8String.fromString(
+                String.valueOf(v)
+              )
+            )
+
+            assertAtomicMappingExists[Float, UTF8String](
+              SearchFieldDataType.SINGLE,
+              DataTypes.StringType,
+              3.14f,
+              v => UTF8String.fromString(
+                String.valueOf(v)
+              )
+            )
           }
 
-          it("numbers") {
+          it("boolean fields") {
 
-            // TODO
+           assertAtomicMappingExists[Boolean, UTF8String](
+             SearchFieldDataType.BOOLEAN,
+             DataTypes.StringType,
+             false,
+             v => UTF8String.fromString(
+               String.valueOf(v)
+             )
+           )
+          }
+        }
 
+        describe("numbers from numeric fields") {
+          it("of same type") {
+
+            assertAtomicMappingExists[Integer, Integer](
+              SearchFieldDataType.INT32,
+              DataTypes.IntegerType,
+              123,
+              identity
+            )
           }
 
-          it("booleans") {
+          it("of different type") {
 
-            // TODO
+            assertAtomicMappingExists[Int, Long](
+              SearchFieldDataType.INT32,
+              DataTypes.LongType,
+              123,
+              _.toLong
+            )
           }
+        }
+
+        it("booleans from boolean fields") {
+
+          assertAtomicMappingExists[Boolean, Boolean](
+            SearchFieldDataType.BOOLEAN,
+            DataTypes.BooleanType,
+            false,
+            identity
+          )
         }
       }
 
@@ -64,8 +158,8 @@ class ReadMappingSupplierV2Spec
             result should have size 1
             val head = result.head
             head.getViolationType shouldBe ViolationType.MISSING_FIELD
-            head shouldBe a [MappingViolations.MissingField]
-            head.asInstanceOf[MappingViolations.MissingField].getFieldName shouldBe first
+            head shouldBe a [MissingField]
+            head.asInstanceOf[MissingField].getFieldName shouldBe first
           }
 
           it("have incompatible dtypes") {

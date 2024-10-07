@@ -12,7 +12,7 @@ object ReadMappingSupplierV2
   override protected[read] def forAtomicTypes(
                                                spark: DataType,
                                                search: SearchFieldDataType
-                                       ): Option[ReadConverter] = {
+                                             ): Option[ReadConverter] = {
 
     spark match {
       case DataTypes.StringType => forString(search)
@@ -27,10 +27,10 @@ object ReadMappingSupplierV2
   private def forString(searchType: SearchFieldDataType): Option[ReadConverter] = {
 
     if (searchType.isString || searchType.isDateTime) {
-      Some(ReadTransformConverter.UTF8_STRING)
+      Some(ReadConverters.UTF8_STRING)
     } else if (searchType.isNumeric || searchType.isBoolean) {
-      Some(ReadTransformConverter.STRING_VALUE_OF
-        .andThen(ReadTransformConverter.UTF8_STRING)
+      Some(ReadConverters.STRING_VALUE_OF
+        .andThen(ReadConverters.UTF8_STRING)
       )
     } else {
       None
@@ -42,10 +42,10 @@ object ReadMappingSupplierV2
     if (searchType.isNumeric) {
 
       val numericMappingSupplier: Option[NumericCastingSupplier] = numericType match {
-        case DataTypes.IntegerType => Some(NumericCastingSupplier.Integer)
-        case DataTypes.LongType => Some(NumericCastingSupplier.Long)
-        case DataTypes.DoubleType => Some(NumericCastingSupplier.Double)
-        case DataTypes.FloatType => Some(NumericCastingSupplier.Float)
+        case DataTypes.IntegerType => Some(NumericCastingSupplier.INT_32)
+        case DataTypes.LongType => Some(NumericCastingSupplier.INT_64)
+        case DataTypes.DoubleType => Some(NumericCastingSupplier.DOUBLE)
+        case DataTypes.FloatType => Some(NumericCastingSupplier.SINGLE)
         case _ => None
       }
 
@@ -59,10 +59,8 @@ object ReadMappingSupplierV2
 
   private def forBoolean(searchType: SearchFieldDataType): Option[ReadConverter] = {
 
-    if (searchType.isString) {
-      Some(ReadTransformConverter.STRING_VALUE_OF)
-    } else if (searchType.isBoolean) {
-      Some(ReadCastConverter.BOOLEAN)
+    if (searchType.isBoolean) {
+      Some(ReadConverters.BOOLEAN)
     } else {
       None
     }
@@ -71,7 +69,7 @@ object ReadMappingSupplierV2
   private def forDate(searchType: SearchFieldDataType): Option[ReadConverter] = {
 
     if (searchType.isDateTime) {
-      Some(ReadTimeConverter.DATE)
+      Some(ReadConverters.DATE)
     } else {
       None
     }
@@ -80,7 +78,7 @@ object ReadMappingSupplierV2
   private def forTimestamp(searchType: SearchFieldDataType): Option[ReadConverter] = {
 
     if (searchType.isDateTime) {
-      Some(ReadTimeConverter.TIMESTAMP)
+      Some(ReadConverters.TIMESTAMP)
     } else {
       None
     }

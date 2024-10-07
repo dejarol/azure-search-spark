@@ -20,8 +20,8 @@ class ReadTimeConverterSpec
           )
 
           val expected: Long = ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
-          ReadTimeConverter.TIMESTAMP.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
-          ReadTimeConverter.TIMESTAMP.apply(null.asInstanceOf[String]) shouldBe null
+          ReadConverters.TIMESTAMP.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
+          ReadConverters.TIMESTAMP.apply(null.asInstanceOf[String]) shouldBe null
         }
 
         it("dates") {
@@ -33,8 +33,8 @@ class ReadTimeConverterSpec
           )
 
           val expected: Int = input.toLocalDate.toEpochDay.toInt
-          ReadTimeConverter.DATE.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
-          ReadTimeConverter.DATE.apply(null.asInstanceOf[String]) shouldBe null
+          ReadConverters.DATE.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
+          ReadConverters.DATE.apply(null.asInstanceOf[String]) shouldBe null
         }
       }
     }

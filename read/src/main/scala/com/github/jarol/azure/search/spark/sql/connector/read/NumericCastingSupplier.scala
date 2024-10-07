@@ -1,74 +1,77 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{ReadCastConverter, ReadConverter, ReadTransformConverter}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{ReadCastConverter, ReadConverter, ReadConverters, ReadTransformConverter}
 
 import java.lang
 
 trait NumericCastingSupplier {
 
-  protected def primaryConverter: ReadConverter
+  protected type InnerType
 
-  protected def forInt32: Option[ReadTransformConverter[Integer]]
+  protected def defaultConverter: ReadCastConverter[InnerType]
 
-  protected def forInt64: Option[ReadTransformConverter[lang.Long]]
+  protected def fromInt32(v: Integer): InnerType
 
-  protected def forDouble: Option[ReadTransformConverter[lang.Double]]
+  protected def fromInt64(v: lang.Long): InnerType
 
-  protected def forSingle: Option[ReadTransformConverter[lang.Float]]
+  protected def fromDouble(v: lang.Double): InnerType
+
+  protected def fromSingle(v: lang.Float): InnerType
 
   final def get(searchType: SearchFieldDataType): Option[ReadConverter] = {
 
-    val secondary: Option[ReadConverter] = if (searchType.equals(SearchFieldDataType.INT32)) {
-      forInt32
+    val secondary: Option[ReadTransformConverter[InnerType]] = if (searchType.equals(SearchFieldDataType.INT32)) {
+      Some((value: Any) => fromInt32(value.asInstanceOf[Integer]))
     } else if (searchType.equals(SearchFieldDataType.INT64)) {
-      forInt64
+      Some((value: Any) => fromInt64(value.asInstanceOf[lang.Long]))
     } else if (searchType.equals(SearchFieldDataType.DOUBLE)) {
-      forDouble
+      Some((value: Any) => fromDouble(value.asInstanceOf[lang.Double]))
     } else if (searchType.equals(SearchFieldDataType.SINGLE)) {
-      forSingle
+      Some((value: Any) => fromSingle(value.asInstanceOf[lang.Float]))
     } else None
 
-    secondary.map(primaryConverter.andThen)
-      .orElse(Some(primaryConverter))
+    secondary.map(defaultConverter.andThen)
+      .orElse(Some(defaultConverter))
   }
 }
 
 object NumericCastingSupplier {
 
-  case object Integer extends NumericCastingSupplier {
-    override protected def primaryConverter: ReadConverter = ReadCastConverter.INT32
-    override protected def forInt32: Option[ReadTransformConverter[Integer]] = None
-    override protected def forInt64: Option[ReadTransformConverter[lang.Long]] = Some((value: Any) => value.asInstanceOf[lang.Integer].longValue())
-    override protected def forDouble: Option[ReadTransformConverter[lang.Double]] = Some((value: Any) => value.asInstanceOf[lang.Integer].doubleValue())
-    override protected def forSingle: Option[ReadTransformConverter[lang.Float]] = Some((value: Any) => value.asInstanceOf[lang.Integer].floatValue())
+  case object INT_32
+    extends NumericCastingSupplier {
+    override protected type InnerType = Integer
+    override protected def defaultConverter: ReadCastConverter[Integer] = ReadConverters.INT32
+    override protected def fromInt32(v: Integer): Integer = v
+    override protected def fromInt64(v: lang.Long): Integer = v.intValue()
+    override protected def fromDouble(v: lang.Double): Integer = v.intValue()
+    override protected def fromSingle(v: lang.Float): Integer = v.intValue()
   }
 
-  case object Long extends NumericCastingSupplier {
-    override protected def primaryConverter: ReadConverter = ReadCastConverter.INT64
-    override protected def forInt32: Option[ReadTransformConverter[Integer]] = Some((value: Any) => value.asInstanceOf[lang.Long].intValue())
-    override protected def forInt64: Option[ReadTransformConverter[lang.Long]] = None
-    override protected def forDouble: Option[ReadTransformConverter[lang.Double]] = Some((value: Any) => value.asInstanceOf[lang.Integer].doubleValue())
-    override protected def forSingle: Option[ReadTransformConverter[lang.Float]] = Some((value: Any) => value.asInstanceOf[lang.Integer].floatValue())
+  case object INT_64 extends NumericCastingSupplier {
+    override protected type InnerType = lang.Long
+    override protected def defaultConverter: ReadCastConverter[lang.Long] = ReadConverters.INT64
+    override protected def fromInt32(v: Integer): lang.Long = v.longValue()
+    override protected def fromInt64(v: lang.Long): lang.Long = v
+    override protected def fromDouble(v: lang.Double): lang.Long = v.longValue()
+    override protected def fromSingle(v: lang.Float): lang.Long = v.longValue()
   }
 
-  case object Double extends NumericCastingSupplier {
-    override protected def primaryConverter: ReadConverter = ReadCastConverter.DOUBLE
-    override protected def forInt32: Option[ReadTransformConverter[Integer]] = Some((value: Any) => value.asInstanceOf[lang.Double].intValue())
-    override protected def forInt64: Option[ReadTransformConverter[lang.Long]] = Some((value: Any) => value.asInstanceOf[lang.Double].longValue())
-    override protected def forDouble: Option[ReadTransformConverter[lang.Double]] = None
-    override protected def forSingle: Option[ReadTransformConverter[lang.Float]] = Some((value: Any) => value.asInstanceOf[lang.Double].floatValue())
+  case object DOUBLE extends NumericCastingSupplier {
+    override protected type InnerType = lang.Double
+    override protected def defaultConverter: ReadCastConverter[lang.Double] = ReadConverters.DOUBLE
+    override protected def fromInt32(v: Integer): lang.Double = v.doubleValue()
+    override protected def fromInt64(v: lang.Long): lang.Double = v.doubleValue()
+    override protected def fromDouble(v: lang.Double): lang.Double = v
+    override protected def fromSingle(v: lang.Float): lang.Double = v.doubleValue()
   }
 
-  case object Float extends NumericCastingSupplier {
-    override protected def primaryConverter: ReadConverter = ReadCastConverter.SINGLE
-
-    override protected def forInt32: Option[ReadTransformConverter[Integer]] = ???
-
-    override protected def forInt64: Option[ReadTransformConverter[lang.Long]] = ???
-
-    override protected def forDouble: Option[ReadTransformConverter[lang.Double]] = ???
-
-    override protected def forSingle: Option[ReadTransformConverter[lang.Float]] = ???
+  case object SINGLE extends NumericCastingSupplier {
+    override protected type InnerType = lang.Float
+    override protected def defaultConverter: ReadCastConverter[lang.Float] = ReadConverters.SINGLE
+    override protected def fromInt32(v: Integer): lang.Float = v.floatValue()
+    override protected def fromInt64(v: lang.Long): lang.Float = v.floatValue()
+    override protected def fromDouble(v: lang.Double): lang.Float = v.floatValue()
+    override protected def fromSingle(v: lang.Float): lang.Float = v
   }
 }
