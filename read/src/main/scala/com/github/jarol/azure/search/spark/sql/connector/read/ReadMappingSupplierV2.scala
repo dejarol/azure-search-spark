@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataTy
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointRule, SafeMappingSupplierV2}
-import org.apache.spark.sql.types.{DataType, DataTypes, NumericType}
+import org.apache.spark.sql.types.{DataType, DataTypes}
 
 object ReadMappingSupplierV2
   extends SafeMappingSupplierV2[ReadConverter] {
@@ -14,34 +14,35 @@ object ReadMappingSupplierV2
                                                search: SearchFieldDataType
                                              ): Option[ReadConverter] = {
 
-    spark match {
-      case DataTypes.StringType => forString(search)
-      case numeric: NumericType => forNumericTypes(numeric, search)
-      case DataTypes.BooleanType => forBoolean(search)
-      case DataTypes.DateType => forDate(search)
-      case DataTypes.TimestampType => forTimestamp(search)
-      case _ => None
-    }
-  }
-
-  private def forString(searchType: SearchFieldDataType): Option[ReadConverter] = {
-
-    if (searchType.isString || searchType.isDateTime) {
-      Some(ReadConverters.UTF8_STRING)
-    } else if (searchType.isNumeric || searchType.isBoolean) {
-      Some(ReadConverters.STRING_VALUE_OF
-        .andThen(ReadConverters.UTF8_STRING)
-      )
+    if (search.isString) {
+      forString(spark)
+    } else if (search.isNumeric) {
+      forNumericTypes(search, spark)
+    } else if (search.isBoolean) {
+      forBoolean(spark)
+    } else if (search.isDateTime) {
+      forDateTime(spark)
     } else {
       None
     }
   }
 
-  private def forNumericTypes(numericType: NumericType, searchType: SearchFieldDataType): Option[ReadConverter] = {
+  private def forString(dataType: DataType): Option[ReadConverter] = {
 
-    if (searchType.isNumeric) {
+    dataType match {
+      case DataTypes.StringType => Some(ReadConverters.UTF8_STRING)
+      case _ => None
+    }
+  }
 
-      val numericMappingSupplier: Option[NumericCastingSupplier] = numericType match {
+  private def forNumericTypes(
+                               searchType: SearchFieldDataType,
+                               dataType: DataType
+                             ): Option[ReadConverter] = {
+
+    if (dataType.isNumeric) {
+
+      val numericMappingSupplier: Option[NumericCastingSupplier] = dataType match {
         case DataTypes.IntegerType => Some(NumericCastingSupplier.INT_32)
         case DataTypes.LongType => Some(NumericCastingSupplier.INT_64)
         case DataTypes.DoubleType => Some(NumericCastingSupplier.DOUBLE)
@@ -53,34 +54,29 @@ object ReadMappingSupplierV2
         _.get(searchType)
       }
     } else {
-      None
+      dataType match {
+        case DataTypes.StringType => Some(ReadConverters.STRING_VALUE_OF.andThen(ReadConverters.UTF8_STRING))
+        case _ => None
+      }
     }
   }
 
-  private def forBoolean(searchType: SearchFieldDataType): Option[ReadConverter] = {
+  private def forBoolean(dataType: DataType): Option[ReadConverter] = {
 
-    if (searchType.isBoolean) {
-      Some(ReadConverters.BOOLEAN)
-    } else {
-      None
+    dataType match {
+      case DataTypes.StringType => Some(ReadConverters.STRING_VALUE_OF.andThen(ReadConverters.UTF8_STRING))
+      case DataTypes.BooleanType => Some(ReadConverters.BOOLEAN)
+      case _ => None
     }
   }
 
-  private def forDate(searchType: SearchFieldDataType): Option[ReadConverter] = {
+  private def forDateTime(dataType: DataType): Option[ReadConverter] = {
 
-    if (searchType.isDateTime) {
-      Some(ReadConverters.DATE)
-    } else {
-      None
-    }
-  }
-
-  private def forTimestamp(searchType: SearchFieldDataType): Option[ReadConverter] = {
-
-    if (searchType.isDateTime) {
-      Some(ReadConverters.TIMESTAMP)
-    } else {
-      None
+    dataType match {
+      case DataTypes.TimestampType => Some(ReadConverters.TIMESTAMP)
+      case DataTypes.DateType => Some(ReadConverters.DATE)
+      case DataTypes.StringType => Some(ReadConverters.UTF8_STRING)
+      case _ => None
     }
   }
 

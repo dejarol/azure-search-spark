@@ -3,11 +3,13 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolation.ViolationType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations._
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants, FieldFactory}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.{EitherValues, Inspectors}
 
+import java.time.{Instant, OffsetDateTime}
+import java.time.temporal.ChronoUnit
 import scala.reflect.ClassTag
 
 class ReadMappingSupplierV2Spec
@@ -46,18 +48,18 @@ class ReadMappingSupplierV2Spec
   describe(`object`[ReadMappingSupplierV2.type ]) {
     describe(SHOULD) {
       describe("return a converter for reading") {
-        describe("strings from") {
-          it("string fields") {
+        it("string fields as strings") {
 
-            assertAtomicMappingExists[String, UTF8String](
-              SearchFieldDataType.STRING,
-              DataTypes.StringType,
-              "hello",
-              UTF8String.fromString
-            )
-          }
+          assertAtomicMappingExists[String, UTF8String](
+            SearchFieldDataType.STRING,
+            DataTypes.StringType,
+            "hello",
+            UTF8String.fromString
+          )
+        }
 
-          it("numeric fields") {
+        describe("numeric fields as") {
+          it("strings") {
 
             assertAtomicMappingExists[Integer, UTF8String](
               SearchFieldDataType.INT32,
@@ -96,54 +98,93 @@ class ReadMappingSupplierV2Spec
             )
           }
 
-          it("boolean fields") {
+          describe("numbers of") {
+            it("same type") {
 
-           assertAtomicMappingExists[Boolean, UTF8String](
-             SearchFieldDataType.BOOLEAN,
-             DataTypes.StringType,
-             false,
-             v => UTF8String.fromString(
-               String.valueOf(v)
-             )
-           )
+              assertAtomicMappingExists[Int, Int](
+                SearchFieldDataType.INT32,
+                DataTypes.IntegerType,
+                123,
+                identity
+              )
+            }
+
+            it("different type") {
+
+              assertAtomicMappingExists[Int, Long](
+                SearchFieldDataType.INT32,
+                DataTypes.LongType,
+                123,
+                _.toLong
+              )
+            }
           }
         }
 
-        describe("numbers from numeric fields") {
-          it("of same type") {
+        describe("boolean fields as") {
+          it("booleans") {
 
-            assertAtomicMappingExists[Integer, Integer](
-              SearchFieldDataType.INT32,
-              DataTypes.IntegerType,
-              123,
+            assertAtomicMappingExists[Boolean, Boolean](
+              SearchFieldDataType.BOOLEAN,
+              DataTypes.BooleanType,
+              false,
               identity
             )
           }
 
-          it("of different type") {
-
-            assertAtomicMappingExists[Int, Long](
-              SearchFieldDataType.INT32,
-              DataTypes.LongType,
-              123,
-              _.toLong
+          it("strings") {
+            assertAtomicMappingExists[Boolean, UTF8String](
+              SearchFieldDataType.BOOLEAN,
+              DataTypes.StringType,
+              false,
+              v => UTF8String.fromString(
+                String.valueOf(v)
+              )
             )
           }
         }
 
-        it("booleans from boolean fields") {
+        describe("datetime fields as") {
+          it("strings") {
 
-          assertAtomicMappingExists[Boolean, Boolean](
-            SearchFieldDataType.BOOLEAN,
-            DataTypes.BooleanType,
-            false,
-            identity
-          )
+            assertAtomicMappingExists[String, UTF8String](
+              SearchFieldDataType.DATE_TIME_OFFSET,
+              DataTypes.StringType,
+              OffsetDateTime.now().format(Constants.DATETIME_OFFSET_FORMATTER),
+              v => UTF8String.fromString(v)
+            )
+          }
+
+          it("dates") {
+
+            val offsetDateTime = OffsetDateTime.now()
+            assertAtomicMappingExists[String, Int](
+              SearchFieldDataType.DATE_TIME_OFFSET,
+              DataTypes.DateType,
+              offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),
+              v => OffsetDateTime.parse(v, Constants.DATETIME_OFFSET_FORMATTER).toLocalDate.toEpochDay.toInt
+            )
+          }
+
+          it("timestamps") {
+
+            val offsetDateTime = OffsetDateTime.now()
+            assertAtomicMappingExists[String, Long](
+              SearchFieldDataType.DATE_TIME_OFFSET,
+              DataTypes.TimestampType,
+              offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),
+              v => ChronoUnit.MICROS.between(
+                Instant.EPOCH,
+                OffsetDateTime.parse(v, Constants.DATETIME_OFFSET_FORMATTER).toInstant
+              )
+            )
+          }
         }
       }
 
       describe("return a Right for") {
 
+        // TODO
       }
 
       describe("return a Left when") {
