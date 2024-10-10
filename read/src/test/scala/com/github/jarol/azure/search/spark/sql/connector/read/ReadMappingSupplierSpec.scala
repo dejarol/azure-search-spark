@@ -210,8 +210,7 @@ class ReadMappingSupplierSpec
             result should have size 1
             val head = result.head
             head.getType shouldBe Type.MISSING_FIELD
-            head shouldBe a [MissingField]
-            head.asInstanceOf[MissingField].getFieldName shouldBe first
+            head.getFieldName shouldBe first
           }
 
           it("have incompatible dtypes") {

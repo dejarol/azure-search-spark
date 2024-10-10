@@ -93,7 +93,7 @@ class SchemaUtilsSpec
 
           SchemaUtils.inferSparkTypeOf(
             createSearchField("location", SearchFieldDataType.GEOGRAPHY_POINT)
-          ) shouldBe GeoPointConverter.sparkType
+          ) shouldBe GeoPointConverter.SCHEMA
         }
       }
 
