@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointRule
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointConverter
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
@@ -93,7 +93,7 @@ class SchemaUtilsSpec
 
           SchemaUtils.inferSparkTypeOf(
             createSearchField("location", SearchFieldDataType.GEOGRAPHY_POINT)
-          ) shouldBe GeoPointRule.sparkType
+          ) shouldBe GeoPointConverter.sparkType
         }
       }
 
@@ -238,171 +238,6 @@ class SchemaUtilsSpec
         }
       }
 
-      describe("evaluate as compatible") {
-        it("two atomic fields with same name and compatible type") {
-
-          SchemaUtils.areCompatibleFields(
-            createStructField(first, DataTypes.StringType),
-            createSearchField(first, SearchFieldDataType.STRING)
-          ) shouldBe true
-
-          SchemaUtils.areCompatibleFields(
-            createStructField(first, DataTypes.DateType),
-            createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET)
-          ) shouldBe true
-        }
-
-        describe("two collection fields with same name and compatible type") {
-          it("atomic case") {
-
-            SchemaUtils.areCompatibleFields(
-              createArrayField(first, DataTypes.IntegerType),
-              createCollectionField(first, SearchFieldDataType.INT32)
-            ) shouldBe true
-
-            SchemaUtils.areCompatibleFields(
-              createArrayField(first, DataTypes.DateType),
-              createCollectionField(first, SearchFieldDataType.DATE_TIME_OFFSET)
-            ) shouldBe true
-
-            SchemaUtils.areCompatibleFields(
-              createArrayField(first, DataTypes.IntegerType),
-              createCollectionField(first, SearchFieldDataType.DOUBLE)
-            ) shouldBe false
-          }
-
-          it("complex case") {
-
-            SchemaUtils.areCompatibleFields(
-              createArrayField(first,
-                createStructType(
-                  createStructField(second, DataTypes.DateType),
-                  createStructField(third, DataTypes.StringType)
-                )
-              ),
-              createComplexCollectionField(
-                first,
-                createSearchField(second, SearchFieldDataType.DATE_TIME_OFFSET),
-                createSearchField(third, SearchFieldDataType.STRING)
-              )
-            ) shouldBe true
-          }
-        }
-
-        describe("two complex fields") {
-
-          lazy val complexField = createComplexField(
-            first,
-            Seq(
-              createSearchField(second, SearchFieldDataType.DOUBLE),
-              createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
-            )
-          )
-
-          it("that have same number of subfields and all are compatible") {
-
-            SchemaUtils.areCompatibleFields(
-              createStructField(
-                first,
-                StructType(
-                  Seq(
-                    createStructField(second, DataTypes.DoubleType),
-                    createStructField(third, DataTypes.TimestampType)
-                  )
-                )
-              ),
-              complexField
-            ) shouldBe true
-          }
-
-          it("when the Spark field has less subfields but all compatible") {
-
-            SchemaUtils.areCompatibleFields(
-              createStructField(
-                first,
-                StructType(
-                  Seq(
-                    createStructField(third, DataTypes.DateType)
-                  )
-                )
-              ),
-              complexField
-            ) shouldBe true
-          }
-        }
-      }
-
-      describe("evaluate as non-compatible") {
-        it("two atomic fields with different name or non-compatible types") {
-
-          SchemaUtils.areCompatibleFields(
-            createStructField(first, DataTypes.DateType),
-            createSearchField(first, SearchFieldDataType.BOOLEAN)
-          ) shouldBe false
-
-          SchemaUtils.areCompatibleFields(
-            createStructField(third, DataTypes.BooleanType),
-            createSearchField(second, SearchFieldDataType.BOOLEAN)
-          ) shouldBe false
-        }
-
-        it("two collection types with different name or non-compatible inner type") {
-
-          SchemaUtils.areCompatibleFields(
-            createArrayField(second, DataTypes.BooleanType),
-            createCollectionField(first, SearchFieldDataType.BOOLEAN)
-          ) shouldBe false
-
-          SchemaUtils.areCompatibleFields(
-            createArrayField(second, DataTypes.StringType),
-            createCollectionField(second, SearchFieldDataType.BOOLEAN)
-          ) shouldBe false
-        }
-
-        describe("two complex fields") {
-          it("with different names") {
-
-            SchemaUtils.areCompatibleFields(
-              createStructField(
-                third,
-                StructType(
-                  Seq(
-                    createStructField(second, DataTypes.StringType)
-                  )
-                )
-              ),
-              createComplexField(
-                first,
-                Seq(
-                  createSearchField(second, SearchFieldDataType.STRING)
-                )
-              )
-            ) shouldBe false
-          }
-
-          it("with more subfields on Spark side") {
-
-            SchemaUtils.areCompatibleFields(
-              createStructField(
-                first,
-                StructType(
-                  Seq(
-                    createStructField(second, DataTypes.StringType),
-                    createStructField(third, DataTypes.TimestampType)
-                  )
-                )
-              ),
-              createComplexField(
-                first,
-                Seq(
-                  createSearchField(second, SearchFieldDataType.STRING)
-                )
-              )
-            ) shouldBe false
-          }
-        }
-      }
-
       describe("retrieve the Search inferred type for a Spark") {
         it("atomic type") {
 
@@ -437,7 +272,7 @@ class SchemaUtilsSpec
           it("with compatible geo point type") {
 
             SchemaUtils.inferSearchTypeFor(
-              createArrayType(GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
+              createArrayType(GeoPointConverter.SCHEMA)
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
             )
@@ -517,7 +352,7 @@ class SchemaUtilsSpec
 
         it("for geo compatible struct types") {
 
-          val structType = GeoPointRule.GEO_POINT_DEFAULT_STRUCT
+          val structType = GeoPointConverter.SCHEMA
           val structField = createStructField(third, structType)
           val searchField = SchemaUtils.toSearchField(structField)
 

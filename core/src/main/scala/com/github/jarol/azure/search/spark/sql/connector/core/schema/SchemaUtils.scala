@@ -1,11 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{AtomicTypeConversionRules, GeoPointRule}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointConverter
 import com.github.jarol.azure.search.spark.sql.connector.core.{DataTypeException, JavaScalaConverters}
-import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
-
-import java.util
+import org.apache.spark.sql.types._
 
 /**
  * Utilities for dealing with both Spark and Search types
@@ -25,7 +23,7 @@ object SchemaUtils {
 
     val searchType = searchField.getType
     if (searchType.isAtomic) {
-      AtomicTypeConversionRules.unsafeInferredTypeOf(searchType)
+      inferSparkAtomicType(searchType)
     } else if (searchType.isCollection) {
 
       // Extract collection inner type
@@ -50,9 +48,38 @@ object SchemaUtils {
           }
       )
     } else if (searchType.isGeoPoint) {
-      GeoPointRule.sparkType
+      GeoPointConverter.SCHEMA
     } else {
-      throw new DataTypeException(f"Unsupported Search type $searchType")
+      throw DataTypeException.forUnsupportedSearchType(searchType)
+    }
+  }
+
+  /**
+   * Infer the Spark type of an atomic Search type
+   * @param searchType search type
+   * @throws DataTypeException for unsupported Search types
+   * @return the inferred Spark data type
+   */
+
+  @throws[DataTypeException]
+  private def inferSparkAtomicType(searchType: SearchFieldDataType): DataType = {
+
+    if (searchType.isString) {
+      DataTypes.StringType
+    } else if (searchType.isNumeric) {
+      searchType match {
+        case SearchFieldDataType.INT32 => DataTypes.IntegerType
+        case SearchFieldDataType.INT64 => DataTypes.LongType
+        case SearchFieldDataType.DOUBLE => DataTypes.DoubleType
+        case SearchFieldDataType.SINGLE => DataTypes.FloatType
+        case _ => throw DataTypeException.forUnsupportedSearchType(searchType)
+      }
+    } else if (searchType.isBoolean) {
+      DataTypes.BooleanType
+    } else if (searchType.isDateTime) {
+      DataTypes.TimestampType
+    } else {
+      throw DataTypeException.forUnsupportedSearchType(searchType)
     }
   }
 
@@ -164,86 +191,6 @@ object SchemaUtils {
   }
 
   /**
-   * Evaluate the compatibility of a SearchField and a StructField. Those two entities are considered compatible if they have
-   *  - same field name
-   *  - compatible data type
-   * @param structField struct field
-   * @param searchField search field
-   * @return true for compatible fields
-   */
-
-  final def areCompatibleFields(structField: StructField, searchField: SearchField): Boolean = {
-
-    val (searchType, sparkType) = (searchField.getType, structField.dataType)
-    val compatibleDataType: Boolean = if (searchType.isAtomic && sparkType.isAtomic) {
-
-      // They should be either naturally compatible or a suitable conversion rule should exist
-      evaluateSparkTypesCompatibility(inferSparkTypeOf(searchField), sparkType) ||
-        AtomicTypeConversionRules.existsConversionRuleFor(sparkType, searchType)
-
-    } else if (searchType.isCollection && sparkType.isCollection) {
-
-      // Evaluate compatibility on inner types
-      // A special case is represented by collection of complex objects
-      val searchInnerType = searchType.unsafeCollectionInnerType
-      val sparkInnerType = sparkType.unsafeCollectionInnerType
-
-      // If both inner types are complex, evaluate subfields compatibility
-      if (searchInnerType.isComplex && sparkInnerType.isComplex) {
-        evaluateSubFieldsCompatibility(
-          sparkInnerType.unsafeSubFields,
-          searchField.getFields
-        )
-      } else {
-        // Otherwise, evaluate standard compatibility
-        areCompatibleFields(
-          StructField("array", sparkInnerType),
-          new SearchField("array", searchInnerType)
-        )
-      }
-
-    } else if (searchType.isComplex && sparkType.isComplex) {
-      // Evaluate compatibility on subfields
-      evaluateSubFieldsCompatibility(
-        sparkType.unsafeSubFields,
-        searchField.getFields
-      )
-    } else if (searchType.isGeoPoint && sparkType.isComplex) {
-      evaluateSparkTypesCompatibility(GeoPointRule.sparkType, sparkType)
-    } else {
-      false
-    }
-
-    searchField.sameNameOf(structField) && compatibleDataType
-  }
-
-  /**
-   * Evaluate the compatibility of two sets of Spark and Search subfields
-   * @param sparkSubFields Spark fields
-   * @param searchSubFields Search fields
-   * @return true for compatible set of fields
-   */
-
-  private def evaluateSubFieldsCompatibility(
-                                              sparkSubFields: Seq[StructField],
-                                              searchSubFields: util.List[SearchField]
-                                            ): Boolean = {
-
-    // Subfields are compatible if for each
-    val searchSubFieldsSeq = JavaScalaConverters.listToSeq(searchSubFields)
-    val allSubfieldsAreCompatible: Boolean = matchNamesakeFields(
-      sparkSubFields,
-      searchSubFieldsSeq
-    ).forall {
-      case (sparkSubField, searchSubField) =>
-        areCompatibleFields(sparkSubField, searchSubField)
-    }
-
-    allSchemaFieldsExist(sparkSubFields, searchSubFieldsSeq) &&
-      allSubfieldsAreCompatible
-  }
-
-  /**
    * Infer the [[SearchFieldDataType]] for a Spark type
    * @param dataType Spark type
    * @throws DataTypeException for unsupported data types
@@ -254,7 +201,7 @@ object SchemaUtils {
   final def inferSearchTypeFor(dataType: DataType): SearchFieldDataType = {
 
     if (dataType.isAtomic) {
-      AtomicTypeConversionRules.unsafeInferredTypeOf(dataType)
+      inferSearchAtomicType(dataType)
     } else if (dataType.isCollection) {
       SearchFieldDataType.collection(
         inferSearchTypeFor(dataType.unsafeCollectionInnerType)
@@ -262,12 +209,41 @@ object SchemaUtils {
     } else if (dataType.isComplex) {
 
       // If compatible with GeoPoint, use Geography point Search data type
-      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointRule.GEO_POINT_DEFAULT_STRUCT)
+      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointConverter.SCHEMA)
       if (compatibleWithGeoPoint) {
         SearchFieldDataType.GEOGRAPHY_POINT
       } else SearchFieldDataType.COMPLEX
     } else {
       throw new DataTypeException(s"Unsupported Spark type ($dataType)")
+    }
+  }
+
+  /**
+   * Infer the Search type for an atomic Spark type
+   * @param dataType Spark type
+   * @throws DataTypeException for unsupported data types
+   * @return the inferred Search type
+   */
+
+  @throws[DataTypeException]
+  private def inferSearchAtomicType(dataType: DataType): SearchFieldDataType = {
+
+    if (dataType.isString) {
+      SearchFieldDataType.STRING
+    } else if (dataType.isNumeric) {
+      dataType match {
+        case DataTypes.IntegerType => SearchFieldDataType.INT32
+        case DataTypes.LongType => SearchFieldDataType.INT64
+        case DataTypes.DoubleType => SearchFieldDataType.DOUBLE
+        case DataTypes.FloatType => SearchFieldDataType.SINGLE
+        case _ => throw DataTypeException.forUnsupportedSparkType(dataType)
+      }
+    } else if (dataType.isBoolean) {
+      SearchFieldDataType.BOOLEAN
+    } else if (dataType.isDateTime) {
+      SearchFieldDataType.DATE_TIME_OFFSET
+    } else {
+      throw DataTypeException.forUnsupportedSparkType(dataType)
     }
   }
 
@@ -283,10 +259,7 @@ object SchemaUtils {
 
     val (name, dType) = (structField.name, structField.dataType)
     if (dType.isAtomic) {
-      new SearchField(
-        name,
-        AtomicTypeConversionRules.unsafeInferredTypeOf(dType)
-      )
+      new SearchField(name, inferSearchTypeFor(dType))
     } else if (dType.isCollection) {
 
       // If the inner type is complex, we should add subFields to newly created field
@@ -319,7 +292,7 @@ object SchemaUtils {
           .setFields(subFields: _*)
       }
     } else {
-      throw new DataTypeException(s"Unsupported Spark type ($dType)")
+      throw DataTypeException.forUnsupportedSparkType(dType)
     }
   }
 }

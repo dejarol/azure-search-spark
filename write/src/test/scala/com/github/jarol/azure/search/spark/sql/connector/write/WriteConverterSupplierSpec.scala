@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{ArrayConverter, AtomicWriteConverters, StructTypeConverter, WriteConverter}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{GeoPointRule, SafeConverterSupplierSpec}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{GeoPointConverter, SafeConverterSupplierSpec}
 import org.apache.spark.sql.types.DataTypes
 
 class WriteConverterSupplierSpec
@@ -132,7 +132,7 @@ class WriteConverterSupplierSpec
           it("same number of subfields with same or compatible types") {
 
             assertConverterExistsAndIsA[StructTypeConverter](
-              createStructField(fourth, GeoPointRule.GEO_POINT_DEFAULT_STRUCT),
+              createStructField(fourth, GeoPointConverter.SCHEMA),
               createSearchField(fourth, SearchFieldDataType.GEOGRAPHY_POINT)
             )
           }

@@ -1,7 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input
 
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.FieldAdapterImpl
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.DataTypes
 
 import java.util
 
@@ -22,8 +24,8 @@ class ComplexConverterSpec
 
         val output = ComplexConverter(
           Map(
-            k1 -> ReadTransformConverter.UTF8_STRING,
-            k2 -> ReadCastConverter.INT32
+            FieldAdapterImpl(k1, DataTypes.StringType) -> ReadConverters.UTF8_STRING,
+            FieldAdapterImpl(k2, DataTypes.IntegerType) -> ReadConverters.INT32
           )
         ).apply(
           input

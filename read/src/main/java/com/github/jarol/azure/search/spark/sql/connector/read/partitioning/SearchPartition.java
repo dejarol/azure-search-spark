@@ -79,32 +79,32 @@ public interface SearchPartition
 
     /**
      * Return an iterator with retrieved {@link SearchResult}(s)
-     * @param client Search client
+     * @param searchClient Search client
      * @return iterator fo {@link SearchResult}(s)
      */
 
     default Iterator<SearchResult> getPartitionResults(
-            @NotNull SearchClient client
+            @NotNull SearchClient searchClient
     ) {
 
         return getSearchPagedIterable(
-                client,
+                searchClient,
                 false
         ).iterator();
     }
 
     /**
      * Get the number of results retrieved by this partition
-     * @param client Search client
+     * @param searchClient Search client
      * @return the number of results retrieved by this partition
      */
 
     default Long getCountPerPartition(
-            @NotNull SearchClient client
+            @NotNull SearchClient searchClient
     ) {
 
         return getSearchPagedIterable(
-                client,
+                searchClient,
                 true
         ).getTotalCount();
     }
