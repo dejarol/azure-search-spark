@@ -3,21 +3,19 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolations._
+import SchemaViolations._
 import org.apache.spark.sql.types.{DataType, StructField}
 
 import java.util
 
-trait SafeMappingSupplierV2[A] {
+trait MappingSupplier[A] {
 
-  private type TOutput = Either[Seq[MappingViolation], Map[FieldAdapter, A]]
+  def safelyGet(
+                 schema: Seq[StructField],
+                 searchFields: Seq[SearchField]
+               ): Either[Seq[SchemaViolation], Map[FieldAdapter, A]] = {
 
-  def build(
-             schema: Seq[StructField],
-             searchFields: Seq[SearchField]
-           ): TOutput = {
-
-    val eitherViolationOrConverter = maybeComplexObjectMapping(schema, searchFields, None)
+    val eitherViolationOrConverter = maybeComplexObjectMapping(schema, searchFields)
     val violations = eitherViolationOrConverter.values.collect {
       case Left(v) => v
     }.toSeq
@@ -36,21 +34,20 @@ trait SafeMappingSupplierV2[A] {
 
   private def maybeComplexObjectMapping(
                                          schema: Seq[StructField],
-                                         searchFields: Seq[SearchField],
-                                         prefix: Option[String]
-                                       ): Map[FieldAdapter, Either[MappingViolation, A]] = {
+                                         searchFields: Seq[SearchField]
+                                       ): Map[FieldAdapter, Either[SchemaViolation, A]] = {
 
     schema.map {
       schemaField =>
         (
-          new FieldAdapter(schemaField),
+          new FieldAdapterImpl(schemaField),
           searchFields.collectFirst {
             case sef if sef.sameNameOf(schemaField) => sef
           }.toRight(schemaField).left.map {
-            sf => new MissingField(sf, prefix.orNull)
+            sf => SchemaViolations.forMissingField(sf)
           }.flatMap {
             searchField =>
-              getConverterFor(schemaField, searchField, prefix)
+              getConverterFor(schemaField, searchField)
           }
         )
     }.toMap
@@ -58,41 +55,39 @@ trait SafeMappingSupplierV2[A] {
 
   private def getConverterFor(
                                schemaField: StructField,
-                               searchField: SearchField,
-                               prefix: Option[String]
-                             ): Either[MappingViolation, A] = {
+                               searchField: SearchField
+                             ): Either[SchemaViolation, A] = {
 
     // Depending on Spark and Search types, detect the converter (if any)
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
     if (sparkType.isAtomic && searchFieldType.isAtomic) {
       // atomic types
-      eitherViolationOrMappingForAtomic(schemaField, searchField, prefix)
+      eitherViolationOrMappingForAtomic(schemaField, searchField)
     } else if (sparkType.isCollection && searchFieldType.isCollection) {
       // array types
-      eitherViolationOrConverterForArrays(sparkType, searchField, prefix)
+      eitherViolationOrConverterForArrays(sparkType, searchField)
     } else if (sparkType.isComplex && searchFieldType.isComplex) {
       // complex types
-      eitherViolationOrConverterForComplex(schemaField, searchField, prefix)
+      eitherViolationOrConverterForComplex(schemaField, searchField)
     } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
       // geo points
-      eitherViolationOrConverterForGeoPoints(schemaField, prefix)
+      eitherViolationOrConverterForGeoPoints(schemaField)
     } else {
       Left(
-        new IncompatibleType(schemaField, searchField, prefix.orNull)
+        new IncompatibleType(schemaField, searchField)
       )
     }
   }
 
   private def eitherViolationOrMappingForAtomic(
                                                  schemaField: StructField,
-                                                 searchField: SearchField,
-                                                 prefix: Option[String]
-                                               ): Either[MappingViolation, A] = {
+                                                 searchField: SearchField
+                                               ): Either[SchemaViolation, A] = {
 
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
     forAtomicTypes(sparkType, searchFieldType)
       .toRight().left.map {
-        _ => new IncompatibleType(schemaField, searchField, prefix.orNull)
+        _ => new IncompatibleType(schemaField, searchField)
       }
   }
 
@@ -118,10 +113,9 @@ trait SafeMappingSupplierV2[A] {
    */
 
   private def eitherViolationOrConverterForArrays(
-                                     sparkType: DataType,
-                                     searchField: SearchField,
-                                     prefix: Option[String]
-                                   ): Either[MappingViolation, A] = {
+                                                   sparkType: DataType,
+                                                   searchField: SearchField
+                                                 ): Either[SchemaViolation, A] = {
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
     val (sparkInnerType, searchInnerType) = (sparkType.unsafeCollectionInnerType, searchField.getType.unsafeCollectionInnerType)
@@ -137,10 +131,9 @@ trait SafeMappingSupplierV2[A] {
     // Get the converter recursively
     getConverterFor(
       StructField("array", sparkInnerType),
-      searchArrayFieldMaybeWithSubFields,
-      prefix.map(_.concat(searchField.getName))
+      searchArrayFieldMaybeWithSubFields
     ).left.map {
-      new ArrayViolation(searchField, _, prefix.orNull)
+      new ArrayViolation(searchField.getName, _)
     }.map(
       forCollection(sparkInnerType, searchField, _)
     )
@@ -148,19 +141,16 @@ trait SafeMappingSupplierV2[A] {
 
   private def eitherViolationOrConverterForComplex(
                                                     schemaField: StructField,
-                                                    searchField: SearchField,
-                                                    prefix: Option[String]
+                                                    searchField: SearchField
                                                   ): Either[IncompatibleNestedField, A] = {
 
     converterForComplexType(
       schemaField.dataType,
-      searchField,
-      prefix.map(_.concat(searchField.getName))
+      searchField
     ).left.map {
       v => new IncompatibleNestedField(
-        schemaField,
-        JavaScalaConverters.seqToList(v),
-        prefix.orNull
+        schemaField.name,
+        JavaScalaConverters.seqToList(v)
       )
     }
   }
@@ -185,15 +175,13 @@ trait SafeMappingSupplierV2[A] {
 
   private def converterForComplexType(
                                        sparkType: DataType,
-                                       searchField: SearchField,
-                                       prefix: Option[String]
-                                     ): Either[Seq[MappingViolation], A] = {
+                                       searchField: SearchField
+                                     ): Either[Seq[SchemaViolation], A] = {
 
     // Build a rule that wraps subField conversion rules
     val maybeSubfieldMapping = maybeComplexObjectMapping(
       sparkType.unsafeSubFields,
-      JavaScalaConverters.listToSeq(searchField.getFields),
-      prefix
+      JavaScalaConverters.listToSeq(searchField.getFields)
     )
 
     val violations = maybeSubfieldMapping.values.collect {
@@ -209,7 +197,7 @@ trait SafeMappingSupplierV2[A] {
       }
 
       Right(
-        forComplex(internal)
+        forNested(internal)
       )
     }
   }
@@ -220,24 +208,23 @@ trait SafeMappingSupplierV2[A] {
    * @return a converter for handling nested data objects
    */
 
-  protected def forComplex(internal: Map[FieldAdapter, A]): A
+  protected def forNested(internal: Map[FieldAdapter, A]): A
 
   /**
    * Safely retrieve a converter for geopoints
    * <br>
    * A converter will exist if and only if given Spark types is compatible with the default geopoint schema
-   * (look at [[GeoPointRule.GEO_POINT_DEFAULT_STRUCT]])
+   * (look at [[GeoPointConverter.SCHEMA]])
+   *
    * @param schemaField spark type
    * @return a converter for geo points
    */
 
-  private def eitherViolationOrConverterForGeoPoints(
-                                                      schemaField: StructField,
-                                                      prefix: Option[String]
-                                                    ): Either[MappingViolation, A] = {
+  private def eitherViolationOrConverterForGeoPoints(schemaField: StructField): Either[SchemaViolation, A] = {
 
-    val allSubFieldsExist = schemaField.dataType.unsafeSubFields.forall {
-      sf => GeoPointRule.GEO_POINT_DEFAULT_STRUCT.exists {
+    val allSubFieldsExistAndAreCompatible = schemaField.dataType.unsafeSubFields.forall {
+      sf =>
+        GeoPointConverter.SCHEMA.exists {
         geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
           sf.dataType,
           geoSf.dataType
@@ -245,12 +232,12 @@ trait SafeMappingSupplierV2[A] {
       }
     }
 
-    (if (allSubFieldsExist) {
+    (if (allSubFieldsExistAndAreCompatible) {
       Some(forGeoPoint)
     } else {
       None
     }).toRight().left.map {
-      _ => new NotSuitableAsGeoPoint(schemaField, prefix.orNull)
+      _ => SchemaViolations.forIncompatibleGeoPoint(schemaField)
     }
   }
 

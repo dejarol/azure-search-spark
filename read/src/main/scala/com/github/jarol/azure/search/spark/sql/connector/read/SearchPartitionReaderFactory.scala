@@ -1,5 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolationException
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}
@@ -8,6 +10,7 @@ import org.apache.spark.sql.types.StructType
 /**
  * Partition reader factory for Search dataSource
  * @param readConfig read configuration
+ * @param schema schema to user for data reading (either inferred or user-defined)
  */
 
 class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
@@ -25,9 +28,35 @@ class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
   override def createReader(partition: InputPartition): PartitionReader[InternalRow] = {
 
     partition match {
-      case sp: SearchPartition =>
-        new SearchPartitionReader(readConfig, null, sp)
+      case sp: SearchPartition => createSearchReader(sp)
       case _ => throw new UnexpectedPartitionTypeException(partition.getClass)
     }
+  }
+
+  /**
+   * Create the partition reader
+   * @param partition instance of [[SearchPartition]]
+   * @throws MappingViolationException if the provided schema clashes with target index fields
+   * @return a Search partition reader
+   */
+
+  @throws[MappingViolationException]
+  private def createSearchReader(partition: SearchPartition): PartitionReader[InternalRow] = {
+
+    val searchDocumentToInternalRowConverter = ReadMappingSupplier.safelyGet(schema, readConfig.getSearchIndexFields)
+      .left.map {
+        v => new MappingViolationException(
+          JavaScalaConverters.seqToList(v)
+        )
+      }.right.map(SearchDocumentToInternalRowConverter) match {
+      case Left(value) => throw value
+      case Right(value) => value
+    }
+
+    new SearchPartitionReader(
+      readConfig,
+      searchDocumentToInternalRowConverter,
+      partition
+    )
   }
 }
