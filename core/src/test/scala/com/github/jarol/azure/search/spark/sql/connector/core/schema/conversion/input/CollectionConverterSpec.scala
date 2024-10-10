@@ -14,7 +14,7 @@ class CollectionConverterSpec
 
         val input = Seq("hello", "world")
         val output = CollectionConverter(
-          ReadTransformConverter.UTF8_STRING
+          ReadConverters.UTF8_STRING
         ).apply(
           JavaScalaConverters.seqToList(input)
         )

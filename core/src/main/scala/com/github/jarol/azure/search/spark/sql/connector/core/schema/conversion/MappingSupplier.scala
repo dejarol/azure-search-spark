@@ -40,7 +40,7 @@ trait MappingSupplier[A] {
     schema.map {
       schemaField =>
         (
-          new FieldAdapterImpl(schemaField),
+          FieldAdapterImpl(schemaField),
           searchFields.collectFirst {
             case sef if sef.sameNameOf(schemaField) => sef
           }.toRight(schemaField).left.map {

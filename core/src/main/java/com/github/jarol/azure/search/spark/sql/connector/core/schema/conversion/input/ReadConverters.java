@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 /**
- * Collection of specialized {@link ReadConverter}(s)
+ * Collection of {@link ReadConverter}(s)
  */
 
 public final class ReadConverters {

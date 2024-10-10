@@ -13,20 +13,23 @@ case class FieldAdapterImpl(
                              private val schemaType: DataType
                            ) extends FieldAdapter {
 
+  override def name(): String = fieldName
+
+  override def sparkType(): DataType = schemaType
+}
+
+object FieldAdapterImpl {
+
   /**
    * Create an instance from a [[StructField]]
    * @param field input StructField
    */
 
-  def this(field: StructField) = {
+  def apply(field: StructField): FieldAdapterImpl = {
 
-    this(
+    FieldAdapterImpl(
       field.name,
       field.dataType
     )
   }
-
-  override def name(): String = fieldName
-
-  override def sparkType(): DataType = schemaType
 }
