@@ -28,8 +28,8 @@ object GeoPointConverter {
 
   final val FOR_WRITE: StructTypeConverter = StructTypeConverter(
     Map(
-      StructField(TYPE_LABEL, DataTypes.StringType) -> AtomicWriteConverters.StringConverter,
-      StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
+      FieldAdapterImpl(StructField(TYPE_LABEL, DataTypes.StringType)) -> AtomicWriteConverters.StringConverter,
+      FieldAdapterImpl(StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType))) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
     )
   )
 }

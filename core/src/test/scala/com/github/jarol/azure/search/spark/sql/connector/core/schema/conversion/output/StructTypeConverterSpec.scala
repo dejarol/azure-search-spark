@@ -1,12 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.FieldAdapterImpl
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 
 class StructTypeConverterSpec
-  extends BasicSpec
-    with FieldFactory {
+  extends BasicSpec {
 
   describe(anInstanceOf[StructTypeConverter]) {
     describe(SHOULD) {
@@ -20,8 +20,8 @@ class StructTypeConverterSpec
         val input = InternalRow(values: _*)
         val output = StructTypeConverter(
           Map(
-            createStructField(k1, DataTypes.IntegerType) -> AtomicWriteConverters.Int32Converter,
-            createStructField(k2, DataTypes.DoubleType) -> AtomicWriteConverters.DoubleConverter
+            FieldAdapterImpl(k1, DataTypes.IntegerType) -> AtomicWriteConverters.Int32Converter,
+            FieldAdapterImpl(k2, DataTypes.DoubleType) -> AtomicWriteConverters.DoubleConverter
           )
         ).apply(input)
 
