@@ -51,7 +51,7 @@ object DecodingSupplier
   private def forNumeric(dataType: DataType): Option[SearchDecoder] = {
 
     if (dataType.isNumeric) {
-
+      None
     } else {
       None
     }
