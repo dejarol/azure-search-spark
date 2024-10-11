@@ -3,20 +3,21 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolation.Type
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolations._
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolationsUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants, FieldFactory}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
-import org.scalatest.{EitherValues, Inspectors}
+import org.scalatest.EitherValues
 
-import java.time.{Instant, OffsetDateTime}
 import java.time.temporal.ChronoUnit
+import java.time.{Instant, OffsetDateTime}
 import scala.reflect.ClassTag
 
 class EncodingSupplierSpec
   extends BasicSpec
     with FieldFactory
-      with EitherValues
-        with Inspectors {
+      with SchemaViolationsUtils
+        with EitherValues {
 
   private lazy val (first, second, third) = ("first", "second", "third")
 
@@ -223,7 +224,7 @@ class EncodingSupplierSpec
             result should have size 1
             val head = result.head
             head.getType shouldBe Type.INCOMPATIBLE_TYPE
-            head shouldBe a [IncompatibleType]
+            isForIncompatibleType(head) shouldBe true
           }
         }
 
@@ -245,11 +246,13 @@ class EncodingSupplierSpec
 
             result should have size 1
             val head = result.head
-            head.getType shouldBe Type.INCOMPATIBLE_NESTED_FIELD
-            head shouldBe a[IncompatibleNestedField]
-            val casted = head.asInstanceOf[IncompatibleNestedField]
-            casted.getSubFieldViolations should have size 1
-            casted.getSubFieldViolations.get(0).getType shouldBe Type.MISSING_FIELD
+            head.getType shouldBe Type.INCOMPATIBLE_COMPLEX_FIELD
+            isForComplexField(head) shouldBe true
+            val maybeViolations = maybeSubFieldViolations(head)
+            maybeViolations shouldBe defined
+            val subViolations = maybeViolations.get
+            subViolations should have size 1
+            subViolations.head.getType shouldBe Type.MISSING_FIELD
           }
 
           it("have incompatible dtypes") {
@@ -271,11 +274,13 @@ class EncodingSupplierSpec
 
             result should have size 1
             val head = result.head
-            head.getType shouldBe Type.INCOMPATIBLE_NESTED_FIELD
-            head shouldBe a[IncompatibleNestedField]
-            val casted = head.asInstanceOf[IncompatibleNestedField]
-            casted.getSubFieldViolations should have size 1
-            casted.getSubFieldViolations.get(0).getType shouldBe Type.INCOMPATIBLE_TYPE
+            head.getType shouldBe Type.INCOMPATIBLE_COMPLEX_FIELD
+            isForComplexField(head) shouldBe true
+            val maybeSubViolations = maybeSubFieldViolations(head)
+            maybeSubViolations shouldBe defined
+            val subViolations = maybeSubViolations.get
+            subViolations should have size 1
+            subViolations.head.getType shouldBe Type.INCOMPATIBLE_TYPE
           }
         }
 
@@ -294,9 +299,10 @@ class EncodingSupplierSpec
             result should have size 1
             val head = result.head
             head.getType shouldBe Type.INCOMPATIBLE_ARRAY_TYPE
-            head shouldBe a [ArrayViolation]
-            val subtypeViolation = head.asInstanceOf[ArrayViolation].getSubtypeViolation
-            subtypeViolation.getType shouldBe Type.INCOMPATIBLE_TYPE
+            isForArrayField(head) shouldBe true
+            val subtypeViolation = maybeSubViolation(head)
+            subtypeViolation shouldBe defined
+            subtypeViolation.get.getType shouldBe Type.INCOMPATIBLE_TYPE
           }
         }
       }

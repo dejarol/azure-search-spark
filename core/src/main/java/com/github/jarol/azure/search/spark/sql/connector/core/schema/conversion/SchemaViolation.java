@@ -21,7 +21,7 @@ public interface SchemaViolation {
         MISSING_FIELD,
         INCOMPATIBLE_TYPE,
         INCOMPATIBLE_ARRAY_TYPE,
-        INCOMPATIBLE_NESTED_FIELD,
+        INCOMPATIBLE_COMPLEX_FIELD,
         NOT_SUITABLE_AS_GEOPOINT
     }
 

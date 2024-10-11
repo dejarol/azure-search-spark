@@ -18,7 +18,7 @@ public final class SchemaViolations {
      * Violation for namesake fields with incompatible data types
      */
 
-    private static class IncompatibleType
+    static class IncompatibleType
             extends SchemaViolationImpl {
 
         private final DataType sparkType;
@@ -47,7 +47,7 @@ public final class SchemaViolations {
      * Violation caused by an incompatible nested field
      */
 
-    private static class ComplexFieldViolation
+    static class ComplexFieldViolation
             extends SchemaViolationImpl {
 
         private final List<SchemaViolation> subFieldViolations;
@@ -63,8 +63,17 @@ public final class SchemaViolations {
                 @NotNull String name,
                 List<SchemaViolation> subFieldViolations
         ) {
-            super(name, Type.INCOMPATIBLE_NESTED_FIELD);
+            super(name, Type.INCOMPATIBLE_COMPLEX_FIELD);
             this.subFieldViolations = subFieldViolations;
+        }
+
+        /**
+         * Get subField violations
+         * @return subField violations
+         */
+
+        public List<SchemaViolation> getSubFieldViolations() {
+            return subFieldViolations;
         }
     }
 
@@ -72,7 +81,7 @@ public final class SchemaViolations {
      * Violation for a collection field with incompatible inner type
      */
 
-    private static class ArrayViolation
+    static class ArrayViolation
             extends SchemaViolationImpl {
 
         private final SchemaViolation subtypeViolation;
