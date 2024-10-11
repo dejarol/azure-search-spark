@@ -7,9 +7,8 @@ import java.io.Serializable;
  */
 
 @FunctionalInterface
-public interface SearchEncoder extends Serializable {
-
-    SearchEncoder IDENTITY = value -> value;
+public interface SearchEncoder
+        extends Serializable {
 
     /**
      * Convert a Search data object to a Spark internal object

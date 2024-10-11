@@ -12,11 +12,19 @@ import java.time.temporal.ChronoUnit;
 
 public class AtomicDecoders {
 
+    public static final SearchDecoder IDENTITY;
+
     /**
      * Decoder for strings
      */
     
     public static final SearchDecoder STRING;
+
+    /**
+     * Decoder from numeric/boolean types to string
+     */
+
+    public static final SearchDecoder STRING_VALUE_OF;
 
     /**
      * Decoder for dates
@@ -31,6 +39,15 @@ public class AtomicDecoders {
     public final static SearchDecoder TIMESTAMP;
 
     static {
+
+        IDENTITY = value -> value;
+
+        STRING_VALUE_OF = new TransformDecoder<String>() {
+            @Override
+            protected String transform(Object value) {
+                return String.valueOf(value);
+            }
+        };
 
         STRING = new TransformDecoder<String>() {
             @Override
