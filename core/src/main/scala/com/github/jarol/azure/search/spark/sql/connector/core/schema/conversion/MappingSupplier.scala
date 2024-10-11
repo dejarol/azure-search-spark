@@ -3,7 +3,6 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
-import SchemaViolations._
 import org.apache.spark.sql.types.{DataType, StructField}
 
 import java.util
@@ -74,7 +73,7 @@ trait MappingSupplier[A] {
       eitherViolationOrConverterForGeoPoints(schemaField)
     } else {
       Left(
-        new IncompatibleType(schemaField, searchField)
+        SchemaViolations.forNamesakeButIncompatibleFields(schemaField.name, sparkType, searchFieldType)
       )
     }
   }
@@ -87,7 +86,7 @@ trait MappingSupplier[A] {
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
     forAtomicTypes(sparkType, searchFieldType)
       .toRight().left.map {
-        _ => new IncompatibleType(schemaField, searchField)
+        _ => SchemaViolations.forNamesakeButIncompatibleFields(schemaField.name, sparkType, searchFieldType)
       }
   }
 
@@ -133,7 +132,7 @@ trait MappingSupplier[A] {
       StructField("array", sparkInnerType),
       searchArrayFieldMaybeWithSubFields
     ).left.map {
-      new ArrayViolation(searchField.getName, _)
+      SchemaViolations.forArrayField(searchField.getName, _)
     }.map(
       forCollection(sparkInnerType, searchField, _)
     )
@@ -142,13 +141,13 @@ trait MappingSupplier[A] {
   private def eitherViolationOrConverterForComplex(
                                                     schemaField: StructField,
                                                     searchField: SearchField
-                                                  ): Either[IncompatibleNestedField, A] = {
+                                                  ): Either[SchemaViolation, A] = {
 
     converterForComplexType(
       schemaField.dataType,
       searchField
     ).left.map {
-      v => new IncompatibleNestedField(
+      v => SchemaViolations.forComplexField(
         schemaField.name,
         JavaScalaConverters.seqToList(v)
       )
@@ -196,9 +195,7 @@ trait MappingSupplier[A] {
         case (k, Right(v)) => (k, v)
       }
 
-      Right(
-        forNested(internal)
-      )
+      Right(forComplex(internal))
     }
   }
 
@@ -208,13 +205,13 @@ trait MappingSupplier[A] {
    * @return a converter for handling nested data objects
    */
 
-  protected def forNested(internal: Map[FieldAdapter, A]): A
+  protected def forComplex(internal: Map[FieldAdapter, A]): A
 
   /**
    * Safely retrieve a converter for geopoints
    * <br>
    * A converter will exist if and only if given Spark types is compatible with the default geopoint schema
-   * (look at [[GeoPointConverter.SCHEMA]])
+   * (look at [[GeoPointType.SCHEMA]])
    *
    * @param schemaField spark type
    * @return a converter for geo points
@@ -224,7 +221,7 @@ trait MappingSupplier[A] {
 
     val allSubFieldsExistAndAreCompatible = schemaField.dataType.unsafeSubFields.forall {
       sf =>
-        GeoPointConverter.SCHEMA.exists {
+        GeoPointType.SCHEMA.exists {
         geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
           sf.dataType,
           geoSf.dataType

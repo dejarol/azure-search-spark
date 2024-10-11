@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointConverter, MappingSupplier}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointType, MappingSupplier}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 object ReadMappingSupplier
@@ -84,6 +84,6 @@ object ReadMappingSupplier
   }
 
   override protected def forCollection(sparkType: DataType, search: SearchField, internal: ReadConverter): ReadConverter = CollectionConverter(internal)
-  override protected def forNested(internal: Map[FieldAdapter, ReadConverter]): ReadConverter = ComplexConverter(internal)
-  override protected def forGeoPoint: ReadConverter = GeoPointConverter.FOR_READ
+  override protected def forComplex(internal: Map[FieldAdapter, ReadConverter]): ReadConverter = ComplexConverter(internal)
+  override protected def forGeoPoint: ReadConverter = GeoPointType.READ_CONVERTER
 }

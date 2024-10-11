@@ -1,22 +1,19 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolationException
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory}
-import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
  * [[DataWriterFactory]] implementation for Search dataSource
- *
  * @param writeConfig write configuration
- * @param converters mapping for converting a Spark internal row to a Search document
- * @param indexActionSupplier index action supplier
+ * @param schema Dataframe schema
  */
 
 class SearchWriterFactory(
                            private val writeConfig: WriteConfig,
-                           private val converters: Map[StructField, WriteConverter],
-                           private val indexActionSupplier: IndexActionSupplier
+                           private val schema: StructType,
                          )
   extends DataWriterFactory {
 
@@ -24,10 +21,58 @@ class SearchWriterFactory(
 
     new SearchDataWriter(
       writeConfig,
-      converters,
-      indexActionSupplier,
+      createInternalRowToSearchDocumentConverter(),
+      createIndexActionSupplier(),
       partitionId,
       taskId
     )
+  }
+
+  /**
+   * Create the [[IndexActionSupplier]]
+   * @throws IllegalIndexActionTypeColumnException if the specified action type column is not eligible (either non-existing or non-string)
+   * @return a index action supplier instance
+   */
+
+  @throws[IllegalIndexActionTypeColumnException]
+  private def createIndexActionSupplier(): IndexActionSupplier = {
+
+    // Create action supplier
+    writeConfig.actionColumn.map {
+      PerDocumentSupplier.safeApply(_, schema, writeConfig.overallAction) match {
+        case Left(value) => throw value
+        case Right(supplier) => supplier
+      }
+    }.getOrElse(
+      IndexActionSupplier.createConstantSupplier(
+        writeConfig.overallAction
+      )
+    )
+  }
+
+  /**
+   * Create a converter for transforming Spark internal rows to Search documents
+   * @throws SchemaViolationException if the conversion function cannot be built
+   * @return a function for transforming Spark internal rows into Search documents
+   */
+
+  @throws[SchemaViolationException]
+  private def createInternalRowToSearchDocumentConverter(): InternalRowToSearchDocumentConverter = {
+
+    // Exclude index action column from mapping, if defined
+    val schemaMaybeWithoutActionColumn: Seq[StructField] = writeConfig.actionColumn match {
+      case Some(value) => schema.filterNot {
+        _.name.equalsIgnoreCase(value)
+      }
+      case None => schema
+    }
+
+    InternalRowToSearchDocumentConverter.safeApply(
+      schemaMaybeWithoutActionColumn,
+      writeConfig.getSearchIndexFields
+    ) match {
+      case Left(value) => throw value
+      case Right(value) => value
+    }
   }
 }

@@ -5,10 +5,10 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import org.apache.spark.sql.types._
 
 /**
- * Conversion rule for geo points
+ * GeoPoint type
  */
 
-object GeoPointConverter {
+object GeoPointType {
 
   private final val TYPE_LABEL = "type"
   private final val COORDINATES_LABEL = "coordinates"
@@ -19,17 +19,17 @@ object GeoPointConverter {
     )
   )
 
-  final val FOR_READ: ComplexConverter = ComplexConverter(
+  final val READ_CONVERTER: ReadConverter = ComplexConverter(
     Map(
       FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> ReadConverters.UTF8_STRING,
       FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionConverter(ReadConverters.DOUBLE)
     )
   )
 
-  final val FOR_WRITE: StructTypeConverter = StructTypeConverter(
+  final val WRITE_CONVERTER: WriteConverter = StructTypeConverter(
     Map(
-      FieldAdapterImpl(StructField(TYPE_LABEL, DataTypes.StringType)) -> AtomicWriteConverters.StringConverter,
-      FieldAdapterImpl(StructField(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType))) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicWriteConverters.StringConverter,
+      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
     )
   )
 }

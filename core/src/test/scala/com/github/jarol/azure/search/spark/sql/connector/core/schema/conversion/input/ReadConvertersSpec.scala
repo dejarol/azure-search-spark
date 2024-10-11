@@ -10,7 +10,7 @@ class ReadConvertersSpec
   extends BasicSpec
     with FieldFactory {
 
-  describe(`object`[ReadConverters]) {
+  describe(`object`[ReadConverters.type]) {
     describe(SHOULD) {
       describe("provide a converter for") {
         describe("casting a non-null Search object into a Spark internal type, like") {

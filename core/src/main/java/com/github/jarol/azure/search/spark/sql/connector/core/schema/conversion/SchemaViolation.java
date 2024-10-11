@@ -30,7 +30,6 @@ public interface SchemaViolation {
      * @return field name
      */
 
-    @SuppressWarnings("unused")
     String getFieldName();
 
     /**

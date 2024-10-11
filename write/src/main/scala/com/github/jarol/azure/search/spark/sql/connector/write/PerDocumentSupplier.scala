@@ -33,19 +33,20 @@ case class PerDocumentSupplier private(private val actionColumnIndex: Int,
 object PerDocumentSupplier {
 
   /**
-   * Create a getter that will retrieve a per-document index action type from an internal row
+   * Safely create a getter that will retrieve a per-document index action type from an internal row.
+   * <br>
+   * If the target column does not exist or its datatype is different from a string, a [[Left]] will be retrieved
    * @param name name of the column that should be used for fetching the action type
    * @param schema row schema
    * @param defaultAction default action to use
-   * @throws IllegalIndexActionTypeColumnException if given column name does not exist within the schema, or it's not a string column
-   * @return an index action getter
+   * @return either a [[IllegalIndexActionTypeColumnException]] or a supplier instance
    */
 
   def safeApply(
                  name: String,
                  schema: StructType,
                  defaultAction: IndexActionType
-               ): Either[Throwable, PerDocumentSupplier] = {
+               ): Either[IllegalIndexActionTypeColumnException, PerDocumentSupplier] = {
 
     // Extract the index of action type column
     val maybeIndexActionColumnIndex: Option[Int] = schema.zipWithIndex.collectFirst {

@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.MappingViolationException
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolationException
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}
@@ -36,19 +35,15 @@ class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
   /**
    * Create the partition reader
    * @param partition instance of [[SearchPartition]]
-   * @throws MappingViolationException if the provided schema clashes with target index fields
+   * @throws SchemaViolationException if the provided schema clashes with target index fields
    * @return a Search partition reader
    */
 
-  @throws[MappingViolationException]
+  @throws[SchemaViolationException]
   private def createSearchReader(partition: SearchPartition): PartitionReader[InternalRow] = {
 
-    val searchDocumentToInternalRowConverter = ReadMappingSupplier.safelyGet(schema, readConfig.getSearchIndexFields)
-      .left.map {
-        v => new MappingViolationException(
-          JavaScalaConverters.seqToList(v)
-        )
-      }.right.map(SearchDocumentToInternalRowConverter) match {
+    val searchDocumentToInternalRowConverter = SearchDocumentToInternalRowConverter
+      .safeApply(schema, readConfig.getSearchIndexFields) match {
       case Left(value) => throw value
       case Right(value) => value
     }

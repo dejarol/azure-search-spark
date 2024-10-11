@@ -7,8 +7,7 @@ import java.io.Serializable;
  */
 
 @FunctionalInterface
-public interface WriteConverter
-        extends Serializable {
+public interface WriteConverter extends Serializable {
 
     /**
      * Convert a Spark internal value to a Search document property
