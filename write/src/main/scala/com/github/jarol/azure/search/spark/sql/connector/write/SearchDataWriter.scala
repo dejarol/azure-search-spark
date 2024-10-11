@@ -4,30 +4,27 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexAction
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
-import org.apache.spark.sql.types.StructField
 
 /**
  * [[DataWriter]] implementation for Search dataSource
  * @param writeConfig write configuration
- * @param converters mapping from Spark internal row to Search document
+ * @param internalRowToSearchDocumentConverter converter from Spark internal rows to Search documents
  * @param actionSupplier index action supplier
  * @param partitionId partition id
  * @param taskId task id
  */
 
 class SearchDataWriter(private val writeConfig: WriteConfig,
-                       private val converters: Map[StructField, WriteConverter],
+                       private val internalRowToSearchDocumentConverter: InternalRowToSearchDocumentConverter,
                        private val actionSupplier: IndexActionSupplier,
                        private val partitionId: Int,
                        private val taskId: Long)
   extends DataWriter[InternalRow]
     with Logging {
 
-  private lazy val internalRowToSearchDocumentConverter = InternalRowToSearchDocumentConverter(converters)
   private var actionsBuffer: Seq[IndexAction[SearchDocument]] = Seq.empty
 
   override def write(record: InternalRow): Unit = {

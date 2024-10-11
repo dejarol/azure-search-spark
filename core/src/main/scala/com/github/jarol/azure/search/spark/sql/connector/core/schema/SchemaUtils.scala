@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointType
 import com.github.jarol.azure.search.spark.sql.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types._
 
@@ -48,7 +48,7 @@ object SchemaUtils {
           }
       )
     } else if (searchType.isGeoPoint) {
-      GeoPointConverter.SCHEMA
+      GeoPointType.SCHEMA
     } else {
       throw DataTypeException.forUnsupportedSearchType(searchType)
     }
@@ -209,7 +209,7 @@ object SchemaUtils {
     } else if (dataType.isComplex) {
 
       // If compatible with GeoPoint, use Geography point Search data type
-      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointConverter.SCHEMA)
+      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointType.SCHEMA)
       if (compatibleWithGeoPoint) {
         SearchFieldDataType.GEOGRAPHY_POINT
       } else SearchFieldDataType.COMPLEX

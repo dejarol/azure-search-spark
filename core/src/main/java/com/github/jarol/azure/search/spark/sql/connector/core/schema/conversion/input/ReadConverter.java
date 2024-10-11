@@ -7,8 +7,7 @@ import java.io.Serializable;
  */
 
 @FunctionalInterface
-public interface ReadConverter
-        extends Serializable {
+public interface ReadConverter extends Serializable {
 
     /**
      * Convert a Search data object to a Spark internal object

@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion;
 
-import com.azure.search.documents.indexes.models.SearchField;
+import com.azure.search.documents.indexes.models.SearchFieldDataType;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.StructField;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -8,10 +9,97 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 /**
- * Collection of {@link SchemaViolation}(s)
+ * Collection of methods for creating instances of {@link SchemaViolation}(s)
  */
 
 public final class SchemaViolations {
+
+    /**
+     * Violation for namesake fields with incompatible data types
+     */
+
+    private static class IncompatibleType
+            extends SchemaViolationImpl {
+
+        private final DataType sparkType;
+        private final SearchFieldDataType searchType;
+
+        /**
+         * Create an instance
+         * @param name field name
+         * @param sparkType Spark type
+         * @param searchType Search type
+         */
+
+        public IncompatibleType(
+                String name,
+                @NotNull DataType sparkType,
+                @NotNull SearchFieldDataType searchType
+        ) {
+
+            super(name, Type.INCOMPATIBLE_TYPE);
+            this.sparkType = sparkType;
+            this.searchType = searchType;
+        }
+    }
+
+    /**
+     * Violation caused by an incompatible nested field
+     */
+
+    private static class ComplexFieldViolation
+            extends SchemaViolationImpl {
+
+        private final List<SchemaViolation> subFieldViolations;
+
+        /**
+         * Create an instance
+         * @param name field name
+         * @param subFieldViolations violations on subFields
+         */
+
+        @Contract(pure = true)
+        public ComplexFieldViolation(
+                @NotNull String name,
+                List<SchemaViolation> subFieldViolations
+        ) {
+            super(name, Type.INCOMPATIBLE_NESTED_FIELD);
+            this.subFieldViolations = subFieldViolations;
+        }
+    }
+
+    /**
+     * Violation for a collection field with incompatible inner type
+     */
+
+    private static class ArrayViolation
+            extends SchemaViolationImpl {
+
+        private final SchemaViolation subtypeViolation;
+
+        /**
+         * Create an instance
+         * @param name field name
+         * @param subtypeViolation inner type violation
+         */
+
+        public ArrayViolation(
+                @NotNull String name,
+                SchemaViolation subtypeViolation
+        ) {
+            super(name, Type.INCOMPATIBLE_ARRAY_TYPE);
+            this.subtypeViolation = subtypeViolation;
+        }
+
+        /**
+         * Get the inner type violation
+         * @return inner type violation
+         */
+
+        public SchemaViolation getSubtypeViolation() {
+            return subtypeViolation;
+        }
+    }
 
     /**
      * Create a schema violation for a missing field
@@ -48,110 +136,55 @@ public final class SchemaViolations {
     }
 
     /**
-     * Instance for namesake fields with incompatible data types
+     * Create a new instance for namesake fields with incompatible data types
+     * @param name field name
+     * @param sparkType Spark type
+     * @param searchType Search type
+     * @return a violation instance
      */
 
-    @SuppressWarnings("unused")
-    public static class IncompatibleType
-            extends SchemaViolationImpl {
+    @Contract("_, _, _ -> new")
+    public static @NotNull SchemaViolation forNamesakeButIncompatibleFields(
+            String name,
+            @NotNull DataType sparkType,
+            @NotNull SearchFieldDataType searchType
+    ) {
 
-        private final String sparkType;
-        private final String searchType;
-
-        /**
-         * Create an instance
-         * @param schemaField Spark field
-         * @param searchField Search field
-         */
-
-        public IncompatibleType(
-                @NotNull StructField schemaField,
-                @NotNull SearchField searchField
-        ) {
-
-            super(schemaField.name(), Type.INCOMPATIBLE_TYPE);
-            this.sparkType = schemaField.dataType().sql();
-            this.searchType = searchField.getType().toString();
-        }
-
-        /**
-         * Get the data type of the Spark field
-         * @return data type of the Spark field
-         */
-
-        public String getSparkType() {
-            return sparkType;
-        }
-
-        /**
-         * Get the data type of the Search field
-         * @return data type of the Search field
-         */
-
-        public String getSearchType() {
-            return searchType;
-        }
+        return new IncompatibleType(name, sparkType, searchType);
     }
 
     /**
-     * Violation caused by an incompatible nested field
+     * Create a new instance for a complex field
+     * @param name name
+     * @param subFieldViolations violations on subFields
+     * @return a violation instance
      */
 
-    public static class IncompatibleNestedField
-            extends SchemaViolationImpl {
+    @Contract(value = "_, _ -> new", pure = true)
+    public static @NotNull SchemaViolation forComplexField(
+            String name,
+            List<SchemaViolation> subFieldViolations
+    ) {
 
-        private final List<SchemaViolation> subFieldViolations;
-
-        /**
-         * Create an instance
-         * @param name field name
-         * @param subFieldViolations violations on subFields
-         */
-
-        @Contract(pure = true)
-        public IncompatibleNestedField(
-                @NotNull String name,
-                List<SchemaViolation> subFieldViolations
-        ) {
-            super(name, Type.INCOMPATIBLE_NESTED_FIELD);
-            this.subFieldViolations = subFieldViolations;
-        }
-
-        public List<SchemaViolation> getSubFieldViolations() {
-            return subFieldViolations;
-        }
+        return new ComplexFieldViolation(
+                name,
+                subFieldViolations
+        );
     }
 
     /**
-     * Violation for a collection field with incompatible inner type
+     * Create a new instance for an array field
+     * @param name name
+     * @param subtypeViolation violation for array inner type
+     * @return a violation instance
      */
 
-    public static class ArrayViolation
-            extends SchemaViolationImpl {
+    @Contract("_, _ -> new")
+    public static @NotNull SchemaViolation forArrayField(
+            @NotNull String name,
+            SchemaViolation subtypeViolation
+    ) {
 
-        private final SchemaViolation subtypeViolation;
-
-        /**
-         * Create an instance
-         * @param name field name
-         * @param subtypeViolation inner type violation
-         */
-
-        public ArrayViolation(
-                @NotNull String name,
-                SchemaViolation subtypeViolation
-        ) {
-            super(name, Type.INCOMPATIBLE_ARRAY_TYPE);
-            this.subtypeViolation = subtypeViolation;
-        }
-
-        /**
-         * Get the inner type violation
-         * @return inner type violation
-         */
-
-        public SchemaViolation getSubtypeViolation() {
-            return subtypeViolation;
-        }
+        return new ArrayViolation(name, subtypeViolation);
     }
 }

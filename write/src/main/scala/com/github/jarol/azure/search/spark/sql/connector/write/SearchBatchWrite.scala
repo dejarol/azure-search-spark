@@ -1,21 +1,19 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, PhysicalWriteInfo, WriterCommitMessage}
-import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StructType
 
 /**
  * [[BatchWrite]] implementation for Search dataSource
  * @param writeConfig write configuration
- * @param converters converters for mapping a Spark internal row to a Search document
- * @param indexActionSupplier index action supplier
+ * @param schema DataFrame schema
  */
 
 class SearchBatchWrite(
                         private val writeConfig: WriteConfig,
-                        private val converters: Map[StructField, WriteConverter],
-                        private val indexActionSupplier: IndexActionSupplier
+                        private val schema: StructType,
+
                       )
   extends BatchWrite
     with Logging {
@@ -24,8 +22,7 @@ class SearchBatchWrite(
 
     new SearchWriterFactory(
       writeConfig,
-      converters,
-      indexActionSupplier
+      schema
     )
   }
 

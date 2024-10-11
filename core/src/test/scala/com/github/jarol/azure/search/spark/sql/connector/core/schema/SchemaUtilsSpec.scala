@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointConverter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointType
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
@@ -93,7 +93,7 @@ class SchemaUtilsSpec
 
           SchemaUtils.inferSparkTypeOf(
             createSearchField("location", SearchFieldDataType.GEOGRAPHY_POINT)
-          ) shouldBe GeoPointConverter.SCHEMA
+          ) shouldBe GeoPointType.SCHEMA
         }
       }
 
@@ -272,7 +272,7 @@ class SchemaUtilsSpec
           it("with compatible geo point type") {
 
             SchemaUtils.inferSearchTypeFor(
-              createArrayType(GeoPointConverter.SCHEMA)
+              createArrayType(GeoPointType.SCHEMA)
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
             )
@@ -352,7 +352,7 @@ class SchemaUtilsSpec
 
         it("for geo compatible struct types") {
 
-          val structType = GeoPointConverter.SCHEMA
+          val structType = GeoPointType.SCHEMA
           val structField = createStructField(third, structType)
           val searchField = SchemaUtils.toSearchField(structField)
 
