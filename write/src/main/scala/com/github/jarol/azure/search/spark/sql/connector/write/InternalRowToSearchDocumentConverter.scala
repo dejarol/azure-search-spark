@@ -3,8 +3,8 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.WriteConverter
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{ConverterFactory, FieldAdapter, SchemaViolation}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchDecoder
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{CodecFactory, FieldAdapter, SchemaViolation}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructField
 
@@ -13,7 +13,7 @@ import org.apache.spark.sql.types.StructField
  * @param converters converters for retrieving document values from an internal row
  */
 
-case class InternalRowToSearchDocumentConverter(private val converters: Map[FieldAdapter, WriteConverter])
+case class InternalRowToSearchDocumentConverter(private val converters: Map[FieldAdapter, SearchDecoder])
   extends (InternalRow => SearchDocument) {
 
   override def apply(v1: InternalRow): SearchDocument = {
@@ -37,19 +37,19 @@ case class InternalRowToSearchDocumentConverter(private val converters: Map[Fiel
 }
 
 object InternalRowToSearchDocumentConverter
-  extends ConverterFactory[InternalRowToSearchDocumentConverter, WriteConverter] {
+  extends CodecFactory[InternalRowToSearchDocumentConverter, SearchDecoder] {
 
   override protected def getInternalMapping(
                                              schema: Seq[StructField],
                                              searchFields: Seq[SearchField]
-                                           ): Either[Seq[SchemaViolation], Map[FieldAdapter, WriteConverter]] = {
+                                           ): Either[Seq[SchemaViolation], Map[FieldAdapter, SearchDecoder]] = {
 
-    WriteMappingSupplier.safelyGet(
+    DecodingSupplier.safelyGet(
       schema, searchFields
     )
   }
 
-  override protected def toConverter(internal: Map[FieldAdapter, WriteConverter]): InternalRowToSearchDocumentConverter = {
+  override protected def toConverter(internal: Map[FieldAdapter, SearchDecoder]): InternalRowToSearchDocumentConverter = {
 
     InternalRowToSearchDocumentConverter(internal)
   }

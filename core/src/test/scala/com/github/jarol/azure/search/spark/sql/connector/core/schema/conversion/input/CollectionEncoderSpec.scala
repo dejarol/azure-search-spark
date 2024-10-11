@@ -5,16 +5,16 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String
 
-class CollectionConverterSpec
+class CollectionEncoderSpec
   extends BasicSpec {
 
-  describe(anInstanceOf[CollectionConverter]) {
+  describe(anInstanceOf[CollectionEncoder]) {
     describe(SHOULD) {
       it(s"convert a list into an ${nameOf[ArrayData]}") {
 
         val input = Seq("hello", "world")
-        val output = CollectionConverter(
-          ReadConverters.UTF8_STRING
+        val output = CollectionEncoder(
+          AtomicEncoders.UTF8_STRING
         ).apply(
           JavaScalaConverters.seqToList(input)
         )

@@ -10,8 +10,8 @@ import java.util
  * @param conversions conversions to apply on complex object subfields
  */
 
-case class ComplexConverter(private val conversions: Map[FieldAdapter, ReadConverter])
-  extends ReadConverter {
+case class ComplexEncoder(private val conversions: Map[FieldAdapter, SearchEncoder])
+  extends SearchEncoder {
 
   override def apply(value: Any): InternalRow = {
 

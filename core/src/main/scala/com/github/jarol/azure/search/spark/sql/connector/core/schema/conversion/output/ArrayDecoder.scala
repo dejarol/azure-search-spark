@@ -11,9 +11,9 @@ import java.util
  * @param arrayInternalConverter converter for array internal objects
  */
 
-case class ArrayConverter(private val arrayInternalType: DataType,
-                          private val arrayInternalConverter: WriteConverter)
-  extends WriteTransformConverter[util.List[Object]] {
+case class ArrayDecoder(private val arrayInternalType: DataType,
+                        private val arrayInternalConverter: SearchDecoder)
+  extends TransformDecoder[util.List[Object]] {
 
   override protected def transform(value: Any): util.List[Object] = {
 

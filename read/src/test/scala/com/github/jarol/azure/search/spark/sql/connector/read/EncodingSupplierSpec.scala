@@ -12,7 +12,7 @@ import java.time.{Instant, OffsetDateTime}
 import java.time.temporal.ChronoUnit
 import scala.reflect.ClassTag
 
-class ReadMappingSupplierSpec
+class EncodingSupplierSpec
   extends BasicSpec
     with FieldFactory
       with EitherValues
@@ -37,7 +37,7 @@ class ReadMappingSupplierSpec
                                                                     transform: TInput => TOutput
                                                                   ): Unit = {
 
-    val result = ReadMappingSupplier.forAtomicTypes(dataType, searchType)
+    val result = EncodingSupplier.forAtomicTypes(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
@@ -45,7 +45,7 @@ class ReadMappingSupplierSpec
     output shouldBe transform(value)
   }
 
-  describe(`object`[ReadMappingSupplier.type ]) {
+  describe(`object`[EncodingSupplier.type ]) {
     describe(SHOULD) {
       describe("return an atomic converter for reading") {
         it("string fields as strings") {
@@ -185,7 +185,7 @@ class ReadMappingSupplierSpec
       describe("return a Right for") {
         it("a non-clashing schema") {
 
-          ReadMappingSupplier.safelyGet(
+          EncodingSupplier.safelyGet(
             Seq(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
@@ -202,7 +202,7 @@ class ReadMappingSupplierSpec
         describe("some top-level schema fields") {
           it("miss") {
 
-            val result = ReadMappingSupplier.safelyGet(
+            val result = EncodingSupplier.safelyGet(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
@@ -215,7 +215,7 @@ class ReadMappingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = ReadMappingSupplier.safelyGet(
+            val result = EncodingSupplier.safelyGet(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(first, SearchFieldDataType.collection(SearchFieldDataType.STRING)))
             ).left.value
@@ -230,7 +230,7 @@ class ReadMappingSupplierSpec
         describe("some nested fields") {
           it("miss") {
 
-            val result = ReadMappingSupplier.safelyGet(
+            val result = EncodingSupplier.safelyGet(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -254,7 +254,7 @@ class ReadMappingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = ReadMappingSupplier.safelyGet(
+            val result = EncodingSupplier.safelyGet(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -282,7 +282,7 @@ class ReadMappingSupplierSpec
         describe("some collection fields") {
           it("have incompatible inner type") {
 
-            val result = ReadMappingSupplier.safelyGet(
+            val result = EncodingSupplier.safelyGet(
               Seq(
                 createArrayField(first, DataTypes.DateType)
               ),

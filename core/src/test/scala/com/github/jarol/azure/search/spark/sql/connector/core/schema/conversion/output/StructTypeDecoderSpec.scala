@@ -5,10 +5,10 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 
-class StructTypeConverterSpec
+class StructTypeDecoderSpec
   extends BasicSpec {
 
-  describe(anInstanceOf[StructTypeConverter]) {
+  describe(anInstanceOf[StructTypeDecoder]) {
     describe(SHOULD) {
       it(s"convert an ${nameOf[InternalRow]} to a map") {
 
@@ -18,10 +18,10 @@ class StructTypeConverterSpec
           3.14
         )
         val input = InternalRow(values: _*)
-        val output = StructTypeConverter(
+        val output = StructTypeDecoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.IntegerType) -> AtomicWriteConverters.Int32Converter,
-            FieldAdapterImpl(k2, DataTypes.DoubleType) -> AtomicWriteConverters.DoubleConverter
+            FieldAdapterImpl(k1, DataTypes.IntegerType) -> AtomicDecoders.Int32Converter,
+            FieldAdapterImpl(k2, DataTypes.DoubleType) -> AtomicDecoders.DoubleConverter
           )
         ).apply(input)
 
