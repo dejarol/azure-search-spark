@@ -33,7 +33,7 @@ object SearchDocumentToInternalRowConverter
                                              searchFields: Seq[SearchField]
                                            ): Either[Seq[SchemaViolation], Map[FieldAdapter, SearchEncoder]] = {
 
-    EncodingSupplier.safelyGet(
+    EncodingSupplier.get(
       schema, searchFields
     )
   }
