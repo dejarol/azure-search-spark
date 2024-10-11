@@ -19,17 +19,17 @@ object GeoPointType {
     )
   )
 
-  final val READ_CONVERTER: ReadConverter = ComplexConverter(
+  final val READ_CONVERTER: SearchEncoder = ComplexEncoder(
     Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> ReadConverters.UTF8_STRING,
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionConverter(ReadConverters.DOUBLE)
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicEncoders.UTF8_STRING,
+      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionEncoder(SearchEncoder.IDENTITY)
     )
   )
 
-  final val WRITE_CONVERTER: WriteConverter = StructTypeConverter(
+  final val WRITE_CONVERTER: SearchDecoder = StructTypeDecoder(
     Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicWriteConverters.StringConverter,
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayConverter(DataTypes.DoubleType, AtomicWriteConverters.DoubleConverter)
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicDecoders.STRING,
+      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayDecoder(DataTypes.DoubleType, SearchDecoder.IDENTITY)
     )
   )
 }

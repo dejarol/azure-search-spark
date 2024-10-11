@@ -5,17 +5,17 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String
 
-class ArrayConverterSpec
+class ArrayDecoderSpec
   extends BasicSpec {
 
-  describe(anInstanceOf[ArrayConverter]) {
+  describe(anInstanceOf[ArrayDecoder]) {
     describe(SHOULD) {
       it("convert an array to a list") {
 
         val input = Seq("hello", "world")
-        val output = ArrayConverter(
+        val output = ArrayDecoder(
           DataTypes.StringType,
-          AtomicWriteConverters.StringConverter
+          AtomicDecoders.StringConverter
         ).apply(
           ArrayData.toArrayData(
             input.map(UTF8String.fromString)

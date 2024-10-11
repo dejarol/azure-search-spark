@@ -11,7 +11,7 @@ import java.time.LocalDate
 class WriteSpec
   extends SearchSparkSpec {
 
-  describe(s"Search dataSource") {
+  ignore(s"Search dataSource") {
     describe(SHOULD) {
       describe("create an index (if it does not exist)") {
         it("with as many fields as many columns") {

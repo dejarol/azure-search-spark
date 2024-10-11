@@ -3,15 +3,17 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.catalyst.util.ArrayData
 
+import java.lang.{Object => JObject}
+
 /**
  * Converter for Search collections
  * @param internal converter for collection internal objects
  */
 
-case class CollectionConverter(private val internal: ReadConverter)
-  extends ReadTransformConverter[ArrayData] {
+case class CollectionEncoder(private val internal: SearchEncoder)
+  extends TransformEncoder[ArrayData] {
 
-  override protected def transform(value: Any): ArrayData = {
+  override protected def transform(value: JObject): ArrayData = {
 
     val values: Seq[Any] = JavaScalaConverters
       .listToSeq(value.asInstanceOf[java.util.List[Object]])

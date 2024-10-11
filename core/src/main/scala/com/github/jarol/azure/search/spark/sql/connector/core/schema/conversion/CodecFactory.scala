@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.types.StructField
 
-trait ConverterFactory[CType, InternalCType] {
+trait CodecFactory[CType, InternalCType] {
 
   final def safeApply(
                        schema: Seq[StructField],

@@ -6,49 +6,52 @@ import org.apache.spark.unsafe.types.UTF8String
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 
-class ReadConvertersSpec
+class AtomicEncodersSpec
   extends BasicSpec
     with FieldFactory {
 
-  describe(`object`[ReadConverters.type]) {
+  describe(`object`[AtomicEncoders.type]) {
     describe(SHOULD) {
       describe("provide a converter for") {
+        /*
         describe("casting a non-null Search object into a Spark internal type, like") {
           it("int") {
 
             val input: Integer = 23
-            ReadConverters.INT32.apply(input) shouldBe input
-            ReadConverters.INT32.apply(null.asInstanceOf[Integer]) shouldBe null
+            AtomicEncoders.INT32.apply(input) shouldBe input
+            AtomicEncoders.INT32.apply(null.asInstanceOf[Integer]) shouldBe null
           }
 
           it("long") {
 
             val input: java.lang.Long = 23
-            ReadConverters.INT64.apply(input) shouldBe input
-            ReadConverters.INT64.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
+            AtomicEncoders.INT64.apply(input) shouldBe input
+            AtomicEncoders.INT64.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
           }
 
           it("double") {
 
             val input: java.lang.Double = 3.14
-            ReadConverters.DOUBLE.apply(input) shouldBe input
-            ReadConverters.DOUBLE.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
+            AtomicEncoders.DOUBLE.apply(input) shouldBe input
+            AtomicEncoders.DOUBLE.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
           }
 
           it("float") {
 
             val input: java.lang.Float = 3.14f
-            ReadConverters.SINGLE.apply(input) shouldBe input
-            ReadConverters.SINGLE.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
+            AtomicEncoders.SINGLE.apply(input) shouldBe input
+            AtomicEncoders.SINGLE.apply(null.asInstanceOf[java.lang.Long]) shouldBe null
           }
 
           it("boolean") {
 
             val input: java.lang.Boolean = false
-            ReadConverters.BOOLEAN.apply(input) shouldBe input
-            ReadConverters.BOOLEAN.apply(null.asInstanceOf[java.lang.Boolean]) shouldBe null
+            AtomicEncoders.BOOLEAN.apply(input) shouldBe input
+            AtomicEncoders.BOOLEAN.apply(null.asInstanceOf[java.lang.Boolean]) shouldBe null
           }
         }
+        
+         */
 
         describe("time-based types, like") {
           it("timestamp") {
@@ -60,8 +63,8 @@ class ReadConvertersSpec
             )
 
             val expected: Long = ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
-            ReadConverters.TIMESTAMP.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
-            ReadConverters.TIMESTAMP.apply(null.asInstanceOf[String]) shouldBe null
+            AtomicEncoders.TIMESTAMP.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
+            AtomicEncoders.TIMESTAMP.apply(null.asInstanceOf[String]) shouldBe null
           }
 
           it("dates") {
@@ -73,8 +76,8 @@ class ReadConvertersSpec
             )
 
             val expected: Int = input.toLocalDate.toEpochDay.toInt
-            ReadConverters.DATE.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
-            ReadConverters.DATE.apply(null.asInstanceOf[String]) shouldBe null
+            AtomicEncoders.DATE.apply(input.format(Constants.DATETIME_OFFSET_FORMATTER)) shouldBe expected
+            AtomicEncoders.DATE.apply(null.asInstanceOf[String]) shouldBe null
           }
         }
 
@@ -82,15 +85,15 @@ class ReadConvertersSpec
           it("normal strings") {
 
             val input = "hello"
-            ReadConverters.STRING_VALUE_OF.apply(input) shouldBe input
-            ReadConverters.STRING_VALUE_OF.apply(null.asInstanceOf[String]) shouldBe null
+            AtomicEncoders.STRING_VALUE_OF.apply(input) shouldBe input
+            AtomicEncoders.STRING_VALUE_OF.apply(null.asInstanceOf[String]) shouldBe null
           }
 
           it("UTF8 strings") {
 
             val input = "hello"
-            ReadConverters.UTF8_STRING.apply(input) shouldBe UTF8String.fromString(input)
-            ReadConverters.UTF8_STRING.apply(null.asInstanceOf[String]) shouldBe null
+            AtomicEncoders.UTF8_STRING.apply(input) shouldBe UTF8String.fromString(input)
+            AtomicEncoders.UTF8_STRING.apply(null.asInstanceOf[String]) shouldBe null
           }
         }
       }

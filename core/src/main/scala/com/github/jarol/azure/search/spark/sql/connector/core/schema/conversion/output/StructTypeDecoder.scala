@@ -11,8 +11,8 @@ import java.util
  * @param converters converters to apply on internal row subfields
  */
 
-case class StructTypeConverter(private val converters: Map[FieldAdapter, WriteConverter])
-  extends WriteTransformConverter[util.Map[String,  Object]] {
+case class StructTypeDecoder(private val converters: Map[FieldAdapter, SearchDecoder])
+  extends TransformDecoder[util.Map[String,  Object]] {
 
   override protected def transform(value: Any): util.Map[String, Object] = {
 

@@ -7,10 +7,10 @@ import org.apache.spark.sql.types.DataTypes
 
 import java.util
 
-class ComplexConverterSpec
+class ComplexEncoderSpec
   extends BasicSpec {
 
-  describe(anInstanceOf[ComplexConverter]) {
+  describe(anInstanceOf[ComplexEncoder]) {
     describe(SHOULD) {
       it(s"convert a map into an ${nameOf[InternalRow]}") {
 
@@ -22,10 +22,10 @@ class ComplexConverterSpec
           )
         )
 
-        val output = ComplexConverter(
+        val output = ComplexEncoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.StringType) -> ReadConverters.UTF8_STRING,
-            FieldAdapterImpl(k2, DataTypes.IntegerType) -> ReadConverters.INT32
+            FieldAdapterImpl(k1, DataTypes.StringType) -> AtomicEncoders.UTF8_STRING,
+            FieldAdapterImpl(k2, DataTypes.IntegerType) -> AtomicEncoders.INT32
           )
         ).apply(
           input

@@ -7,7 +7,7 @@ import org.apache.spark.sql.types.{DataType, StructField}
 
 import java.util
 
-trait MappingSupplier[A] {
+trait CodecSupplier[A] {
 
   def safelyGet(
                  schema: Seq[StructField],
