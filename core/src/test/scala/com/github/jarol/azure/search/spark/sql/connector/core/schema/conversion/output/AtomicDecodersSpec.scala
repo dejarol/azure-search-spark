@@ -3,9 +3,8 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
 
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime}
+import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 
 class AtomicDecodersSpec
   extends BasicSpec {

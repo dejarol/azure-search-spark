@@ -37,7 +37,7 @@ class EncodingSupplierSpec
                                                                     transform: TInput => TOutput
                                                                   ): Unit = {
 
-    val result = EncodingSupplier.forAtomicTypes(dataType, searchType)
+    val result = EncodingSupplier.atomicCodecFor(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
@@ -185,7 +185,7 @@ class EncodingSupplierSpec
       describe("return a Right for") {
         it("a non-clashing schema") {
 
-          EncodingSupplier.safelyGet(
+          EncodingSupplier.get(
             Seq(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
@@ -202,7 +202,7 @@ class EncodingSupplierSpec
         describe("some top-level schema fields") {
           it("miss") {
 
-            val result = EncodingSupplier.safelyGet(
+            val result = EncodingSupplier.get(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
@@ -215,7 +215,7 @@ class EncodingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodingSupplier.safelyGet(
+            val result = EncodingSupplier.get(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(first, SearchFieldDataType.collection(SearchFieldDataType.STRING)))
             ).left.value
@@ -230,7 +230,7 @@ class EncodingSupplierSpec
         describe("some nested fields") {
           it("miss") {
 
-            val result = EncodingSupplier.safelyGet(
+            val result = EncodingSupplier.get(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -254,7 +254,7 @@ class EncodingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodingSupplier.safelyGet(
+            val result = EncodingSupplier.get(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -282,7 +282,7 @@ class EncodingSupplierSpec
         describe("some collection fields") {
           it("have incompatible inner type") {
 
-            val result = EncodingSupplier.safelyGet(
+            val result = EncodingSupplier.get(
               Seq(
                 createArrayField(first, DataTypes.DateType)
               ),

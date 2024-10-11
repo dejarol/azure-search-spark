@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{CodecSupplier, FieldAdapter, GeoPointType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{SafeCodecSupplier, FieldAdapter, GeoPointType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.{ArrayDecoder, AtomicDecoders, SearchDecoder, StructTypeDecoder}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{toSearchTypeOperations, toSparkTypeOperations}
 import org.apache.spark.sql.types.{DataType, DataTypes}
@@ -11,9 +11,9 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
  */
 
 object DecodingSupplier
-  extends CodecSupplier[SearchDecoder] {
+  extends SafeCodecSupplier[SearchDecoder] {
 
-  override protected def forAtomicTypes(
+  override protected def atomicCodecFor(
                                          spark: DataType,
                                          search: SearchFieldDataType
                                        ): Option[SearchDecoder] = {
@@ -74,7 +74,7 @@ object DecodingSupplier
     }
   }
 
-  override protected def forCollection(sparkType: DataType, search: SearchField, internal: SearchDecoder): SearchDecoder = ArrayDecoder(sparkType, internal)
-  override protected def forComplex(internal: Map[FieldAdapter, SearchDecoder]): SearchDecoder = StructTypeDecoder(internal)
+  override protected def collectionCodec(sparkType: DataType, search: SearchField, internal: SearchDecoder): SearchDecoder = ArrayDecoder(sparkType, internal)
+  override protected def createComplexCodec(internal: Map[FieldAdapter, SearchDecoder]): SearchDecoder = StructTypeDecoder(internal)
   override protected def forGeoPoint: SearchDecoder = GeoPointType.WRITE_CONVERTER
 }

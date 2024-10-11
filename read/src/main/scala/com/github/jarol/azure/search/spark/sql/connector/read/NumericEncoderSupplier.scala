@@ -1,9 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.DataTypeException
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input.{SearchEncoder, TransformEncoder}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 
 import java.lang.{Double => JDouble, Float => JFloat, Long => JLong}
 
@@ -19,22 +17,21 @@ trait NumericEncoderSupplier {
 
   protected def fromSingle(v: JFloat): TTarget
 
-  final def get(searchType: SearchFieldDataType): SearchEncoder = {
+  final def maybeEncoderForType(searchType: SearchFieldDataType): Option[SearchEncoder] = {
 
-    if (searchType.isNumeric) {
-      val encodingFunction: Any => TTarget = searchType match {
-        case SearchFieldDataType.INT32 => (v1: Any) => fromInt32(v1.asInstanceOf[Integer])
-        case SearchFieldDataType.INT64 => (value: Any) => fromInt64(value.asInstanceOf[JLong])
-        case SearchFieldDataType.DOUBLE => (value: Any) => fromDouble(value.asInstanceOf[JDouble])
-        case SearchFieldDataType.SINGLE => (value: Any) => fromSingle(value.asInstanceOf[JFloat])
-        case _ => throw DataTypeException.forUnsupportedSearchType(searchType)
-      }
+    val encodingFunction: Option[Any => TTarget] = searchType match {
+      case SearchFieldDataType.INT32 => Some((v1: Any) => fromInt32(v1.asInstanceOf[Integer]))
+      case SearchFieldDataType.INT64 => Some((v1: Any) => fromInt64(v1.asInstanceOf[JLong]))
+      case SearchFieldDataType.DOUBLE => Some((v1: Any) => fromDouble(v1.asInstanceOf[JDouble]))
+      case SearchFieldDataType.SINGLE => Some((v1: Any) => fromSingle(v1.asInstanceOf[JFloat]))
+      case _ => None
+    }
 
-      new TransformEncoder[TTarget] {
-        override protected def transform(value: Any): TTarget = encodingFunction(value)
+    encodingFunction.map {
+      function => new TransformEncoder[TTarget] {
+        override protected def transform(value: Any): TTarget =
+          function(value)
       }
-    } else {
-      throw new DataTypeException(f"Expected a numeric Search type, found $searchType")
     }
   }
 }
