@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Instant, OffsetDateTime}
 import scala.reflect.ClassTag
 
-class EncodingSupplierSpec
+class EncodersSupplierSpec
   extends SafeCodecSupplierSpec
     with SchemaViolationsMixins {
 
@@ -27,14 +27,14 @@ class EncodingSupplierSpec
    * @tparam TOutput output type
    */
 
-  private def assertAtomicCodecExists[TInput, TOutput: ClassTag](
-                                                                  searchType: SearchFieldDataType,
-                                                                  dataType: DataType,
-                                                                  value: TInput,
-                                                                  transform: TInput => TOutput
+  private def assertAtomicEncoderExists[TInput, TOutput: ClassTag](
+                                                                    searchType: SearchFieldDataType,
+                                                                    dataType: DataType,
+                                                                    value: TInput,
+                                                                    transform: TInput => TOutput
                                                                 ): Unit = {
 
-    val result = EncodingSupplier.atomicCodecFor(dataType, searchType)
+    val result = EncodersSupplier.atomicCodecFor(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
@@ -42,12 +42,12 @@ class EncodingSupplierSpec
     output shouldBe transform(value)
   }
 
-  describe(`object`[EncodingSupplier.type ]) {
+  describe(`object`[EncodersSupplier.type ]) {
     describe(SHOULD) {
       describe("return an atomic encoder for reading") {
         it("string fields as strings") {
 
-          assertAtomicCodecExists[String, UTF8String](
+          assertAtomicEncoderExists[String, UTF8String](
             SearchFieldDataType.STRING,
             DataTypes.StringType,
             "hello",
@@ -58,7 +58,7 @@ class EncodingSupplierSpec
         describe("numeric fields as") {
           it("strings") {
 
-            assertAtomicCodecExists[Integer, UTF8String](
+            assertAtomicEncoderExists[Integer, UTF8String](
               SearchFieldDataType.INT32,
               DataTypes.StringType,
               123,
@@ -67,7 +67,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicCodecExists[Long, UTF8String](
+            assertAtomicEncoderExists[Long, UTF8String](
               SearchFieldDataType.INT64,
               DataTypes.StringType,
               123,
@@ -76,7 +76,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicCodecExists[Double, UTF8String](
+            assertAtomicEncoderExists[Double, UTF8String](
               SearchFieldDataType.DOUBLE,
               DataTypes.StringType,
               3.14,
@@ -85,7 +85,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicCodecExists[Float, UTF8String](
+            assertAtomicEncoderExists[Float, UTF8String](
               SearchFieldDataType.SINGLE,
               DataTypes.StringType,
               3.14f,
@@ -98,7 +98,7 @@ class EncodingSupplierSpec
           describe("numbers of") {
             it("same type") {
 
-              assertAtomicCodecExists[Int, Int](
+              assertAtomicEncoderExists[Int, Int](
                 SearchFieldDataType.INT32,
                 DataTypes.IntegerType,
                 123,
@@ -108,7 +108,7 @@ class EncodingSupplierSpec
 
             it("different type") {
 
-              assertAtomicCodecExists[Int, Long](
+              assertAtomicEncoderExists[Int, Long](
                 SearchFieldDataType.INT32,
                 DataTypes.LongType,
                 123,
@@ -121,7 +121,7 @@ class EncodingSupplierSpec
         describe("boolean fields as") {
           it("booleans") {
 
-            assertAtomicCodecExists[Boolean, Boolean](
+            assertAtomicEncoderExists[Boolean, Boolean](
               SearchFieldDataType.BOOLEAN,
               DataTypes.BooleanType,
               false,
@@ -130,7 +130,7 @@ class EncodingSupplierSpec
           }
 
           it("strings") {
-            assertAtomicCodecExists[Boolean, UTF8String](
+            assertAtomicEncoderExists[Boolean, UTF8String](
               SearchFieldDataType.BOOLEAN,
               DataTypes.StringType,
               false,
@@ -144,7 +144,7 @@ class EncodingSupplierSpec
         describe("datetime fields as") {
           it("strings") {
 
-            assertAtomicCodecExists[String, UTF8String](
+            assertAtomicEncoderExists[String, UTF8String](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.StringType,
               OffsetDateTime.now().format(Constants.DATETIME_OFFSET_FORMATTER),
@@ -155,7 +155,7 @@ class EncodingSupplierSpec
           it("dates") {
 
             val offsetDateTime = OffsetDateTime.now()
-            assertAtomicCodecExists[String, Int](
+            assertAtomicEncoderExists[String, Int](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.DateType,
               offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),
@@ -166,7 +166,7 @@ class EncodingSupplierSpec
           it("timestamps") {
 
             val offsetDateTime = OffsetDateTime.now()
-            assertAtomicCodecExists[String, Long](
+            assertAtomicEncoderExists[String, Long](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.TimestampType,
               offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),
@@ -182,7 +182,7 @@ class EncodingSupplierSpec
       describe("return a Right for") {
         it("a non-clashing schema") {
 
-          EncodingSupplier.get(
+          EncodersSupplier.get(
             Seq(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
@@ -199,7 +199,7 @@ class EncodingSupplierSpec
         describe("some top-level schema fields") {
           it("miss") {
 
-            val result = EncodingSupplier.get(
+            val result = EncodersSupplier.get(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
@@ -212,7 +212,7 @@ class EncodingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodingSupplier.get(
+            val result = EncodersSupplier.get(
               Seq(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(first, SearchFieldDataType.collection(SearchFieldDataType.STRING)))
             ).left.value
@@ -227,7 +227,7 @@ class EncodingSupplierSpec
         describe("some nested fields") {
           it("miss") {
 
-            val result = EncodingSupplier.get(
+            val result = EncodersSupplier.get(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -253,7 +253,7 @@ class EncodingSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodingSupplier.get(
+            val result = EncodersSupplier.get(
               Seq(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -283,7 +283,7 @@ class EncodingSupplierSpec
         describe("some collection fields") {
           it("have incompatible inner type") {
 
-            val result = EncodingSupplier.get(
+            val result = EncodersSupplier.get(
               Seq(
                 createArrayField(first, DataTypes.DateType)
               ),

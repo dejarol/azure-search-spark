@@ -29,7 +29,7 @@ class NumericEncoderSupplierSpec
     val maybeEncoder = supplier.getForType(searchType)
     maybeEncoder shouldBe defined
     val encoder = maybeEncoder.get
-    encoder shouldBe a[TransformEncoder[SparkT]]
+    encoder shouldBe a[TransformEncoder[_]]
     encoder.apply(input) shouldBe expectedFunction(input)
   }
 

@@ -52,6 +52,14 @@ trait SafeCodecSupplier[CodecType] {
     }
   }
 
+  /**
+   * Create a map with keys being field definitions and values being either a schema violation
+   * (indicating a non-compatible field) or a codec for encoding/data from such field
+   * @param schema Spark schema fields
+   * @param searchFields Search index fields
+   * @return a map with keys being field definitions and values being either a schema violation
+   */
+
   private def maybeComplexObjectCodec(
                                        schema: Seq[StructField],
                                        searchFields: Seq[SearchField]
@@ -178,7 +186,7 @@ trait SafeCodecSupplier[CodecType] {
     ).left.map {
       SchemaViolations.forArrayField(searchField.getName, _)
     }.map(
-      collectionCodec(sparkInnerType, searchField, _)
+      collectionCodec(sparkInnerType, _)
     )
   }
 
@@ -211,7 +219,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return a codec for collections
    */
 
-  protected def collectionCodec(sparkType: DataType, search: SearchField, internal: CodecType): CodecType
+  protected def collectionCodec(sparkType: DataType, internal: CodecType): CodecType
 
   /**
    * Safely retrieve the codec for a complex type

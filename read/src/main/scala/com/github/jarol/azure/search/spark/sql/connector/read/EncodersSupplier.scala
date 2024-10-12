@@ -1,13 +1,26 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointType, SafeCodecSupplier}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
-object EncodingSupplier
+/**
+ * Encoder supplier
+ */
+
+object EncodersSupplier
   extends SafeCodecSupplier[SearchEncoder] {
+
+  /**
+   * Safely get the encoder between two atomic types
+   * <br>
+   * The encoder will exist only for compatible atomic types
+   * @param spark  Spark type
+   * @param search Search type
+   * @return an optional codec for given types
+   */
 
   override protected[read] def atomicCodecFor(
                                                spark: DataType,
@@ -27,19 +40,36 @@ object EncodingSupplier
     }
   }
 
+  /**
+   * Get the encoder to use when dealing with Search STRING type
+   * @param dataType Spark target type
+   * @return the encoder for Search STRING type
+   */
+
   private def forString(dataType: DataType): Option[SearchEncoder] = {
 
+    // Allow a string to be read only as a string
     dataType match {
       case DataTypes.StringType => Some(AtomicEncoders.UTF8_STRING)
       case _ => None
     }
   }
 
+  /**
+   * Get the encoder to use for Search numeric types (int32, int64, double, single)
+   * @param dataType Spark data type
+   * @param searchType Search numeric type
+   * @return encoder for Search numeric types
+   */
+
   private def forNumericTypes(
                                dataType: DataType,
                                searchType: SearchFieldDataType
                              ): Option[SearchEncoder] = {
 
+    // Allow a numeric type to be read as
+    // [a] another numeric type
+    // [b] a string
     if (dataType.isNumeric) {
 
       val numericEncoderSupplier: Option[NumericEncoderSupplier] = dataType match {
@@ -54,6 +84,8 @@ object EncodingSupplier
         _.getForType(searchType)
       }
     } else {
+
+      // Set encoder for strings
       dataType match {
         case DataTypes.StringType => Some(
           AtomicEncoders.STRING_VALUE_OF.andThen(
@@ -64,8 +96,17 @@ object EncodingSupplier
     }
   }
 
+  /**
+   * Get the encoder for Search BOOLEAN type
+   * @param dataType Spark data type
+   * @return encoder for Search BOOLEAN type
+   */
+
   private def forBoolean(dataType: DataType): Option[SearchEncoder] = {
 
+    // Allow a boolean to be read as
+    // [a] a boolean
+    // [b] a string
     dataType match {
       case DataTypes.StringType => Some(AtomicEncoders.STRING_VALUE_OF.andThen(AtomicEncoders.UTF8_STRING))
       case DataTypes.BooleanType => Some(AtomicEncoders.IDENTITY)
@@ -73,8 +114,17 @@ object EncodingSupplier
     }
   }
 
+  /**
+   * Get the encoder for Search DATETIME_OFFSET type
+   * @param dataType Spark data type
+   * @return encoder for Search DATETIME_OFFSET type
+   */
+
   private def forDateTime(dataType: DataType): Option[SearchEncoder] = {
 
+    // Allow a datetime to be read as
+    // [a] a date or timestamp
+    // [b] a string
     dataType match {
       case DataTypes.TimestampType => Some(AtomicEncoders.TIMESTAMP)
       case DataTypes.DateType => Some(AtomicEncoders.DATE)
@@ -83,7 +133,7 @@ object EncodingSupplier
     }
   }
 
-  override protected def collectionCodec(sparkType: DataType, search: SearchField, internal: SearchEncoder): SearchEncoder = CollectionEncoder(internal)
+  override protected def collectionCodec(sparkType: DataType, internal: SearchEncoder): SearchEncoder = CollectionEncoder(internal)
   override protected def createComplexCodec(internal: Map[FieldAdapter, SearchEncoder]): SearchEncoder = ComplexEncoder(internal)
   override protected def forGeoPoint: SearchEncoder = GeoPointType.READ_CONVERTER
 }
