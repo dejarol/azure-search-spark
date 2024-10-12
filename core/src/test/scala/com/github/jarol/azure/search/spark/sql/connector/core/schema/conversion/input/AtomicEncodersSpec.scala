@@ -10,7 +10,7 @@ class AtomicEncodersSpec
   extends BasicSpec
     with FieldFactory {
 
-  describe(`object`[AtomicEncoders.type]) {
+  describe(`object`[AtomicEncoders]) {
     describe(SHOULD) {
       describe("provide a converter for") {
         /*

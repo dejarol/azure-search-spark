@@ -2,11 +2,13 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 
+import scala.reflect.ClassTag
+
 /**
  * Mix-in trait for dealing with instances of [[SchemaViolation]]
  */
 
-trait SchemaViolationsUtils {
+trait SchemaViolationsMixins {
 
   /**
    * Evaluate if a schema violation instance is an instance for a given subclass
@@ -15,7 +17,7 @@ trait SchemaViolationsUtils {
    * @return true if given violation is an instance of given subclass type
    */
 
-  protected final def isOfType[T <: SchemaViolation](v: SchemaViolation): Boolean = v.isInstanceOf[T]
+  protected final def isOfType[T <: SchemaViolation: ClassTag](v: SchemaViolation): Boolean = v.isInstanceOf[T]
 
   /**
    * Returns true if this instance is a [[SchemaViolations.IncompatibleType]]

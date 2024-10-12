@@ -17,7 +17,7 @@ object EncodingSupplier
     if (search.isString) {
       forString(spark)
     } else if (search.isNumeric) {
-      forNumericTypes(search, spark)
+      forNumericTypes(spark, search)
     } else if (search.isBoolean) {
       forBoolean(spark)
     } else if (search.isDateTime) {
@@ -36,8 +36,8 @@ object EncodingSupplier
   }
 
   private def forNumericTypes(
-                               searchType: SearchFieldDataType,
-                               dataType: DataType
+                               dataType: DataType,
+                               searchType: SearchFieldDataType
                              ): Option[SearchEncoder] = {
 
     if (dataType.isNumeric) {
@@ -51,7 +51,7 @@ object EncodingSupplier
       }
 
       numericEncoderSupplier.flatMap {
-        _.maybeEncoderForType(searchType)
+        _.getForType(searchType)
       }
     } else {
       dataType match {
