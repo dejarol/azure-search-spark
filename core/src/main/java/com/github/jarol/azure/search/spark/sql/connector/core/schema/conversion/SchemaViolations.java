@@ -18,7 +18,7 @@ public final class SchemaViolations {
      * Violation for namesake fields with incompatible data types
      */
 
-    static class IncompatibleType
+     static class IncompatibleType
             extends SchemaViolationImpl {
 
         private final DataType sparkType;

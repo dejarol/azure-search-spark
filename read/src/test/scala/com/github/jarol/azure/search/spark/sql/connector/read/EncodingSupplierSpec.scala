@@ -1,23 +1,19 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolation.Type
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolations._
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolationsUtils
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{SafeCodecSupplierSpec, SchemaViolationsMixins}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
-import org.scalatest.EitherValues
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, OffsetDateTime}
 import scala.reflect.ClassTag
 
 class EncodingSupplierSpec
-  extends BasicSpec
-    with FieldFactory
-      with SchemaViolationsUtils
-        with EitherValues {
+  extends SafeCodecSupplierSpec
+    with SchemaViolationsMixins {
 
   private lazy val (first, second, third) = ("first", "second", "third")
 
@@ -31,12 +27,12 @@ class EncodingSupplierSpec
    * @tparam TOutput output type
    */
 
-  private def assertAtomicMappingExists[TInput, TOutput: ClassTag](
-                                                                    searchType: SearchFieldDataType,
-                                                                    dataType: DataType,
-                                                                    value: TInput,
-                                                                    transform: TInput => TOutput
-                                                                  ): Unit = {
+  private def assertAtomicCodecExists[TInput, TOutput: ClassTag](
+                                                                  searchType: SearchFieldDataType,
+                                                                  dataType: DataType,
+                                                                  value: TInput,
+                                                                  transform: TInput => TOutput
+                                                                ): Unit = {
 
     val result = EncodingSupplier.atomicCodecFor(dataType, searchType)
     result shouldBe defined
@@ -48,10 +44,10 @@ class EncodingSupplierSpec
 
   describe(`object`[EncodingSupplier.type ]) {
     describe(SHOULD) {
-      describe("return an atomic converter for reading") {
+      describe("return an atomic encoder for reading") {
         it("string fields as strings") {
 
-          assertAtomicMappingExists[String, UTF8String](
+          assertAtomicCodecExists[String, UTF8String](
             SearchFieldDataType.STRING,
             DataTypes.StringType,
             "hello",
@@ -62,7 +58,7 @@ class EncodingSupplierSpec
         describe("numeric fields as") {
           it("strings") {
 
-            assertAtomicMappingExists[Integer, UTF8String](
+            assertAtomicCodecExists[Integer, UTF8String](
               SearchFieldDataType.INT32,
               DataTypes.StringType,
               123,
@@ -71,7 +67,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicMappingExists[Long, UTF8String](
+            assertAtomicCodecExists[Long, UTF8String](
               SearchFieldDataType.INT64,
               DataTypes.StringType,
               123,
@@ -80,7 +76,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicMappingExists[Double, UTF8String](
+            assertAtomicCodecExists[Double, UTF8String](
               SearchFieldDataType.DOUBLE,
               DataTypes.StringType,
               3.14,
@@ -89,7 +85,7 @@ class EncodingSupplierSpec
               )
             )
 
-            assertAtomicMappingExists[Float, UTF8String](
+            assertAtomicCodecExists[Float, UTF8String](
               SearchFieldDataType.SINGLE,
               DataTypes.StringType,
               3.14f,
@@ -102,7 +98,7 @@ class EncodingSupplierSpec
           describe("numbers of") {
             it("same type") {
 
-              assertAtomicMappingExists[Int, Int](
+              assertAtomicCodecExists[Int, Int](
                 SearchFieldDataType.INT32,
                 DataTypes.IntegerType,
                 123,
@@ -112,7 +108,7 @@ class EncodingSupplierSpec
 
             it("different type") {
 
-              assertAtomicMappingExists[Int, Long](
+              assertAtomicCodecExists[Int, Long](
                 SearchFieldDataType.INT32,
                 DataTypes.LongType,
                 123,
@@ -125,7 +121,7 @@ class EncodingSupplierSpec
         describe("boolean fields as") {
           it("booleans") {
 
-            assertAtomicMappingExists[Boolean, Boolean](
+            assertAtomicCodecExists[Boolean, Boolean](
               SearchFieldDataType.BOOLEAN,
               DataTypes.BooleanType,
               false,
@@ -134,7 +130,7 @@ class EncodingSupplierSpec
           }
 
           it("strings") {
-            assertAtomicMappingExists[Boolean, UTF8String](
+            assertAtomicCodecExists[Boolean, UTF8String](
               SearchFieldDataType.BOOLEAN,
               DataTypes.StringType,
               false,
@@ -148,7 +144,7 @@ class EncodingSupplierSpec
         describe("datetime fields as") {
           it("strings") {
 
-            assertAtomicMappingExists[String, UTF8String](
+            assertAtomicCodecExists[String, UTF8String](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.StringType,
               OffsetDateTime.now().format(Constants.DATETIME_OFFSET_FORMATTER),
@@ -159,7 +155,7 @@ class EncodingSupplierSpec
           it("dates") {
 
             val offsetDateTime = OffsetDateTime.now()
-            assertAtomicMappingExists[String, Int](
+            assertAtomicCodecExists[String, Int](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.DateType,
               offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),
@@ -170,7 +166,7 @@ class EncodingSupplierSpec
           it("timestamps") {
 
             val offsetDateTime = OffsetDateTime.now()
-            assertAtomicMappingExists[String, Long](
+            assertAtomicCodecExists[String, Long](
               SearchFieldDataType.DATE_TIME_OFFSET,
               DataTypes.TimestampType,
               offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER),

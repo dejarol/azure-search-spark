@@ -9,7 +9,7 @@ import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
 class AtomicDecodersSpec
   extends BasicSpec {
 
-  describe(`object`[AtomicDecoders.type ]) {
+  describe(`object`[AtomicDecoders]) {
     describe(SHOULD) {
       describe("provide a converter for") {
         it("strings") {
