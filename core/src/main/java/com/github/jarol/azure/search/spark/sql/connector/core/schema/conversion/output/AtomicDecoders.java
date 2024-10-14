@@ -4,10 +4,12 @@ import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import org.apache.spark.unsafe.types.UTF8String;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class AtomicDecoders {
@@ -31,6 +33,8 @@ public class AtomicDecoders {
      */
 
     public final static SearchDecoder DATE;
+
+    public final static SearchDecoder DATE_TO_STRING;
 
     /**
      * Decoder for timestamps
@@ -68,6 +72,15 @@ public class AtomicDecoders {
                         LocalTime.MIDNIGHT,
                         Constants.UTC_OFFSET
                 );
+            }
+        };
+
+        DATE_TO_STRING = new TransformDecoder<String>() {
+            @Override
+            protected String transform(Object value) {
+                return ((Date) value)
+                        .toLocalDate()
+                        .format(DateTimeFormatter.ISO_LOCAL_DATE);
             }
         };
 

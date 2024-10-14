@@ -21,7 +21,7 @@ object DecodingSupplier
     if (search.isString) {
       forString(spark)
     } else if (search.isNumeric) {
-      forNumeric(spark)
+      forNumeric(spark, search)
     } else if (search.isBoolean) {
       forBoolean(spark)
     }else if (search.isDateTime) {
@@ -39,7 +39,7 @@ object DecodingSupplier
       Some(AtomicDecoders.STRING_VALUE_OF)
     } else if (dataType.isDateTime) {
       dataType match {
-        case DataTypes.DateType => Some(AtomicDecoders.DATE)
+        case DataTypes.DateType => Some(AtomicDecoders.DATE_TO_STRING)
         case DataTypes.TimestampType => Some(AtomicDecoders.TIMESTAMP)
         case _ => None
       }
@@ -48,10 +48,20 @@ object DecodingSupplier
     }
   }
 
-  private def forNumeric(dataType: DataType): Option[SearchDecoder] = {
+  private def forNumeric(dataType: DataType, searchType: SearchFieldDataType): Option[SearchDecoder] = {
 
     if (dataType.isNumeric) {
-      None
+      val maybeDecoderSupplier: Option[NumericDecoderSupplier] = dataType match {
+        case DataTypes.IntegerType => Some(NumericDecoderSupplier.INT32)
+        case DataTypes.LongType => Some(NumericDecoderSupplier.INT64)
+        case DataTypes.DoubleType => Some(NumericDecoderSupplier.DOUBLE)
+        case DataTypes.FloatType => Some(NumericDecoderSupplier.SINGLE)
+        case _ => None
+      }
+
+      maybeDecoderSupplier.flatMap {
+        _.getForType(searchType)
+      }
     } else {
       None
     }
@@ -76,5 +86,5 @@ object DecodingSupplier
 
   override protected def collectionCodec(sparkType: DataType, internal: SearchDecoder): SearchDecoder = ArrayDecoder(sparkType, internal)
   override protected def createComplexCodec(internal: Map[FieldAdapter, SearchDecoder]): SearchDecoder = StructTypeDecoder(internal)
-  override protected def forGeoPoint: SearchDecoder = GeoPointType.WRITE_CONVERTER
+  override protected def forGeoPoint: SearchDecoder = GeoPointType.DECODER
 }

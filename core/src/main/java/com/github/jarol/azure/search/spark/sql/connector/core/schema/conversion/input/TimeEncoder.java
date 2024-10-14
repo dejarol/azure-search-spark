@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import java.time.OffsetDateTime;
 
 /**
- * Read converter for time-related types, i.e.
+ * Encoder for time-related types, i.e.
  * <ul>
  *     <li>dates</li>
  *     <li>timestamps</li>

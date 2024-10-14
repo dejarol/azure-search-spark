@@ -18,7 +18,7 @@ class EncodersSupplierSpec
   private lazy val (first, second, third) = ("first", "second", "third")
 
   /**
-   * Assert that a converter between two atomic types exists and reads data correctly
+   * Assert that an encoder between two atomic types exists and reads data correctly
    * @param searchType Search type
    * @param dataType Spark type
    * @param value test value

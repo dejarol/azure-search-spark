@@ -6,8 +6,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import java.util
 
 /**
- * Converter for complex (nested) objects
- * @param conversions conversions to apply on complex object subfields
+ * Encoder for complex (nested) objects
+ * @param conversions encoders to apply on complex object subfields
  */
 
 case class ComplexEncoder(private val conversions: Map[FieldAdapter, SearchEncoder])

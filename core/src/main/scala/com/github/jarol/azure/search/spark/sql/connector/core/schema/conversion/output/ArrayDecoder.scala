@@ -7,20 +7,20 @@ import org.apache.spark.sql.types.DataType
 import java.util
 
 /**
- * Converter for Spark arrays
- * @param arrayInternalConverter converter for array internal objects
+ * Decoder for Spark arrays
+ * @param internalDecoder converter for array internal objects
  */
 
-case class ArrayDecoder(private val arrayInternalType: DataType,
-                        private val arrayInternalConverter: SearchDecoder)
+case class ArrayDecoder(private val internalType: DataType,
+                        private val internalDecoder: SearchDecoder)
   extends TransformDecoder[util.List[Object]] {
 
   override protected def transform(value: Any): util.List[Object] = {
 
     JavaScalaConverters.seqToList(
       value.asInstanceOf[ArrayData]
-        .toSeq(arrayInternalType)
-        .map(arrayInternalConverter.apply)
+        .toSeq(internalType)
+        .map(internalDecoder.apply)
     )
   }
 }

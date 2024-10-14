@@ -135,5 +135,5 @@ object EncodersSupplier
 
   override protected def collectionCodec(sparkType: DataType, internal: SearchEncoder): SearchEncoder = CollectionEncoder(internal)
   override protected def createComplexCodec(internal: Map[FieldAdapter, SearchEncoder]): SearchEncoder = ComplexEncoder(internal)
-  override protected def forGeoPoint: SearchEncoder = GeoPointType.READ_CONVERTER
+  override protected def forGeoPoint: SearchEncoder = GeoPointType.ENCODER
 }
