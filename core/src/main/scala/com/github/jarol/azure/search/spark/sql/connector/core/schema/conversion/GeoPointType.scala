@@ -19,14 +19,14 @@ object GeoPointType {
     )
   )
 
-  final val READ_CONVERTER: SearchEncoder = ComplexEncoder(
+  final val ENCODER: SearchEncoder = ComplexEncoder(
     Map(
       FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicEncoders.UTF8_STRING,
       FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionEncoder(AtomicEncoders.IDENTITY)
     )
   )
 
-  final val WRITE_CONVERTER: SearchDecoder = StructTypeDecoder(
+  final val DECODER: SearchDecoder = StructTypeDecoder(
     Map(
       FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicDecoders.STRING,
       FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.IDENTITY)

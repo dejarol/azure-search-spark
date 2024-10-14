@@ -6,8 +6,8 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import java.lang.{Object => JObject}
 
 /**
- * Converter for Search collections
- * @param internal converter for collection internal objects
+ * Encoder for Search collections
+ * @param internal encoder for collection internal objects
  */
 
 case class CollectionEncoder(private val internal: SearchEncoder)

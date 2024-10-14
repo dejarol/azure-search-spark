@@ -57,7 +57,7 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
    * @param prefix optional key prefix
    * @param supplier optional message supplier for better exception explanation
    * @throws ConfigException if the key is not found
-   * @return the value related to given key, converted using given converter
+   * @return the value related to given key
    */
 
   @throws[ConfigException]
@@ -76,11 +76,11 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
   /**
    * Get the value of a key as a typed value by applying a conversion
    * @param key key
-   * @param conversion conversion
+   * @param conversion conversion function
    * @param prefix optional key prefix
    * @param supplier optional message supplier
    * @throws ConfigException if the key is not found or the conversion fails
-   * @return the value related to given key, converted using given converter
+   * @return the value related to given key, transformed according to the given conversion
    */
 
   @throws[ConfigException]

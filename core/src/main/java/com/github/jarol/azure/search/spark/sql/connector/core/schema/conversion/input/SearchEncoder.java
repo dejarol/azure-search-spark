@@ -19,11 +19,11 @@ public interface SearchEncoder
     Object apply(Object value);
 
     /**
-     * Compose a new encoder by combining this instance with a second converter, so that
-     * this converter is applied first, and the second right afterward (similarly to
+     * Compose a new encoder by combining this instance with a second encoder, so that
+     * this encoder is applied first, and the second right afterward (similarly to
      * {@link java.util.function.Function#compose})
-     * @param after converter to apply after this instance
-     * @return a combined converter
+     * @param after encoder to apply after this instance
+     * @return a combined encoder
      */
 
     default SearchEncoder andThen(SearchEncoder after) {
