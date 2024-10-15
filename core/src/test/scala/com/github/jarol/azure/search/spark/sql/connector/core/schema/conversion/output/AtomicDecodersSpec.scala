@@ -18,11 +18,9 @@ class AtomicDecodersSpec
           it("strings") {
 
             val input = "hello"
-            AtomicDecoders.STRING.apply(
-              UTF8String.fromString(input)
-            ) shouldBe input
-
-            AtomicDecoders.STRING.apply(null) shouldBe null
+            val decoder = AtomicDecoders.forStrings()
+            decoder.apply(UTF8String.fromString(input)) shouldBe input
+            decoder.apply(null) shouldBe null
           }
 
           it("date") {
@@ -33,14 +31,14 @@ class AtomicDecodersSpec
               Constants.UTC_OFFSET
             )
             val expected = input.format(Constants.DATETIME_OFFSET_FORMATTER)
-            AtomicDecoders.DATE.apply(input.toLocalDate.toEpochDay.toInt) shouldBe expected
+            AtomicDecoders.forDates().apply(input.toLocalDate.toEpochDay.toInt) shouldBe expected
           }
 
           it("timestamp") {
 
             val input = OffsetDateTime.now(Constants.UTC_OFFSET)
             val expected = input.format(Constants.DATETIME_OFFSET_FORMATTER)
-            AtomicDecoders.TIMESTAMP.apply(
+            AtomicDecoders.forTimestamps().apply(
               ChronoUnit.MICROS.between(Instant.EPOCH, input.toInstant)
             ) shouldBe expected
           }
@@ -51,7 +49,7 @@ class AtomicDecodersSpec
             it("strings") {
 
               val input = LocalDate.now()
-              AtomicDecoders.DATE_TO_STRING.apply(
+              AtomicDecoders.fromDateToString().apply(
                 Date.valueOf(input)
               ) shouldBe input.format(DateTimeFormatter.ISO_LOCAL_DATE)
             }

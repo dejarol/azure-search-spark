@@ -7,16 +7,16 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.{toSearchTy
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 /**
- * Supplier for decoding (i.e. converting data from Spark to Search)
+ * Supplier for decoders
  */
 
 object DecodingSupplier
   extends SafeCodecSupplier[SearchDecoder] {
 
-  override protected def atomicCodecFor(
-                                         spark: DataType,
-                                         search: SearchFieldDataType
-                                       ): Option[SearchDecoder] = {
+  override protected[write] def atomicCodecFor(
+                                                spark: DataType,
+                                                search: SearchFieldDataType
+                                              ): Option[SearchDecoder] = {
 
     if (search.isString) {
       forString(spark)
@@ -34,13 +34,13 @@ object DecodingSupplier
   private def forString(dataType: DataType): Option[SearchDecoder] = {
 
     if (dataType.isString) {
-      Some(AtomicDecoders.STRING)
+      Some(AtomicDecoders.forStrings())
     } else if (dataType.isNumeric || dataType.isBoolean) {
-      Some(AtomicDecoders.STRING_VALUE_OF)
+      Some(AtomicDecoders.stringValueOf())
     } else if (dataType.isDateTime) {
       dataType match {
-        case DataTypes.DateType => Some(AtomicDecoders.DATE_TO_STRING)
-        case DataTypes.TimestampType => Some(AtomicDecoders.TIMESTAMP)
+        case DataTypes.DateType => Some(AtomicDecoders.fromDateToString())
+        case DataTypes.TimestampType => Some(AtomicDecoders.forTimestamps())
         case _ => None
       }
     } else {
@@ -70,7 +70,7 @@ object DecodingSupplier
   private def forBoolean(dataType: DataType): Option[SearchDecoder] = {
 
     dataType match {
-      case DataTypes.BooleanType => Some(AtomicDecoders.IDENTITY)
+      case DataTypes.BooleanType => Some(AtomicDecoders.identity())
       case _ => None
     }
   }
@@ -78,8 +78,8 @@ object DecodingSupplier
   private def forDateTime(dataType: DataType): Option[SearchDecoder] = {
 
     dataType match {
-      case DataTypes.DateType => Some(AtomicDecoders.DATE)
-      case DataTypes.TimestampType => Some(AtomicDecoders.TIMESTAMP)
+      case DataTypes.DateType => Some(AtomicDecoders.forDates())
+      case DataTypes.TimestampType => Some(AtomicDecoders.forTimestamps())
       case _ => None
     }
   }

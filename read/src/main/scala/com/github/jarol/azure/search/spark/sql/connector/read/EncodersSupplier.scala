@@ -50,7 +50,7 @@ object EncodersSupplier
 
     // Allow a string to be read only as a string
     dataType match {
-      case DataTypes.StringType => Some(AtomicEncoders.UTF8_STRING)
+      case DataTypes.StringType => Some(AtomicEncoders.forUTF8Strings())
       case _ => None
     }
   }
@@ -88,8 +88,9 @@ object EncodersSupplier
       // Set encoder for strings
       dataType match {
         case DataTypes.StringType => Some(
-          AtomicEncoders.STRING_VALUE_OF.andThen(
-            AtomicEncoders.UTF8_STRING)
+          AtomicEncoders.stringValueOf().andThen(
+            AtomicEncoders.forUTF8Strings()
+          )
         )
         case _ => None
       }
@@ -108,8 +109,8 @@ object EncodersSupplier
     // [a] a boolean
     // [b] a string
     dataType match {
-      case DataTypes.StringType => Some(AtomicEncoders.STRING_VALUE_OF.andThen(AtomicEncoders.UTF8_STRING))
-      case DataTypes.BooleanType => Some(AtomicEncoders.IDENTITY)
+      case DataTypes.StringType => Some(AtomicEncoders.stringValueOf().andThen(AtomicEncoders.forUTF8Strings()))
+      case DataTypes.BooleanType => Some(AtomicEncoders.identity())
       case _ => None
     }
   }
@@ -126,9 +127,9 @@ object EncodersSupplier
     // [a] a date or timestamp
     // [b] a string
     dataType match {
-      case DataTypes.TimestampType => Some(AtomicEncoders.TIMESTAMP)
-      case DataTypes.DateType => Some(AtomicEncoders.DATE)
-      case DataTypes.StringType => Some(AtomicEncoders.UTF8_STRING)
+      case DataTypes.TimestampType => Some(AtomicEncoders.forTimestamps())
+      case DataTypes.DateType => Some(AtomicEncoders.forDates())
+      case DataTypes.StringType => Some(AtomicEncoders.forUTF8Strings())
       case _ => None
     }
   }

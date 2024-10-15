@@ -2,6 +2,8 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import org.apache.spark.unsafe.types.UTF8String;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -12,48 +14,33 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
-public class AtomicDecoders {
+/**
+ * Collection of atomic {@link SearchDecoder}
+ */
 
-    public static final SearchDecoder IDENTITY;
-
-    /**
-     * Decoder for strings
-     */
-    
-    public static final SearchDecoder STRING;
+public final class AtomicDecoders {
 
     /**
-     * Decoder from numeric/boolean types to string
+     * Gets a no-op decoder (i.e. a decoder that does not apply any transformation)
+     * @return a no-op decoder
      */
 
-    public static final SearchDecoder STRING_VALUE_OF;
+    @Contract(pure = true)
+    public static @NotNull SearchDecoder identity() {
+
+        return value -> value;
+    }
 
     /**
-     * Decoder for dates
+     * Get the decoder for strings
+     * @return decoder for strings
      */
 
-    public final static SearchDecoder DATE;
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchDecoder forStrings() {
 
-    public final static SearchDecoder DATE_TO_STRING;
-
-    /**
-     * Decoder for timestamps
-     */
-
-    public final static SearchDecoder TIMESTAMP;
-
-    static {
-
-        IDENTITY = value -> value;
-
-        STRING_VALUE_OF = new TransformDecoder<String>() {
-            @Override
-            protected String transform(Object value) {
-                return String.valueOf(value);
-            }
-        };
-
-        STRING = new TransformDecoder<String>() {
+        // Strings are internally represented as UTF8Strings
+        return new TransformDecoder<String>() {
             @Override
             protected String transform(Object value) {
                 return new String(
@@ -62,8 +49,33 @@ public class AtomicDecoders {
                 );
             }
         };
+    }
 
-        DATE = new TimeDecoder() {
+    /**
+     * Gets a decoder from numeric/boolean types to string
+     * @return a decoder from numeric/boolean types to string
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchDecoder stringValueOf() {
+
+        return new TransformDecoder<String>() {
+            @Override
+            protected String transform(Object value) {
+                return String.valueOf(value);
+            }
+        };
+    }
+
+    /**
+     * Gets a decoder for dates
+     * @return decoder for dates
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchDecoder forDates() {
+
+        return new TimeDecoder() {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
 
@@ -74,8 +86,17 @@ public class AtomicDecoders {
                 );
             }
         };
+    }
 
-        DATE_TO_STRING = new TransformDecoder<String>() {
+    /**
+     * Gets a decoder from dates to strings
+     * @return decoder from dates to strings
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchDecoder fromDateToString() {
+
+        return new TransformDecoder<String>() {
             @Override
             protected String transform(Object value) {
                 return ((Date) value)
@@ -83,8 +104,17 @@ public class AtomicDecoders {
                         .format(DateTimeFormatter.ISO_LOCAL_DATE);
             }
         };
+    }
 
-        TIMESTAMP = new TimeDecoder() {
+    /**
+     * Gets a decoder for timestamps
+     * @return decoder for timestamps
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchDecoder forTimestamps() {
+
+        return new TimeDecoder() {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
                 return Instant.EPOCH.plus(

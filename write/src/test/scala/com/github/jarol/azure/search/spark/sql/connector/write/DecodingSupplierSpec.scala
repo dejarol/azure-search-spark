@@ -6,4 +6,19 @@ class DecodingSupplierSpec
   extends SafeCodecSupplierSpec
     with SchemaViolationsMixins {
 
+  describe(`object`[DecodingSupplier.type ]) {
+    describe(SHOULD) {
+      describe("return a Left for") {
+        it("a") {
+          // TODO
+        }
+      }
+
+      describe("return a Right for") {
+        it("a") {
+          // TODO
+        }
+      }
+    }
+  }
 }
