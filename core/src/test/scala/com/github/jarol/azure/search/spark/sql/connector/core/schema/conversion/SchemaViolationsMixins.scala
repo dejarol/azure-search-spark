@@ -2,8 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 
-import scala.reflect.ClassTag
-
 /**
  * Mix-in trait for dealing with instances of [[SchemaViolation]]
  */
@@ -11,21 +9,12 @@ import scala.reflect.ClassTag
 trait SchemaViolationsMixins {
 
   /**
-   * Evaluate if a schema violation instance is an instance for a given subclass
-   * @param v violation
-   * @tparam T subclass type
-   * @return true if given violation is an instance of given subclass type
-   */
-
-  protected final def isOfType[T <: SchemaViolation: ClassTag](v: SchemaViolation): Boolean = v.isInstanceOf[T]
-
-  /**
    * Returns true if this instance is a [[SchemaViolations.IncompatibleType]]
    * @param v violation
    * @return true for incompatible type violations
    */
 
-  def isForIncompatibleType(v: SchemaViolation): Boolean = isOfType[SchemaViolations.IncompatibleType](v)
+  def isForIncompatibleType(v: SchemaViolation): Boolean = v.isInstanceOf[SchemaViolations.IncompatibleType]
 
   /**
    * Returns true if this instance refers to a complex field violation
@@ -33,7 +22,7 @@ trait SchemaViolationsMixins {
    * @return true for complex field violations
    */
 
-  def isForComplexField(v: SchemaViolation): Boolean = isOfType[SchemaViolations.ComplexFieldViolation](v)
+  def isForComplexField(v: SchemaViolation): Boolean = v.isInstanceOf[SchemaViolations.ComplexFieldViolation]
 
   /**
    * Returns true if this instance refers to an array field violation
@@ -41,7 +30,7 @@ trait SchemaViolationsMixins {
    * @return true for array field violations
    */
 
-  def isForArrayField(v: SchemaViolation): Boolean = isOfType[SchemaViolations.ArrayViolation](v)
+  def isForArrayField(v: SchemaViolation): Boolean = v.isInstanceOf[SchemaViolations.ArrayViolation]
 
   /**
    * Maybe get subfield violations (defined if given a [[SchemaViolations.ComplexFieldViolation]])
