@@ -35,7 +35,7 @@ class NumericEncoderSupplierSpec
 
   describe(`object`[NumericEncoderSupplier]) {
     describe(SHOULD) {
-      describe("define suppliers for handling numeric data, as") {
+      describe("define encoders for handling numeric data, as") {
         it("int") {
 
           val supplier = NumericEncoderSupplier.INT_32

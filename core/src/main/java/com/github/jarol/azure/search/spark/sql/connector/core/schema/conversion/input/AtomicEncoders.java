@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input;
 
 import org.apache.spark.unsafe.types.UTF8String;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
@@ -14,53 +15,57 @@ import java.time.temporal.ChronoUnit;
 public final class AtomicEncoders {
 
     /**
-     * Noop encoder (returns a value as-is)
+     * Gets a no-op encoder (i.e. no operation is applied)
+     * @return a no-op encoder
      */
 
-    public static final SearchEncoder IDENTITY = value -> value;
+    @Contract(pure = true)
+    public static @NotNull SearchEncoder identity() {
+
+        return value -> value;
+    }
 
     /**
-     * Support encoder from numeric/boolean types to string
+     * Gets an encoder that converts an object to string by invoking Java's {@link String#valueOf} method
+     * @return encoder implementing string conversion
      */
 
-    public static final SearchEncoder STRING_VALUE_OF;
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchEncoder stringValueOf() {
 
-    /**
-     * Encoder for strings (internally represented as {@link UTF8String}
-     */
-
-    public static final SearchEncoder UTF8_STRING;
-
-    /**
-     * Encoder for timestamps (internally represented as epoch microseconds)
-     */
-
-    public static final SearchEncoder TIMESTAMP;
-
-
-    /**
-     * Encoder for dates (internally represented as epoch days)
-     */
-
-    public static final SearchEncoder DATE;
-
-    static {
-
-        STRING_VALUE_OF = new TransformEncoder<String>() {
+        return new TransformEncoder<String>() {
             @Override
             protected String transform(Object value) {
                 return String.valueOf(value);
             }
         };
+    }
 
-        UTF8_STRING = new TransformEncoder<UTF8String>() {
+    /**
+     * Gets an encoder for converting Search strings to Spark internal strings (represented as {@link UTF8String})
+     * @return encoder for Spark internal strings
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchEncoder forUTF8Strings() {
+
+        return new TransformEncoder<UTF8String>() {
             @Override
             protected UTF8String transform(Object value) {
                 return UTF8String.fromString((String) value);
             }
         };
+    }
 
-        TIMESTAMP = new TimeEncoder<Long>() {
+    /**
+     * Gets an encoder for Spark timestamp
+     * @return encoder for timestamps
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchEncoder forTimestamps() {
+
+        return new TimeEncoder<Long>() {
 
             @Override
             protected @NotNull Long toInternalObject(
@@ -73,8 +78,17 @@ public final class AtomicEncoders {
                 );
             }
         };
+    }
 
-        DATE = new TimeEncoder<Integer>() {
+    /**
+     * Gets an encoder for Spark dates
+     * @return encoder for dates
+     */
+
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull SearchEncoder forDates() {
+
+        return new TimeEncoder<Integer>() {
 
             @Override
             protected Integer toInternalObject(

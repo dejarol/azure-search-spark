@@ -5,17 +5,56 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 
 import java.lang.{Double => JDouble, Float => JFloat, Long => JLong}
 
+/**
+ * Supplier for handling numeric decoding conversions
+ */
+
 trait NumericDecoderSupplier {
+
+  /**
+   * Decoder's Spark internal reference type
+   */
 
   private[write] type SparkType
 
+  /**
+   * Convert a value from this instance's Spark internal value to an integer
+   * @param v Spark internal value
+   * @return Spark internal value as an integer
+   */
+
   private[write] def toInt32(v: SparkType): Integer
+
+  /**
+   * Convert a value from this instance's Spark internal value to a long
+   * @param v Spark internal value
+   * @return Spark internal value as a long
+   */
 
   private[write] def toInt64(v: SparkType): JLong
 
+  /**
+   * Convert a value from this instance's Spark internal value to a double
+   * @param v Spark internal value
+   * @return Spark internal value as a double
+   */
+
   private[write] def toDouble(v: SparkType): JDouble
 
+  /**
+   * Convert a value from this instance's Spark internal value to a float
+   * @param v Spark internal value
+   * @return Spark internal value as a float
+   */
+
   private[write] def toFloat(v: SparkType): JFloat
+
+  /**
+   * Safely get the decoder to use for translating a value from its internal Spark representation
+   * to a target Search representation
+   * @param searchType target Search type
+   * @return an optional decoder
+   */
 
   final def getForType(searchType: SearchFieldDataType): Option[SearchDecoder] = {
 
@@ -29,7 +68,8 @@ trait NumericDecoderSupplier {
 
     decodingFunction.map {
       function => new TransformDecoder[Any] {
-        override protected def transform(value: Any): Any = function(value.asInstanceOf[SparkType])
+        override protected def transform(value: Any): Any =
+          function(value.asInstanceOf[SparkType])
       }
     }
   }
