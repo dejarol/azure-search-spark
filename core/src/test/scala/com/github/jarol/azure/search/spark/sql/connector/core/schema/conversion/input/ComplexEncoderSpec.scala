@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaSc
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 
-import java.util
+import java.util.{Map => JMap}
 
 class ComplexEncoderSpec
   extends BasicSpec {
@@ -15,21 +15,19 @@ class ComplexEncoderSpec
       it(s"convert a map into an ${nameOf[InternalRow]}") {
 
         val (k1, k2, v1, v2) = ("k1", "k2", "hello", 1)
-        val input: util.Map[String, Object] = JavaScalaConverters.scalaMapToJava(
+        val input: JMap[String, Object] = JavaScalaConverters.scalaMapToJava(
           Map(
             k1 -> v1,
-            k2 -> java.lang.Integer.valueOf(v2)
+            k2 -> Integer.valueOf(v2)
           )
         )
 
         val output = ComplexEncoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.StringType) -> AtomicEncoders.UTF8_STRING,
-            FieldAdapterImpl(k2, DataTypes.IntegerType) -> AtomicEncoders.IDENTITY
+            FieldAdapterImpl(k1, DataTypes.StringType) -> AtomicEncoders.forUTF8Strings(),
+            FieldAdapterImpl(k2, DataTypes.IntegerType) -> AtomicEncoders.identity()
           )
-        ).apply(
-          input
-        )
+        ).apply(input)
 
         output.getString(0) shouldBe v1
         output.getInt(1) shouldBe v2

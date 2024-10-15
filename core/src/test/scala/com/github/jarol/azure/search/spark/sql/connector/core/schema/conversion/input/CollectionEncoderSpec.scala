@@ -14,7 +14,7 @@ class CollectionEncoderSpec
 
         val input = Seq("hello", "world")
         val output = CollectionEncoder(
-          AtomicEncoders.UTF8_STRING
+          AtomicEncoders.forUTF8Strings()
         ).apply(
           JavaScalaConverters.seqToList(input)
         )
