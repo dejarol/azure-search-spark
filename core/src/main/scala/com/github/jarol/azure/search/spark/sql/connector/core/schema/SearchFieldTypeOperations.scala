@@ -23,7 +23,13 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    * @return true for numeric types
    */
 
-  final def isNumeric: Boolean = SearchFieldTypeOperations.NUMERIC_TYPES.contains(input)
+  final def isNumeric: Boolean = {
+
+    input match {
+      case SearchFieldDataType.INT32 | SearchFieldDataType.INT64 | SearchFieldDataType.DOUBLE | SearchFieldDataType.SINGLE => true
+      case _ => false
+    }
+  }
 
   final def isBoolean: Boolean = input.equals(SearchFieldDataType.BOOLEAN)
 
@@ -73,17 +79,4 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
 private object SearchFieldTypeOperations {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
-
-  private val NUMERIC_TYPES: Set[SearchFieldDataType] = Set(
-    SearchFieldDataType.INT32,
-    SearchFieldDataType.INT64,
-    SearchFieldDataType.DOUBLE,
-    SearchFieldDataType.SINGLE
-  )
-
-  protected[schema] val ATOMIC_TYPES: Set[SearchFieldDataType] = Set(
-    SearchFieldDataType.STRING,
-    SearchFieldDataType.BOOLEAN,
-    SearchFieldDataType.DATE_TIME_OFFSET
-  ) ++ NUMERIC_TYPES
 }

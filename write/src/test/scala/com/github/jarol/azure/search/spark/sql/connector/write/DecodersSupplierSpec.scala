@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{SafeCodecSupplierSpec, SchemaViolationsMixins}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{SafeCodecSupplierSpec, SchemaViolation, SchemaViolationsMixins}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -14,6 +14,8 @@ import scala.reflect.ClassTag
 class DecodersSupplierSpec
   extends SafeCodecSupplierSpec
     with SchemaViolationsMixins {
+
+  private lazy val (first, second) = ("first", "second")
 
   /**
    * Assert that an atomic decoder between a Spark type and a Search type exists,
@@ -172,14 +174,42 @@ class DecodersSupplierSpec
       }
 
       describe("return a Left for") {
-        it("a") {
-          // TODO
+        it("missing fields") {
+
+          val violations = DecodersSupplier.get(
+            Seq(createStructField(first, DataTypes.StringType)),
+            Seq(createSearchField(second, SearchFieldDataType.STRING))
+          ).left.value
+
+          violations should have size 1
+          violations.head.getType shouldBe SchemaViolation.Type.MISSING_FIELD
+        }
+
+        it("namesake fields with incompatible types") {
+
+          val violations = DecodersSupplier.get(
+            Seq(createStructField(first, DataTypes.IntegerType)),
+            Seq(createSearchField(first, SearchFieldDataType.COMPLEX))
+          ).left.value
+
+          violations should have size 1
+          violations.head.getType shouldBe SchemaViolation.Type.INCOMPATIBLE_TYPE
         }
       }
 
       describe("return a Right for") {
-        it("a") {
-          // TODO
+        it("matching schemas") {
+
+          DecodersSupplier.get(
+            Seq(
+              createStructField(first, DataTypes.TimestampType),
+              createStructField(second, DataTypes.StringType)
+            ),
+            Seq(
+              createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET),
+              createSearchField(second, SearchFieldDataType.STRING)
+            )
+          ) shouldBe 'right
         }
       }
     }
