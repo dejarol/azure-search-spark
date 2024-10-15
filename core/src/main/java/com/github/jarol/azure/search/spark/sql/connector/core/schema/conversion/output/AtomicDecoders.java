@@ -37,7 +37,7 @@ public final class AtomicDecoders {
      */
 
     @Contract(value = " -> new", pure = true)
-    public static @NotNull SearchDecoder forStrings() {
+    public static @NotNull SearchDecoder forUTF8Strings() {
 
         // Strings are internally represented as UTF8Strings
         return new TransformDecoder<String>() {
@@ -96,14 +96,18 @@ public final class AtomicDecoders {
     @Contract(value = " -> new", pure = true)
     public static @NotNull SearchDecoder fromDateToString() {
 
-        return new TransformDecoder<String>() {
+        TransformDecoder<String> toIsoLocalDate = new TransformDecoder<String>() {
+
             @Override
-            protected String transform(Object value) {
-                return ((Date) value)
-                        .toLocalDate()
-                        .format(DateTimeFormatter.ISO_LOCAL_DATE);
+            protected @NotNull String transform(Object value) {
+                return OffsetDateTime.parse(
+                        (String) value,
+                        Constants.DATETIME_OFFSET_FORMATTER
+                ).format(DateTimeFormatter.ISO_LOCAL_DATE);
             }
         };
+
+        return forDates().andThen(toIsoLocalDate);
     }
 
     /**

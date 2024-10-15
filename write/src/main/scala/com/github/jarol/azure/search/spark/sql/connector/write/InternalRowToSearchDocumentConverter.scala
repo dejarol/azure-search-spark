@@ -44,7 +44,7 @@ object InternalRowToSearchDocumentConverter
                                              searchFields: Seq[SearchField]
                                            ): Either[Seq[SchemaViolation], Map[FieldAdapter, SearchDecoder]] = {
 
-    DecodingSupplier.get(
+    DecodersSupplier.get(
       schema, searchFields
     )
   }

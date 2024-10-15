@@ -10,7 +10,7 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
  * Supplier for decoders
  */
 
-object DecodingSupplier
+object DecodersSupplier
   extends SafeCodecSupplier[SearchDecoder] {
 
   override protected[write] def atomicCodecFor(
@@ -31,13 +31,22 @@ object DecodingSupplier
     }
   }
 
+  /**
+   * Returns the decoder to use for decoding Spark internal values to Search String type
+   * @param dataType Spark internal type
+   * @return the decoder for strings
+   */
+
   private def forString(dataType: DataType): Option[SearchDecoder] = {
 
     if (dataType.isString) {
-      Some(AtomicDecoders.forStrings())
+      // String to String
+      Some(AtomicDecoders.forUTF8Strings())
     } else if (dataType.isNumeric || dataType.isBoolean) {
+      // Numeric or boolean to String
       Some(AtomicDecoders.stringValueOf())
     } else if (dataType.isDateTime) {
+      // Date or Timestamp to String
       dataType match {
         case DataTypes.DateType => Some(AtomicDecoders.fromDateToString())
         case DataTypes.TimestampType => Some(AtomicDecoders.forTimestamps())
@@ -48,8 +57,16 @@ object DecodingSupplier
     }
   }
 
+  /**
+   * Returns the decoder to user for decoding Spark internal numeric values to Search numeric types
+   * @param dataType Spark internal type
+   * @param searchType Search numeric type
+   * @return decoder for numeric types
+   */
+
   private def forNumeric(dataType: DataType, searchType: SearchFieldDataType): Option[SearchDecoder] = {
 
+    // A decoder will exist only for Spark internal numeric types
     if (dataType.isNumeric) {
       val maybeDecoderSupplier: Option[NumericDecoderSupplier] = dataType match {
         case DataTypes.IntegerType => Some(NumericDecoderSupplier.INT32)
@@ -67,16 +84,30 @@ object DecodingSupplier
     }
   }
 
+  /**
+   * Returns the decoder to user for decoding Spark internal values to Search boolean type
+   * @param dataType Spark internal type
+   * @return decoder for boolean types
+   */
+
   private def forBoolean(dataType: DataType): Option[SearchDecoder] = {
 
     dataType match {
+      // Boolean to Boolean
       case DataTypes.BooleanType => Some(AtomicDecoders.identity())
       case _ => None
     }
   }
 
+  /**
+   * Returns the decoder to user for decoding Spark internal values to Search datetime type
+   * @param dataType Spark internal type
+   * @return decoder for datetime types
+   */
+
   private def forDateTime(dataType: DataType): Option[SearchDecoder] = {
 
+    // A decoder will exist only for Date or Timestamp Spark types
     dataType match {
       case DataTypes.DateType => Some(AtomicDecoders.forDates())
       case DataTypes.TimestampType => Some(AtomicDecoders.forTimestamps())

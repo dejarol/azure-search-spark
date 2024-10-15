@@ -3,7 +3,6 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
 import org.apache.spark.unsafe.types.UTF8String
 
-import java.sql.Date
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, LocalTime, OffsetDateTime}
@@ -18,7 +17,7 @@ class AtomicDecodersSpec
           it("strings") {
 
             val input = "hello"
-            val decoder = AtomicDecoders.forStrings()
+            val decoder = AtomicDecoders.forUTF8Strings()
             decoder.apply(UTF8String.fromString(input)) shouldBe input
             decoder.apply(null) shouldBe null
           }
@@ -50,7 +49,7 @@ class AtomicDecodersSpec
 
               val input = LocalDate.now()
               AtomicDecoders.fromDateToString().apply(
-                Date.valueOf(input)
+                input.toEpochDay.toInt
               ) shouldBe input.format(DateTimeFormatter.ISO_LOCAL_DATE)
             }
           }

@@ -28,7 +28,7 @@ object GeoPointType {
 
   final val DECODER: SearchDecoder = StructTypeDecoder(
     Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicDecoders.forStrings(),
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicDecoders.forUTF8Strings(),
       FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
     )
   )

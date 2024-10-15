@@ -15,7 +15,7 @@ class ArrayDecoderSpec
         val input = Seq("hello", "world")
         val output = ArrayDecoder(
           DataTypes.StringType,
-          AtomicDecoders.STRING
+          AtomicDecoders.forUTF8Strings()
         ).apply(
           ArrayData.toArrayData(
             input.map(UTF8String.fromString)
