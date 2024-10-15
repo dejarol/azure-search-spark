@@ -68,12 +68,16 @@ trait SafeCodecSupplier[CodecType] {
     schema.map {
       schemaField =>
         (
+          // Create the field adapter
           FieldAdapterImpl(schemaField),
+          // Collect namesake field
           searchFields.collectFirst {
             case sef if sef.sameNameOf(schemaField) => sef
           }.toRight(schemaField).left.map {
+            // Map missing fields to a SchemaViolation
             sf => SchemaViolations.forMissingField(sf)
           }.flatMap {
+            // Otherwise, get the codec
             searchField =>
               getCodecFor(schemaField, searchField)
           }

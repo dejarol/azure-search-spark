@@ -1,18 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.core
 
-import java.util
+import java.util.{List => JList, Map => JMap}
 import scala.jdk.CollectionConverters._
 
 object JavaScalaConverters {
 
   /**
-   * Convert a Scala seq to a [[java.util.List]]
+   * Convert a Scala seq to a Java list
    * @param seq Scala seq
    * @tparam T seq type
-   * @return a java list
+   * @return a Java list
    */
 
-  def seqToList[T](seq: Seq[T]): util.List[T] = seq.asJava
+  def seqToList[T](seq: Seq[T]): JList[T] = seq.asJava
 
   /**
    * Convert a java list to a seq
@@ -21,7 +21,7 @@ object JavaScalaConverters {
    * @return a seq
    */
 
-  def listToSeq[T](list: util.List[T]): Seq[T] = list.asScala
+  def listToSeq[T](list: JList[T]): Seq[T] = list.asScala
 
   /**
    * Convert a java map to a scala map
@@ -31,7 +31,7 @@ object JavaScalaConverters {
    * @return a scala immutable map
    */
 
-  def javaMapToScala[K, V](map: util.Map[K, V]): Map[K, V] = map.asScala.toMap
+  def javaMapToScala[K, V](map: JMap[K, V]): Map[K, V] = map.asScala.toMap
 
   /**
    * Convert a Scala map to a Java map
@@ -41,5 +41,5 @@ object JavaScalaConverters {
    * @return a scala immutable map
    */
 
-  def scalaMapToJava[K, V](map: Map[K, V]): util.Map[K, V] = map.asJava
+  def scalaMapToJava[K, V](map: Map[K, V]): JMap[K, V] = map.asJava
 }

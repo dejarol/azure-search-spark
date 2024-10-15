@@ -32,13 +32,13 @@ class EncodersSupplierSpec
                                                                     dataType: DataType,
                                                                     value: TInput,
                                                                     transform: TInput => TOutput
-                                                                ): Unit = {
+                                                                  ): Unit = {
 
     val result = EncodersSupplier.atomicCodecFor(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
-    output shouldBe a[TOutput]
+    output shouldBe a [TOutput]
     output shouldBe transform(value)
   }
 

@@ -9,8 +9,6 @@ import java.io.Serializable;
 @FunctionalInterface
 public interface SearchDecoder extends Serializable {
 
-    SearchDecoder IDENTITY = value -> value;
-
     /**
      * Convert a Spark internal value to a Search document property
      * @param value internal value
@@ -18,4 +16,17 @@ public interface SearchDecoder extends Serializable {
      */
 
     Object apply(Object value);
+
+    /**
+     * Combine this decoder with another
+     * <br>
+     * This instance's transformation will be applied first, and the <b>after</b> transformation later
+     * @param after transformation to apply right after the one defined by this instance
+     * @return a combined decoder
+     */
+
+    default SearchDecoder andThen(SearchDecoder after) {
+
+        return (value -> after.apply(this.apply(value)));
+    }
 }
