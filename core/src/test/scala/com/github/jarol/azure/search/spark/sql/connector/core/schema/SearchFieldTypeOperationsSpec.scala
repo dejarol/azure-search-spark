@@ -9,6 +9,16 @@ class SearchFieldTypeOperationsSpec
     with FieldFactory
       with Inspectors {
 
+  private lazy val ATOMIC_TYPES = Set(
+    SearchFieldDataType.STRING,
+    SearchFieldDataType.INT32,
+    SearchFieldDataType.INT64,
+    SearchFieldDataType.DOUBLE,
+    SearchFieldDataType.SINGLE,
+    SearchFieldDataType.BOOLEAN,
+    SearchFieldDataType.DATE_TIME_OFFSET
+  )
+
   /**
    * Run a set of tests using an instance of [[SearchFieldTypeAssertion]]
    * @param assertion assertion to run
@@ -17,7 +27,7 @@ class SearchFieldTypeOperationsSpec
   private def runTypeAssertion(assertion: SearchFieldTypeAssertion): Unit = {
 
     // Check for simple types
-    forAll(SearchFieldTypeOperations.ATOMIC_TYPES) {
+    forAll(ATOMIC_TYPES) {
       k => assertion.predicate(k) shouldBe assertion.expectedAtomic
     }
 
