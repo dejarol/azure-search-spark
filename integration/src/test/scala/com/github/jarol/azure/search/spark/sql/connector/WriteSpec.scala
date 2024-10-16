@@ -1,17 +1,15 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models.{ActionTypeBean, SimpleBean}
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
-import org.apache.spark.sql.SaveMode
 
 import java.time.LocalDate
 
 class WriteSpec
   extends SearchSparkSpec {
 
-  ignore(s"Search dataSource") {
+  describe("Search dataSource") {
     describe(SHOULD) {
       describe("create an index (if it does not exist)") {
         it("with as many fields as many columns") {
@@ -23,11 +21,7 @@ class WriteSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(documents).write.format(Constants.DATASOURCE_NAME)
-            .options(optionsForAuthAndIndex(indexName))
-            .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
-            .mode(SaveMode.Append)
-            .save()
+          writeToIndex(toDF(documents), indexName, "id", None)
 
           indexExists(indexName) shouldBe true
           val expectedSearchFieldNames = schemaOfCaseClass[SimpleBean].fields.map(_.name)
@@ -47,13 +41,12 @@ class WriteSpec
 
           dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-          toDF(documents).write.format(Constants.DATASOURCE_NAME)
-            .options(optionsForAuthAndIndex(indexName))
-            .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, "id")
-            .option(WriteConfig.INDEX_ACTION_COLUMN_CONFIG, indexActionColumn)
-            .mode(SaveMode.Append)
-            .save()
 
+          val extraOptions = Map(
+            WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
+          )
+
+          writeToIndex(toDF(documents), indexName, "id", Some(extraOptions))
           indexExists(indexName) shouldBe true
           val expectedSearchFieldNames = schemaOfCaseClass[ActionTypeBean].fields.collect {
             case sf if !sf.name.equalsIgnoreCase(indexActionColumn) => sf.name

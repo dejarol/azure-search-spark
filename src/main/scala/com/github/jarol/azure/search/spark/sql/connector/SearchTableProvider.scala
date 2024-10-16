@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters, NoSuchIndexException}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters, IndexDoesNotExistException}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import org.apache.spark.sql.connector.catalog.{SessionConfigSupport, Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
@@ -22,12 +22,13 @@ class SearchTableProvider
 
   /**
    * Infer the schema for a target Search index
+ *
    * @param options options for retrieving the Search index
-   * @throws NoSuchIndexException if the target index does not exist
+   * @throws IndexDoesNotExistException if the target index does not exist
    * @return the index schema
    */
 
-  @throws[NoSuchIndexException]
+  @throws[IndexDoesNotExistException]
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
 
     val readConfig = ReadConfig(
@@ -41,7 +42,7 @@ class SearchTableProvider
         readConfig.select
       )
     } else {
-      throw new NoSuchIndexException(readConfig.getIndex)
+      throw new IndexDoesNotExistException(readConfig.getIndex)
     }
   }
 
