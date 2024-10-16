@@ -20,8 +20,8 @@ class StructTypeDecoderSpec
         val input = InternalRow(values: _*)
         val output = StructTypeDecoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.IntegerType) -> AtomicDecoders.identity(),
-            FieldAdapterImpl(k2, DataTypes.DoubleType) -> AtomicDecoders.identity()
+            FieldAdapterImpl(k1, DataTypes.IntegerType, 0) -> AtomicDecoders.identity(),
+            FieldAdapterImpl(k2, DataTypes.DoubleType, 1) -> AtomicDecoders.identity()
           )
         ).apply(input)
 

@@ -21,4 +21,6 @@ public interface FieldAdapter {
      */
 
     DataType sparkType();
+
+    int index();
 }

@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
-import org.apache.spark.sql.types.{DataType, StructField}
+import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 import java.util.{List => JList}
 
@@ -27,7 +27,7 @@ trait SafeCodecSupplier[CodecType] {
    */
 
   def get(
-           schema: Seq[StructField],
+           schema: StructType,
            searchFields: Seq[SearchField]
          ): Either[Seq[SchemaViolation], Map[FieldAdapter, CodecType]] = {
 
@@ -61,7 +61,7 @@ trait SafeCodecSupplier[CodecType] {
    */
 
   private def maybeComplexObjectCodec(
-                                       schema: Seq[StructField],
+                                       schema: StructType,
                                        searchFields: Seq[SearchField]
                                      ): Map[FieldAdapter, Either[SchemaViolation, CodecType]] = {
 
@@ -69,7 +69,7 @@ trait SafeCodecSupplier[CodecType] {
       schemaField =>
         (
           // Create the field adapter
-          FieldAdapterImpl(schemaField),
+          FieldAdapterImpl(schemaField, schema),
           // Collect namesake field
           searchFields.collectFirst {
             case sef if sef.sameNameOf(schemaField) => sef
@@ -242,7 +242,7 @@ trait SafeCodecSupplier[CodecType] {
 
     // Build a rule that wraps subField conversion rules
     val maybeSubfieldMapping = maybeComplexObjectCodec(
-      sparkType.unsafeSubFields,
+      StructType(sparkType.unsafeSubFields),
       JavaScalaConverters.listToSeq(searchField.getFields)
     )
 

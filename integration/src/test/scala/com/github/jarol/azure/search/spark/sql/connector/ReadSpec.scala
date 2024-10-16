@@ -1,14 +1,19 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
+import com.azure.search.documents.SearchDocument
+import com.azure.search.documents.models.{SearchOptions, SearchResult}
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
 import com.github.jarol.azure.search.spark.sql.connector.models.{AtomicBean, SimpleBean}
+import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.Inspectors
 
 import java.sql.{Date, Timestamp}
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, OffsetDateTime}
+import java.util.stream.{Collectors, StreamSupport}
+import java.util.{List => JList}
 
 class ReadSpec
   extends SearchSparkSpec
@@ -130,16 +135,16 @@ class ReadSpec
 
           // Write some data
           val indexName = "numeric-beans"
-          val notNullBean = new AtomicBean("notNullId", Some(1), Some(123), Some(3.45), Some(4.56f), Some(false), Some(LocalDateTime.now()))
-          val nullBean = AtomicBean("nullId", None, None, None, None, None, None)
+          val notNullBean = AtomicBean.from("hello", Some(1), Some(2147483650L), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
+          val nullBean = AtomicBean.from("world", None, None, None, None, None)
           val samples = Seq(notNullBean, nullBean)
-
-          dropIndexIfExists(indexName)
-          writeToIndex(toDF(samples), indexName, "id", None)
-          Thread.sleep(5000)
 
           describe("numeric values as") {
             it("strings") {
+
+              dropIndexIfExists(indexName)
+              writeToIndex(toDF(samples), indexName, "id", None)
+              Thread.sleep(5000)
 
               // Create a schema with all string fields
               val schemaRead = schemaOfCaseClass[AtomicBean].map {
@@ -154,16 +159,23 @@ class ReadSpec
               ) {
                 case (row, sample) =>
                   assertEncoding[String](row, sample, "intValue", _.intValue.map(String.valueOf))
-                  assertEncoding[String](row, sample, "intValue", _.intValue.map(String.valueOf))
                   assertEncoding[String](row, sample, "longValue", _.longValue.map(String.valueOf))
                   assertEncoding[String](row, sample, "doubleValue", _.doubleValue.map(String.valueOf))
-                  assertEncoding[String](row, sample, "floatValue", _.floatValue.map(String.valueOf))
               }
             }
 
             it("numeric values of different type") {
 
+              val docs: JList[SearchDocument] = StreamSupport.stream(
+                ReadConfig(optionsForAuthAndIndex(indexName)).search(new SearchOptions()).spliterator(),
+                false
+              ).map[SearchDocument]((t: SearchResult) => t.getDocument(classOf[SearchDocument]))
+                  .collect(
+                    Collectors.toList[SearchDocument]()
+                  )
+
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("intValue", DataTypes.DoubleType),
                 createStructField("longValue", DataTypes.FloatType)
               )
@@ -184,6 +196,7 @@ class ReadSpec
             it("booleans") {
 
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("booleanValue", DataTypes.BooleanType)
               )
 
@@ -193,13 +206,14 @@ class ReadSpec
                 zipRowsAndBeans(rows, samples)
               ) {
                 case (r, s) =>
-                  assertEncoding[Boolean](r, s, "booleanBalue", _.booleanValue)
+                  assertEncoding[Boolean](r, s, "booleanValue", _.booleanValue)
               }
             }
 
             it("strings") {
 
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("booleanValue", DataTypes.StringType)
               )
 
@@ -209,7 +223,7 @@ class ReadSpec
                 zipRowsAndBeans(rows, samples)
               ) {
                 case (r, s) =>
-                  assertEncoding[String](r, s, "booleanBalue", _.booleanValue.map(String.valueOf))
+                  assertEncoding[String](r, s, "booleanValue", _.booleanValue.map(String.valueOf))
               }
             }
           }
@@ -218,6 +232,7 @@ class ReadSpec
             it("dates") {
 
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.DateType)
               )
 
@@ -236,6 +251,7 @@ class ReadSpec
             it("timestamps") {
 
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.TimestampType)
               )
 
@@ -252,6 +268,7 @@ class ReadSpec
             it("strings") {
 
               val schemaRead = createStructType(
+                createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.StringType)
               )
 
@@ -262,13 +279,12 @@ class ReadSpec
               ) {
                 case (r, s) =>
                   assertEncoding[String](r, s, "timestampValue", _.timestampValue.map {
-                    _.toLocalDateTime.format(Constants.DATETIME_OFFSET_FORMATTER)
+                    _.toInstant.atZone(Constants.UTC_OFFSET)
+                      .format(Constants.DATETIME_OFFSET_FORMATTER)
                   })
               }
             }
           }
-
-          dropIndexIfExists(indexName)
         }
       }
     }

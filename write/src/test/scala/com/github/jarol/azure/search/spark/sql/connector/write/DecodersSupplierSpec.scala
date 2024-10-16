@@ -177,7 +177,7 @@ class DecodersSupplierSpec
         it("missing fields") {
 
           val violations = DecodersSupplier.get(
-            Seq(createStructField(first, DataTypes.StringType)),
+            createStructType(createStructField(first, DataTypes.StringType)),
             Seq(createSearchField(second, SearchFieldDataType.STRING))
           ).left.value
 
@@ -188,7 +188,7 @@ class DecodersSupplierSpec
         it("namesake fields with incompatible types") {
 
           val violations = DecodersSupplier.get(
-            Seq(createStructField(first, DataTypes.IntegerType)),
+            createStructType(createStructField(first, DataTypes.IntegerType)),
             Seq(createSearchField(first, SearchFieldDataType.COMPLEX))
           ).left.value
 
@@ -201,7 +201,7 @@ class DecodersSupplierSpec
         it("matching schemas") {
 
           DecodersSupplier.get(
-            Seq(
+            createStructType(
               createStructField(first, DataTypes.TimestampType),
               createStructField(second, DataTypes.StringType)
             ),

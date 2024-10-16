@@ -183,7 +183,7 @@ class EncodersSupplierSpec
         it("a non-clashing schema") {
 
           EncodersSupplier.get(
-            Seq(
+            createStructType(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
             ),
@@ -200,7 +200,7 @@ class EncodersSupplierSpec
           it("miss") {
 
             val result = EncodersSupplier.get(
-              Seq(createStructField(first, DataTypes.StringType)),
+              createStructType(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
 
@@ -213,7 +213,7 @@ class EncodersSupplierSpec
           it("have incompatible dtypes") {
 
             val result = EncodersSupplier.get(
-              Seq(createStructField(first, DataTypes.StringType)),
+              createStructType(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(first, SearchFieldDataType.collection(SearchFieldDataType.STRING)))
             ).left.value
 
@@ -228,7 +228,7 @@ class EncodersSupplierSpec
           it("miss") {
 
             val result = EncodersSupplier.get(
-              Seq(
+              createStructType(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
                 )
@@ -254,7 +254,7 @@ class EncodersSupplierSpec
           it("have incompatible dtypes") {
 
             val result = EncodersSupplier.get(
-              Seq(
+              createStructType(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
                 )
@@ -284,7 +284,7 @@ class EncodersSupplierSpec
           it("have incompatible inner type") {
 
             val result = EncodersSupplier.get(
-              Seq(
+              createStructType(
                 createArrayField(first, DataTypes.DateType)
               ),
               Seq(

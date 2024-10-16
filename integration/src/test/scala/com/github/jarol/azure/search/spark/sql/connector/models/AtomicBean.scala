@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
 import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 /**
  * Bean for read/write integrations tests
@@ -9,7 +9,6 @@ import java.time.LocalDateTime
  * @param intValue int value
  * @param longValue long value
  * @param doubleValue double value
- * @param floatValue float
  * @param booleanValue boolean
  * @param timestampValue timestamp
  */
@@ -19,10 +18,11 @@ case class AtomicBean(
                        intValue: Option[Int],
                        longValue: Option[Long],
                        doubleValue: Option[Double],
-                       floatValue: Option[Float],
                        booleanValue: Option[Boolean],
                        timestampValue: Option[Timestamp]
-                     ) {
+                     )
+
+object AtomicBean {
 
   /**
    * Create an instance
@@ -30,31 +30,30 @@ case class AtomicBean(
    * @param intValue int
    * @param longValue long
    * @param doubleValue double
-   * @param floatValue float
    * @param booleanValue boolean
    * @param timestampValue timestamp
    * @return an instance
    */
 
-  def this(
+  def from(
             id: String,
             intValue: Option[Int],
             longValue: Option[Long],
             doubleValue: Option[Double],
-            floatValue: Option[Float],
             booleanValue: Option[Boolean],
-            timestampValue: Option[LocalDateTime]
-          ) = {
+            timestampValue: Option[OffsetDateTime]
+          ): AtomicBean = {
 
-    this(
+    AtomicBean(
       id,
       intValue,
       longValue,
       doubleValue,
-      floatValue,
       booleanValue,
       timestampValue.map {
-        Timestamp.valueOf
+        offsetDateTime => Timestamp.from(
+          offsetDateTime.toInstant
+        )
       }
     )
   }

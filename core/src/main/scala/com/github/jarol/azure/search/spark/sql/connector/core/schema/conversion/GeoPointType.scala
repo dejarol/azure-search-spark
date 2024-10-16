@@ -21,15 +21,15 @@ object GeoPointType {
 
   final val ENCODER: SearchEncoder = ComplexEncoder(
     Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicEncoders.forUTF8Strings(),
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> CollectionEncoder(AtomicEncoders.identity())
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType, 0) -> AtomicEncoders.forUTF8Strings(),
+      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType), 1) -> CollectionEncoder(AtomicEncoders.identity())
     )
   )
 
   final val DECODER: SearchDecoder = StructTypeDecoder(
     Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType) -> AtomicDecoders.forUTF8Strings(),
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType)) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
+      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType, 0) -> AtomicDecoders.forUTF8Strings(),
+      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType), 1) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
     )
   )
 }
