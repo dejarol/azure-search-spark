@@ -17,9 +17,9 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
       - name: 'Unit tests'
-        run: sbt clean test
+        run: sbt + clean test
       - name: 'Integration tests'
-        run: sbt 'project integration' clean test
+        run: sbt 'project integration' + clean test
         env:
           AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
           AZURE_SEARCH_API_KEY: ${{ secrets.AZURE_SEARCH_API_KEY }}

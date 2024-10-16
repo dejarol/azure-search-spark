@@ -1,9 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, IndexDoesNotExistException}
+import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
 import com.github.jarol.azure.search.spark.sql.connector.models.SimpleBean
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
-import org.apache.spark.sql.SaveMode
 
 import java.time.LocalDate
 

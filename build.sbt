@@ -12,6 +12,7 @@ ThisBuild / javacOptions ++= Seq(
 )
 
 ThisBuild / scalacOptions ++= Seq(
+  "-deprecation",
   "-target:jvm-1.8",
   "-Ywarn-unused:implicits",
   "-Ywarn-unused:imports",
@@ -45,7 +46,9 @@ lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 
 // Core project
 lazy val core = (project in file("core"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
+    publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
@@ -59,7 +62,9 @@ lazy val core = (project in file("core"))
 
 // Read project
 lazy val read = (project in file("read"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
+    publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
@@ -71,7 +76,9 @@ lazy val read = (project in file("read"))
 
 // Write project
 lazy val write = (project in file("write"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
+    publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
@@ -101,10 +108,11 @@ lazy val root = (project in file("."))
 
 // Integration tests
 lazy val integration = (project in file("integration"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
   .dependsOn(root % compileTestDependency)
   .settings(
-    crossScalaVersions := supportedScalaVersions,
     publish / skip := true,
+    crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL

@@ -60,7 +60,7 @@ object RangePartitioner {
       .collectFirst {
         // Collect type for namesake field
         case sf if sf.getName.equalsIgnoreCase(name) => sf
-      }.toRight().left.map {
+      }.toRight(()).left.map {
         // Map non-existing fields to an exception
         _ => IllegalSearchFieldException.nonExisting(name)
       }.right.flatMap(evaluateExistingCandidate)

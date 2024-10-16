@@ -55,7 +55,7 @@ object PerDocumentSupplier {
     }
 
     // If defined, create the supplier
-    maybeIndexActionColumnIndex.toRight().left.map {
+    maybeIndexActionColumnIndex.toRight(()).left.map {
       _ => new IllegalIndexActionTypeColumnException(name)
     }.right.map {
       PerDocumentSupplier(_, defaultAction)

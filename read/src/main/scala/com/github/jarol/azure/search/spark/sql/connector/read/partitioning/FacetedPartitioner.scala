@@ -140,7 +140,7 @@ object FacetedPartitioner {
     // Collect the namesake field and evaluate it (if any)
     val maybeExistingField = fields.collectFirst {
       case sf if sf.getName.equalsIgnoreCase(name) => sf
-    }.toRight().left.map {
+    }.toRight(()).left.map {
       _ => IllegalSearchFieldException.nonExisting(name)
     }.right.flatMap(evaluateExistingCandidate)
 
