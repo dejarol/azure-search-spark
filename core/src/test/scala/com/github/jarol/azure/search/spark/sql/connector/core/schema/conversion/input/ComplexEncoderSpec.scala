@@ -24,8 +24,8 @@ class ComplexEncoderSpec
 
         val output = ComplexEncoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.StringType) -> AtomicEncoders.forUTF8Strings(),
-            FieldAdapterImpl(k2, DataTypes.IntegerType) -> AtomicEncoders.identity()
+            FieldAdapterImpl(k1, DataTypes.StringType, 0) -> AtomicEncoders.forUTF8Strings(),
+            FieldAdapterImpl(k2, DataTypes.IntegerType, 1) -> AtomicEncoders.identity()
           )
         ).apply(input)
 

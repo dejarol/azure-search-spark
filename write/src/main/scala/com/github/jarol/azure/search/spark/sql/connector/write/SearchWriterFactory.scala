@@ -68,7 +68,7 @@ class SearchWriterFactory(
     }
 
     InternalRowToSearchDocumentConverter.safeApply(
-      schemaMaybeWithoutActionColumn,
+      StructType(schemaMaybeWithoutActionColumn),
       writeConfig.getSearchIndexFields
     ) match {
       case Left(value) => throw value

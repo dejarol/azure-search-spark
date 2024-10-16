@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion
 
-import org.apache.spark.sql.types.{DataType, StructField}
+import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
  * Implementation of [[FieldAdapter]]
@@ -10,12 +10,15 @@ import org.apache.spark.sql.types.{DataType, StructField}
 
 case class FieldAdapterImpl(
                              private val fieldName: String,
-                             private val schemaType: DataType
+                             private val schemaType: DataType,
+                             private val fieldIndex: Int
                            ) extends FieldAdapter {
 
   override def name(): String = fieldName
 
   override def sparkType(): DataType = schemaType
+
+  override def index(): Int = fieldIndex
 }
 
 object FieldAdapterImpl {
@@ -25,11 +28,15 @@ object FieldAdapterImpl {
    * @param field input StructField
    */
 
-  def apply(field: StructField): FieldAdapterImpl = {
+  def apply(
+             field: StructField,
+             schema: StructType
+           ): FieldAdapterImpl = {
 
     FieldAdapterImpl(
       field.name,
-      field.dataType
+      field.dataType,
+      schema.fieldIndex(field.name)
     )
   }
 }
