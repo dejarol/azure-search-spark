@@ -2,6 +2,13 @@ package com.github.jarol.azure.search.spark.sql.connector.models
 
 import com.azure.search.documents.models.IndexActionType
 
+/**
+ * Bean for read/write integration tests
+ * @param id id
+ * @param value value
+ * @param action action
+ */
+
 case class ActionTypeBean(
                            id: String,
                            value: Option[Int],
@@ -9,6 +16,14 @@ case class ActionTypeBean(
                          )
 
 object ActionTypeBean {
+
+  /**
+   * Create an instance
+   * @param id id
+   * @param value value
+   * @param action action
+   * @return a bean instance
+   */
 
   def apply(
              id: String,

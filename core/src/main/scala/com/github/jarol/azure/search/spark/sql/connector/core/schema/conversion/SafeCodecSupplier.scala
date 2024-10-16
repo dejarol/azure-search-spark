@@ -136,7 +136,7 @@ trait SafeCodecSupplier[CodecType] {
 
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
     atomicCodecFor(sparkType, searchFieldType)
-      .toRight().left.map {
+      .toRight(()).left.map {
         _ => SchemaViolations.forNamesakeButIncompatibleFields(
           schemaField.name,
           sparkType,
@@ -297,7 +297,7 @@ trait SafeCodecSupplier[CodecType] {
       Some(forGeoPoint)
     } else {
       None
-    }).toRight().left.map {
+    }).toRight(()).left.map {
       _ => SchemaViolations.forIncompatibleGeoPoint(schemaField)
     }
   }
