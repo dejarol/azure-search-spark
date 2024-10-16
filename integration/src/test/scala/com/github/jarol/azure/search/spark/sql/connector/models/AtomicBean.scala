@@ -22,9 +22,7 @@ case class AtomicBean(
                        floatValue: Option[Float],
                        booleanValue: Option[Boolean],
                        timestampValue: Option[Timestamp]
-                     )
-
-object AtomicBean {
+                     ) {
 
   /**
    * Create an instance
@@ -38,17 +36,17 @@ object AtomicBean {
    * @return an instance
    */
 
-  def apply(
-             id: String,
-             intValue: Option[Int],
-             longValue: Option[Long],
-             doubleValue: Option[Double],
-             floatValue: Option[Float],
-             booleanValue: Option[Boolean],
-             timestampValue: Option[LocalDateTime]
-           ): AtomicBean = {
+  def this(
+            id: String,
+            intValue: Option[Int],
+            longValue: Option[Long],
+            doubleValue: Option[Double],
+            floatValue: Option[Float],
+            booleanValue: Option[Boolean],
+            timestampValue: Option[LocalDateTime]
+          ) = {
 
-    AtomicBean(
+    this(
       id,
       intValue,
       longValue,

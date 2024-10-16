@@ -130,8 +130,8 @@ class ReadSpec
 
           // Write some data
           val indexName = "numeric-beans"
-          val notNullBean = AtomicBean("notNullId", Some(1), Some(123), Some(3.45), Some(4.56f), Some(false), Some(LocalDateTime.now()))
-          val nullBean = AtomicBean("nullId", None, None, None, None, None, None.asInstanceOf[Option[LocalDateTime]])
+          val notNullBean = new AtomicBean("notNullId", Some(1), Some(123), Some(3.45), Some(4.56f), Some(false), Some(LocalDateTime.now()))
+          val nullBean = AtomicBean("nullId", None, None, None, None, None, None)
           val samples = Seq(notNullBean, nullBean)
 
           dropIndexIfExists(indexName)
