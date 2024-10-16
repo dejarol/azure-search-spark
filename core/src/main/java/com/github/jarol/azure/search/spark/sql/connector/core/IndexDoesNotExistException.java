@@ -6,7 +6,7 @@ import java.util.NoSuchElementException;
  * Exception for non-existing Search indexes
  */
 
-public class NoSuchIndexException
+public class IndexDoesNotExistException
         extends NoSuchElementException {
 
     /**
@@ -14,7 +14,7 @@ public class NoSuchIndexException
      * @param name index name
      */
 
-    public NoSuchIndexException(
+    public IndexDoesNotExistException(
             String name
     ) {
 

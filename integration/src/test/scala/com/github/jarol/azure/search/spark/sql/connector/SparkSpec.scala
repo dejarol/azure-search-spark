@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Encoder, Encoders, Row, SparkSession}
 
@@ -104,7 +103,7 @@ trait SparkSpec
    * @return a collection of typed instances
    */
 
-  private def toSeqOfUsingEncoder[A](df: DataFrame, encoder: Encoder[A]): Seq[A] = df.as[A](encoder).collect()
+  private def toSeqUsingEncoder[A](df: DataFrame, encoder: Encoder[A]): Seq[A] = df.as[A](encoder).collect()
 
   /**
    * Convert a [[DataFrame]] to a collection of case classes
@@ -113,5 +112,5 @@ trait SparkSpec
    * @return a collection of case classes
    */
 
-  protected final def toSeqOf[A <: Product: TypeTag](df: DataFrame): Seq[A] = toSeqOfUsingEncoder[A](df, Encoders.product[A])
+  protected final def toSeqOf[A <: Product: TypeTag](df: DataFrame): Seq[A] = toSeqUsingEncoder[A](df, Encoders.product[A])
 }

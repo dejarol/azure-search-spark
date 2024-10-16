@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import org.apache.spark.sql.catalyst.analysis.NoSuchIndexException
+import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
 import org.apache.spark.sql.types.StructType
 
@@ -16,15 +16,15 @@ class SearchScanBuilder(private val schema: StructType,
 
   /**
    * Build the scan
-   * @throws NoSuchIndexException if the target index does not exist
+   * @throws IndexDoesNotExistException if the target index does not exist
    * @return a scan to be used for Search DataSource
    */
 
-  @throws[NoSuchIndexException]
+  @throws[IndexDoesNotExistException]
   override def build(): Scan = {
 
     if (!readConfig.indexExists) {
-      throw new NoSuchIndexException(readConfig.getIndex)
+      throw new IndexDoesNotExistException(readConfig.getIndex)
     } else {
       new SearchScan(schema, readConfig)
     }
