@@ -3,8 +3,8 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema._
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input._
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{FieldAdapter, GeoPointType, SafeCodecSupplier}
-import org.apache.spark.sql.types.{DataType, DataTypes}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{GeoPointType, SafeCodecSupplier, SearchIndexColumn}
+import org.apache.spark.sql.types.{DataType, DataTypes, StructType}
 
 /**
  * Encoder supplier
@@ -135,6 +135,6 @@ object EncodersSupplier
   }
 
   override protected def collectionCodec(sparkType: DataType, internal: SearchEncoder): SearchEncoder = CollectionEncoder(internal)
-  override protected def createComplexCodec(internal: Map[FieldAdapter, SearchEncoder]): SearchEncoder = ComplexEncoder(internal)
-  override protected def forGeoPoint: SearchEncoder = GeoPointType.ENCODER
+  override protected def createComplexCodec(internal: Map[SearchIndexColumn, SearchEncoder]): SearchEncoder = ComplexEncoder(internal)
+  override protected def forGeoPoint(schema: StructType): SearchEncoder = GeoPointType.encoder(schema)
 }

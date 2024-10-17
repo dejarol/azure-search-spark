@@ -20,16 +20,17 @@ trait SafeCodecSupplier[CodecType] {
    * Safely get the codec between a Spark schema and a Search index schema.
    * <br>
    * It returns either a collection of [[SchemaViolation]] (reporting fields that are not codecable) or
-   * the codec mapping (a map with keys being [[FieldAdapter]] and values being instances of [[CodecType]])
+   * the codec mapping (a map with keys being [[SearchIndexColumn]] and values being instances of [[CodecType]])
+   *
    * @param schema Spark schema fields
    * @param searchFields Search index fields
    * @return either some schema violations or the codec function
    */
 
-  def get(
-           schema: StructType,
-           searchFields: Seq[SearchField]
-         ): Either[Seq[SchemaViolation], Map[FieldAdapter, CodecType]] = {
+  final def get(
+                 schema: StructType,
+                 searchFields: Seq[SearchField]
+               ): Either[Seq[SchemaViolation], Map[SearchIndexColumn, CodecType]] = {
 
     val maybeCodec = maybeComplexObjectCodec(schema, searchFields)
 
@@ -63,13 +64,13 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeComplexObjectCodec(
                                        schema: StructType,
                                        searchFields: Seq[SearchField]
-                                     ): Map[FieldAdapter, Either[SchemaViolation, CodecType]] = {
+                                     ): Map[SearchIndexColumn, Either[SchemaViolation, CodecType]] = {
 
     schema.map {
       schemaField =>
         (
-          // Create the field adapter
-          FieldAdapterImpl(schemaField, schema),
+          // Create the Search index column
+          SearchIndexColumnImpl(schemaField, schema),
           // Collect namesake field
           searchFields.collectFirst {
             case sef if sef.sameNameOf(schemaField) => sef
@@ -170,8 +171,12 @@ trait SafeCodecSupplier[CodecType] {
                                    searchField: SearchField
                                  ): Either[SchemaViolation, CodecType] = {
 
+    val (sparkInnerType, searchInnerType) = (
+      sparkType.unsafeCollectionInnerType,
+      searchField.getType.unsafeCollectionInnerType
+    )
+
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
-    val (sparkInnerType, searchInnerType) = (sparkType.unsafeCollectionInnerType, searchField.getType.unsafeCollectionInnerType)
     val maybeSubFields: Option[JList[SearchField]] = if (searchInnerType.isComplex) {
       Some(searchField.getFields)
     } else None
@@ -268,7 +273,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return a converter for handling nested data objects
    */
 
-  protected def createComplexCodec(internal: Map[FieldAdapter, CodecType]): CodecType
+  protected def createComplexCodec(internal: Map[SearchIndexColumn, CodecType]): CodecType
 
   /**
    * Safely retrieve a codec for geopoints
@@ -283,18 +288,20 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeGeoPointCodec(schemaField: StructField): Either[SchemaViolation, CodecType] = {
 
     // Evaluate if the field is eligible for being a GeoPoint
-    val allSubFieldsExistAndAreCompatible = schemaField.dataType.unsafeSubFields
-      .forall { sf =>
-        GeoPointType.SCHEMA.exists {
-          geoSf => geoSf.name.equals(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
-            sf.dataType,
-            geoSf.dataType
+    val subFields = schemaField.dataType.unsafeSubFields
+    val allSubFieldsExistAndAreCompatible = subFields.size.equals(GeoPointType.SCHEMA.size) && subFields.forall { sf =>
+      GeoPointType.SCHEMA.exists {
+        geoSf => geoSf.name.equalsIgnoreCase(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
+          sf.dataType,
+          geoSf.dataType
         )
       }
     }
 
     (if (allSubFieldsExistAndAreCompatible) {
-      Some(forGeoPoint)
+      Some(
+        forGeoPoint(StructType(subFields))
+      )
     } else {
       None
     }).toRight(()).left.map {
@@ -303,9 +310,10 @@ trait SafeCodecSupplier[CodecType] {
   }
 
   /**
-   * Converter for GeoPoints
+   * Get the codec for GeoPoints
+   * @param schema schema of candidate field
    * @return converter for GeoPoints
    */
 
-  protected def forGeoPoint: CodecType
+  protected def forGeoPoint(schema: StructType): CodecType
 }

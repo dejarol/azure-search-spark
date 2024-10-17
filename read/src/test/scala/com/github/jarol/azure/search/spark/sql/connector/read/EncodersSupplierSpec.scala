@@ -15,7 +15,7 @@ class EncodersSupplierSpec
   extends SafeCodecSupplierSpec
     with SchemaViolationsMixins {
 
-  private lazy val (first, second, third) = ("first", "second", "third")
+  private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
 
   /**
    * Assert that an encoder between two atomic types exists and reads data correctly
@@ -180,7 +180,7 @@ class EncodersSupplierSpec
       }
 
       describe("return a Right for") {
-        it("a non-clashing schema") {
+        it("perfectly matching schemas") {
 
           EncodersSupplier.get(
             createStructType(
@@ -191,7 +191,47 @@ class EncodersSupplierSpec
               createSearchField(first, SearchFieldDataType.STRING),
               createSearchField(second, SearchFieldDataType.INT32)
             )
-          )
+          ) shouldBe 'right
+        }
+
+        describe("matching schemas with different column order") {
+          it("for top-level fields") {
+
+            EncodersSupplier.get(
+              createStructType(
+                createStructField(second, DataTypes.IntegerType),
+                createStructField(first, DataTypes.StringType)
+              ),
+              Seq(
+                createSearchField(first, SearchFieldDataType.STRING),
+                createSearchField(second, SearchFieldDataType.INT32)
+              )
+            ) shouldBe 'right
+          }
+
+          it("for nested subfields") {
+
+            EncodersSupplier.get(
+              createStructType(
+                createStructField(second, DataTypes.IntegerType),
+                createStructField(first,
+                  createStructType(
+                    createStructField(third, DataTypes.TimestampType),
+                    createStructField(fourth, DataTypes.BooleanType)
+                  )
+                )
+              ),
+              Seq(
+                createComplexField(first,
+                  Seq(
+                    createSearchField(fourth, SearchFieldDataType.BOOLEAN),
+                    createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
+                  )
+                ),
+                createSearchField(second, SearchFieldDataType.INT32)
+              )
+            ) shouldBe 'right
+          }
         }
       }
 
