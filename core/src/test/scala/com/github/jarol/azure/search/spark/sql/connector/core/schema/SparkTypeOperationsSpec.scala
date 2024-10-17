@@ -22,7 +22,7 @@ class SparkTypeOperationsSpec
           DataTypes.IntegerType.isNumeric shouldBe true
           DataTypes.LongType.isNumeric shouldBe true
           DataTypes.DoubleType.isNumeric shouldBe true
-          DataTypes.FloatType.isNumeric shouldBe true
+          DataTypes.FloatType.isNumeric shouldBe false
         }
 
         it("a boolean") {

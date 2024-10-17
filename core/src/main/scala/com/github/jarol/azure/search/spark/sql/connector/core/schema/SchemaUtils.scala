@@ -5,6 +5,8 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import com.github.jarol.azure.search.spark.sql.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types._
 
+import java.util.{List => JList}
+
 /**
  * Utilities for dealing with both Spark and Search types
  */
@@ -27,26 +29,18 @@ object SchemaUtils {
     } else if (searchType.isCollection) {
 
       // Extract collection inner type
-      ArrayType(
-        inferSparkTypeOf(
-          new SearchField("array", searchType.unsafeCollectionInnerType)
-        ),
-        containsNull = true
-      )
-    } else if (searchType.isComplex) {
+      val innerSearchType = searchType.unsafeCollectionInnerType
+      val innerSparkType = innerSearchType match {
+        case SearchFieldDataType.SINGLE => DataTypes.FloatType
+        case SearchFieldDataType.COMPLEX => inferSparkComplexType(searchField.getFields)
+        case _ => inferSparkTypeOf(
+          new SearchField("array", innerSearchType)
+        )
+      }
 
-      // Extract subfields,
-      // convert them into StructFields
-      // and create a StructType
-      StructType(
-        JavaScalaConverters.listToSeq(searchField.getFields)
-          .map { searchField =>
-            StructField(
-              searchField.getName,
-              inferSparkTypeOf(searchField)
-            )
-          }
-      )
+      ArrayType(innerSparkType, containsNull = true)
+    } else if (searchType.isComplex) {
+      inferSparkComplexType(searchField.getFields)
     } else if (searchType.isGeoPoint) {
       GeoPointType.SCHEMA
     } else {
@@ -55,7 +49,7 @@ object SchemaUtils {
   }
 
   /**
-   * Infer the Spark type of an atomic Search type
+   * Infer the Spark type for an atomic Search type
    * @param searchType search type
    * @throws DataTypeException for unsupported Search types
    * @return the inferred Spark data type
@@ -71,7 +65,7 @@ object SchemaUtils {
         case SearchFieldDataType.INT32 => DataTypes.IntegerType
         case SearchFieldDataType.INT64 => DataTypes.LongType
         case SearchFieldDataType.DOUBLE => DataTypes.DoubleType
-        case SearchFieldDataType.SINGLE => DataTypes.FloatType
+        case SearchFieldDataType.SINGLE => throw DataTypeException.forSearchSingleFields()
         case _ => throw DataTypeException.forUnsupportedSearchType(searchType)
       }
     } else if (searchType.isBoolean) {
@@ -81,6 +75,26 @@ object SchemaUtils {
     } else {
       throw DataTypeException.forUnsupportedSearchType(searchType)
     }
+  }
+
+  /**
+   * Infer the Spark type for a collection on Search subfields
+   * @param subFields Search subfields
+   * @return a StructType wrapping all subFields definitions
+   */
+
+  private def inferSparkComplexType(subFields: JList[SearchField]): StructType = {
+
+    // Create a StructType wrapping all subfields
+    val seqOfSubFields = JavaScalaConverters.listToSeq(subFields).map {
+      searchField =>
+        StructField(
+          searchField.getName,
+          inferSparkTypeOf(searchField)
+        )
+    }
+
+    StructType(seqOfSubFields)
   }
 
   /**
@@ -135,62 +149,6 @@ object SchemaUtils {
   }
 
   /**
-   * Evaluate whether all schema fields exist in a Search schema
-   * <br>
-   * For a schema field to exist, a namesake Search field should exist
-   * @param schema schema fields
-   * @param searchFields search fields
-   * @return true if for all schema fields a namesake Search field exist
-   */
-
-  final def allSchemaFieldsExist(schema: Seq[StructField], searchFields: Seq[SearchField]): Boolean = {
-
-    schema.forall {
-      spField => searchFields.exists {
-        seField => seField.sameNameOf(spField)
-      }
-    }
-  }
-
-  /**
-   * Retrieve the name of schema fields that do not have a namesake Search fields
-   * @param schema schema fields
-   * @param searchFields search fields
-   * @return missing schema fields
-   */
-
-  final def getMissingSchemaFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Seq[String] = {
-
-    schema.collect {
-      case spField if !searchFields.exists {
-        seField => seField.sameNameOf(spField)
-      } => spField.name
-    }
-  }
-
-  /**
-   * Zip each schema field with the namesake Search field (if it exists).
-   * The output will contain only schema fields that have a Search counterpart
-   * @param schema schema
-   * @param searchFields Search fields
-   * @return a map with keys being schema fields and values being the namesake Search fields
-   */
-
-  final def matchNamesakeFields(schema: Seq[StructField], searchFields: Seq[SearchField]): Map[StructField, SearchField] = {
-
-    schema.map {
-      spField => (
-        spField,
-        searchFields.collectFirst {
-          case seField if seField.sameNameOf(spField) => seField
-        }
-      )
-    }.collect {
-      case (k, Some(v)) => (k, v)
-    }.toMap
-  }
-
-  /**
    * Infer the [[SearchFieldDataType]] for a Spark type
    * @param dataType Spark type
    * @throws DataTypeException for unsupported data types
@@ -203,9 +161,13 @@ object SchemaUtils {
     if (dataType.isAtomic) {
       inferSearchAtomicType(dataType)
     } else if (dataType.isCollection) {
-      SearchFieldDataType.collection(
-        inferSearchTypeFor(dataType.unsafeCollectionInnerType)
-      )
+      val innerDType = dataType.unsafeCollectionInnerType
+      val innerSearchType = innerDType match {
+        case DataTypes.FloatType => SearchFieldDataType.SINGLE
+        case _ => inferSearchTypeFor(innerDType)
+      }
+
+      SearchFieldDataType.collection(innerSearchType)
     } else if (dataType.isComplex) {
 
       // If compatible with GeoPoint, use Geography point Search data type
@@ -235,7 +197,6 @@ object SchemaUtils {
         case DataTypes.IntegerType => SearchFieldDataType.INT32
         case DataTypes.LongType => SearchFieldDataType.INT64
         case DataTypes.DoubleType => SearchFieldDataType.DOUBLE
-        case DataTypes.FloatType => SearchFieldDataType.SINGLE
         case _ => throw DataTypeException.forUnsupportedSparkType(dataType)
       }
     } else if (dataType.isBoolean) {
@@ -262,25 +223,16 @@ object SchemaUtils {
       new SearchField(name, inferSearchTypeFor(dType))
     } else if (dType.isCollection) {
 
+      val searchField = new SearchField(name, inferSearchTypeFor(dType))
+
       // If the inner type is complex, we should add subFields to newly created field
-      val searchField = new SearchField(
-        name,
-        SearchFieldDataType.collection(
-          inferSearchTypeFor(dType.unsafeCollectionInnerType)
-        )
-      )
-
-      // Optional subfields
-      val maybeSearchSubFields: Option[Seq[SearchField]] = dType
-        .unsafeCollectionInnerType
-        .safeSubFields.map {
-          v => v.map(toSearchField)
+      val innerDType = dType.unsafeCollectionInnerType
+      if (innerDType.isComplex) {
+        val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map(toSearchField)
+        searchField.setFields(subFields: _*)
+      } else {
+        searchField
       }
-
-      // Set subfields, if defined
-      maybeSearchSubFields.map {
-        v => searchField.setFields(v: _*)
-      }.getOrElse(searchField)
     } else if (dType.isComplex) {
 
       val inferredSearchType = inferSearchTypeFor(dType)

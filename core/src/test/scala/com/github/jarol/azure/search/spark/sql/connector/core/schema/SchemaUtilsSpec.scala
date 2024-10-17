@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointType
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory}
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
 
@@ -44,7 +44,6 @@ class SchemaUtilsSpec
             SearchFieldDataType.INT32 -> DataTypes.IntegerType,
             SearchFieldDataType.INT64 -> DataTypes.LongType,
             SearchFieldDataType.DOUBLE -> DataTypes.DoubleType,
-            SearchFieldDataType.SINGLE -> DataTypes.FloatType,
             SearchFieldDataType.BOOLEAN -> DataTypes.BooleanType
           )
 
@@ -57,19 +56,60 @@ class SchemaUtilsSpec
           }
         }
 
-        it("a collection type") {
+        describe("throw an exception for") {
+          it(s"a field whose datatype is ${SearchFieldDataType.SINGLE}") {
 
-          val innerType = SearchFieldDataType.INT64
-          SchemaUtils.inferSparkTypeOf(
-            createSearchField(
-              "collection",
-              createCollectionType(innerType)
-            )
-          ) shouldBe ArrayType(
+            a [DataTypeException] shouldBe thrownBy {
+              SchemaUtils.inferSparkTypeOf(
+                createSearchField(first, SearchFieldDataType.SINGLE)
+              )
+            }
+
+            a [DataTypeException] shouldBe thrownBy {
+              SchemaUtils.inferSparkTypeOf(
+                createComplexField(first,
+                  Seq(
+                    createSearchField(second, SearchFieldDataType.SINGLE)
+                  )
+                )
+              )
+            }
+          }
+        }
+
+        describe("a collection type when the inner type is") {
+          it(s"${SearchFieldDataType.SINGLE}") {
+
             SchemaUtils.inferSparkTypeOf(
-              createSearchField("inner", innerType)
+              createCollectionField(first, SearchFieldDataType.SINGLE)
+            ) shouldBe ArrayType(DataTypes.FloatType)
+          }
+
+          it("a supported atomic type") {
+
+            val innerType = SearchFieldDataType.INT64
+            SchemaUtils.inferSparkTypeOf(
+              createSearchField(
+                "collection",
+                createCollectionType(innerType)
+              )
+            ) shouldBe ArrayType(
+              SchemaUtils.inferSparkTypeOf(
+                createSearchField("inner", innerType)
+              )
             )
-          )
+          }
+
+          it("a complex type") {
+
+            SchemaUtils.inferSparkTypeOf(
+              createComplexCollectionField(
+                first,
+                createSearchField(second, SearchFieldDataType.DATE_TIME_OFFSET),
+                createSearchField(third, SearchFieldDataType.BOOLEAN)
+              )
+            )
+          }
         }
 
         it("a complex type") {
@@ -89,7 +129,7 @@ class SchemaUtilsSpec
           )
         }
 
-        it(" a geo point") {
+        it("a geo point") {
 
           SchemaUtils.inferSparkTypeOf(
             createSearchField("location", SearchFieldDataType.GEOGRAPHY_POINT)
@@ -117,72 +157,6 @@ class SchemaUtilsSpec
           schema should contain theSameElementsAs searchFields.map(
             SchemaUtils.toStructField
           )
-        }
-      }
-
-      it("evaluate if all schema fields exist") {
-
-        val schema = Seq(
-          createStructField(first, DataTypes.StringType)
-        )
-
-        val firstSetOfSearchFields = Seq(
-          createSearchField(first, SearchFieldDataType.INT64)
-        )
-
-        val secondSetOfSearchFields = Seq(
-          createSearchField(second, SearchFieldDataType.STRING)
-        )
-
-        SchemaUtils.allSchemaFieldsExist(schema, firstSetOfSearchFields) shouldBe true
-        SchemaUtils.allSchemaFieldsExist(schema, secondSetOfSearchFields) shouldBe false
-        SchemaUtils.allSchemaFieldsExist(schema, Seq.empty) shouldBe false
-      }
-
-      it("return missing schema fields") {
-
-        val schema = Seq(
-          createStructField(first, DataTypes.TimestampType),
-          createStructField(third, DataTypes.DateType)
-        )
-
-        val searchFields = Seq(
-          createSearchField(third, SearchFieldDataType.BOOLEAN)
-        )
-
-        val actual = SchemaUtils.getMissingSchemaFields(schema, searchFields)
-        val expected = schema.collect {
-          case sp if !searchFields.exists {
-            se => se.getName.equalsIgnoreCase(sp.name)
-          } => sp.name
-        }
-
-        actual should have size expected.size
-        actual should contain theSameElementsAs expected
-      }
-
-      it("match namesake fields") {
-
-        val schema = Seq(
-          createStructField(first, DataTypes.StringType),
-          createStructField(second, DataTypes.IntegerType)
-        )
-
-        val searchFields = Seq(
-          createSearchField(first, SearchFieldDataType.COMPLEX)
-        )
-
-        val output = SchemaUtils.matchNamesakeFields(schema, searchFields)
-        val expectedSize = schema.count {
-          sp => searchFields.exists {
-            se => sp.name.equalsIgnoreCase(se.getName)
-          }
-        }
-
-        output.size shouldBe expectedSize
-        forAll(output.toSeq) {
-          case (k, v) =>
-            k.name shouldBe v.getName
         }
       }
 
@@ -255,6 +229,15 @@ class SchemaUtilsSpec
             )
           }
 
+          it("with inner float type") {
+
+            SchemaUtils.inferSearchTypeFor(
+              createArrayType(DataTypes.FloatType)
+            ) shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.SINGLE
+            )
+          }
+
           it("with inner struct type") {
 
             SchemaUtils.inferSearchTypeFor(
@@ -299,6 +282,17 @@ class SchemaUtilsSpec
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.DATE_TIME_OFFSET
+            )
+          }
+
+          it("with inner float type") {
+
+            val structField = createArrayField(first, DataTypes.FloatType)
+            val searchField = SchemaUtils.toSearchField(structField)
+
+            searchField.getName shouldBe structField.name
+            searchField.getType shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.SINGLE
             )
           }
 
