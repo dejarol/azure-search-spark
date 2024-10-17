@@ -58,4 +58,22 @@ public class DataTypeException
                 )
         );
     }
+
+    /**
+     * Create a new instance for top-level Search SINGLE fields (not allowed by the Search REST API)
+     * @return an instance for single fields
+     */
+
+    @Contract(" -> new")
+    public static @NotNull DataTypeException forSearchSingleFields() {
+
+        return new DataTypeException(
+                String.format("%s are not supported. Only %s are",
+                        SearchFieldDataType.SINGLE,
+                        SearchFieldDataType.collection(
+                                SearchFieldDataType.SINGLE
+                        )
+                )
+        );
+    }
 }

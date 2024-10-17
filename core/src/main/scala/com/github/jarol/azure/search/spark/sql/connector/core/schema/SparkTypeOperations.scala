@@ -18,8 +18,7 @@ class SparkTypeOperations(override protected val input: DataType)
     Seq(
       DataTypes.IntegerType,
       DataTypes.LongType,
-      DataTypes.DoubleType,
-      DataTypes.FloatType
+      DataTypes.DoubleType
     ).exists {
       _.equals(input)
     }
