@@ -4,26 +4,26 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output.SearchDecoder
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{CodecFactory, FieldAdapter, SchemaViolation}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.{CodecFactory, SearchIndexColumn, SchemaViolation}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
 /**
  * Converter for mapping an [[InternalRow]] to a [[SearchDocument]]
- * @param converters converters for retrieving document values from an internal row
+ * @param indexColumnToSearchDecoders converters for retrieving document values from an internal row
  */
 
-case class InternalRowToSearchDocumentConverter(private val converters: Map[FieldAdapter, SearchDecoder])
+case class InternalRowToSearchDocumentConverter(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
   extends (InternalRow => SearchDocument) {
 
   override def apply(v1: InternalRow): SearchDocument = {
 
     // Create a map with non-null properties
-    val properties: Map[String, Object] = converters.collect {
-      case (field, converter) if !v1.isNullAt(field.index()) =>
+    val properties: Map[String, Object] = indexColumnToSearchDecoders.collect {
+      case (field, decoder) if !v1.isNullAt(field.index()) =>
         (
           field.name,
-          converter.apply(v1.get(field.index(), field.sparkType()))
+          decoder.apply(v1.get(field.index(), field.sparkType()))
         )
     }
 
@@ -42,14 +42,14 @@ object InternalRowToSearchDocumentConverter
   override protected def getInternalMapping(
                                              schema: StructType,
                                              searchFields: Seq[SearchField]
-                                           ): Either[Seq[SchemaViolation], Map[FieldAdapter, SearchDecoder]] = {
+                                           ): Either[Seq[SchemaViolation], Map[SearchIndexColumn, SearchDecoder]] = {
 
     DecodersSupplier.get(
       schema, searchFields
     )
   }
 
-  override protected def toConverter(internal: Map[FieldAdapter, SearchDecoder]): InternalRowToSearchDocumentConverter = {
+  override protected def toCodec(internal: Map[SearchIndexColumn, SearchDecoder]): InternalRowToSearchDocumentConverter = {
 
     InternalRowToSearchDocumentConverter(internal)
   }

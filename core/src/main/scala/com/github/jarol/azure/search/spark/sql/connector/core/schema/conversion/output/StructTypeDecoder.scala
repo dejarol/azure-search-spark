@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.FieldAdapter
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SearchIndexColumn
 import org.apache.spark.sql.catalyst.InternalRow
 
 import java.util
@@ -11,7 +11,7 @@ import java.util
  * @param converters converters to apply on internal row subfields
  */
 
-case class StructTypeDecoder(private val converters: Map[FieldAdapter, SearchDecoder])
+case class StructTypeDecoder(private val converters: Map[SearchIndexColumn, SearchDecoder])
   extends TransformDecoder[util.Map[String,  Object]] {
 
   override protected def transform(value: Any): util.Map[String, Object] = {

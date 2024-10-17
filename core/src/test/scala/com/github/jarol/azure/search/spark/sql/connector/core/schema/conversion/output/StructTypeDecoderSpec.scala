@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.FieldAdapterImpl
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SearchIndexColumnImpl
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 
@@ -20,8 +20,8 @@ class StructTypeDecoderSpec
         val input = InternalRow(values: _*)
         val output = StructTypeDecoder(
           Map(
-            FieldAdapterImpl(k1, DataTypes.IntegerType, 0) -> AtomicDecoders.identity(),
-            FieldAdapterImpl(k2, DataTypes.DoubleType, 1) -> AtomicDecoders.identity()
+            SearchIndexColumnImpl(k1, DataTypes.IntegerType, 0) -> AtomicDecoders.identity(),
+            SearchIndexColumnImpl(k2, DataTypes.DoubleType, 1) -> AtomicDecoders.identity()
           )
         ).apply(input)
 

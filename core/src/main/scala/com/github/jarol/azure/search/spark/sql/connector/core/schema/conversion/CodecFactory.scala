@@ -16,13 +16,13 @@ trait CodecFactory[CType, InternalCType] {
         v => new SchemaViolationException(
           JavaScalaConverters.seqToList(v)
         )
-      }.right.map(toConverter)
+      }.right.map(toCodec)
   }
 
   protected def getInternalMapping(
                                     schema: StructType,
                                     searchFields: Seq[SearchField]
-                                  ): Either[Seq[SchemaViolation], Map[FieldAdapter, InternalCType]]
+                                  ): Either[Seq[SchemaViolation], Map[SearchIndexColumn, InternalCType]]
 
-  protected def toConverter(internal: Map[FieldAdapter, InternalCType]): CType
+  protected def toCodec(internal: Map[SearchIndexColumn, InternalCType]): CType
 }

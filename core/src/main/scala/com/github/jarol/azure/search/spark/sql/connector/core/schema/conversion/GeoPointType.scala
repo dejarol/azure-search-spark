@@ -19,17 +19,51 @@ object GeoPointType {
     )
   )
 
-  final val ENCODER: SearchEncoder = ComplexEncoder(
-    Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType, 0) -> AtomicEncoders.forUTF8Strings(),
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType), 1) -> CollectionEncoder(AtomicEncoders.identity())
-    )
-  )
+  /**
+   * Create an encoder for this type
+   * @param schema schema of candidate GeoPoint field
+   * @return an encoder for GeoPoints
+   */
 
-  final val DECODER: SearchDecoder = StructTypeDecoder(
-    Map(
-      FieldAdapterImpl(TYPE_LABEL, DataTypes.StringType, 0) -> AtomicDecoders.forUTF8Strings(),
-      FieldAdapterImpl(COORDINATES_LABEL, ArrayType(DataTypes.DoubleType), 1) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
+  final def encoder(schema: StructType): SearchEncoder = {
+
+    ComplexEncoder(
+      Map(
+        SearchIndexColumnImpl(
+          TYPE_LABEL,
+          DataTypes.StringType,
+          schema.fieldIndex(TYPE_LABEL)
+        ) -> AtomicEncoders.forUTF8Strings(),
+        SearchIndexColumnImpl(
+          COORDINATES_LABEL,
+          ArrayType(DataTypes.DoubleType),
+          schema.fieldIndex(COORDINATES_LABEL)
+        ) -> CollectionEncoder(AtomicEncoders.identity())
+      )
     )
-  )
+  }
+
+  /**
+   * Create a decoder for this type
+   * @param schema schema of candidate GeoPoint field
+   * @return a decoder for GeoPoints
+   */
+
+  final def decoder(schema: StructType): SearchDecoder = {
+
+    StructTypeDecoder(
+      Map(
+        SearchIndexColumnImpl(
+          TYPE_LABEL,
+          DataTypes.StringType,
+          schema.fieldIndex(TYPE_LABEL)
+        ) -> AtomicDecoders.forUTF8Strings(),
+        SearchIndexColumnImpl(
+          COORDINATES_LABEL,
+          ArrayType(DataTypes.DoubleType),
+          schema.fieldIndex(COORDINATES_LABEL)
+        ) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
+      )
+    )
+  }
 }
