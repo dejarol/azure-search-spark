@@ -166,18 +166,10 @@ class ReadSpec
 
             it("numeric values of different type") {
 
-              val docs: JList[SearchDocument] = StreamSupport.stream(
-                ReadConfig(optionsForAuthAndIndex(indexName)).search(new SearchOptions()).spliterator(),
-                false
-              ).map[SearchDocument]((t: SearchResult) => t.getDocument(classOf[SearchDocument]))
-                  .collect(
-                    Collectors.toList[SearchDocument]()
-                  )
-
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("intValue", DataTypes.DoubleType),
-                createStructField("longValue", DataTypes.FloatType)
+                createStructField("longValue", DataTypes.DoubleType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
@@ -187,7 +179,7 @@ class ReadSpec
               ) {
                 case (row, bean) =>
                   assertEncoding[Double](row, bean, "intValue", _.intValue.map(_.doubleValue()))
-                  assertEncoding[Float](row, bean, "longValue", _.longValue.map(_.floatValue()))
+                  assertEncoding[Double](row, bean, "longValue", _.longValue.map(_.doubleValue()))
               }
             }
           }
