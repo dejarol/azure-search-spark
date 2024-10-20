@@ -2,14 +2,14 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 
-import java.util
+import java.util.{List => JList, Collections => JCollections}
 import java.util.function.Supplier
 
 class SearchPartitionSpec
   extends BasicSpec {
 
   private lazy val nullFilter: Supplier[String] = () => null
-  private lazy val emptySelect: Supplier[util.List[String]] = () => util.Collections.emptyList()
+  private lazy val emptySelect: Supplier[JList[String]] = () => JCollections.emptyList()
 
   /**
    * Create an abstract instance of [[SearchPartition]]
@@ -19,12 +19,12 @@ class SearchPartitionSpec
    */
 
   private def createAbstractPartition(filterSupplier: Supplier[String],
-                                      selectSupplier: Supplier[util.List[String]]): SearchPartition = {
+                                      selectSupplier: Supplier[JList[String]]): SearchPartition = {
 
     new SearchPartition {
       override def getPartitionId: Int = 0
       override def getSearchFilter: String = filterSupplier.get()
-      override def getSearchSelect: util.List[String] = selectSupplier.get()
+      override def getSearchSelect: JList[String] = selectSupplier.get()
     }
   }
 

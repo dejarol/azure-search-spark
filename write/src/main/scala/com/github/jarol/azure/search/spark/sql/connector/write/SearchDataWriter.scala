@@ -11,17 +11,19 @@ import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 /**
  * [[DataWriter]] implementation for Search dataSource
  * @param writeConfig write configuration
- * @param internalRowToSearchDocumentConverter converter from Spark internal rows to Search documents
+ * @param documentDecoder converter from Spark internal rows to Search documents
  * @param actionSupplier index action supplier
  * @param partitionId partition id
  * @param taskId task id
  */
 
-class SearchDataWriter(private val writeConfig: WriteConfig,
-                       private val internalRowToSearchDocumentConverter: InternalRowToSearchDocumentConverter,
-                       private val actionSupplier: IndexActionSupplier,
-                       private val partitionId: Int,
-                       private val taskId: Long)
+class SearchDataWriter(
+                        private val writeConfig: WriteConfig,
+                        private val documentDecoder: SearchDocumentDecoder,
+                        private val actionSupplier: IndexActionSupplier,
+                        private val partitionId: Int,
+                        private val taskId: Long
+                      )
   extends DataWriter[InternalRow]
     with Logging {
 
@@ -31,7 +33,7 @@ class SearchDataWriter(private val writeConfig: WriteConfig,
 
     // Create index action by setting document and action type
     val indexAction: IndexAction[SearchDocument] = new IndexAction[SearchDocument]
-      .setDocument(internalRowToSearchDocumentConverter.apply(record))
+      .setDocument(documentDecoder.apply(record))
       .setActionType(actionSupplier.get(record))
 
     // Add the action to the batch and, if full, write it
