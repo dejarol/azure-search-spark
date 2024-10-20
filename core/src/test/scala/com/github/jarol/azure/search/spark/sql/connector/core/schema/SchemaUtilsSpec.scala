@@ -6,7 +6,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTy
 import org.apache.spark.sql.types._
 import org.scalatest.Inspectors
 
-import java.util
+import java.util.{List => JList}
 
 class SchemaUtilsSpec
   extends BasicSpec
@@ -22,7 +22,7 @@ class SchemaUtilsSpec
    */
 
   private def assertExistAll(
-                              actual: util.List[SearchField],
+                              actual: JList[SearchField],
                               expected: Map[String, SearchFieldDataType]
                             ): Unit = {
 

@@ -4,7 +4,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverter
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataType
 
-import java.util
+import java.util.{List => JList}
 
 /**
  * Decoder for Spark arrays
@@ -13,9 +13,9 @@ import java.util
 
 case class ArrayDecoder(private val internalType: DataType,
                         private val internalDecoder: SearchDecoder)
-  extends TransformDecoder[util.List[Object]] {
+  extends TransformDecoder[JList[Object]] {
 
-  override protected def transform(value: Any): util.List[Object] = {
+  override protected def transform(value: Any): JList[Object] = {
 
     JavaScalaConverters.seqToList(
       value.asInstanceOf[ArrayData]

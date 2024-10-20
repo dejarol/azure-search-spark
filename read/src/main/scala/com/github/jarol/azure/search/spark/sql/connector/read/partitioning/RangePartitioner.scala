@@ -6,13 +6,13 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigExce
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 
-import java.util
+import java.util.{List => JList}
 
 case class RangePartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
 
   @throws[ConfigException]
-  override def createPartitions(): util.List[SearchPartition] = {
+  override def createPartitions(): JList[SearchPartition] = {
 
     val partitionerOptions = readConfig.partitionerOptions
     val partitionFieldName = partitionerOptions.unsafelyGet(ReadConfig.PARTITION_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)

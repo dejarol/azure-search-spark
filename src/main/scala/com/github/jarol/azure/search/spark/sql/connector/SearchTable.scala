@@ -9,7 +9,7 @@ import org.apache.spark.sql.connector.write.{LogicalWriteInfo, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
-import java.util
+import java.util.{HashSet => JHashSet, Set => JSet}
 
 /**
  * [[Table]] implementation for Search dataSource
@@ -28,9 +28,9 @@ class SearchTable(
 
   override def schema(): StructType = tableSchema
 
-  override def capabilities(): util.Set[TableCapability] = {
+  override def capabilities(): JSet[TableCapability] = {
 
-    new util.HashSet[TableCapability]() {{
+    new JHashSet[TableCapability]() {{
       add(TableCapability.BATCH_READ)
       add(TableCapability.BATCH_WRITE)
     }}

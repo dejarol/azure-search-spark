@@ -57,7 +57,7 @@ class SearchWriterFactory(
    */
 
   @throws[SchemaViolationException]
-  private def createInternalRowToSearchDocumentConverter(): InternalRowToSearchDocumentConverter = {
+  private def createInternalRowToSearchDocumentConverter(): SearchDocumentDecoder = {
 
     // Exclude index action column from mapping, if defined
     val schemaMaybeWithoutActionColumn: Seq[StructField] = writeConfig.actionColumn match {
@@ -67,7 +67,7 @@ class SearchWriterFactory(
       case None => schema
     }
 
-    InternalRowToSearchDocumentConverter.safeApply(
+    SearchDocumentDecoder.safeApply(
       StructType(schemaMaybeWithoutActionColumn),
       writeConfig.getSearchIndexFields
     ) match {
