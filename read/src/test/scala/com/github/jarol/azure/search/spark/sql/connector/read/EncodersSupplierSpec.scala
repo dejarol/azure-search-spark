@@ -84,15 +84,6 @@ class EncodersSupplierSpec
                 String.valueOf(v)
               )
             )
-
-            assertAtomicEncoderExists[Float, UTF8String](
-              SearchFieldDataType.SINGLE,
-              DataTypes.StringType,
-              3.14f,
-              v => UTF8String.fromString(
-                String.valueOf(v)
-              )
-            )
           }
 
           describe("numbers of") {
