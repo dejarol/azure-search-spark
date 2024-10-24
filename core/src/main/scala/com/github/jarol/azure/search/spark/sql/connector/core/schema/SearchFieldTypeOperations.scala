@@ -69,11 +69,20 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
   /**
    * Evaluate if this type is a candidate for partitioning.
    * <br>
-   * Only numeric (but not single) or date time types are candidates
-   * @return true for numeric (but not single) or date time types
+   * Only numeric or date time types are candidates
+   * @return true for numeric or date time types
    */
 
-  final def isCandidateForPartitioning: Boolean = isDateTime || (isNumeric && !input.equals(SearchFieldDataType.SINGLE))
+  final def isCandidateForPartitioning: Boolean = isDateTime || isNumeric
+
+  /**
+   * Evaluate if this type is a candidate for faceting
+   * <br>
+   * Only string or numeric types are good candidates
+   * @return true for string or numeric types
+   */
+
+  final def isCandidateForFaceting: Boolean = isString || isNumeric || isDateTime
 }
 
 private object SearchFieldTypeOperations {
