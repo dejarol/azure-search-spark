@@ -127,11 +127,11 @@ class DecodersSupplierSpec
 
           it("of different types") {
 
-            assertAtomicDecoderExists[Long, Float](
+            assertAtomicDecoderExists[Long, Integer](
               DataTypes.LongType,
-              SearchFieldDataType.SINGLE,
+              SearchFieldDataType.INT32,
               123,
-              _.floatValue()
+              _.intValue()
             )
           }
         }
