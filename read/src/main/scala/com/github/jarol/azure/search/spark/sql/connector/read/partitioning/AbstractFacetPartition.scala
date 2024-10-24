@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.azure.search.documents.indexes.models.SearchField
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -46,6 +47,14 @@ abstract class AbstractFacetPartition(override protected val partitionId: Int,
 object AbstractFacetPartition {
 
   /**
+   * Trait for formatting facet values to string
+   * <br>
+   * Formatted values will be used for filtering documents within partitions
+   */
+
+  private sealed trait FacetToStringFunction extends (Any => String)
+
+  /**
    * Generate a set of partitions from values retrieved from a facetable field
    * @param maybeFilter optional overall filter
    * @param maybeSelect optional list of selection fields
@@ -54,16 +63,16 @@ object AbstractFacetPartition {
    * @return a collection of Search partitions
    */
 
-  def createCollection(maybeFilter: Option[String],
-                       maybeSelect: Option[Seq[String]],
-                       facetField: SearchField,
-                       facets: Seq[Any]): Seq[AbstractFacetPartition] = {
+  def createCollection(
+                        maybeFilter: Option[String],
+                        maybeSelect: Option[Seq[String]],
+                        facetField: SearchField,
+                        facets: Seq[Any]
+                      ): Seq[AbstractFacetPartition] = {
 
-    val valueFormatter = FilterValueFormatters.forType(facetField.getType)
+    val toStringFunction = getFunction(facetField.getType)
     val facetFieldName: String = facetField.getName
-    val facetStringValues: Seq[String] = facets.map {
-      valueFormatter.format
-    }
+    val facetStringValues: Seq[String] = facets.map(toStringFunction)
 
     // Create as many partitions as the number of retrieved facet values
     val partitionsForFacetsValues: Seq[AbstractFacetPartition] = facetStringValues
@@ -87,5 +96,28 @@ object AbstractFacetPartition {
     )
 
     partitionsForFacetsValues :+ partitionForEitherNullOrOtherFacetValues
+  }
+
+  /**
+   * Get the function corresponding to a Search type
+   * @param searchType facetable field type
+   * @throws IllegalStateException for Search types (should not occur)
+   * @return a function for value formatting
+   */
+
+  @throws[IllegalStateException]
+  private def getFunction(searchType: SearchFieldDataType): FacetToStringFunction = {
+
+    if (searchType.isString || searchType.isDateTime) {
+      new FacetToStringFunction {
+        override def apply(v1: Any): String = s"'$v1'"
+      }
+    } else if (searchType.isNumeric) {
+      new FacetToStringFunction {
+        override def apply(v1: Any): String = String.valueOf(v1)
+      }
+    } else {
+      throw new IllegalStateException(f"No facet to string function defined for $searchType")
+    }
   }
 }

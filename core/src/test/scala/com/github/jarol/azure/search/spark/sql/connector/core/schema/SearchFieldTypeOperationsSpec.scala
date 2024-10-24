@@ -103,19 +103,36 @@ class SearchFieldTypeOperationsSpec
         collectionType.unsafeCollectionInnerType shouldBe expectedInnerType
       }
 
-      it("evaluate if a type is candidate for partitioning") {
+      describe("evaluate if a type") {
+        it("is candidate for partitioning") {
 
-        SearchFieldDataType.STRING.isCandidateForPartitioning shouldBe false
-        SearchFieldDataType.SINGLE.isCandidateForPartitioning shouldBe false
-        forAll(
-          Seq(
-            SearchFieldDataType.INT32,
-            SearchFieldDataType.INT64,
-            SearchFieldDataType.DOUBLE,
-            SearchFieldDataType.DATE_TIME_OFFSET
-          )
-        ) {
-          tp => tp.isCandidateForPartitioning shouldBe true
+          SearchFieldDataType.STRING.isCandidateForPartitioning shouldBe false
+          SearchFieldDataType.SINGLE.isCandidateForPartitioning shouldBe false
+          forAll(
+            Seq(
+              SearchFieldDataType.INT32,
+              SearchFieldDataType.INT64,
+              SearchFieldDataType.DOUBLE,
+              SearchFieldDataType.DATE_TIME_OFFSET
+            )
+          ) {
+            tp => tp.isCandidateForPartitioning shouldBe true
+          }
+        }
+
+        it("is candidate for faceting") {
+
+          SearchFieldDataType.DATE_TIME_OFFSET.isCandidateForFaceting shouldBe false
+          forAll(
+            Seq(
+              SearchFieldDataType.STRING,
+              SearchFieldDataType.INT32,
+              SearchFieldDataType.INT64,
+              SearchFieldDataType.DOUBLE
+            )
+          ) {
+            tp => tp.isCandidateForFaceting shouldBe true
+          }
         }
       }
     }

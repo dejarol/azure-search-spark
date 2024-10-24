@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.{FacetResult, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 
@@ -138,7 +138,7 @@ object FacetedPartitioner {
                                                   ): Either[ConfigException, SearchField] = {
 
     // Collect the namesake field and evaluate it (if any)
-    val maybeExistingField = fields.collectFirst {
+    val maybeExistingField: Either[IllegalSearchFieldException, SearchField] = fields.collectFirst {
       case sf if sf.getName.equalsIgnoreCase(name) => sf
     }.toRight(()).left.map {
       _ => IllegalSearchFieldException.nonExisting(name)
@@ -162,20 +162,23 @@ object FacetedPartitioner {
    * @return either a [[ConfigException]] or the candidate
    */
 
-  private def evaluateExistingCandidate(candidate: SearchField): Either[IllegalSearchFieldException, SearchField] = {
+  private def evaluateExistingCandidate(candidate: SearchField): Either[IllegalFacetableFieldException, SearchField] = {
 
     val facetable = candidate.isEnabledFor(SearchFieldFeature.FACETABLE)
     val filterable = candidate.isEnabledFor(SearchFieldFeature.FILTERABLE)
-    if (facetable && filterable) {
+    val facetableType = candidate.getType.isCandidateForFaceting
+    if (facetable && filterable && facetableType) {
       Right(candidate)
     } else {
-      val nonEnabledFeature = if (!facetable) SearchFieldFeature.FACETABLE else SearchFieldFeature.FILTERABLE
-      Left(
-        IllegalSearchFieldException.notEnabledFor(
-          candidate.getName,
-          nonEnabledFeature
-        )
-      )
+
+      val exception = if (!facetableType) {
+        IllegalFacetableFieldException.forInvalidType(candidate)
+      } else {
+        val nonEnabledFeature = if (!facetable) SearchFieldFeature.FACETABLE else SearchFieldFeature.FILTERABLE
+        IllegalFacetableFieldException.forMissingFeature(candidate, nonEnabledFeature)
+      }
+
+      Left(exception)
     }
   }
 
