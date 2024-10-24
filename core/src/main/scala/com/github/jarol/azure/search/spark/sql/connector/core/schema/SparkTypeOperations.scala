@@ -15,12 +15,9 @@ class SparkTypeOperations(override protected val input: DataType)
 
   override final def isNumeric: Boolean = {
 
-    Seq(
-      DataTypes.IntegerType,
-      DataTypes.LongType,
-      DataTypes.DoubleType
-    ).exists {
-      _.equals(input)
+    input match {
+      case DataTypes.IntegerType | DataTypes.LongType | DataTypes.DoubleType => true
+      case _ => false
     }
   }
 
@@ -28,8 +25,10 @@ class SparkTypeOperations(override protected val input: DataType)
 
   override def isDateTime: Boolean = {
 
-    input.equals(DataTypes.DateType) ||
-      input.equals(DataTypes.TimestampType)
+    input match {
+      case DataTypes.DateType | DataTypes.TimestampType => true
+      case _ => false
+    }
   }
 
   override def isCollection: Boolean = {

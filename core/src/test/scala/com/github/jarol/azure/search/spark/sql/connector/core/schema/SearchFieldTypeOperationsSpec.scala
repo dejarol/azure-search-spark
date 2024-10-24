@@ -14,7 +14,6 @@ class SearchFieldTypeOperationsSpec
     SearchFieldDataType.INT32,
     SearchFieldDataType.INT64,
     SearchFieldDataType.DOUBLE,
-    SearchFieldDataType.SINGLE,
     SearchFieldDataType.BOOLEAN,
     SearchFieldDataType.DATE_TIME_OFFSET
   )
@@ -52,7 +51,7 @@ class SearchFieldTypeOperationsSpec
           SearchFieldDataType.INT32.isNumeric shouldBe true
           SearchFieldDataType.INT64.isNumeric shouldBe true
           SearchFieldDataType.DOUBLE.isNumeric shouldBe true
-          SearchFieldDataType.SINGLE.isNumeric shouldBe true
+          SearchFieldDataType.SINGLE.isNumeric shouldBe false
         }
 
         it("boolean") {
