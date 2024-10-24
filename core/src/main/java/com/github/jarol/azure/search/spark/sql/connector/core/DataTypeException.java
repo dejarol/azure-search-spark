@@ -65,7 +65,7 @@ public class DataTypeException
      */
 
     @Contract(" -> new")
-    public static @NotNull DataTypeException forSearchSingleFields() {
+    public static @NotNull DataTypeException forSingleSearchFieldDataType() {
 
         return new DataTypeException(
                 String.format("%s are not supported. Only %s are",
