@@ -26,8 +26,7 @@ class FilterValueFormattersSpec
             Seq(
               SearchFieldDataType.INT32,
               SearchFieldDataType.INT64,
-              SearchFieldDataType.DOUBLE,
-              SearchFieldDataType.SINGLE
+              SearchFieldDataType.DOUBLE
             )
           ) {
            `type` =>
