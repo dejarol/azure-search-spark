@@ -65,7 +65,7 @@ object SchemaUtils {
         case SearchFieldDataType.INT32 => DataTypes.IntegerType
         case SearchFieldDataType.INT64 => DataTypes.LongType
         case SearchFieldDataType.DOUBLE => DataTypes.DoubleType
-        case SearchFieldDataType.SINGLE => throw DataTypeException.forSearchSingleFields()
+        case SearchFieldDataType.SINGLE => throw DataTypeException.forSingleSearchFieldDataType()
         case _ => throw DataTypeException.forUnsupportedSearchType(searchType)
       }
     } else if (searchType.isBoolean) {
@@ -176,7 +176,7 @@ object SchemaUtils {
         SearchFieldDataType.GEOGRAPHY_POINT
       } else SearchFieldDataType.COMPLEX
     } else {
-      throw new DataTypeException(s"Unsupported Spark type ($dataType)")
+      throw DataTypeException.forUnsupportedSparkType(dataType)
     }
   }
 

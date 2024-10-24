@@ -1,10 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.models.{SearchOptions, SearchResult}
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
 import com.github.jarol.azure.search.spark.sql.connector.models.{AtomicBean, SimpleBean}
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{DataTypes, StructType}
@@ -12,8 +9,6 @@ import org.scalatest.Inspectors
 
 import java.sql.{Date, Timestamp}
 import java.time.{LocalDate, OffsetDateTime}
-import java.util.stream.{Collectors, StreamSupport}
-import java.util.{List => JList}
 
 class ReadSpec
   extends SearchSparkSpec
@@ -135,7 +130,7 @@ class ReadSpec
 
           // Write some data
           val indexName = "numeric-beans"
-          val notNullBean = AtomicBean.from("hello", Some(1), Some(2147483650L), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
+          val notNullBean = AtomicBean.from("hello", Some(1), Some(123), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
           val nullBean = AtomicBean.from("world", None, None, None, None, None)
           val samples = Seq(notNullBean, nullBean)
 

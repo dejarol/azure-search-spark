@@ -26,7 +26,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
   final def isNumeric: Boolean = {
 
     input match {
-      case SearchFieldDataType.INT32 | SearchFieldDataType.INT64 | SearchFieldDataType.DOUBLE | SearchFieldDataType.SINGLE => true
+      case SearchFieldDataType.INT32 | SearchFieldDataType.INT64 | SearchFieldDataType.DOUBLE => true
       case _ => false
     }
   }

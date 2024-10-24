@@ -71,18 +71,12 @@ object EncodersSupplier
     // [a] another numeric type
     // [b] a string
     if (dataType.isNumeric) {
-
-      val numericEncoderSupplier: Option[NumericEncoderSupplier] = dataType match {
-        case DataTypes.IntegerType => Some(NumericEncoderSupplier.INT_32)
-        case DataTypes.LongType => Some(NumericEncoderSupplier.INT_64)
-        case DataTypes.DoubleType => Some(NumericEncoderSupplier.DOUBLE)
-        case DataTypes.FloatType => Some(NumericEncoderSupplier.SINGLE)
-        case _ => None
-      }
-
-      numericEncoderSupplier.flatMap {
-        _.getForType(searchType)
-      }
+      Some(
+        NumericEncoder(
+          searchType,
+          dataType
+        )
+      )
     } else {
 
       // Set encoder for strings
