@@ -85,7 +85,7 @@ object RangePartitioner {
    * @return either a [[IllegalSearchFieldException]] describing the non-eligibility reason, or the field itself
    */
 
-  protected[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalSearchFieldException, SearchField] = {
+  protected[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalPartitioningFieldException, SearchField] = {
 
     // Evaluate if related Search field is a good candidate
     val sfType = searchField.getType
@@ -98,16 +98,9 @@ object RangePartitioner {
 
       // Set a proper cause
       val cause = if (!isFilterable) {
-        IllegalSearchFieldException
-          .notEnabledFor(
-            searchField.getName,
-            SearchFieldFeature.FILTERABLE
-          )
+        IllegalPartitioningFieldException.forNonFilterableField(searchField)
       } else {
-        IllegalSearchFieldException
-          .fieldTypeNotEligibleForPartitioning(
-            searchField
-          )
+        IllegalPartitioningFieldException.forNonPartitionableType(searchField)
       }
 
       Left(cause)
