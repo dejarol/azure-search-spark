@@ -19,7 +19,6 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    *  - int32
    *  - int64
    *  - double
-   *  - single
    * @return true for numeric types
    */
 
@@ -82,7 +81,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    * @return true for string or numeric types
    */
 
-  final def isCandidateForFaceting: Boolean = isString || isNumeric || isDateTime
+  final def isCandidateForFaceting: Boolean = isString || isNumeric
 }
 
 private object SearchFieldTypeOperations {
