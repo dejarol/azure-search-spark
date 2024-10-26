@@ -5,7 +5,7 @@ import java.time.OffsetDateTime
 
 /**
  * Bean for read/write integrations tests
- * @param id id
+ * @param id document id
  * @param intValue int value
  * @param longValue long value
  * @param doubleValue double value
@@ -14,13 +14,14 @@ import java.time.OffsetDateTime
  */
 
 case class AtomicBean(
-                       id: String,
+                       override val id: String,
                        intValue: Option[Int],
                        longValue: Option[Long],
                        doubleValue: Option[Double],
                        booleanValue: Option[Boolean],
                        timestampValue: Option[Timestamp]
                      )
+  extends ITDocument(id)
 
 object AtomicBean {
 

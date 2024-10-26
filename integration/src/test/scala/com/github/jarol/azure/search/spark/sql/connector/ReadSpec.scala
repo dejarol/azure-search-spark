@@ -1,18 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
-import com.github.jarol.azure.search.spark.sql.connector.models.{AtomicBean, SimpleBean}
+import com.github.jarol.azure.search.spark.sql.connector.models.{ActionTypeBean, AtomicBean, CollectionBean, ITDocument, SimpleBean}
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.Inspectors
 
 import java.sql.{Date, Timestamp}
+import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
   extends SearchSparkSpec
-    with RowMixins
       with FieldFactory
         with Inspectors {
 
@@ -23,10 +23,10 @@ class ReadSpec
    * @return a collection of tuples
    */
 
-  private def zipRowsAndBeans(
-                               rows: Seq[Row],
-                               beans: Seq[AtomicBean]
-                             ): Seq[(Row, AtomicBean)] = {
+  private def zipRowsAndBeans[D <: ITDocument](
+                                                rows: Seq[Row],
+                                                beans: Seq[D]
+                                              ): Seq[(Row, D)] = {
 
     rows
       .sortBy(_.getAs[String]("id"))
@@ -34,22 +34,22 @@ class ReadSpec
   }
 
   /**
-   * Assert that a row value has been encoded correctly w.r.t. its original value
-   * @param output output row (retrieved from a Search index)
-   * @param input a DataFrame row written to the Search index
-   * @param colName column name
-   * @param encodingFunction expected encoding function from the input to the output
-   * @tparam T encoding target type
+   * Assert that an atomic value has been encoded correctly
+   * @param output output row
+   * @param input input row
+   * @param colName column name to test
+   * @param encodingFunction expected encoding function
+   * @tparam TOutput output type
    */
 
-  private def assertEncoding[T](
-                                 output: Row,
-                                 input: AtomicBean,
-                                 colName: String,
-                                 encodingFunction: AtomicBean => Option[T]
-                               ): Unit = {
+  private def assertAtomicBeanEncoding[TOutput](
+                                                 output: Row,
+                                                 input: AtomicBean,
+                                                 colName: String,
+                                                 encodingFunction: AtomicBean => Option[TOutput]
+                                               ): Unit = {
 
-    output.getAsOpt[T](colName) shouldBe encodingFunction(input)
+    output.getAsOpt[TOutput](colName) shouldBe encodingFunction(input)
   }
 
   describe("Search dataSource") {
@@ -149,13 +149,11 @@ class ReadSpec
               // Read data and do assertions
               val rows: Seq[Row] = readIndex(indexName, None, None, Some(StructType(schemaRead))).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (row, sample) =>
-                  assertEncoding[String](row, sample, "intValue", _.intValue.map(String.valueOf))
-                  assertEncoding[String](row, sample, "longValue", _.longValue.map(String.valueOf))
-                  assertEncoding[String](row, sample, "doubleValue", _.doubleValue.map(String.valueOf))
+                  assertAtomicBeanEncoding[String](row, sample, "intValue", _.intValue.map(String.valueOf))
+                  assertAtomicBeanEncoding[String](row, sample, "longValue", _.longValue.map(String.valueOf))
+                  assertAtomicBeanEncoding[String](row, sample, "doubleValue", _.doubleValue.map(String.valueOf))
               }
             }
 
@@ -169,12 +167,10 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (row, bean) =>
-                  assertEncoding[Double](row, bean, "intValue", _.intValue.map(_.doubleValue()))
-                  assertEncoding[Double](row, bean, "longValue", _.longValue.map(_.doubleValue()))
+                  assertAtomicBeanEncoding[Double](row, bean, "intValue", _.intValue.map(_.doubleValue()))
+                  assertAtomicBeanEncoding[Double](row, bean, "longValue", _.longValue.map(_.doubleValue()))
               }
             }
           }
@@ -189,11 +185,9 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
-                  assertEncoding[Boolean](r, s, "booleanValue", _.booleanValue)
+                  assertAtomicBeanEncoding[Boolean](r, s, "booleanValue", _.booleanValue)
               }
             }
 
@@ -206,11 +200,9 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
-                  assertEncoding[String](r, s, "booleanValue", _.booleanValue.map(String.valueOf))
+                  assertAtomicBeanEncoding[String](r, s, "booleanValue", _.booleanValue.map(String.valueOf))
               }
             }
           }
@@ -225,12 +217,10 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
-                  assertEncoding[Date](r, s, "timestampValue", _.timestampValue.map {
-                    t => Date.valueOf(t.toLocalDateTime.toLocalDate)
+                  assertAtomicBeanEncoding[Date](r, s, "timestampValue", _.timestampValue.map {
+                    t => Date.valueOf(t.toInstant.atOffset(Constants.UTC_OFFSET).format(DateTimeFormatter.ISO_LOCAL_DATE))
                   })
               }
             }
@@ -244,11 +234,9 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
-                  assertEncoding[Timestamp](r, s, "timestampValue", _.timestampValue)
+                  assertAtomicBeanEncoding[Timestamp](r, s, "timestampValue", _.timestampValue)
               }
             }
 
@@ -261,15 +249,84 @@ class ReadSpec
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
               rows should have size samples.size
-              forAll(
-                zipRowsAndBeans(rows, samples)
-              ) {
+              forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
-                  assertEncoding[String](r, s, "timestampValue", _.timestampValue.map {
+                  assertAtomicBeanEncoding[String](r, s, "timestampValue", _.timestampValue.map {
                     _.toInstant.atZone(Constants.UTC_OFFSET)
                       .format(Constants.DATETIME_OFFSET_FORMATTER)
                   })
               }
+            }
+          }
+        }
+
+        describe("containing") {
+          describe("collections of") {
+
+            val indexName = "collection-beans"
+
+            it("simple types") {
+
+              val samples = Seq(
+                CollectionBean[String]("hello", Some(Seq("world", "John"))),
+                CollectionBean[String]("world", None)
+              )
+
+              dropIndexIfExists(indexName)
+              writeToIndex(toDF(samples), indexName, "id", None)
+              Thread.sleep(2000)
+              val rows = readIndex(indexName, None, None, None).collect()
+              rows should have size samples.size
+              forAll(zipRowsAndBeans(rows, samples)) {
+                case (r, s) =>
+                  r.getAs[Seq[String]]("array") should contain theSameElementsAs s.array.getOrElse(Seq.empty)
+              }
+
+              dropIndexIfExists(indexName)
+            }
+
+            it("complex types") {
+
+              val samples: Seq[CollectionBean[ActionTypeBean]] = Seq(
+                CollectionBean("hello", Some(
+                  Seq(
+                    ActionTypeBean("john", Some(1), "action"),
+                    ActionTypeBean("jane", None, "delete")
+                  )
+                )),
+                CollectionBean("world", None)
+              )
+
+              dropIndexIfExists(indexName)
+              writeToIndex(toDF(samples), indexName, "id", None)
+              Thread.sleep(2000)
+              val rows = toSeqOf[CollectionBean[ActionTypeBean]](readIndex(indexName, None, None, None))
+              rows should have size samples.size
+              forAll(rows.sortBy(_.id)
+                .zip(samples.sortBy(_.id))
+              ) {
+                case (r, s) =>
+
+                  // Null value for arrays is the empty array,
+                  // so the value read from a Search index is always non-null
+                  r.array shouldBe defined
+                  val actual = r.array.get
+
+                  // If input was None, actual should be empty. Otherwise, they should contain the same elements
+                  s.array match {
+                    case Some(value) =>
+                      actual should contain theSameElementsAs value
+                    case None =>
+                      actual shouldBe empty
+                  }
+              }
+
+              dropIndexIfExists(indexName)
+            }
+
+            it("geo points") {
+
+              // TODO: test
             }
           }
         }
