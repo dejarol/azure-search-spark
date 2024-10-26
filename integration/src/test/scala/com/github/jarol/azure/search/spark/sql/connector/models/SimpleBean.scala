@@ -5,16 +5,16 @@ import java.time.{LocalDate, LocalTime}
 
 /**
  * Simple bean for read/write integration tests
- * @param id id
+ * @param id document id
  * @param date date
  * @param insertTime insert time
  */
 
 case class SimpleBean(
-                       id: String,
+                       override val id: String,
                        date: Option[Date],
                        insertTime: Option[Timestamp]
-                     )
+                     ) extends ITDocument(id)
 
 object SimpleBean {
 

@@ -13,7 +13,8 @@ import org.apache.spark.sql.types.StructType
 
 trait SearchSparkSpec
   extends SparkSpec
-    with SearchSpec {
+    with SearchSpec
+      with RowMixins {
 
   /**
    * Get the minimum set of options required for reading or writing to a Search index

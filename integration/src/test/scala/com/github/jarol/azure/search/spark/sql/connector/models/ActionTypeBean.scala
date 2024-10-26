@@ -4,16 +4,17 @@ import com.azure.search.documents.models.IndexActionType
 
 /**
  * Bean for read/write integration tests
- * @param id id
+ * @param id document id
  * @param value value
  * @param action action
  */
 
 case class ActionTypeBean(
-                           id: String,
+                           override val id: String,
                            value: Option[Int],
                            action: String
                          )
+  extends ITDocument(id)
 
 object ActionTypeBean {
 
