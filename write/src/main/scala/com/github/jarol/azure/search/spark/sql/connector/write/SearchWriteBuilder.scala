@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
-import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType
@@ -30,7 +29,6 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
 
     if (writeConfig.indexExists) {
       log.info(s"Index ${writeConfig.getIndex} already exists")
-      writeConfig.getSearchIndexFields
     } else {
 
       // Try to create target index
@@ -39,9 +37,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
         schema
       ) match {
         case Left(value) => throw value
-        case Right(value) =>
-          log.info(s"Successfully created index ${writeConfig.getIndex}")
-          JavaScalaConverters.listToSeq(value.getFields)
+        case Right(_) => log.info(s"Successfully created index ${writeConfig.getIndex}")
       }
     }
 
@@ -75,7 +71,7 @@ object SearchWriteBuilder {
         .schemaToSearchFields(schema)
 
       writeConfig.withSearchIndexClientDo {
-        _.createOrUpdateIndex(
+        _.createIndex(
           new SearchIndex(indexName)
             .setFields(searchFields: _*)
         )

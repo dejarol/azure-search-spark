@@ -288,19 +288,11 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeGeoPointCodec(schemaField: StructField): Either[SchemaViolation, CodecType] = {
 
     // Evaluate if the field is eligible for being a GeoPoint
-    val subFields = schemaField.dataType.unsafeSubFields
-    val allSubFieldsExistAndAreCompatible = subFields.size.equals(GeoPointType.SCHEMA.size) && subFields.forall { sf =>
-      GeoPointType.SCHEMA.exists {
-        geoSf => geoSf.name.equalsIgnoreCase(sf.name) && SchemaUtils.evaluateSparkTypesCompatibility(
-          sf.dataType,
-          geoSf.dataType
-        )
-      }
-    }
-
+    val dataType = schemaField.dataType
+    val allSubFieldsExistAndAreCompatible = SchemaUtils.isEligibleAsGeoPoint(dataType)
     (if (allSubFieldsExistAndAreCompatible) {
       Some(
-        forGeoPoint(StructType(subFields))
+        forGeoPoint(StructType(dataType.unsafeSubFields))
       )
     } else {
       None
