@@ -11,10 +11,29 @@ import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
+import scala.reflect.runtime.universe.TypeTag
+
 class ReadSpec
-  extends SearchSparkSpec
-      with FieldFactory
-        with Inspectors {
+  extends SearchSparkIntegrationSpec("read-spec")
+    with FieldFactory with Inspectors {
+
+  /**
+   * Write a collection of samples and sleep for some time
+   * @param samples samples to write
+   * @param options writer extra options
+   * @tparam T sample type
+   */
+
+  private def createIndexAndWrite[T <: ITDocument with Product: TypeTag](
+                                                                          samples: Seq[T],
+                                                                          options: Option[Map[String, String]]
+                                                                        ): Unit = {
+
+    // Wait some time to ensure result consistency
+    createIndexForDocument[T]()
+    Thread.sleep(5000)
+    writeToIndex(toDF(samples), indexName, "id", options)
+  }
 
   /**
    * Zip together rows and numeric beans, sorting both by id
@@ -54,7 +73,7 @@ class ReadSpec
 
   describe("Search dataSource") {
     describe(SHOULD) {
-      ignore("throw an exception when") {
+      describe("throw an exception when") {
         it("target index does not exist") {
 
           val indexName = "non-existing"
@@ -69,77 +88,53 @@ class ReadSpec
       }
 
       describe("read documents") {
-        ignore("that match a filter") {
+        it("that match a filter") {
 
-          val (indexName, id) = ("simple-beans", "hello")
+          val id = "hello"
           val input = Seq(
             SimpleBean(id, Some(LocalDate.now())),
             SimpleBean("world", Some(LocalDate.now().plusDays(1)))
           )
 
-          dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-
           val writeExtraOptions = Map(
             WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.FILTERABLE_FIELDS -> "id"
           )
 
-          writeToIndex(toDF(input), indexName, "id", Some(writeExtraOptions))
-
-          // Wait some time to ensure result consistency
-          Thread.sleep(5000)
-          indexExists(indexName) shouldBe true
+          createIndexAndWrite[SimpleBean](input, Some(writeExtraOptions))
           val df = readIndex(indexName, Some(s"id eq '$id'"), None, Some(schemaOfCaseClass[SimpleBean]))
 
           val output = toSeqOf[SimpleBean](df)
           output should have size 1
           output.head.id shouldBe id
-
-          dropIndexIfExists(indexName)
-          indexExists(indexName) shouldBe false
         }
 
-        ignore("selecting some fields") {
+        it("selecting some fields") {
 
-          val indexName = "select-beans"
-          dropIndexIfExists(indexName)
           indexExists(indexName) shouldBe false
-
           val input = Seq(
             SimpleBean("hello", Some(LocalDate.now())),
             SimpleBean("world", Some(LocalDate.now().plusDays(1)))
           )
 
-          dropIndexIfExists(indexName)
-          indexExists(indexName) shouldBe false
-          writeToIndex(toDF(input), indexName, "id", None)
-
-          // Wait some time to ensure result consistency
-          Thread.sleep(5000)
-
+          createIndexAndWrite(input, None)
           val select = Seq("id", "date")
           val df = readIndex(indexName, None, Some(select), None)
           df.count() shouldBe input.size
           df.columns should contain theSameElementsAs select
-
-          dropIndexIfExists(indexName)
-          indexExists(indexName) shouldBe false
         }
 
-        ignore("translating") {
+        describe("translating") {
 
-          // Write some data
-          val indexName = "numeric-beans"
-          val notNullBean = AtomicBean.from("hello", Some(1), Some(123), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
-          val nullBean = AtomicBean.from("world", None, None, None, None, None)
-          val samples = Seq(notNullBean, nullBean)
+          lazy val notNullBean = AtomicBean.from("hello", Some(1), Some(123), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
+          lazy val nullBean = AtomicBean.from("world", None, None, None, None, None)
+          lazy val numericSamples = Seq(notNullBean, nullBean)
 
           describe("numeric values as") {
             it("strings") {
 
-              dropIndexIfExists(indexName)
-              writeToIndex(toDF(samples), indexName, "id", None)
-              Thread.sleep(5000)
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
 
               // Create a schema with all string fields
               val schemaRead = schemaOfCaseClass[AtomicBean].map {
@@ -148,8 +143,8 @@ class ReadSpec
 
               // Read data and do assertions
               val rows: Seq[Row] = readIndex(indexName, None, None, Some(StructType(schemaRead))).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (row, sample) =>
                   assertAtomicBeanEncoding[String](row, sample, "intValue", _.intValue.map(String.valueOf))
                   assertAtomicBeanEncoding[String](row, sample, "longValue", _.longValue.map(String.valueOf))
@@ -159,6 +154,8 @@ class ReadSpec
 
             it("numeric values of different type") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("intValue", DataTypes.DoubleType),
@@ -166,8 +163,8 @@ class ReadSpec
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (row, bean) =>
                   assertAtomicBeanEncoding[Double](row, bean, "intValue", _.intValue.map(_.doubleValue()))
                   assertAtomicBeanEncoding[Double](row, bean, "longValue", _.longValue.map(_.doubleValue()))
@@ -178,14 +175,16 @@ class ReadSpec
           describe("boolean values as") {
             it("booleans") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("booleanValue", DataTypes.BooleanType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (r, s) =>
                   assertAtomicBeanEncoding[Boolean](r, s, "booleanValue", _.booleanValue)
               }
@@ -193,14 +192,16 @@ class ReadSpec
 
             it("strings") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("booleanValue", DataTypes.StringType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (r, s) =>
                   assertAtomicBeanEncoding[String](r, s, "booleanValue", _.booleanValue.map(String.valueOf))
               }
@@ -210,14 +211,16 @@ class ReadSpec
           describe("datetimeoffset values as") {
             it("dates") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.DateType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (r, s) =>
                   assertAtomicBeanEncoding[Date](r, s, "timestampValue", _.timestampValue.map {
                     t => Date.valueOf(t.toInstant.atOffset(Constants.UTC_OFFSET).format(DateTimeFormatter.ISO_LOCAL_DATE))
@@ -227,14 +230,16 @@ class ReadSpec
 
             it("timestamps") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.TimestampType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (r, s) =>
                   assertAtomicBeanEncoding[Timestamp](r, s, "timestampValue", _.timestampValue)
               }
@@ -242,14 +247,16 @@ class ReadSpec
 
             it("strings") {
 
+              indexExists(indexName) shouldBe false
+              createIndexAndWrite(numericSamples, None)
               val schemaRead = createStructType(
                 createStructField("id", DataTypes.StringType),
                 createStructField("timestampValue", DataTypes.StringType)
               )
 
               val rows = readIndex(indexName, None, None, Some(schemaRead)).collect()
-              rows should have size samples.size
-              forAll(zipRowsAndBeans(rows, samples)) {
+              rows should have size numericSamples.size
+              forAll(zipRowsAndBeans(rows, numericSamples)) {
                 case (r, s) =>
                   assertAtomicBeanEncoding[String](r, s, "timestampValue", _.timestampValue.map {
                     _.toInstant.atZone(Constants.UTC_OFFSET)
@@ -262,31 +269,26 @@ class ReadSpec
 
         describe("containing") {
           describe("collections of") {
+            it("simple types") {
 
-            val indexName = "collection-beans"
-
-            ignore("simple types") {
-
+              indexExists(indexName) shouldBe false
               val samples = Seq(
                 CollectionBean[String]("hello", Some(Seq("world", "John"))),
                 CollectionBean[String]("world", None)
               )
 
-              dropIndexIfExists(indexName)
-              writeToIndex(toDF(samples), indexName, "id", None)
-              Thread.sleep(2000)
+              createIndexAndWrite(samples, None)
               val rows = readIndex(indexName, None, None, None).collect()
               rows should have size samples.size
               forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
                   r.getAs[Seq[String]]("array") should contain theSameElementsAs s.array.getOrElse(Seq.empty)
               }
-
-              dropIndexIfExists(indexName)
             }
 
-            ignore("complex types") {
+            it("complex types") {
 
+              indexExists(indexName) shouldBe false
               val samples: Seq[CollectionBean[ActionTypeBean]] = Seq(
                 CollectionBean("hello", Some(
                   Seq(
@@ -297,9 +299,7 @@ class ReadSpec
                 CollectionBean("world", None)
               )
 
-              dropIndexIfExists(indexName)
-              writeToIndex(toDF(samples), indexName, "id", None)
-              Thread.sleep(2000)
+              createIndexAndWrite(samples, None)
               val rows = toSeqOf[CollectionBean[ActionTypeBean]](readIndex(indexName, None, None, None))
               rows should have size samples.size
               forAll(rows.sortBy(_.id)
@@ -320,12 +320,11 @@ class ReadSpec
                       actual shouldBe empty
                   }
               }
-
-              dropIndexIfExists(indexName)
             }
 
             it("geo points") {
 
+              indexExists(indexName) shouldBe false
               val samples: Seq[CollectionBean[GeoPointBean]] = Seq(
                 CollectionBean("hello", Some(
                   Seq(
@@ -336,8 +335,7 @@ class ReadSpec
                 CollectionBean("world", None)
               )
 
-              dropIndexIfExists(indexName)
-              writeToIndex(toDF(samples), indexName, "id", None)
+              createIndexAndWrite(samples, None)
               val rows = toSeqOf[CollectionBean[GeoPointBean]](
                 readIndex(indexName, None, None, None)
               )

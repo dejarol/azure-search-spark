@@ -138,7 +138,7 @@ object SchemaUtils {
 
     (first, second) match {
       case (f: ArrayType, s: ArrayType) => evaluateSparkTypesCompatibility(f.elementType, s.elementType)
-      case (f: StructType, s: StructType) => f.forall {
+      case (f: StructType, s: StructType) => f.size.equals(s.size) && f.forall {
         ff => s.exists {
           ss => ss.name.equals(ff.name) &&
             evaluateSparkTypesCompatibility(ff.dataType, ss.dataType)
@@ -171,13 +171,30 @@ object SchemaUtils {
     } else if (dataType.isComplex) {
 
       // If compatible with GeoPoint, use Geography point Search data type
-      val compatibleWithGeoPoint = evaluateSparkTypesCompatibility(dataType, GeoPointType.SCHEMA)
-      if (compatibleWithGeoPoint) {
+      if (isEligibleAsGeoPoint(dataType)) {
         SearchFieldDataType.GEOGRAPHY_POINT
       } else SearchFieldDataType.COMPLEX
     } else {
       throw DataTypeException.forUnsupportedSparkType(dataType)
     }
+  }
+
+  /**
+   * Evaluate if a data type is eligible for being a Search GeoPoint type
+   * <br>
+   * An eligible Spark type is a [[StructType]] with 2 inner fields
+   *  - <b>type</b> (String)
+   *  - <b>coordinates</b> (Array(Double))
+   * @param dataType Spark type
+   * @return true for eligible types
+   */
+
+  final def isEligibleAsGeoPoint(dataType: DataType): Boolean = {
+
+    evaluateSparkTypesCompatibility(
+      dataType,
+      GeoPointType.SCHEMA
+    )
   }
 
   /**
@@ -225,9 +242,10 @@ object SchemaUtils {
 
       val searchField = new SearchField(name, inferSearchTypeFor(dType))
 
-      // If the inner type is complex, we should add subFields to newly created field
+      // If the inner type is complex but not GeoPoint, we should add subFields to newly created field
       val innerDType = dType.unsafeCollectionInnerType
-      if (innerDType.isComplex) {
+      val notEligibleAsGeoPoint = !SchemaUtils.isEligibleAsGeoPoint(innerDType)
+      if (innerDType.isComplex && notEligibleAsGeoPoint) {
         val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map(toSearchField)
         searchField.setFields(subFields: _*)
       } else {
