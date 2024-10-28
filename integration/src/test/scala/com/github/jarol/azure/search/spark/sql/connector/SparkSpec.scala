@@ -11,7 +11,8 @@ import scala.reflect.runtime.universe.TypeTag
  */
 
 trait SparkSpec
-  extends BasicSpec {
+  extends BasicSpec
+    with RowMixins {
 
   protected final lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")

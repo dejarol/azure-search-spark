@@ -7,7 +7,7 @@ import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import java.time.LocalDate
 
 class WriteSpec
-  extends SearchSparkSpec {
+  extends SearchSparkIntegrationSpec("write-spec") {
 
   describe("Search dataSource") {
     describe(SHOULD) {

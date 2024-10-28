@@ -36,6 +36,27 @@ class SchemaUtilsSpec
 
   describe(`object`[SchemaUtils.type ]) {
     describe(SHOULD) {
+      describe("throw an exception for") {
+        it(s"a field whose datatype is ${SearchFieldDataType.SINGLE}") {
+
+          a [DataTypeException] shouldBe thrownBy {
+            SchemaUtils.inferSparkTypeOf(
+              createSearchField(first, SearchFieldDataType.SINGLE)
+            )
+          }
+
+          a [DataTypeException] shouldBe thrownBy {
+            SchemaUtils.inferSparkTypeOf(
+              createComplexField(first,
+                Seq(
+                  createSearchField(second, SearchFieldDataType.SINGLE)
+                )
+              )
+            )
+          }
+        }
+      }
+
       describe("resolve Spark dataType for") {
         it("an atomic type") {
 
@@ -53,27 +74,6 @@ class SchemaUtilsSpec
                 createSearchField("fieldName", searchType
                 )
               ) shouldBe expectedSparkType
-          }
-        }
-
-        describe("throw an exception for") {
-          it(s"a field whose datatype is ${SearchFieldDataType.SINGLE}") {
-
-            a [DataTypeException] shouldBe thrownBy {
-              SchemaUtils.inferSparkTypeOf(
-                createSearchField(first, SearchFieldDataType.SINGLE)
-              )
-            }
-
-            a [DataTypeException] shouldBe thrownBy {
-              SchemaUtils.inferSparkTypeOf(
-                createComplexField(first,
-                  Seq(
-                    createSearchField(second, SearchFieldDataType.SINGLE)
-                  )
-                )
-              )
-            }
           }
         }
 
@@ -319,6 +319,19 @@ class SchemaUtilsSpec
                 third -> SearchFieldDataType.BOOLEAN
               )
             )
+          }
+
+          it("with geo inner type") {
+
+            val structField = createArrayField(first, GeoPointType.SCHEMA)
+            val searchField = SchemaUtils.toSearchField(structField)
+            searchField.getName shouldBe structField.name
+            searchField.getType shouldBe SearchFieldDataType.collection(
+              SearchFieldDataType.GEOGRAPHY_POINT
+            )
+
+            // subFields should not be added
+            searchField.getFields shouldBe null
           }
         }
 

@@ -1,20 +1,58 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.Constants
+import com.azure.search.documents.indexes.models.SearchIndex
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.models.ITDocument
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
-import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, Encoders, SaveMode}
+import org.scalatest.BeforeAndAfterEach
+
+import scala.reflect.runtime.universe.TypeTag
 
 /**
  * Mix-in trait for Search-Spark integration tests
+ * @param indexName index name for integration tests
  */
 
-trait SearchSparkSpec
-  extends SparkSpec
-    with SearchSpec
-      with RowMixins {
+abstract class SearchSparkIntegrationSpec(protected val indexName: String)
+  extends SearchSpec with SparkSpec
+    with BeforeAndAfterEach {
+
+  override protected def afterEach(): Unit = {
+
+    dropIndexIfExists(indexName)
+    super.afterEach()
+  }
+
+  override protected def beforeEach(): Unit = {
+
+    dropIndexIfExists(indexName)
+    Thread.sleep(10000)
+    super.beforeEach()
+  }
+
+  protected final def createIndexForDocument[T <: ITDocument with Product: TypeTag](): Unit = {
+
+    val schema = Encoders.product[T].schema
+    val searchFields = schema.map {
+      spf =>
+        val sef = SchemaUtils.toSearchField(spf)
+        if (sef.getName.equals("id")) {
+          sef.setKey(true)
+        } else sef
+    }
+
+    searchIndexClient.createIndex(
+      new SearchIndex(
+        indexName,
+        JavaScalaConverters.seqToList(searchFields)
+      )
+    )
+  }
 
   /**
    * Get the minimum set of options required for reading or writing to a Search index
