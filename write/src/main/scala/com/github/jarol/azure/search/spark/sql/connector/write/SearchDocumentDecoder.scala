@@ -8,6 +8,8 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
+import java.util.{LinkedHashMap => JLinkedMap}
+
 /**
  * Decoder for translating an [[InternalRow]] to a [[SearchDocument]]
  * @param indexColumnToSearchDecoders converters for retrieving document values from an internal row
@@ -16,23 +18,32 @@ import org.apache.spark.sql.types.StructType
 case class SearchDocumentDecoder(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
   extends (InternalRow => SearchDocument) {
 
+  // Sorted collection of document properties
+  private lazy val sortedColumns: Seq[(SearchIndexColumn, SearchDecoder)] = indexColumnToSearchDecoders
+    .toSeq.sortBy {
+      case (column, _) => column.index()
+  }
+
   override def apply(v1: InternalRow): SearchDocument = {
 
     // Create a map with non-null properties
-    val properties: Map[String, Object] = indexColumnToSearchDecoders.collect {
-      case (field, decoder) if !v1.isNullAt(field.index()) =>
-        (
-          field.name,
-          decoder.apply(v1.get(field.index(), field.sparkType()))
-        )
+    val properties: JLinkedMap[String, Object] = new JLinkedMap()
+
+    // Exclude null properties
+    sortedColumns.filterNot {
+      case (k, _) => v1.isNullAt(k.index())
+    }.foreach {
+      case (k, v) =>
+
+        // Add property
+        properties.put(
+          k.name(),
+          v.apply(v1.get(k.index(), k.sparkType()))
+      )
     }
 
     // Create a new document from this properties
-    new SearchDocument(
-      JavaScalaConverters.scalaMapToJava(
-        properties
-      )
-    )
+    new SearchDocument(properties)
   }
 }
 

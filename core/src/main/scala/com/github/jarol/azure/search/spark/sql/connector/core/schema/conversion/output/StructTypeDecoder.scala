@@ -1,31 +1,42 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output
 
-import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SearchIndexColumn
 import org.apache.spark.sql.catalyst.InternalRow
 
-import java.util
+import java.util.{LinkedHashMap => JLinkedMap, Map => JMap}
 
 /**
  * Converter for Spark internal rows
- * @param converters converters to apply on internal row subfields
+ * @param indexColumnToSearchDecoders decoders to apply on internal row subfields
  */
 
-case class StructTypeDecoder(private val converters: Map[SearchIndexColumn, SearchDecoder])
-  extends TransformDecoder[util.Map[String,  Object]] {
+case class StructTypeDecoder(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
+  extends TransformDecoder[JMap[String,  Object]] {
 
-  override protected def transform(value: Any): util.Map[String, Object] = {
+  // Sorted collection of document properties
+  private lazy val sortedColumns: Seq[(SearchIndexColumn, SearchDecoder)] = indexColumnToSearchDecoders
+    .toSeq.sortBy {
+      case (column, _) => column.index()
+  }
 
-    val internalRow = value.asInstanceOf[InternalRow]
-    val scalaMap: Map[String, Object] = converters.zipWithIndex.map {
-      case ((field, converter), index) => (
-        field.name,
-        converter.apply(
-          internalRow.get(index, field.sparkType())
-        )
+  override protected def transform(value: Any): JMap[String, Object] = {
+
+    val row = value.asInstanceOf[InternalRow]
+    val properties = new JLinkedMap[String, Object]()
+
+    // Exclude null properties
+    sortedColumns.filterNot {
+      case (k, _) => row.isNullAt(k.index())
+    }.foreach {
+      case (k, v) =>
+
+        // Add property
+        properties.put(
+          k.name,
+          v.apply(row.get(k.index(), k.sparkType()))
       )
     }
 
-    JavaScalaConverters.scalaMapToJava(scalaMap)
+    properties
   }
 }

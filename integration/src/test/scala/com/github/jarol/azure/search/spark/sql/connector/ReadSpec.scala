@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
-import com.github.jarol.azure.search.spark.sql.connector.models.{ActionTypeBean, AtomicBean, CollectionBean, ITDocument, SimpleBean}
+import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{DataTypes, StructType}
