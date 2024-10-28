@@ -11,7 +11,7 @@ class ComplexEncoderSpec
   extends BasicSpec {
 
   private lazy val (k1, k2, v1, v2) = ("k1", "k2", "hello", 1)
-  private lazy val input: JMap[String, Object] = new JLinkedMap() {{
+  private lazy val input: JMap[String, Object] = new JLinkedMap[String, Object]() {{
     put(k1, v1)
     put(k2, Integer.valueOf(v2))
   }}
