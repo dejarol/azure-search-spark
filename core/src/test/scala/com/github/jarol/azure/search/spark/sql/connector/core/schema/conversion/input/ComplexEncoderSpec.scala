@@ -1,19 +1,20 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.input
 
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SearchIndexColumnImpl
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 
-import java.util.{Map => JMap}
+import java.util.{LinkedHashMap => JLinkedMap, Map => JMap}
 
 class ComplexEncoderSpec
   extends BasicSpec {
 
   private lazy val (k1, k2, v1, v2) = ("k1", "k2", "hello", 1)
-  private lazy val input: JMap[String, Object] = JavaScalaConverters.scalaMapToJava(
-    Map(k1 -> v1, k2 -> Integer.valueOf(v2))
-  )
+  private lazy val input: JMap[String, Object] = new JLinkedMap() {{
+    put(k1, v1)
+    put(k2, Integer.valueOf(v2))
+  }}
 
   describe(anInstanceOf[ComplexEncoder]) {
     describe(SHOULD) {
