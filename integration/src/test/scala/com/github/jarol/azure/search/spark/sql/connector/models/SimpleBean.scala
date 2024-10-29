@@ -1,7 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
+import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
+
 import java.sql.{Date, Timestamp}
 import java.time.{LocalDate, LocalTime}
+import java.util.{Map => JMap}
 
 /**
  * Simple bean for read/write integration tests
@@ -14,9 +17,18 @@ case class SimpleBean(
                        override val id: String,
                        date: Option[Date],
                        insertTime: Option[Timestamp]
-                     ) extends ITDocument(id)
+                     ) extends AbstractITDocument(id) {
+}
 
 object SimpleBean {
+
+  implicit object Serializer extends ITDocumentSerializer[SimpleBean] {
+    override protected def extend(document: SimpleBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
+      map
+        .maybeAddProperty("date", document.date)
+        .maybeAddProperty("insertTime", document.insertTime)
+    }
+  }
 
   /**
    * Create an instance
@@ -33,7 +45,7 @@ object SimpleBean {
     SimpleBean(
       id,
       date.map(Date.valueOf),
-      date.map(d => Timestamp.valueOf(d.atTime(LocalTime.MIDNIGHT)))
+      date.map(d => Timestamp.valueOf(d.atTime(LocalTime.now())))
     )
   }
 }

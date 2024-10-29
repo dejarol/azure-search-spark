@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.SearchIndex
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.models.ITDocument
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.models.AbstractITDocument
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.types.StructType
@@ -15,12 +15,13 @@ import scala.reflect.runtime.universe.TypeTag
 
 /**
  * Mix-in trait for Search-Spark integration tests
- * @param indexName index name for integration tests
  */
 
-abstract class SearchSparkIntegrationSpec(protected val indexName: String)
+abstract class SearchSparkIntegrationSpec
   extends SearchSpec with SparkSpec
     with BeforeAndAfterEach {
+
+  protected final val indexName = "integration"
 
   override protected def afterEach(): Unit = {
 
@@ -35,7 +36,7 @@ abstract class SearchSparkIntegrationSpec(protected val indexName: String)
     super.beforeEach()
   }
 
-  protected final def createIndexForDocument[T <: ITDocument with Product: TypeTag](): Unit = {
+  protected final def createIndexFromSchemaOfCaseClass[T <: AbstractITDocument with Product: TypeTag](): Unit = {
 
     val schema = Encoders.product[T].schema
     val searchFields = schema.map {
@@ -46,12 +47,27 @@ abstract class SearchSparkIntegrationSpec(protected val indexName: String)
         } else sef
     }
 
+    // Create index
     searchIndexClient.createIndex(
       new SearchIndex(
         indexName,
         JavaScalaConverters.seqToList(searchFields)
       )
     )
+
+    // Write documents
+    Thread.sleep(5000)
+  }
+
+  protected final def writeDocuments[T: DocumentSerializer](documents: Seq[T]): Unit = {
+
+    SearchTestUtils.writeDocuments[T](
+      getSearchClient(indexName),
+      JavaScalaConverters.seqToList(documents),
+      implicitly[DocumentSerializer[T]]
+    )
+
+    Thread.sleep(5000)
   }
 
   /**
