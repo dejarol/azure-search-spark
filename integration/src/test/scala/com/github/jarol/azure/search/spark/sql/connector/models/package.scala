@@ -18,36 +18,36 @@ package object models {
     (v1: T) => docSerializer.serialize(v1)
   }
 
-  implicit object StringSerializer$ extends PropertySerializer[String] {
-    override def toPropertyValue(v1: String): String = v1
+  implicit object StringSerializer extends PropertySerializer[String] {
+    override def serialize(v1: String): String = v1
   }
 
-  implicit object IntSerializer$ extends PropertySerializer[Int] {
-    override def toPropertyValue(v1: Int): Integer = v1
+  implicit object IntSerializer extends PropertySerializer[Int] {
+    override def serialize(v1: Int): Integer = v1
   }
 
-  implicit object LongSerializer$ extends PropertySerializer[Long] {
-    override def toPropertyValue(v1: Long): JLong = v1
+  implicit object LongSerializer extends PropertySerializer[Long] {
+    override def serialize(v1: Long): JLong = v1
   }
 
-  implicit object DoubleSerializer$ extends PropertySerializer[Double] {
-    override def toPropertyValue(v1: Double): JDouble = v1
+  implicit object DoubleSerializer extends PropertySerializer[Double] {
+    override def serialize(v1: Double): JDouble = v1
   }
 
-  implicit object BooleanSerializer$ extends PropertySerializer[Boolean] {
-    override def toPropertyValue(v1: Boolean): JBoolean = v1
+  implicit object BooleanSerializer extends PropertySerializer[Boolean] {
+    override def serialize(v1: Boolean): JBoolean = v1
   }
 
-  implicit object DateSerializer$ extends PropertySerializer[Date] {
-    override def toPropertyValue(v1: Date): String = {
+  implicit object DateSerializer extends PropertySerializer[Date] {
+    override def serialize(v1: Date): String = {
       v1.toLocalDate.atTime(LocalTime.MIDNIGHT)
         .atOffset(Constants.UTC_OFFSET)
         .format(Constants.DATETIME_OFFSET_FORMATTER)
     }
   }
 
-  implicit object TimestampSerializer$ extends PropertySerializer[Timestamp] {
-    override def toPropertyValue(v1: Timestamp): String = {
+  implicit object TimestampSerializer extends PropertySerializer[Timestamp] {
+    override def serialize(v1: Timestamp): String = {
       v1.toInstant
         .atOffset(Constants.UTC_OFFSET)
         .format(Constants.DATETIME_OFFSET_FORMATTER)
