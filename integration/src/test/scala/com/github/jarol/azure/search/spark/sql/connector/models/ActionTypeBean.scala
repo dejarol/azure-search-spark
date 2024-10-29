@@ -1,6 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
 import com.azure.search.documents.models.IndexActionType
+import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
+
+import java.util.{Map => JMap}
 
 /**
  * Bean for read/write integration tests
@@ -14,9 +17,18 @@ case class ActionTypeBean(
                            value: Option[Int],
                            action: String
                          )
-  extends ITDocument(id)
+  extends AbstractITDocument(id) {
+}
 
 object ActionTypeBean {
+
+  implicit object Serializer
+    extends ITDocumentSerializer[ActionTypeBean] {
+    override protected def extend(document: ActionTypeBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
+      map.maybeAddProperty("value", document.value)
+        .addProperty[String]("action", document.action)
+    }
+  }
 
   /**
    * Create an instance

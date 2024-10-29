@@ -5,6 +5,6 @@ package com.github.jarol.azure.search.spark.sql.connector.models
  * @param id document id
  */
 
-abstract class ITDocument(val id: String) {
-
+abstract class AbstractITDocument(val id: String)
+  extends ITDocument {
 }

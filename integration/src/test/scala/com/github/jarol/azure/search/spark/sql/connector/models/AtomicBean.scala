@@ -1,7 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
+import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
+
 import java.sql.Timestamp
 import java.time.OffsetDateTime
+import java.util.{Map => JMap}
 
 /**
  * Bean for read/write integrations tests
@@ -21,9 +24,21 @@ case class AtomicBean(
                        booleanValue: Option[Boolean],
                        timestampValue: Option[Timestamp]
                      )
-  extends ITDocument(id)
+  extends AbstractITDocument(id) {
+}
 
 object AtomicBean {
+
+  implicit object Serializer extends ITDocumentSerializer[AtomicBean] {
+    override protected def extend(document: AtomicBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
+
+      map.maybeAddProperty("intValue", document.intValue)
+        .maybeAddProperty("longValue", document.longValue)
+        .maybeAddProperty("doubleValue", document.doubleValue)
+        .maybeAddProperty("booleanValue", document.booleanValue)
+        .maybeAddProperty("timestampValue", document.timestampValue)
+    }
+  }
 
   /**
    * Create an instance
