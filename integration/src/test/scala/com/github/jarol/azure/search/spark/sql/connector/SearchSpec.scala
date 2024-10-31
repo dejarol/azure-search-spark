@@ -92,10 +92,16 @@ trait SearchSpec
    * @param name name of the index to drop
    */
 
-  protected final def dropIndexIfExists(name: String): Unit = {
+  protected final def dropIndexIfExists(
+                                         name: String,
+                                         sleep: Boolean
+                                       ): Unit = {
 
     if (indexExists(name)) {
       searchIndexClient.deleteIndex(name)
+      if (sleep) {
+        Thread.sleep(10000)
+      }
     }
   }
 
