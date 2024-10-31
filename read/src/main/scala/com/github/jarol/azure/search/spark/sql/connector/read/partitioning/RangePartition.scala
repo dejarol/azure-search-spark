@@ -30,7 +30,7 @@ case class RangePartition(override protected val partitionId: Int,
                           private val fieldName: String,
                           private val lowerBound: Option[String],
                           private val upperBound: Option[String])
-  extends SearchPartitionTemplate(partitionId, inputFilter, maybeSelect) {
+  extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
 
   override def getSearchFilter: String = {
 

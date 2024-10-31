@@ -1,15 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.SearchIndex
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.models.AbstractITDocument
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.{DataFrame, Encoders, SaveMode}
-import org.scalatest.BeforeAndAfterEach
+import org.apache.spark.sql.Encoders
+import org.scalatest.BeforeAndAfterAll
 
 import scala.reflect.runtime.universe.TypeTag
 
@@ -17,29 +14,55 @@ import scala.reflect.runtime.universe.TypeTag
  * Mix-in trait for Search-Spark integration tests
  */
 
-abstract class SearchSparkIntegrationSpec
-  extends SearchSpec with SparkSpec
-    with BeforeAndAfterEach {
+trait SearchSparkIntegrationSpec
+  extends SearchSpec
+    with SparkSpec
+    with BeforeAndAfterAll {
 
-  protected final val indexName = "integration"
+  /**
+   * Collection of names with all Search indexes created during this integration spec.
+   * <br>
+   * They will be deleted at spec startup and teardown
+   */
 
-  override protected def afterEach(): Unit = {
+  protected val itSearchIndexNames: Seq[String]
 
-    dropIndexIfExists(indexName)
-    super.afterEach()
+  /**
+   * Clean up all created indexes, at spec start-up
+   */
+
+  override final def beforeAll(): Unit = {
+
+    itSearchIndexNames.foreach {
+      index => dropIndexIfExists(index, sleep = false)
+    }
+
+    super.beforeAll()
   }
 
-  override protected def beforeEach(): Unit = {
+  /**
+   * Clean up all created indexes, at spec tear-down
+   */
 
-    dropIndexIfExists(indexName)
-    Thread.sleep(10000)
-    super.beforeEach()
+  override final def afterAll(): Unit = {
+
+    itSearchIndexNames.foreach {
+      index => dropIndexIfExists(index, sleep = false)
+    }
+
+    super.afterAll()
   }
 
-  protected final def createIndexFromSchemaOfCaseClass[T <: AbstractITDocument with Product: TypeTag](): Unit = {
+  /**
+   * Create an index from the schema of a document
+   * @param indexName index name
+   * @tparam T type of document (must extend [[AbstractITDocument]] and be a case class)
+   */
 
-    val schema = Encoders.product[T].schema
-    val searchFields = schema.map {
+  protected final def createIndexFromSchemaOf[T <: AbstractITDocument with Product: TypeTag](indexName: String): Unit = {
+
+    // Define Search fields
+    val searchFields = Encoders.product[T].schema.map {
       spf =>
         val sef = SchemaUtils.toSearchField(spf)
         if (sef.getName.equals("id")) {
@@ -55,11 +78,21 @@ abstract class SearchSparkIntegrationSpec
       )
     )
 
-    // Write documents
+    // Wait for some seconds in order to ensure test consistency
     Thread.sleep(5000)
   }
 
-  protected final def writeDocuments[T: DocumentSerializer](documents: Seq[T]): Unit = {
+  /**
+   * Write a collection of documents to an index
+   * @param indexName index name
+   * @param documents documents
+   * @tparam T document type (an implicit [[DocumentSerializer]] for this type is expected to be on scope)
+   */
+
+  protected final def writeDocuments[T: DocumentSerializer](
+                                                             indexName: String,
+                                                             documents: Seq[T]
+                                                           ): Unit = {
 
     SearchTestUtils.writeDocuments[T](
       getSearchClient(indexName),
@@ -67,6 +100,7 @@ abstract class SearchSparkIntegrationSpec
       implicitly[DocumentSerializer[T]]
     )
 
+    // Wait for some seconds in order to ensure test consistency
     Thread.sleep(5000)
   }
 
@@ -83,69 +117,5 @@ abstract class SearchSparkIntegrationSpec
       IOConfig.API_KEY_CONFIG -> SEARCH_API_KEY,
       IOConfig.INDEX_CONFIG -> name
     )
-  }
-
-  /**
-   * Read data from a target index
-   * @param name index name
-   * @param filter filter to apply on index data
-   * @param select list of fields to select
-   * @param schema optional read schema
-   * @return index data
-   */
-
-  protected final def readIndex(
-                                 name: String,
-                                 filter: Option[String],
-                                 select: Option[Seq[String]],
-                                 schema: Option[StructType]
-                               ): DataFrame = {
-
-    // Set extra options
-    val extraOptions = Map(
-      ReadConfig.FILTER_CONFIG -> filter,
-      ReadConfig.SELECT_CONFIG -> select.map(_.mkString(","))
-    ).collect {
-      case (k, Some(v)) => (k, v)
-    }
-
-    // Set up a reader
-    val reader = spark.read.format(Constants.DATASOURCE_NAME)
-      .options(optionsForAuthAndIndex(name))
-      .options(extraOptions)
-
-    // Optionally apply schema
-    schema match {
-      case Some(value) => reader.schema(value).load(name)
-      case None => reader.load(name)
-    }
-  }
-
-  /**
-   * Write a dataFrame to a Search index
-   * @param df data to write
-   * @param name index name
-   * @param keyField name of index key field (required)
-   * @param extraOptions additional write options
-   */
-
-  protected final def writeToIndex(
-                                    df: DataFrame,
-                                    name: String,
-                                    keyField: String,
-                                    extraOptions: Option[Map[String, String]]
-                                  ): Unit = {
-
-    // Set up the writer
-    val basicWriter = df.write.format(Constants.DATASOURCE_NAME)
-      .options(optionsForAuthAndIndex(name))
-      .option(WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD, keyField)
-
-    // Add extra options, if needed
-    extraOptions
-      .map(basicWriter.options)
-      .getOrElse(basicWriter)
-      .mode(SaveMode.Append)
-      .save()
   }
 }
