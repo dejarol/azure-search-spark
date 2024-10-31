@@ -10,7 +10,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Utility for Java-based integration test methods
+ */
+
 public final class SearchTestUtils {
+
+    /**
+     * Write a collection of documents
+     * @param searchClient client for writing documents
+     * @param documents documents
+     * @param serializer serializer for documents
+     * @param <TDocument> document type
+     */
 
     public static <TDocument> void writeDocuments(
             @NotNull SearchClient searchClient,

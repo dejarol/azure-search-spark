@@ -26,7 +26,7 @@ abstract class AbstractFacetPartition(override protected val partitionId: Int,
                                       override protected val inputFilter: Option[String],
                                       override protected val maybeSelect: Option[Seq[String]],
                                       protected val facetFieldName: String)
-  extends SearchPartitionTemplate(partitionId, inputFilter, maybeSelect) {
+  extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
 
   override final def getSearchFilter: String = {
 
