@@ -22,10 +22,10 @@ class SearchPartitionReader(private val readConfig: ReadConfig,
   extends PartitionReader[InternalRow]
     with Logging {
 
-  private lazy val searchResultIterator: JIterator[SearchResult] = readConfig
-    .withSearchClientDo{
-      searchPartition.getPartitionResults
-    }
+  // Retrieve documents for this partition
+  private lazy val searchResultIterator: JIterator[SearchResult] = readConfig.withSearchClientDo {
+    searchPartition.getPartitionResults
+  }
 
   override def next(): Boolean = searchResultIterator.hasNext
 

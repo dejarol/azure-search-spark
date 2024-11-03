@@ -1,9 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.PropertySerializer
+import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, PropertySerializer}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 
-import java.util.{List => JList, Map => JMap}
+import java.util.{Objects, List => JList, Map => JMap}
 
 /**
  * Wrapper for enriching a Java Map with some utility methods
@@ -28,6 +28,20 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
   }
 
   /**
+   * Get a document property
+   * @param key key
+   * @tparam T property type
+   * @return the value related to requested key
+   */
+
+  def getProperty[T: PropertyDeserializer](key: String): T = {
+
+    implicitly[PropertyDeserializer[T]].deserialize(
+      delegate.get(key)
+    )
+  }
+
+  /**
    * Add an optional property, if defined
    * @param key key
    * @param value optional property
@@ -40,6 +54,26 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
     value.map {
       addProperty(key, _)
     }.getOrElse(delegate)
+  }
+
+  /**
+   * Maybe get the value of a key
+   * @param key key
+   * @tparam T value type
+   * @return a non-empty Option for a non-null value
+   */
+
+  def maybeGetProperty[T: PropertyDeserializer](key: String): Option[T] = {
+
+    val value = delegate.get(key)
+    if (Objects.isNull(value)) {
+      None
+    } else {
+      Some(
+        implicitly[PropertyDeserializer[T]]
+          .deserialize(value)
+      )
+    }
   }
 
   /**

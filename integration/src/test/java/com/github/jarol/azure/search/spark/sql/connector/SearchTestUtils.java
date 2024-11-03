@@ -5,6 +5,8 @@ import com.azure.search.documents.SearchDocument;
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch;
 import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
+import com.azure.search.documents.models.SearchOptions;
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -15,6 +17,15 @@ import java.util.stream.Collectors;
  */
 
 public final class SearchTestUtils {
+
+    public static List<SearchDocument> readDocuments(
+            SearchClient client
+    ) {
+
+        return SearchUtils.getSearchPagedIterable(client, new SearchOptions())
+                .stream().map(result -> result.getDocument(SearchDocument.class))
+                .collect(Collectors.toList());
+    }
 
     /**
      * Write a collection of documents

@@ -83,28 +83,6 @@ trait SearchSparkIntegrationSpec
   }
 
   /**
-   * Write a collection of documents to an index
-   * @param indexName index name
-   * @param documents documents
-   * @tparam T document type (an implicit [[DocumentSerializer]] for this type is expected to be on scope)
-   */
-
-  protected final def writeDocuments[T: DocumentSerializer](
-                                                             indexName: String,
-                                                             documents: Seq[T]
-                                                           ): Unit = {
-
-    SearchTestUtils.writeDocuments[T](
-      getSearchClient(indexName),
-      JavaScalaConverters.seqToList(documents),
-      implicitly[DocumentSerializer[T]]
-    )
-
-    // Wait for some seconds in order to ensure test consistency
-    Thread.sleep(5000)
-  }
-
-  /**
    * Get the minimum set of options required for reading or writing to a Search index
    * @param name index name
    * @return minimum options for read/write operations
