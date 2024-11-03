@@ -1,16 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.Constants
-import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ActionTypeBean, SimpleBean}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ActionTypeBean, BaseActionTypeBean, SimpleBean}
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.SaveMode
+import org.scalatest.Inspectors
 
 import java.time.LocalDate
 import scala.reflect.runtime.universe.TypeTag
 
 class WriteSpec
-  extends SearchSparkIntegrationSpec {
+  extends SearchSparkIntegrationSpec
+    with Inspectors {
 
   private lazy val simpleBeansIndex = "write-simple-beans"
   private lazy val actionTypeBeans = "write-action-type-beans"
@@ -46,22 +48,50 @@ class WriteSpec
       .save()
   }
 
+  /**
+   * Read documents from an index as collection of instances of a target type
+   * @param index index name
+   * @tparam T target type (should have an implicit [[DocumentDeserializer]] in scope)
+   * @return a collection of typed documents
+   */
+
+  private def readDocumentsAs[T: DocumentDeserializer](index: String): Seq[T] = {
+
+    val deserializer = implicitly[DocumentDeserializer[T]]
+    JavaScalaConverters.listToSeq(
+      SearchTestUtils.readDocuments(getSearchClient(index))
+    ).map {
+      deserializer.deserialize(_)
+    }
+  }
+
   describe("Search dataSource") {
     describe(SHOULD) {
       describe("create an index (if it does not exist)") {
         it("with as many fields as many columns") {
 
-          val documents: Seq[SimpleBean] = Seq(
+          val input: Seq[SimpleBean] = Seq(
             SimpleBean("hello", Some(LocalDate.now()))
           )
 
           dropIndexIfExists(simpleBeansIndex, sleep = true)
           indexExists(simpleBeansIndex) shouldBe false
-          writeToIndex(simpleBeansIndex, documents, None)
+          writeToIndex(simpleBeansIndex, input, None)
 
           val expectedSearchFieldNames = schemaOfCaseClass[SimpleBean].fields.map(_.name)
           val actualFieldNames = getIndexFields(simpleBeansIndex).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
+          val actual: Seq[SimpleBean] = readDocumentsAs[SimpleBean](simpleBeansIndex)
+          actual should have size input.size
+          forAll(actual.sortBy(_.id).zip(
+            input.sortBy(_.id)
+          )) {
+            case (actual, expected) =>
+              actual.id shouldBe expected.id
+              actual.date shouldBe expected.date
+              actual.insertTime shouldBe expected.insertTime
+          }
+
           dropIndexIfExists(simpleBeansIndex, sleep = false)
         }
 
@@ -87,6 +117,16 @@ class WriteSpec
 
           val actualFieldNames = getIndexFields(actionTypeBeans).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
+          val actual: Seq[BaseActionTypeBean] = readDocumentsAs(actionTypeBeans)
+          actual should have size documents.size
+          forAll(actual.sortBy(_.id).zip(
+            documents.sortBy(_.id)
+          )) {
+            case (actual, expected) =>
+              actual.id shouldBe expected.id
+              actual.value shouldBe expected.value
+          }
+
           dropIndexIfExists(actionTypeBeans, sleep = false)
         }
       }
