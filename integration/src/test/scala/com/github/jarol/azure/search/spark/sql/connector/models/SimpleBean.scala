@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
+import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, ITDocumentSerializer}
 
 import java.sql.{Date, Timestamp}
 import java.time.{LocalDate, LocalTime}
@@ -22,14 +22,6 @@ case class SimpleBean(
 
 object SimpleBean {
 
-  implicit object Serializer extends ITDocumentSerializer[SimpleBean] {
-    override protected def extend(document: SimpleBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
-      map
-        .maybeAddProperty("date", document.date)
-        .maybeAddProperty("insertTime", document.insertTime)
-    }
-  }
-
   /**
    * Create an instance
    * @param id id
@@ -47,5 +39,23 @@ object SimpleBean {
       date.map(Date.valueOf),
       date.map(d => Timestamp.valueOf(d.atTime(LocalTime.now())))
     )
+  }
+
+  implicit object Serializer extends ITDocumentSerializer[SimpleBean] {
+    override protected def extend(document: SimpleBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
+      map
+        .maybeAddProperty("date", document.date)
+        .maybeAddProperty("insertTime", document.insertTime)
+    }
+  }
+
+  implicit object Deserializer extends DocumentDeserializer[SimpleBean] {
+    override def deserialize(document: JMap[String, AnyRef]): SimpleBean = {
+      SimpleBean(
+        document.getProperty[String]("id"),
+        document.maybeGetProperty[Date]("date"),
+        document.maybeGetProperty[Timestamp]("insertTime")
+      )
+    }
   }
 }
