@@ -117,7 +117,7 @@ class WriteSpec
 
           val actualFieldNames = getIndexFields(actionTypeBeans).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          val actual: Seq[BaseActionTypeBean] = readDocumentsAs(actionTypeBeans)
+          val actual: Seq[BaseActionTypeBean] = readDocumentsAs[BaseActionTypeBean](actionTypeBeans)
           actual should have size documents.size
           forAll(actual.sortBy(_.id).zip(
             documents.sortBy(_.id)
