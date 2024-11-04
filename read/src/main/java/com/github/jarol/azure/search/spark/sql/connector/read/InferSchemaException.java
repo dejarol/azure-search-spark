@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector;
+package com.github.jarol.azure.search.spark.sql.connector.read;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
