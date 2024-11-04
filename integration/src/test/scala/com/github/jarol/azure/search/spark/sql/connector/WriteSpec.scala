@@ -68,25 +68,35 @@ class WriteSpec
     }
   }
 
+  /**
+   * Assert that a field has been properly enabled/disabled when creating a new index
+   * @param indexName index name
+   * @param names name of fields to enable
+   * @param feature feature to enable
+   */
+
   private def assertFeatureEnablingOnIndex(
                                             indexName: String,
                                             names: Seq[String],
                                             feature: SearchFieldFeature
                                           ): Unit = {
 
-    val (expectedNotEnabled, expectedEnabled) = getIndexFields(indexName)
+    // Separate expected enabled fields from expected disabled fields
+    val (expectedEnabled, expectedNotEnabled) = getIndexFields(indexName)
       .partition {
         p => names.exists {
           _.equalsIgnoreCase(p.getName)
       }
     }
 
-    forAll(expectedNotEnabled) {
-      field => feature.isDisabledOnField(field) shouldBe true
-    }
-
+    // Assertion for expected enabled fields
     forAll(expectedEnabled) {
       field => feature.isEnabledOnField(field) shouldBe true
+    }
+
+    // Assertion for expected disabled fields
+    forAll(expectedNotEnabled) {
+      field => feature.isDisabledOnField(field) shouldBe true
     }
   }
 
@@ -156,11 +166,12 @@ class WriteSpec
         }
 
         describe("allowing the user to enable field properties, like being") {
-          it("facetable") {
 
-            val documents = Seq(
-              FeaturesBean("hello", Some("DISCOUNT"), Some(0))
-            )
+          lazy val documents = Seq(
+            FeaturesBean("hello", Some("DISCOUNT"), Some(0))
+          )
+
+          it("facetable") {
 
             val facetableFields = Seq("category")
             val extraOptions = Map(
@@ -174,21 +185,50 @@ class WriteSpec
 
           it("filterable") {
 
-            // TODO: test
+            val filterableFields = Seq("category")
+            val extraOptions = Map(
+              WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.FILTERABLE_FIELDS -> filterableFields.mkString(",")
+            )
+
+            dropIndexIfExists(featuresIndex, sleep = true)
+            writeToIndex(featuresIndex, documents, Some(extraOptions))
+            assertFeatureEnablingOnIndex(featuresIndex, filterableFields, SearchFieldFeature.FILTERABLE)
           }
 
           it("hidden") {
 
-            // TODO: test
+            val hiddenFields = Seq("category", "level")
+            val extraOptions = Map(
+              WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.HIDDEN_FIELDS -> hiddenFields.mkString(",")
+            )
+
+            dropIndexIfExists(featuresIndex, sleep = true)
+            writeToIndex(featuresIndex, documents, Some(extraOptions))
+            assertFeatureEnablingOnIndex(featuresIndex, hiddenFields, SearchFieldFeature.HIDDEN)
           }
 
           it("searchable") {
 
-            // TODO: test
+            val searchableFields = Seq("category")
+            val extraOptions = Map(
+              WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.SEARCHABLE_FIELDS -> searchableFields.mkString(",")
+            )
+
+            dropIndexIfExists(featuresIndex, sleep = true)
+            writeToIndex(featuresIndex, documents, Some(extraOptions))
+            assertFeatureEnablingOnIndex(featuresIndex, searchableFields, SearchFieldFeature.SEARCHABLE)
           }
 
           it("sortable") {
 
+            val sortableFields = Seq("level")
+            val extraOptions = Map(
+              WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.SORTABLE_FIELDS -> sortableFields.mkString(",")
+            )
+
+            dropIndexIfExists(featuresIndex, sleep = true)
+            writeToIndex(featuresIndex, documents, Some(extraOptions))
+            assertFeatureEnablingOnIndex(featuresIndex, sortableFields, SearchFieldFeature.SORTABLE)
           }
         }
       }
