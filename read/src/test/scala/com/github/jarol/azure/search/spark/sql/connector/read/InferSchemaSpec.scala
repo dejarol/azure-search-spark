@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector
+package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException

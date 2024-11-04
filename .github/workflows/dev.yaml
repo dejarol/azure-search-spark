@@ -16,14 +16,8 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
-      - name: 'Unit tests - core'
-        run: sbt 'project core' + clean test
-      - name: 'Unit tests - read'
-        run: sbt 'project read' + clean test
-      - name: 'Unit tests - write'
-        run: sbt 'project write' + clean test
-      - name: 'Unit tests - root'
-        run: sbt + test
+      - name: 'Unit tests'
+        run: sbt + clean test
       - name: 'Integration tests'
         run: sbt 'project integration' + clean test
         env:

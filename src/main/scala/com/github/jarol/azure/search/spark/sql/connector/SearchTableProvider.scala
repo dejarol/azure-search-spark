@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters, IndexDoesNotExistException}
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, IndexDoesNotExistException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.read.{InferSchema, ReadConfig}
 import org.apache.spark.sql.connector.catalog.{SessionConfigSupport, Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.sources.DataSourceRegister
