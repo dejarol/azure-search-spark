@@ -105,7 +105,7 @@ public enum SearchFieldFeature {
     }
 
     /**
-     * Enable the feature on a {@link SearchField}
+     * Enable a feature on a {@link SearchField}
      * @param searchField Search field
      * @return input search field with this feature enabled
      */
@@ -115,6 +115,19 @@ public enum SearchFieldFeature {
     ) {
 
         return enablingFunction.apply(searchField, true);
+    }
+
+    /**
+     * Disable a feature on a {@link SearchField}
+     * @param searchField Search field
+     * @return input search field with given feature disabled
+     */
+
+    public SearchField disableOnField(
+            SearchField searchField
+    ) {
+
+        return enablingFunction.apply(searchField, false);
     }
 
     /**
@@ -129,5 +142,18 @@ public enum SearchFieldFeature {
 
         Boolean test = featurePredicate.apply(searchField);
         return Objects.nonNull(test) && test;
+    }
+
+    /**
+     * Evaluate if the feature is disabled on a {@link SearchField}
+     * @param searchField Search field
+     * @return true for disabled features
+     */
+
+    public boolean isDisabledOnField(
+            SearchField searchField
+    ) {
+
+        return !isEnabledOnField(searchField);
     }
 }

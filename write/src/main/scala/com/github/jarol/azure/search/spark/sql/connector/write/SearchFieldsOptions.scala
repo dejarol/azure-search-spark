@@ -31,7 +31,7 @@ case class SearchFieldsOptions(
    * @return true for key fields
    */
 
-  final def isKey(field: StructField): Boolean = field.name.equalsIgnoreCase(keyField)
+  final def isKey(field: String): Boolean = field.equalsIgnoreCase(keyField)
 
   /**
    * Evaluate if a field name exists within an optional list of field names
@@ -40,11 +40,11 @@ case class SearchFieldsOptions(
    * @return true for existing fields
    */
 
-  private def fieldNameExistsIn(field: StructField, fieldNames: Option[Seq[String]]): Boolean = {
+  private def fieldNameExistsIn(field: String, fieldNames: Option[Seq[String]]): Boolean = {
 
     fieldNames.exists {
       _.exists {
-        _.equalsIgnoreCase(field.name)
+        _.equalsIgnoreCase(field)
       }
     }
   }
@@ -55,7 +55,7 @@ case class SearchFieldsOptions(
    * @return true for facetable fields
    */
 
-  final def isFacetable(field: StructField): Boolean = fieldNameExistsIn(field, facetableFields)
+  final def isFacetable(field: String): Boolean = fieldNameExistsIn(field, facetableFields)
 
   /**
    * Evaluate if a fields is filterable
@@ -63,7 +63,7 @@ case class SearchFieldsOptions(
    * @return true for filterable fields
    */
 
-  final def isFilterable(field: StructField): Boolean = fieldNameExistsIn(field, filterableFields)
+  final def isFilterable(field: String): Boolean = fieldNameExistsIn(field, filterableFields)
 
   /**
    * Evaluate if a fields is hidden
@@ -71,7 +71,7 @@ case class SearchFieldsOptions(
    * @return true for hidden fields
    */
 
-  final def isHidden(field: StructField): Boolean = fieldNameExistsIn(field, hiddenFields)
+  final def isHidden(field: String): Boolean = fieldNameExistsIn(field, hiddenFields)
 
   /**
    * Evaluate if a fields is searchable
@@ -79,7 +79,7 @@ case class SearchFieldsOptions(
    * @return true for searchable fields
    */
 
-  final def isSearchable(field: StructField): Boolean = fieldNameExistsIn(field, searchableFields)
+  final def isSearchable(field: String): Boolean = fieldNameExistsIn(field, searchableFields)
 
   /**
    * Evaluate if a fields is sortable
@@ -87,7 +87,7 @@ case class SearchFieldsOptions(
    * @return true for sortable fields
    */
 
-  final def isSortable(field: StructField): Boolean = fieldNameExistsIn(field, sortableFields)
+  final def isSortable(field: String): Boolean = fieldNameExistsIn(field, sortableFields)
 
   /**
    * If defined, remove the index action column field from a schema
@@ -106,13 +106,28 @@ case class SearchFieldsOptions(
     }
   }
 
-  private lazy val featuresAndPredicates: Map[SearchFieldFeature, StructField => Boolean] = Map(
+  /**
+   * Map of features and their predicates
+   */
+
+  private lazy val featuresAndPredicates: Map[SearchFieldFeature, String => Boolean] = Map(
     SearchFieldFeature.FACETABLE -> isFacetable,
     SearchFieldFeature.FILTERABLE -> isFilterable,
     SearchFieldFeature.HIDDEN -> isHidden,
     SearchFieldFeature.KEY -> isKey,
     SearchFieldFeature.SEARCHABLE -> isSearchable,
     SearchFieldFeature.SORTABLE -> isSortable
+  )
+
+  /**
+   * Feature we want to explicitly disable if not marked by the user
+   */
+
+  private lazy val featuresToDisableIfNotPresent: Set[SearchFieldFeature] = Set(
+    SearchFieldFeature.FACETABLE,
+    SearchFieldFeature.FILTERABLE,
+    SearchFieldFeature.SEARCHABLE,
+    SearchFieldFeature.SORTABLE
   )
 
   /**
@@ -126,14 +141,21 @@ case class SearchFieldsOptions(
     // For each schema field
     maybeExcludeIndexActionColumn(schema).map {
       structField =>
-        // Collect the set of features to enable
-        val featuresToEnable: Seq[SearchFieldFeature] = featuresAndPredicates
-          .collect {
-            case (k, v) if v.apply(structField) => k
-          }.toSeq
 
-        SchemaUtils.toSearchField(structField)
-          .enableFeatures(featuresToEnable: _*)
+        val searchField = SchemaUtils.toSearchField(structField)
+
+        // Collect the set of features to enable/disable
+        val featuresToEnable = featuresAndPredicates.collect {
+          case (k, v) if v.apply(structField.name) => k
+        }.toSeq
+
+        val featuresToDisable = featuresAndPredicates.collect {
+          case (k, v) if !v.apply(structField.name) &&
+            featuresToDisableIfNotPresent.contains(k) => k
+        }.toSeq
+
+        searchField.enableFeatures(featuresToEnable: _*)
+          .disableFeatures(featuresToDisable: _*)
     }
   }
 }

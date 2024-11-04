@@ -89,13 +89,11 @@ class SearchFieldsOptionsSpec
 
     val feature: SearchFieldFeature = featureAssertion.feature
     val options = createOptionsForFeature(feature, key, list, None)
-    val nonMatchingFields = schema.filterNot(featureAssertion.shouldBeEnabled(options, _))
-    val matchingFields = schema.filter(featureAssertion.shouldBeEnabled(options, _))
-
+    val (matchingFields, nonMatchingFields) = schema.partition(featureAssertion.shouldBeEnabled(options, _))
     val searchFields = getSearchFieldsMap(options, schema)
     forAll(nonMatchingFields) {
       sf =>
-        feature.isEnabledOnField(searchFields(sf.name)) shouldBe false
+        feature.isDisabledOnField(searchFields(sf.name)) shouldBe true
     }
 
     forAll(matchingFields) {
