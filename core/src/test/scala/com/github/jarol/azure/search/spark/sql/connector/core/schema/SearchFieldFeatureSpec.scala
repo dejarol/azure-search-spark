@@ -2,42 +2,38 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import org.scalatest.Inspectors
 
 class SearchFieldFeatureSpec
   extends BasicSpec
-    with FieldFactory {
-
-  private lazy val field = createSearchField("first", SearchFieldDataType.STRING)
-
-  /**
-   * Assert that a feature has been implemented successfully
-   * @param field test field
-   * @param feature feature to test
-   */
-
-  private def assertCorrectFeature(
-                                    field: SearchField,
-                                    feature: SearchFieldFeature
-                                  ): Unit = {
-
-    // Before enabling, the feature should be disabled
-    // After enabling, it should be true
-    feature.isEnabledOnField(field) shouldBe false
-    feature.isEnabledOnField(
-      feature.enableOnField(field)
-    ) shouldBe true
-  }
+    with FieldFactory
+      with Inspectors {
 
   describe(anInstanceOf[SearchFieldFeature]) {
     describe(SHOULD) {
       it(s"enable a feature on a ${nameOf[SearchField]}") {
 
-        assertCorrectFeature(field, SearchFieldFeature.FACETABLE)
-        assertCorrectFeature(field, SearchFieldFeature.FILTERABLE)
-        assertCorrectFeature(field, SearchFieldFeature.HIDDEN)
-        assertCorrectFeature(field, SearchFieldFeature.KEY)
-        assertCorrectFeature(field, SearchFieldFeature.SEARCHABLE)
-        assertCorrectFeature(field, SearchFieldFeature.SORTABLE)
+        val field = createSearchField("first", SearchFieldDataType.STRING)
+        forAll(SearchFieldFeature.values().toSeq) {
+          feature =>
+            feature.isEnabledOnField(field) shouldBe false
+            feature.isEnabledOnField(
+              feature.enableOnField(field)
+            ) shouldBe true
+        }
+      }
+
+      it(s"disable a feature on a ${nameOf[SearchField]}") {
+
+        val field = createSearchField("second", SearchFieldDataType.INT32)
+        forAll(SearchFieldFeature.values().toSeq) {
+          feature =>
+            feature.isEnabledOnField(field) shouldBe false
+            val enabled = feature.enableOnField(field)
+            feature.isEnabledOnField(enabled) shouldBe true
+            val disabled = feature.disableOnField(enabled)
+            feature.isDisabledOnField(disabled) shouldBe true
+        }
       }
     }
   }

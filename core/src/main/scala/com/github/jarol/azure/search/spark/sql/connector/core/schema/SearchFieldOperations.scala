@@ -33,6 +33,20 @@ class SearchFieldOperations(private val field: SearchField) {
   }
 
   /**
+   * Disable a set of features on this field
+   * @param features feature to enable
+   * @return this field with some features disabled
+   */
+
+  final def disableFeatures(features: SearchFieldFeature*): SearchField = {
+
+    features.foldLeft(field) {
+      case (field, feature) =>
+        feature.disableOnField(field)
+    }
+  }
+
+  /**
    * Evaluate if a feature is enabled on this field
    * @param feature feature
    * @return true for enabled features

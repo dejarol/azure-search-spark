@@ -31,31 +31,31 @@ object FeatureEnabledAssertion {
 
   case object Facetable extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.FACETABLE
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isFacetable(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isFacetable(field.name)
   }
 
   case object Filterable extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.FILTERABLE
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isFilterable(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isFilterable(field.name)
   }
 
   case object Hidden extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.HIDDEN
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isHidden(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isHidden(field.name)
   }
 
   case object Key extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.KEY
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isKey(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isKey(field.name)
   }
 
   case object Searchable extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.SEARCHABLE
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isSearchable(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isSearchable(field.name)
   }
 
   case object Sortable extends FeatureEnabledAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.SORTABLE
-    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isSortable(field)
+    override def shouldBeEnabled(options: SearchFieldsOptions, field: StructField): Boolean = options.isSortable(field.name)
   }
 }

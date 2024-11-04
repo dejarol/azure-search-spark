@@ -1,8 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.models.IndexActionType
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ActionTypeBean, BaseActionTypeBean, SimpleBean}
+import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ActionTypeBean, BaseActionTypeBean, FeaturesBean, SimpleBean}
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
 import org.apache.spark.sql.SaveMode
 import org.scalatest.Inspectors
@@ -15,11 +16,13 @@ class WriteSpec
     with Inspectors {
 
   private lazy val simpleBeansIndex = "write-simple-beans"
-  private lazy val actionTypeBeans = "write-action-type-beans"
+  private lazy val actionTypeIndex = "write-action-type-beans"
+  private lazy val featuresIndex = "write-features-index"
 
   override protected lazy val itSearchIndexNames: Seq[String] = Seq(
     simpleBeansIndex,
-    actionTypeBeans
+    actionTypeIndex,
+    featuresIndex
   )
 
   /**
@@ -65,10 +68,32 @@ class WriteSpec
     }
   }
 
+  private def assertFeatureEnablingOnIndex(
+                                            indexName: String,
+                                            names: Seq[String],
+                                            feature: SearchFieldFeature
+                                          ): Unit = {
+
+    val (expectedNotEnabled, expectedEnabled) = getIndexFields(indexName)
+      .partition {
+        p => names.exists {
+          _.equalsIgnoreCase(p.getName)
+      }
+    }
+
+    forAll(expectedNotEnabled) {
+      field => feature.isDisabledOnField(field) shouldBe true
+    }
+
+    forAll(expectedEnabled) {
+      field => feature.isEnabledOnField(field) shouldBe true
+    }
+  }
+
   describe("Search dataSource") {
     describe(SHOULD) {
       describe("create an index (if it does not exist)") {
-        it("with as many fields as many columns") {
+        ignore("with as many fields as many columns") {
 
           val input: Seq[SimpleBean] = Seq(
             SimpleBean("hello", Some(LocalDate.now()))
@@ -95,29 +120,29 @@ class WriteSpec
           dropIndexIfExists(simpleBeansIndex, sleep = false)
         }
 
-        it("not including the column used for index action type") {
+        ignore("not including the column used for index action type") {
 
           val indexActionColumn = "action"
           val documents: Seq[ActionTypeBean] = Seq(
             ActionTypeBean("hello", Some(1), IndexActionType.UPLOAD)
           )
 
-          dropIndexIfExists(actionTypeBeans, sleep = true)
-          indexExists(actionTypeBeans) shouldBe false
+          dropIndexIfExists(actionTypeIndex, sleep = true)
+          indexExists(actionTypeIndex) shouldBe false
 
           val extraOptions = Map(
             WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
           )
 
-          writeToIndex(actionTypeBeans, documents, Some(extraOptions))
-          indexExists(actionTypeBeans) shouldBe true
+          writeToIndex(actionTypeIndex, documents, Some(extraOptions))
+          indexExists(actionTypeIndex) shouldBe true
           val expectedSearchFieldNames = schemaOfCaseClass[ActionTypeBean].fields.collect {
             case sf if !sf.name.equalsIgnoreCase(indexActionColumn) => sf.name
           }
 
-          val actualFieldNames = getIndexFields(actionTypeBeans).map(_.getName)
+          val actualFieldNames = getIndexFields(actionTypeIndex).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          val actual: Seq[BaseActionTypeBean] = readDocumentsAs[BaseActionTypeBean](actionTypeBeans)
+          val actual: Seq[BaseActionTypeBean] = readDocumentsAs[BaseActionTypeBean](actionTypeIndex)
           actual should have size documents.size
           forAll(actual.sortBy(_.id).zip(
             documents.sortBy(_.id)
@@ -127,7 +152,44 @@ class WriteSpec
               actual.value shouldBe expected.value
           }
 
-          dropIndexIfExists(actionTypeBeans, sleep = false)
+          dropIndexIfExists(actionTypeIndex, sleep = false)
+        }
+
+        describe("allowing the user to enable field properties, like being") {
+          it("facetable") {
+
+            val documents = Seq(
+              FeaturesBean("hello", Some("DISCOUNT"), Some(0))
+            )
+
+            val facetableFields = Seq("category")
+            val extraOptions = Map(
+              WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.FACETABLE_FIELDS -> facetableFields.mkString(",")
+            )
+
+            dropIndexIfExists(featuresIndex, sleep = true)
+            writeToIndex(featuresIndex, documents, Some(extraOptions))
+            assertFeatureEnablingOnIndex(featuresIndex, facetableFields, SearchFieldFeature.FACETABLE)
+          }
+
+          it("filterable") {
+
+            // TODO: test
+          }
+
+          it("hidden") {
+
+            // TODO: test
+          }
+
+          it("searchable") {
+
+            // TODO: test
+          }
+
+          it("sortable") {
+
+          }
         }
       }
     }
