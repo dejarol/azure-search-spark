@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.config;
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.DataFrameWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,9 +23,10 @@ public class ConfigException
     static {
 
         INVALID_VALUE_PREFIX = "Illegal value";
-        LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER = () -> String.format("This option should be provided either to Spark %s/Writer " +
+        LOCAL_OR_SESSION_CONFIGURATION_MESSAGE_SUPPLIER = () -> String.format("This option should be provided either to Spark %s/%s " +
                         "or configured at the session level prefixed by 'spark.datasource.%s.'",
                 DataFrameReader.class.getSimpleName(),
+                DataFrameWriter.class.getSimpleName(),
                 Constants.DATASOURCE_NAME
         );
 

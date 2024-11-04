@@ -158,7 +158,7 @@ trait RangeFactory[T, D] {
         )
       )
     } else {
-      Right()
+      Right(())
     }
   }
 
