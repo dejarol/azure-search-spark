@@ -1,9 +1,8 @@
-package com.github.jarol.azure.search.spark.sql.connector
+package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import org.apache.spark.sql.types.StructType
 
 /**
@@ -52,7 +51,10 @@ object InferSchema {
    */
 
   @throws[ConfigException]
-  protected[connector] def selectFields(allFields: Seq[SearchField], selection: Option[Seq[String]]): Seq[SearchField] = {
+  protected[connector] def selectFields(
+                                         allFields: Seq[SearchField],
+                                         selection: Option[Seq[String]]
+                                       ): Seq[SearchField] = {
 
     selection match {
 
