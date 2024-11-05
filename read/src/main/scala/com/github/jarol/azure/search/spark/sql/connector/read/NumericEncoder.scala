@@ -8,7 +8,6 @@ import java.lang.{Double => JDouble, Long => JLong}
 
 /**
  * Encoder for numeric types
- * <br>
  * @param searchType Search data type (input)
  * @param dataType Spark data type (target)
  */
