@@ -68,17 +68,9 @@ object DecodersSupplier
 
     // A decoder will exist only for Spark internal numeric types
     if (dataType.isNumeric) {
-      val maybeDecoderSupplier: Option[NumericDecoderSupplier] = dataType match {
-        case DataTypes.IntegerType => Some(NumericDecoderSupplier.INT32)
-        case DataTypes.LongType => Some(NumericDecoderSupplier.INT64)
-        case DataTypes.DoubleType => Some(NumericDecoderSupplier.DOUBLE)
-        case DataTypes.FloatType => Some(NumericDecoderSupplier.SINGLE)
-        case _ => None
-      }
-
-      maybeDecoderSupplier.flatMap {
-        _.getForType(searchType)
-      }
+      Some(
+        NumericDecoder(dataType, searchType)
+      )
     } else {
       None
     }
