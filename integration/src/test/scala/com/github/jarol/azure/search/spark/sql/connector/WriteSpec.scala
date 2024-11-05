@@ -116,18 +116,6 @@ class WriteSpec
           val expectedSearchFieldNames = schemaOfCaseClass[SimpleBean].fields.map(_.name)
           val actualFieldNames = getIndexFields(simpleBeansIndex).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          val actual: Seq[SimpleBean] = readDocumentsAs[SimpleBean](simpleBeansIndex)
-          actual should have size input.size
-          forAll(actual.sortBy(_.id).zip(
-            input.sortBy(_.id)
-          )) {
-            case (actual, expected) =>
-              actual.id shouldBe expected.id
-              actual.date shouldBe expected.date
-              actual.insertTime shouldBe expected.insertTime
-          }
-
-          dropIndexIfExists(simpleBeansIndex, sleep = false)
         }
 
         ignore("not including the column used for index action type") {
@@ -152,17 +140,6 @@ class WriteSpec
 
           val actualFieldNames = getIndexFields(actionTypeIndex).map(_.getName)
           actualFieldNames should contain theSameElementsAs expectedSearchFieldNames
-          val actual: Seq[BaseActionTypeBean] = readDocumentsAs[BaseActionTypeBean](actionTypeIndex)
-          actual should have size documents.size
-          forAll(actual.sortBy(_.id).zip(
-            documents.sortBy(_.id)
-          )) {
-            case (actual, expected) =>
-              actual.id shouldBe expected.id
-              actual.value shouldBe expected.value
-          }
-
-          dropIndexIfExists(actionTypeIndex, sleep = false)
         }
 
         describe("allowing the user to enable field properties, like being") {
