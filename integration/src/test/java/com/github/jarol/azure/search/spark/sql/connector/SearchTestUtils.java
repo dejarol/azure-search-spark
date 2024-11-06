@@ -18,6 +18,12 @@ import java.util.stream.Collectors;
 
 public final class SearchTestUtils {
 
+    /**
+     * Read all documents
+     * @param client Search client
+     * @return a collection with all index document
+     */
+
     public static List<SearchDocument> readDocuments(
             SearchClient client
     ) {

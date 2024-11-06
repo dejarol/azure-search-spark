@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types.{DataTypes, StructType}
+import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.{BeforeAndAfterAll, Inspectors}
 
 import java.sql.{Date, Timestamp}
@@ -26,28 +26,6 @@ class ReadSpec
     atomicBeansIndex,
     collectionBeansIndex
   )
-
-  /**
-   * Write a collection of documents to an index
-   * @param indexName index name
-   * @param documents documents
-   * @tparam T document type (an implicit [[DocumentSerializer]] for this type is expected to be on scope)
-   */
-
-  private final def writeDocuments[T: DocumentSerializer](
-                                                           indexName: String,
-                                                           documents: Seq[T]
-                                                         ): Unit = {
-
-    SearchTestUtils.writeDocuments[T](
-      getSearchClient(indexName),
-      JavaScalaConverters.seqToList(documents),
-      implicitly[DocumentSerializer[T]]
-    )
-
-    // Wait for some seconds in order to ensure test consistency
-    Thread.sleep(5000)
-  }
 
   /**
    * Read data from a target index
@@ -174,8 +152,8 @@ class ReadSpec
 
         describe("translating") {
 
-          lazy val notNullBean = AtomicBean.from("hello", Some(1), Some(123), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
-          lazy val nullBean = AtomicBean.from("world", None, None, None, None, None)
+          lazy val notNullBean = AtomicBean.from("hello", Some("john"), Some(1), Some(123), Some(3.45), Some(false), Some(OffsetDateTime.now(Constants.UTC_OFFSET)))
+          lazy val nullBean = AtomicBean.from("world", None, None, None, None, None, None)
           lazy val numericSamples = Seq(notNullBean, nullBean)
 
           describe("numeric values as") {

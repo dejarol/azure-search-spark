@@ -9,6 +9,7 @@ import java.util.{Map => JMap}
 /**
  * Bean for read/write integrations tests
  * @param id document id
+ * @param stringValue string value
  * @param intValue int value
  * @param longValue long value
  * @param doubleValue double value
@@ -18,6 +19,7 @@ import java.util.{Map => JMap}
 
 case class AtomicBean(
                        override val id: String,
+                       stringValue: Option[String],
                        intValue: Option[Int],
                        longValue: Option[Long],
                        doubleValue: Option[Double],
@@ -32,7 +34,8 @@ object AtomicBean {
   implicit object Serializer extends ITDocumentSerializer[AtomicBean] {
     override protected def extend(document: AtomicBean, map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
 
-      map.maybeAddProperty("intValue", document.intValue)
+      map.maybeAddProperty("stringValue", document.stringValue)
+        .maybeAddProperty("intValue", document.intValue)
         .maybeAddProperty("longValue", document.longValue)
         .maybeAddProperty("doubleValue", document.doubleValue)
         .maybeAddProperty("booleanValue", document.booleanValue)
@@ -43,6 +46,7 @@ object AtomicBean {
   /**
    * Create an instance
    * @param id id
+   * @param stringValue string
    * @param intValue int
    * @param longValue long
    * @param doubleValue double
@@ -53,6 +57,7 @@ object AtomicBean {
 
   def from(
             id: String,
+            stringValue: Option[String],
             intValue: Option[Int],
             longValue: Option[Long],
             doubleValue: Option[Double],
@@ -62,6 +67,7 @@ object AtomicBean {
 
     AtomicBean(
       id,
+      stringValue,
       intValue,
       longValue,
       doubleValue,

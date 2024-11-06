@@ -58,6 +58,10 @@ package object models {
     override def serialize(v1: Int): Integer = v1
   }
 
+  /**
+   * Deserializer for integers
+   */
+
   implicit object IntDeserializer extends PropertyDeserializer[Int] {
     override def deserialize(value: Any): Int = value.asInstanceOf[Integer]
   }
@@ -68,6 +72,20 @@ package object models {
 
   implicit object LongSerializer extends PropertySerializer[Long] {
     override def serialize(v1: Long): JLong = v1
+  }
+
+  /**
+   * Deserializer for longs
+   */
+
+  implicit object LongDeserializer extends PropertyDeserializer[JLong] {
+    override def deserialize(value: Any): JLong = {
+
+      value match {
+        case i: Integer => i.longValue()
+        case l: JLong => l
+      }
+    }
   }
 
   /**
@@ -84,6 +102,14 @@ package object models {
 
   implicit object BooleanSerializer extends PropertySerializer[Boolean] {
     override def serialize(v1: Boolean): JBoolean = v1
+  }
+
+  /**
+   * Deserializer for booleans
+   */
+
+  implicit object BooleanDeserializer extends PropertyDeserializer[Boolean] {
+    override def deserialize(value: Any): Boolean = value.asInstanceOf[JBoolean]
   }
 
   /**
