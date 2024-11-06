@@ -6,6 +6,12 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
 
 import java.lang.{Double => JDouble, Float => JFloat, Long => JLong}
 
+/**
+ * Decoder for numeric types
+ * @param dataType Spark type
+ * @param searchType Search type
+ */
+
 case class NumericDecoder(
                            private val dataType: DataType,
                            private val searchType: SearchFieldDataType
@@ -21,6 +27,12 @@ case class NumericDecoder(
     }
   }
 
+  /**
+   * Decode an integer
+   * @param v integer value
+   * @return the decoded value
+   */
+
   private def fromInt(v: Integer): AnyRef = {
 
     searchType match {
@@ -30,14 +42,26 @@ case class NumericDecoder(
     }
   }
 
-  private def fromLong(v: JLong): AnyRef = {
+  /**
+   * Decode a long
+   * @param l long value
+   * @return the decoded value
+   */
+
+  private def fromLong(l: JLong): AnyRef = {
 
     searchType match {
-      case SearchFieldDataType.INT32 => Integer.valueOf(v.intValue())
-      case SearchFieldDataType.INT64 => v
-      case SearchFieldDataType.DOUBLE => JDouble.valueOf(v.doubleValue())
+      case SearchFieldDataType.INT32 => Integer.valueOf(l.intValue())
+      case SearchFieldDataType.INT64 => l
+      case SearchFieldDataType.DOUBLE => JDouble.valueOf(l.doubleValue())
     }
   }
+
+  /**
+   * Decode a double
+   * @param d double value
+   * @return the decoded value
+   */
 
   private def fromDouble(d: JDouble): AnyRef = {
 
@@ -47,6 +71,12 @@ case class NumericDecoder(
       case SearchFieldDataType.DOUBLE => d
     }
   }
+
+  /**
+   * Decode a float
+   * @param f float value
+   * @return the decoded value
+   */
 
   private def fromFloat(f: JFloat): AnyRef = {
 

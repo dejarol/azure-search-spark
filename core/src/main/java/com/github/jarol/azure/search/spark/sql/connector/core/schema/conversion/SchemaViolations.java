@@ -5,8 +5,10 @@ import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.StructField;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Collection of methods for creating instances of {@link SchemaViolation}(s)
@@ -19,7 +21,7 @@ public final class SchemaViolations {
      */
 
      static class IncompatibleType
-            extends SchemaViolationImpl {
+            extends AbstractSchemaViolation {
 
         private final DataType sparkType;
         private final SearchFieldDataType searchType;
@@ -31,7 +33,7 @@ public final class SchemaViolations {
          * @param searchType Search type
          */
 
-        public IncompatibleType(
+        private IncompatibleType(
                 String name,
                 @NotNull DataType sparkType,
                 @NotNull SearchFieldDataType searchType
@@ -41,6 +43,15 @@ public final class SchemaViolations {
             this.sparkType = sparkType;
             this.searchType = searchType;
         }
+
+        @Override
+        protected @Nullable String detailsDescription() {
+
+            return String.format(
+                    "{\"sparkType\": \"%s\", \"searchType\": \"%s\"}",
+                    sparkType, searchType
+            );
+        }
     }
 
     /**
@@ -48,7 +59,7 @@ public final class SchemaViolations {
      */
 
     static class ComplexFieldViolation
-            extends SchemaViolationImpl {
+            extends AbstractSchemaViolation {
 
         private final List<SchemaViolation> subFieldViolations;
 
@@ -59,7 +70,7 @@ public final class SchemaViolations {
          */
 
         @Contract(pure = true)
-        public ComplexFieldViolation(
+        private ComplexFieldViolation(
                 @NotNull String name,
                 List<SchemaViolation> subFieldViolations
         ) {
@@ -75,6 +86,16 @@ public final class SchemaViolations {
         public List<SchemaViolation> getSubFieldViolations() {
             return subFieldViolations;
         }
+
+        @Override
+        protected @Nullable String detailsDescription() {
+            return String.format(
+                    "{\"subViolations\": [%s]}",
+                    subFieldViolations.stream()
+                            .map(SchemaViolation::description)
+                            .collect(Collectors.joining(", "))
+            );
+        }
     }
 
     /**
@@ -82,7 +103,7 @@ public final class SchemaViolations {
      */
 
     static class ArrayViolation
-            extends SchemaViolationImpl {
+            extends AbstractSchemaViolation {
 
         private final SchemaViolation subtypeViolation;
 
@@ -92,7 +113,7 @@ public final class SchemaViolations {
          * @param subtypeViolation inner type violation
          */
 
-        public ArrayViolation(
+        private ArrayViolation(
                 @NotNull String name,
                 SchemaViolation subtypeViolation
         ) {
@@ -108,6 +129,15 @@ public final class SchemaViolations {
         public SchemaViolation getSubtypeViolation() {
             return subtypeViolation;
         }
+
+        @Override
+        protected @Nullable String detailsDescription() {
+
+            return String.format(
+                    "{\"subTypeViolation\": %s}",
+                    subtypeViolation.description()
+            );
+        }
     }
 
     /**
@@ -121,10 +151,15 @@ public final class SchemaViolations {
             @NotNull StructField field
     ) {
 
-        return new SchemaViolationImpl(
+        return new AbstractSchemaViolation(
                 field.name(),
                 SchemaViolation.Type.MISSING_FIELD
-        );
+        ) {
+            @Override
+            protected @Nullable String detailsDescription() {
+                return null;
+            }
+        };
     }
 
     /**
@@ -138,10 +173,15 @@ public final class SchemaViolations {
             @NotNull StructField field
     ) {
 
-        return new SchemaViolationImpl(
+        return new AbstractSchemaViolation(
                 field.name(),
                 SchemaViolation.Type.NOT_SUITABLE_AS_GEOPOINT
-        );
+        ) {
+            @Override
+            protected @Nullable String detailsDescription() {
+                return null;
+            }
+        };
     }
 
     /**

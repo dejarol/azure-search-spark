@@ -38,4 +38,6 @@ public interface SchemaViolation {
      */
 
     Type getType();
+
+    String description();
 }
