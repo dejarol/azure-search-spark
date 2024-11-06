@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.{ITDocumentSerializer, PropertySerializer}
+import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, ITDocumentSerializer, PropertyDeserializer, PropertySerializer}
 
 import java.util.{Map => JMap}
 
@@ -19,10 +19,32 @@ case class CollectionBean[T](
 
 object CollectionBean {
 
+  /**
+   * Create a serializer for given type
+   * @tparam T array type (should have an implicit [[PropertySerializer]] in scope)
+   * @return a document serializer
+   */
+
   def serializerFor[T: PropertySerializer]: ITDocumentSerializer[CollectionBean[T]] = {
 
     (document: CollectionBean[T], map: JMap[String, AnyRef]) => {
       map.maybeAddArray[T]("array", document.array)
+    }
+  }
+
+  /**
+   * Create a deserializer for given type
+   * @tparam T array type (should have an implicit [[PropertyDeserializer]] in scope)
+   * @return a document deserializer
+   */
+
+  def deserializerFor[T: PropertyDeserializer]: DocumentDeserializer[CollectionBean[T]] = {
+
+    (document: JMap[String, AnyRef]) => {
+      CollectionBean(
+        document.getProperty[String]("id"),
+        document.maybeGetArray[T]("array")
+      )
     }
   }
 }

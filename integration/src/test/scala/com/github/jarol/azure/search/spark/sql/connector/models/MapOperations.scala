@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, PropertySerializer}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
+import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, PropertySerializer}
 
 import java.util.{Objects, List => JList, Map => JMap}
 
@@ -65,14 +65,8 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
 
   def maybeGetProperty[T: PropertyDeserializer](key: String): Option[T] = {
 
-    val value = delegate.get(key)
-    if (Objects.isNull(value)) {
-      None
-    } else {
-      Some(
-        implicitly[PropertyDeserializer[T]]
-          .deserialize(value)
-      )
+    Option(delegate.get(key)).map {
+      v => implicitly[PropertyDeserializer[T]].deserialize(v)
     }
   }
 
@@ -108,5 +102,24 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
     value.map {
       addArray(key, _)
     }.getOrElse(delegate)
+  }
+
+  /**
+   * Get an optional collection of values
+   * @param key key
+   * @tparam T collection inner type
+   * @return a non-empty Option if the property is defined
+   */
+
+  def maybeGetArray[T: PropertyDeserializer](key: String): Option[Seq[T]] = {
+
+    val deserializer = implicitly[PropertyDeserializer[T]]
+    Option(delegate.get(key)).map {
+      v => JavaScalaConverters.listToSeq(
+        v.asInstanceOf[JList[AnyRef]]
+      ).map {
+        deserializer.deserialize
+      }
+    }
   }
 }

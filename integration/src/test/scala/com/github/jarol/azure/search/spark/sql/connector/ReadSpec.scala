@@ -21,12 +21,6 @@ class ReadSpec
   private lazy val atomicBeansIndex = "read-atomic-beans"
   private lazy val collectionBeansIndex = "read-collection-beans"
 
-  override protected lazy val itSearchIndexNames: Seq[String] = Seq(
-    simpleBeansIndex,
-    atomicBeansIndex,
-    collectionBeansIndex
-  )
-
   /**
    * Read data from a target index
    * @param name index name

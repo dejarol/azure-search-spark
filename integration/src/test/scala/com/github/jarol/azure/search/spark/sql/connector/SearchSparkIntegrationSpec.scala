@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector
 
 import com.azure.search.documents.indexes.models.SearchIndex
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.models.AbstractITDocument
 import org.apache.spark.sql.Encoders
@@ -20,20 +19,12 @@ trait SearchSparkIntegrationSpec
     with BeforeAndAfterAll {
 
   /**
-   * Collection of names with all Search indexes created during this integration spec.
-   * <br>
-   * They will be deleted at spec startup and teardown
-   */
-
-  protected val itSearchIndexNames: Seq[String]
-
-  /**
    * Clean up all created indexes, at spec start-up
    */
 
   override final def beforeAll(): Unit = {
 
-    itSearchIndexNames.foreach {
+    listIndexes().foreach {
       index => dropIndexIfExists(index, sleep = false)
     }
 
@@ -46,7 +37,7 @@ trait SearchSparkIntegrationSpec
 
   override final def afterAll(): Unit = {
 
-    itSearchIndexNames.foreach {
+    listIndexes().foreach {
       index => dropIndexIfExists(index, sleep = false)
     }
 
@@ -80,20 +71,5 @@ trait SearchSparkIntegrationSpec
 
     // Wait for some seconds in order to ensure test consistency
     Thread.sleep(5000)
-  }
-
-  /**
-   * Get the minimum set of options required for reading or writing to a Search index
-   * @param name index name
-   * @return minimum options for read/write operations
-   */
-
-  protected final def optionsForAuthAndIndex(name: String): Map[String, String] = {
-
-    Map(
-      IOConfig.END_POINT_CONFIG -> SEARCH_END_POINT,
-      IOConfig.API_KEY_CONFIG -> SEARCH_API_KEY,
-      IOConfig.INDEX_CONFIG -> name
-    )
   }
 }

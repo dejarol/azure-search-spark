@@ -5,6 +5,7 @@ import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import com.azure.search.documents.models.SearchOptions
+import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 
@@ -23,6 +24,21 @@ trait SearchSpec
       .endpoint(SEARCH_END_POINT)
       .credential(KEY_CREDENTIALS)
       .buildClient
+
+  /**
+   * Get the minimum set of options required for reading or writing to a Search index
+   * @param name index name
+   * @return minimum options for read/write operations
+   */
+
+  protected final def optionsForAuthAndIndex(name: String): Map[String, String] = {
+
+    Map(
+      IOConfig.END_POINT_CONFIG -> SEARCH_END_POINT,
+      IOConfig.API_KEY_CONFIG -> SEARCH_API_KEY,
+      IOConfig.INDEX_CONFIG -> name
+    )
+  }
 
   /**
    * Get a Search index
@@ -56,6 +72,13 @@ trait SearchSpec
         name,
         JavaScalaConverters.seqToList(fields)
       )
+    )
+  }
+
+  protected final def listIndexes(): Seq[String] = {
+
+    JavaScalaConverters.listToSeq(
+      SearchTestUtils.listIndexes(searchIndexClient)
     )
   }
 
