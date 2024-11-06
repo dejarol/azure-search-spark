@@ -108,14 +108,14 @@ object WriteConfig {
 
   /**
    * Create an instance from a simple map
-   * @param dsOptions local options
+   * @param options local options
    * @return a write config
    */
 
-  def apply(dsOptions: Map[String, String]): WriteConfig = {
+  def apply(options: Map[String, String]): WriteConfig = {
 
     WriteConfig(
-      CaseInsensitiveMap(dsOptions)
+      CaseInsensitiveMap(options)
     )
   }
 

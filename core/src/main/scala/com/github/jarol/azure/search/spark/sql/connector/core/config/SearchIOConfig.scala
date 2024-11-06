@@ -19,10 +19,10 @@ class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String
 
   /**
    * Create a new instance from a simple map
-   * @param dsOptions options passed to the dataSource
+   * @param options options passed to the dataSource
    */
 
-  def this(dsOptions: Map[String, String]) = this(CaseInsensitiveMap(dsOptions))
+  def this(options: Map[String, String]) = this(CaseInsensitiveMap(options))
 
   /**
    * Get the target Search endpoint, at either local of config level
