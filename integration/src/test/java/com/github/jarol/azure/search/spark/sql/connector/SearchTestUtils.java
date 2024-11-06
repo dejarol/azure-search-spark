@@ -2,7 +2,9 @@ package com.github.jarol.azure.search.spark.sql.connector;
 
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchDocument;
+import com.azure.search.documents.indexes.SearchIndexClient;
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch;
+import com.azure.search.documents.indexes.models.SearchIndex;
 import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
 import com.azure.search.documents.models.SearchOptions;
@@ -17,6 +19,21 @@ import java.util.stream.Collectors;
  */
 
 public final class SearchTestUtils {
+
+    /**
+     * List of existing indexes
+     * @param client Search index client
+     * @return list of existing index names
+     */
+
+    public static List<String> listIndexes(
+            @NotNull SearchIndexClient client
+    ) {
+
+        return client.listIndexes()
+                .stream().map(SearchIndex::getName)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Read all documents
