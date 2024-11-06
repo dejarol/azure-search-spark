@@ -5,8 +5,8 @@ import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import com.azure.search.documents.models.SearchOptions
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 
 /**
  * Trait to mix in for integration tests that require the interaction with a Search service
@@ -116,6 +116,45 @@ trait SearchSpec
     JavaScalaConverters.listToSeq(
       getSearchIndex(name).getFields
     )
+  }
+
+  /**
+   * Write a collection of documents to an index
+   * @param indexName index name
+   * @param documents documents
+   * @tparam T document type (an implicit [[DocumentSerializer]] for this type is expected to be on scope)
+   */
+
+  protected final def writeDocuments[T: DocumentSerializer](
+                                                             indexName: String,
+                                                             documents: Seq[T]
+                                                           ): Unit = {
+
+    SearchTestUtils.writeDocuments[T](
+      getSearchClient(indexName),
+      JavaScalaConverters.seqToList(documents),
+      implicitly[DocumentSerializer[T]]
+    )
+
+    // Wait for some seconds in order to ensure test consistency
+    Thread.sleep(5000)
+  }
+
+  /**
+   * Read documents from an index as collection of instances of a target type
+   * @param index index name
+   * @tparam T target type (should have an implicit [[DocumentDeserializer]] in scope)
+   * @return a collection of typed documents
+   */
+
+  protected final def readDocumentsAs[T: DocumentDeserializer](index: String): Seq[T] = {
+
+    val deserializer = implicitly[DocumentDeserializer[T]]
+    JavaScalaConverters.listToSeq(
+      SearchTestUtils.readDocuments(getSearchClient(index))
+    ).map {
+      deserializer.deserialize(_)
+    }
   }
 }
 

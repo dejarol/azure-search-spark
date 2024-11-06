@@ -95,18 +95,15 @@ public final class AtomicDecoders {
     @Contract(value = " -> new", pure = true)
     public static @NotNull SearchDecoder fromDateToString() {
 
-        TransformDecoder<String> toIsoLocalDate = new TransformDecoder<String>() {
+        return new TransformDecoder<String>() {
 
             @Override
-            protected @NotNull String transform(Object value) {
-                return OffsetDateTime.parse(
-                        (String) value,
-                        Constants.DATETIME_OFFSET_FORMATTER
-                ).format(DateTimeFormatter.ISO_LOCAL_DATE);
+            protected String transform(Object value) {
+                return LocalDate
+                        .ofEpochDay((Integer) value)
+                        .format(DateTimeFormatter.ISO_LOCAL_DATE);
             }
         };
-
-        return forDates().andThen(toIsoLocalDate);
     }
 
     /**

@@ -77,7 +77,7 @@ object DecodersSupplier
   }
 
   /**
-   * Returns the decoder to user for decoding Spark internal values to Search boolean type
+   * Returns the decoder to use for decoding Spark internal values to Search boolean type
    * @param dataType Spark internal type
    * @return decoder for boolean types
    */
