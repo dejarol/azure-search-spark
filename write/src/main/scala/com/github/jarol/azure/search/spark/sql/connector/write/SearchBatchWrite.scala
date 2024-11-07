@@ -12,8 +12,7 @@ import org.apache.spark.sql.types.StructType
 
 class SearchBatchWrite(
                         private val writeConfig: WriteConfig,
-                        private val schema: StructType,
-
+                        private val schema: StructType
                       )
   extends BatchWrite
     with Logging {

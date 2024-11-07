@@ -11,7 +11,7 @@ import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 /**
  * [[DataWriter]] implementation for Search dataSource
  * @param writeConfig write configuration
- * @param documentDecoder converter from Spark internal rows to Search documents
+ * @param documentDecoder decoder from Spark internal rows to Search documents
  * @param actionSupplier index action supplier
  * @param partitionId partition id
  * @param taskId task id

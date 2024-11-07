@@ -21,7 +21,7 @@ class SearchWriterFactory(
 
     new SearchDataWriter(
       writeConfig,
-      createInternalRowToSearchDocumentConverter(),
+      createDocumentDecoder(),
       createIndexActionSupplier(),
       partitionId,
       taskId
@@ -51,13 +51,13 @@ class SearchWriterFactory(
   }
 
   /**
-   * Create a converter for transforming Spark internal rows to Search documents
-   * @throws SchemaViolationException if the conversion function cannot be built
-   * @return a function for transforming Spark internal rows into Search documents
+   * Create a decoder for converting Spark internal rows to Search documents
+   * @throws SchemaViolationException if the decoder cannot be built
+   * @return a decoder from Spark internal rows to Search documents
    */
 
   @throws[SchemaViolationException]
-  private def createInternalRowToSearchDocumentConverter(): SearchDocumentDecoder = {
+  private def createDocumentDecoder(): SearchDocumentDecoder = {
 
     // Exclude index action column from mapping, if defined
     val schemaMaybeWithoutActionColumn: Seq[StructField] = writeConfig.actionColumn match {
