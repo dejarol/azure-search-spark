@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.models
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, PropertySerializer}
 
-import java.util.{Objects, List => JList, Map => JMap}
+import java.util.{List => JList, Map => JMap}
 
 /**
  * Wrapper for enriching a Java Map with some utility methods
