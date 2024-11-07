@@ -68,22 +68,22 @@ class SearchFieldTypeOperationsSpec
 
         it("atomic") {
 
-          runTypeAssertion(TypeAssertions.Atomic)
+          runTypeAssertion(SearchFieldTypeAssertion.Atomic)
         }
 
         it("complex") {
 
-          runTypeAssertion(TypeAssertions.Complex)
+          runTypeAssertion(SearchFieldTypeAssertion.Complex)
         }
 
         it("a collection") {
 
-          runTypeAssertion(TypeAssertions.Collection)
+          runTypeAssertion(SearchFieldTypeAssertion.Collection)
         }
 
         it("a geo point") {
 
-          runTypeAssertion(TypeAssertions.GeoPoint)
+          runTypeAssertion(SearchFieldTypeAssertion.GeoPoint)
         }
       }
 

@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.FieldFactory
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.{BeforeAndAfterEach, Inspectors}
 
@@ -34,51 +33,52 @@ class SearchWriteBuilderSpec
     // Take options for auth and index,
     // add key field and provided options
     val allOptions: Map[String, String] = optionsForAuthAndIndex(testIndex) + (
-      WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD -> idFieldName
+      WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
       ) ++ options
 
     SearchWriteBuilder.createIndex(
       WriteConfig(allOptions),
       schema
     )
+
+    Thread.sleep(5000)
   }
 
   /**
    * Assert that a field has been properly enabled/disabled when creating a new index
-   * @param fieldsToEnable name of fields to enable
-   * @param feature feature to enable
+   * @param schema schema for index creation
+   * @param fieldList name of fields to enable
+   * @param config suffix for index creation property
+   * @param featureAssertion feature assertion
    */
 
-  private def assertFeatureEnabling(
-                                     schema: StructType,
-                                     fieldsToEnable: Seq[String],
-                                     config: String,
-                                     feature: SearchFieldFeature
+  private def assertFeatureDisabling(
+                                      schema: StructType,
+                                      fieldList: Seq[String],
+                                      config: String,
+                                      featureAssertion: FeatureAssertion
                                    ): Unit = {
 
     // Create index
     indexExists(testIndex) shouldBe false
-    createSearchIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + config -> fieldsToEnable.mkString(",")))
+    createSearchIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + config -> fieldList.mkString(",")))
     indexExists(testIndex) shouldBe true
 
-    // Retrieve index fields,
-    // separate expected enabled fields from expected disabled fields
-    val (expectedEnabled, expectedNotEnabled) = getIndexFields(testIndex).partition {
-      p => fieldsToEnable.exists {
+    // Retrieve index fields
+    val matchingFields = getIndexFields(testIndex).filter {
+      p => fieldList.exists {
         _.equalsIgnoreCase(p.getName)
       }
     }
 
-    // Assertion for expected enabled fields
-    forAll(expectedEnabled) {
+    // Assertion for matching fields
+    forAll(matchingFields) {
       field =>
-        feature.isEnabledOnField(field) shouldBe true
-    }
-
-    // Assertion for expected disabled fields
-    forAll(expectedNotEnabled) {
-      field =>
-        feature.isDisabledOnField(field) shouldBe true
+        if (featureAssertion.refersToDisablingFeature) {
+          featureAssertion.getFeatureValue(field) shouldBe Some(false)
+        } else {
+          featureAssertion.getFeatureValue(field) shouldBe Some(true)
+        }
     }
   }
 
@@ -91,10 +91,11 @@ class SearchWriteBuilderSpec
             keyField,
             createStructField("name", DataTypes.StringType),
             createStructField("date", DataTypes.TimestampType),
-            createStructField("address",
+            createArrayField("education",
               createStructType(
                 createStructField("city", DataTypes.StringType),
-                createStructField("code", DataTypes.IntegerType)
+                createStructField("title", DataTypes.StringType),
+                createStructField("grade", DataTypes.IntegerType)
               )
             )
           )
@@ -137,39 +138,39 @@ class SearchWriteBuilderSpec
           actualFields.map(_.getName) should contain theSameElementsAs expectedSchema.map(_.name)
         }
 
-        describe("allowing the user to enable field properties, like") {
+        describe("allowing the user to edit default field properties, like") {
 
           it("facetable") {
 
-            val facetableField = createStructField("category", DataTypes.StringType)
+            val nonFacetableField = createStructField("category", DataTypes.StringType)
             val schema = createStructType(
               keyField,
               createStructField("discount", DataTypes.DoubleType),
-              facetableField
+              nonFacetableField
             )
 
-            assertFeatureEnabling(
+            assertFeatureDisabling(
               schema,
-              Seq(facetableField.name),
-              WriteConfig.FACETABLE_FIELDS,
-              SearchFieldFeature.FACETABLE
+              Seq(nonFacetableField.name),
+              WriteConfig.DISABLE_FACETING_CONFIG,
+              FeatureAssertion.FACETABLE
             )
           }
 
           it("filterable") {
 
-            val filterableField = createStructField("level", DataTypes.IntegerType)
+            val nonFilterableField = createStructField("level", DataTypes.IntegerType)
             val schema = createStructType(
               keyField,
-              filterableField,
+              nonFilterableField,
               createStructField("date", DataTypes.TimestampType)
             )
 
-            assertFeatureEnabling(
+            assertFeatureDisabling(
               schema,
-              Seq(filterableField.name),
-              WriteConfig.FILTERABLE_FIELDS,
-              SearchFieldFeature.FILTERABLE
+              Seq(nonFilterableField.name),
+              WriteConfig.DISABLE_FILTERING_CONFIG,
+              FeatureAssertion.FILTERABLE
             )
           }
 
@@ -184,37 +185,37 @@ class SearchWriteBuilderSpec
               createStructField("category", DataTypes.StringType)
             )
 
-            assertFeatureEnabling(
+            assertFeatureDisabling(
               schema,
               Seq(firstHidden.name, secondHidden.name),
-              WriteConfig.HIDDEN_FIELDS,
-              SearchFieldFeature.HIDDEN
+              WriteConfig.HIDDEN_FIELDS_CONFIG,
+              FeatureAssertion.HIDDEN
             )
           }
 
           it("searchable") {
 
-            val searchableField = createStructField("description", DataTypes.StringType)
+            val nonSearchableField = createStructField("description", DataTypes.StringType)
             val schema = createStructType(
               keyField,
-              searchableField,
+              nonSearchableField,
               createStructField("date", DataTypes.DateType)
             )
 
-            assertFeatureEnabling(
+            assertFeatureDisabling(
               schema,
-              Seq(searchableField.name),
-              WriteConfig.SEARCHABLE_FIELDS,
-              SearchFieldFeature.SEARCHABLE
+              Seq(nonSearchableField.name),
+              WriteConfig.DISABLE_SEARCH_CONFIG,
+              FeatureAssertion.SEARCHABLE
             )
           }
 
           it("sortable") {
 
-            val sortableField = createStructField("level", DataTypes.IntegerType)
+            val nonSortableField = createStructField("level", DataTypes.IntegerType)
             val schema = createStructType(
               keyField,
-              sortableField,
+              nonSortableField,
               createStructField(
                 "address",
                 createStructType(
@@ -223,11 +224,11 @@ class SearchWriteBuilderSpec
               )
             )
 
-            assertFeatureEnabling(
+            assertFeatureDisabling(
               schema,
-              Seq(sortableField.name),
-              WriteConfig.SORTABLE_FIELDS,
-              SearchFieldFeature.SORTABLE
+              Seq(nonSortableField.name),
+              WriteConfig.DISABLE_SORTING_CONFIG,
+              FeatureAssertion.SORTABLE
             )
           }
         }
