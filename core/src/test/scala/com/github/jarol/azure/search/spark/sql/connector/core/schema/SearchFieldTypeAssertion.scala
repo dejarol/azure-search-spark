@@ -44,7 +44,7 @@ trait SearchFieldTypeAssertion {
   def expectedGeoPoint: Boolean
 }
 
-object TypeAssertions {
+object SearchFieldTypeAssertion {
 
   /**
    * Assertion for simple types

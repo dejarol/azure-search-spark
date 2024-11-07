@@ -84,22 +84,22 @@ class WriteConfigSpec
             val indexActionColumn = "world"
             val options = WriteConfig(
               Map(
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.KEY_FIELD}" -> keyField,
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.FACETABLE_FIELDS}" -> facetable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.FILTERABLE_FIELDS}" -> filterable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.HIDDEN_FIELDS}" -> hidden.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.SEARCHABLE_FIELDS}" -> searchable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.SORTABLE_FIELDS}" -> sortable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField,
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_FACETING_CONFIG}" -> facetable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_FILTERING_CONFIG}" -> filterable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.HIDDEN_FIELDS_CONFIG}" -> hidden.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_SEARCH_CONFIG}" -> searchable.mkString(","),
+                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
                 WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
               )
             ).searchFieldOptions
 
             options.keyField shouldBe keyField
-            assertDefinedAndContaining(options.facetableFields, facetable)
-            assertDefinedAndContaining(options.filterableFields, filterable)
+            assertDefinedAndContaining(options.disabledFromFaceting, facetable)
+            assertDefinedAndContaining(options.disabledFromFiltering, filterable)
             assertDefinedAndContaining(options.hiddenFields, hidden)
-            assertDefinedAndContaining(options.searchableFields, searchable)
-            assertDefinedAndContaining(options.sortableFields, sortable)
+            assertDefinedAndContaining(options.disabledFromSearch, searchable)
+            assertDefinedAndContaining(options.disabledFromSorting, sortable)
             options.indexActionColumn shouldBe Some(indexActionColumn)
           }
         }

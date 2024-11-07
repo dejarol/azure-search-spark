@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema;
 import com.azure.search.documents.indexes.models.SearchField;
 import org.jetbrains.annotations.Contract;
 
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -114,6 +114,7 @@ public enum SearchFieldFeature {
             SearchField searchField
     ) {
 
+
         return enablingFunction.apply(searchField, true);
     }
 
@@ -140,8 +141,9 @@ public enum SearchFieldFeature {
             SearchField searchField
     ) {
 
-        Boolean test = featurePredicate.apply(searchField);
-        return Objects.nonNull(test) && test;
+        return Optional.ofNullable(
+                featurePredicate.apply(searchField)
+        ).orElse(false);
     }
 
     /**

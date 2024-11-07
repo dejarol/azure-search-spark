@@ -75,16 +75,16 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return options for defining fields on target Search index
    */
 
-  def searchFieldOptions: SearchFieldsOptions = {
+  def searchFieldOptions: SearchFieldsCreationOptions = {
 
     val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
-    SearchFieldsOptions(
-      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD, Some(WriteConfig.CREATE_INDEX_PREFIX), None),
-      createIndexConfig.getAsList(WriteConfig.FILTERABLE_FIELDS),
-      createIndexConfig.getAsList(WriteConfig.SORTABLE_FIELDS),
-      createIndexConfig.getAsList(WriteConfig.HIDDEN_FIELDS),
-      createIndexConfig.getAsList(WriteConfig.SEARCHABLE_FIELDS),
-      createIndexConfig.getAsList(WriteConfig.FACETABLE_FIELDS),
+    SearchFieldsCreationOptions(
+      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.CREATE_INDEX_PREFIX), None),
+      createIndexConfig.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
+      createIndexConfig.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
+      createIndexConfig.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
+      createIndexConfig.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
+      createIndexConfig.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
       actionColumn
     )
   }
@@ -99,12 +99,12 @@ object WriteConfig {
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
 
   final val CREATE_INDEX_PREFIX = "createIndex."
-  final val KEY_FIELD = "keyField"
-  final val FILTERABLE_FIELDS = "filterableFields"
-  final val SORTABLE_FIELDS = "sortableFields"
-  final val HIDDEN_FIELDS = "hiddenFields"
-  final val SEARCHABLE_FIELDS = "searchableFields"
-  final val FACETABLE_FIELDS = "facetableFields"
+  final val KEY_FIELD_CONFIG = "keyField"
+  final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
+  final val DISABLE_SORTING_CONFIG = "disableSortingOn"
+  final val HIDDEN_FIELDS_CONFIG = "hiddenFields"
+  final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
+  final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
 
   /**
    * Create an instance from a simple map
