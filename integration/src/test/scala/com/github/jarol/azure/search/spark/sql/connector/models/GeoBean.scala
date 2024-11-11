@@ -37,7 +37,7 @@ object GeoBean {
   implicit object Deserializer extends DocumentDeserializer[GeoBean] {
     override def deserialize(document: JMap[String, AnyRef]): GeoBean = {
       GeoBean(
-        document.getProperty("type"),
+        document.getProperty[String]("type"),
         document.getArray[Double]("coordinates")
       )
     }

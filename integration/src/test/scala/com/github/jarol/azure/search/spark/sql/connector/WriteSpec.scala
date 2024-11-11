@@ -65,11 +65,11 @@ class WriteSpec
    * @tparam TOutput output type (should have an implicit [[PropertyDeserializer]] in scope)
    */
 
-  private def assertCorrectDecodingFor[TInput: TypeTag, TOutput: PropertyDeserializer](
-                                                                                        value: TInput,
-                                                                                        colName: String,
-                                                                                        expectedDecoding: TInput => TOutput
-                                                                                      ): Unit = {
+  private def assertWriteBehaviorFor[TInput: TypeTag, TOutput: PropertyDeserializer](
+                                                                                      value: TInput,
+                                                                                      colName: String,
+                                                                                      expectedDecoding: TInput => TOutput
+                                                                                    ): Unit = {
 
     // Create and write a simple document
     val expected = PairBean.apply[TInput](value)
@@ -87,10 +87,17 @@ class WriteSpec
     actual.value shouldBe expected.value.map(expectedDecoding)
   }
 
-  private def assertCorrectArrayDecodingFor[T: PropertyDeserializer](
-                                                                      input: CollectionBean[T],
-                                                                      expectedSearchType: SearchFieldDataType
-                                                                    ): Unit = {
+  /**
+   * Assert that a Spark internal array has been properly written to a Search index
+   * @param input input document
+   * @param expectedSearchType expected Search collection type
+   * @tparam T Java/Scala array inner type
+   */
+
+  private def assertWriteArrayBehaviorFor[T: PropertyDeserializer: TypeTag](
+                                                                             input: CollectionBean[T],
+                                                                             expectedSearchType: SearchFieldDataType
+                                                                           ): Unit = {
 
     // Drop index and write the document
     dropIndexIfExists(collectionBeansIndex, sleep = true)
@@ -124,25 +131,25 @@ class WriteSpec
 
             // Create index from schema
             createIndexFromSchemaOf[AtomicBean](atomicBeansIndex)
-            assertCorrectDecodingFor[String, String]("john", "stringValue", identity)
+            assertWriteBehaviorFor[String, String]("john", "stringValue", identity)
           }
         }
 
         describe("numeric values as") {
           it("Search strings") {
 
-            assertCorrectDecodingFor[Int, String](123, "stringValue", String.valueOf)
+            assertWriteBehaviorFor[Int, String](123, "stringValue", String.valueOf)
           }
 
           describe("Search numeric values") {
             it("of same type") {
 
-              assertCorrectDecodingFor[JLong, JLong](12345678910L, "longValue", identity)
+              assertWriteBehaviorFor[JLong, JLong](12345678910L, "longValue", identity)
             }
 
             it("of different type") {
 
-              assertCorrectDecodingFor[JDouble, JLong](123.456, "longValue", _.longValue())
+              assertWriteBehaviorFor[JDouble, JLong](123.456, "longValue", _.longValue())
             }
           }
         }
@@ -150,19 +157,19 @@ class WriteSpec
         describe("boolean values as") {
           it("Search strings") {
 
-            assertCorrectDecodingFor[Boolean, String](false, "stringValue", String.valueOf)
+            assertWriteBehaviorFor[Boolean, String](false, "stringValue", String.valueOf)
           }
 
           it("Search booleans") {
 
-            assertCorrectDecodingFor[Boolean, Boolean](false, "booleanValue", identity)
+            assertWriteBehaviorFor[Boolean, Boolean](false, "booleanValue", identity)
           }
         }
 
         describe("date values as") {
           it("Search strings") {
 
-            assertCorrectDecodingFor[Date, String](
+            assertWriteBehaviorFor[Date, String](
               Date.valueOf(LocalDate.now()),
               "stringValue",
               _.toLocalDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -171,7 +178,7 @@ class WriteSpec
 
           it("Search datetimeOffset") {
 
-            assertCorrectDecodingFor[Date, Timestamp](
+            assertWriteBehaviorFor[Date, Timestamp](
               Date.valueOf(LocalDate.now()),
               "timestampValue",
               d => Timestamp.from(d.toLocalDate.atTime(LocalTime.MIDNIGHT).toInstant(Constants.UTC_OFFSET))
@@ -182,7 +189,7 @@ class WriteSpec
         describe("timestamp values as") {
           it("Search strings") {
 
-            assertCorrectDecodingFor[Timestamp, String](
+            assertWriteBehaviorFor[Timestamp, String](
               Timestamp.from(Instant.now()),
               "stringValue",
               _.toInstant.atOffset(Constants.UTC_OFFSET).format(Constants.DATETIME_OFFSET_FORMATTER)
@@ -191,7 +198,7 @@ class WriteSpec
 
           it("Search datetimeOffset") {
 
-            assertCorrectDecodingFor[Timestamp, Timestamp](
+            assertWriteBehaviorFor[Timestamp, Timestamp](
               Timestamp.from(Instant.now()),
               "timestampValue",
               identity
@@ -203,7 +210,7 @@ class WriteSpec
           it("simple types") {
 
             val expected = CollectionBean[String]("hello", Some(Seq("john", "doe")))
-            assertCorrectArrayDecodingFor[String](expected, SearchFieldDataType.STRING)
+            assertWriteArrayBehaviorFor[String](expected, SearchFieldDataType.STRING)
           }
 
           it("complex types") {
@@ -218,7 +225,7 @@ class WriteSpec
               )
             )
 
-            assertCorrectArrayDecodingFor[SimpleBean](expected, SearchFieldDataType.COMPLEX)
+            assertWriteArrayBehaviorFor[SimpleBean](expected, SearchFieldDataType.COMPLEX)
           }
 
           it("geopoints") {
@@ -233,7 +240,7 @@ class WriteSpec
               )
             )
 
-            assertCorrectArrayDecodingFor[GeoBean](expected, SearchFieldDataType.GEOGRAPHY_POINT)
+            assertWriteArrayBehaviorFor[GeoBean](expected, SearchFieldDataType.GEOGRAPHY_POINT)
           }
         }
       }
