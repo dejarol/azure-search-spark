@@ -19,6 +19,7 @@ class WriteSpec
 
   private lazy val atomicBeansIndex = "write-atomic-beans"
   private lazy val collectionBeansIndex = "write-collection-beans"
+  private lazy val complexBeansIndex = "write-complex-beans"
 
   /**
    * Write some documents to a Search index
@@ -117,10 +118,48 @@ class WriteSpec
     documents should have size 1
     val actual = documents.head
     actual.id shouldBe input.id
-    actual.array shouldBe defined
-    input.array shouldBe defined
-    val (actualArray, expectedArray) = (actual.array.get, input.array.get)
-    actualArray should contain theSameElementsAs expectedArray
+    (actual.array, input.array) match {
+      case (Some(a), Some(b)) => a should contain theSameElementsAs b
+      case (None, None) =>
+      case _ => fail("Unexpected case (one of the arrays is empty, while the other doesn't)")
+    }
+  }
+
+  /**
+   * Asser that a Spark internal row has been properly written as a sub document to a Search index
+   * @param subDocument sub document
+   * @param expectedSearchFieldType expected Search field type for the sub document field
+   * @tparam T sub document type
+   */
+
+  private def assertWriteComplexBehavior[T <: Product: PropertyDeserializer: TypeTag](
+                                                                                       subDocument: T,
+                                                                                       expectedSearchFieldType: SearchFieldDataType
+                                                                                     ): Unit = {
+
+    // Drop index and write data
+    dropIndexIfExists(collectionBeansIndex, sleep = true)
+    val input: PairBean[T] = PairBean[T](subDocument)
+    writeUsingDataSource(complexBeansIndex, Seq(input), None, None)
+
+    // Assertion for sub document Search type
+    val maybeType = getIndexFields(collectionBeansIndex).collectFirst {
+      case sf if sf.getName.equals("value") && sf.getType.equals(expectedSearchFieldType) =>
+        sf.getType
+    }
+
+    maybeType shouldBe defined
+
+    // Assertion on retrieved document
+    val output: Seq[PairBean[T]] = readDocumentsAs[PairBean[T]](collectionBeansIndex)(
+      PairBean.deserializerFor[T]("value")
+    )
+
+    output should have size 1
+    val head = output.head
+    head.id shouldBe input.id
+    head.value shouldBe defined
+    head.value.get shouldBe subDocument
   }
 
   describe("Search dataSource") {
@@ -241,6 +280,25 @@ class WriteSpec
             )
 
             assertWriteArrayBehaviorFor[GeoBean](expected, SearchFieldDataType.GEOGRAPHY_POINT)
+            dropIndexIfExists(collectionBeansIndex, sleep = false)
+          }
+        }
+
+        describe("internal Rows as") {
+          it("sub documents") {
+
+            assertWriteComplexBehavior[SimpleBean](
+              SimpleBean("john", Some(LocalDate.now())),
+              SearchFieldDataType.COMPLEX
+            )
+          }
+
+          it("geo points") {
+
+            assertWriteComplexBehavior[GeoBean](
+              GeoBean(Seq(3.14, 4.56)),
+              SearchFieldDataType.GEOGRAPHY_POINT
+            )
           }
         }
       }
