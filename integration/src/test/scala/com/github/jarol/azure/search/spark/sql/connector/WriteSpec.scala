@@ -138,12 +138,12 @@ class WriteSpec
                                                                                      ): Unit = {
 
     // Drop index and write data
-    dropIndexIfExists(collectionBeansIndex, sleep = true)
+    dropIndexIfExists(complexBeansIndex, sleep = true)
     val input: PairBean[T] = PairBean[T](subDocument)
     writeUsingDataSource(complexBeansIndex, Seq(input), None, None)
 
     // Assertion for sub document Search type
-    val maybeType = getIndexFields(collectionBeansIndex).collectFirst {
+    val maybeType = getIndexFields(complexBeansIndex).collectFirst {
       case sf if sf.getName.equals("value") && sf.getType.equals(expectedSearchFieldType) =>
         sf.getType
     }
@@ -151,7 +151,7 @@ class WriteSpec
     maybeType shouldBe defined
 
     // Assertion on retrieved document
-    val output: Seq[PairBean[T]] = readDocumentsAs[PairBean[T]](collectionBeansIndex)(
+    val output: Seq[PairBean[T]] = readDocumentsAs[PairBean[T]](complexBeansIndex)(
       PairBean.deserializerFor[T]("value")
     )
 
