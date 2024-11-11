@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
+import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
@@ -27,12 +28,12 @@ class WriteSpec
    * @param extraOptions additional write options
    */
 
-  private def writeToIndex[T <: AbstractITDocument with Product: TypeTag](
-                                                                           index: String,
-                                                                           documents: Seq[T],
-                                                                           columnNames: Option[Seq[String]],
-                                                                           extraOptions: Option[Map[String, String]]
-                                                                         ): Unit = {
+  private def writeUsingDataSource[T <: AbstractITDocument with Product: TypeTag](
+                                                                                   index: String,
+                                                                                   documents: Seq[T],
+                                                                                   columnNames: Option[Seq[String]],
+                                                                                   extraOptions: Option[Map[String, String]]
+                                                                                 ): Unit = {
 
     // Create dataFrame
     val dataFrame = columnNames.map {
@@ -72,7 +73,7 @@ class WriteSpec
 
     // Create and write a simple document
     val expected = PairBean.apply[TInput](value)
-    writeToIndex(atomicBeansIndex, Seq(expected), Some(Seq("id", colName)), None)
+    writeUsingDataSource(atomicBeansIndex, Seq(expected), Some(Seq("id", colName)), None)
 
     // Retrieve the document using standard Java client API
     val output = readDocumentsAs[PairBean[TOutput]](atomicBeansIndex)(PairBean.deserializerFor[TOutput](colName))
@@ -84,6 +85,35 @@ class WriteSpec
     val actual = output.get
     actual.id shouldBe expected.id
     actual.value shouldBe expected.value.map(expectedDecoding)
+  }
+
+  private def assertCorrectArrayDecodingFor[T: PropertyDeserializer](
+                                                                      input: CollectionBean[T],
+                                                                      expectedSearchType: SearchFieldDataType
+                                                                    ): Unit = {
+
+    // Drop index and write the document
+    dropIndexIfExists(collectionBeansIndex, sleep = true)
+    writeUsingDataSource(collectionBeansIndex, Seq(input), None, None)
+    indexExists(collectionBeansIndex) shouldBe true
+
+    // Assert Search collection type
+    val maybeArrayType = getIndexFields(collectionBeansIndex).collectFirst {
+      case field if field.getName.equalsIgnoreCase("array") => field.getType
+    }
+
+    maybeArrayType shouldBe defined
+    maybeArrayType.get shouldBe SearchFieldDataType.collection(expectedSearchType)
+
+    // Read documents and run assertion
+    val documents = readDocumentsAs[CollectionBean[T]](collectionBeansIndex)(CollectionBean.deserializerFor[T])
+    documents should have size 1
+    val actual = documents.head
+    actual.id shouldBe input.id
+    actual.array shouldBe defined
+    input.array shouldBe defined
+    val (actualArray, expectedArray) = (actual.array.get, input.array.get)
+    actualArray should contain theSameElementsAs expectedArray
   }
 
   describe("Search dataSource") {
@@ -173,29 +203,37 @@ class WriteSpec
           it("simple types") {
 
             val expected = CollectionBean[String]("hello", Some(Seq("john", "doe")))
-            indexExists(collectionBeansIndex) shouldBe false
-            writeToIndex(collectionBeansIndex, Seq(expected), None, None)
-            indexExists(collectionBeansIndex) shouldBe true
-
-            val documents = readDocumentsAs[CollectionBean[String]](collectionBeansIndex)(CollectionBean.deserializerFor[String])
-            documents should have size 1
-            val actual = documents.head
-            actual.id shouldBe expected.id
-            actual.array shouldBe defined
-            expected.array shouldBe defined
-            val (actualArray, expectedArray) = (actual.array.get, expected.array.get)
-            actualArray should contain theSameElementsAs expectedArray
+            assertCorrectArrayDecodingFor[String](expected, SearchFieldDataType.STRING)
           }
 
           it("complex types") {
 
-            // TODO
+            val expected = CollectionBean[SimpleBean](
+              "hello",
+              Some(
+                Seq(
+                  SimpleBean("john", Some(LocalDate.now())),
+                  SimpleBean("jane", Some(LocalDate.now().plusDays(1)))
+                )
+              )
+            )
+
+            assertCorrectArrayDecodingFor[SimpleBean](expected, SearchFieldDataType.COMPLEX)
           }
 
           it("geopoints") {
 
-            // TODO
+            val expected = CollectionBean[GeoBean](
+              "hello",
+              Some(
+                Seq(
+                  GeoBean(Seq(3.14, 4.56)),
+                  GeoBean(Seq(6.57, 7.89))
+                )
+              )
+            )
 
+            assertCorrectArrayDecodingFor[GeoBean](expected, SearchFieldDataType.GEOGRAPHY_POINT)
           }
         }
       }

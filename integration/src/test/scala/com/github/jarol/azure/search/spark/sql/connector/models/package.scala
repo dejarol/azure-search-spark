@@ -25,13 +25,27 @@ package object models {
   /**
    * Get the property serializer for a type having an implicit [[DocumentSerializer]] in scope
    * @tparam T serializer type
-   * @return a property serializer for a type having an implicit [[DocumentSerializer]] in scope
+   * @return a property serializer for a sub document of type T
    */
 
   implicit def documentSerializerOf[T: DocumentSerializer]: PropertySerializer[T] = {
 
     val docSerializer = implicitly[DocumentSerializer[T]]
     (v1: T) => docSerializer.serialize(v1)
+  }
+
+  /**
+   * Get the property deserializer for a type having an implicit [[DocumentDeserializer]] in scope
+   * @tparam T deserializer type
+   * @return a property deserializer for a sub document of type T
+   */
+
+  implicit def documentDeserializerOf[T: DocumentDeserializer]: PropertyDeserializer[T] = {
+
+    val deserializer = implicitly[DocumentDeserializer[T]]
+    (value: Any) => deserializer.deserialize(
+      value.asInstanceOf[JMap[String, AnyRef]]
+    )
   }
 
   /**
@@ -94,6 +108,16 @@ package object models {
 
   implicit object DoubleSerializer extends PropertySerializer[Double] {
     override def serialize(v1: Double): JDouble = v1
+  }
+
+  /**
+   * Deserializer for double
+   */
+
+  implicit object DoubleDeserializer extends PropertyDeserializer[Double] {
+    override def deserialize(value: Any): Double = {
+      value.asInstanceOf[Double]
+    }
   }
 
   /**
