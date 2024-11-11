@@ -42,6 +42,23 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
   }
 
   /**
+   * Get an array property
+   * @param key key
+   * @tparam T array type (should have an implicit [[PropertyDeserializer]] in scope)
+   * @return the array value for given key
+   */
+
+  def getArray[T: PropertyDeserializer](key: String): Seq[T] = {
+
+    val deserializer = implicitly[PropertyDeserializer[T]]
+    JavaScalaConverters.listToSeq(
+      delegate.get(key).asInstanceOf[JList[AnyRef]]
+    ).map {
+      deserializer.deserialize
+    }
+  }
+
+  /**
    * Add an optional property, if defined
    * @param key key
    * @param value optional property
@@ -113,13 +130,8 @@ class MapOperations(private val delegate: JMap[String, AnyRef]) {
 
   def maybeGetArray[T: PropertyDeserializer](key: String): Option[Seq[T]] = {
 
-    val deserializer = implicitly[PropertyDeserializer[T]]
     Option(delegate.get(key)).map {
-      v => JavaScalaConverters.listToSeq(
-        v.asInstanceOf[JList[AnyRef]]
-      ).map {
-        deserializer.deserialize
-      }
+      _ => getArray[T](key)
     }
   }
 }
