@@ -55,5 +55,10 @@ public abstract class AbstractSchemaViolation
         );
     }
 
+    /**
+     * Get a string reporting violation details (it will be added to the description)
+     * @return null for no description, some description otherwise
+     */
+
     protected abstract @Nullable String detailsDescription();
 }

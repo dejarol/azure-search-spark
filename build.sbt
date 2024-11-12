@@ -21,6 +21,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-Ywarn-unused:privates"
 )
 
+ThisBuild / autoAPIMappings := true
 ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")

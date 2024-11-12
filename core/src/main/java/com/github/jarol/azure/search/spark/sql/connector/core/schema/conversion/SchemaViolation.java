@@ -39,5 +39,10 @@ public interface SchemaViolation {
 
     Type getType();
 
+    /**
+     * Get a description in JSON format
+     * @return description as JSON string
+     */
+
     String description();
 }
