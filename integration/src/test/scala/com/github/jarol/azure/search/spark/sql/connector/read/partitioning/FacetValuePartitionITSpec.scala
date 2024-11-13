@@ -28,7 +28,7 @@ class FacetValuePartitionITSpec
                                      ): Unit = {
 
     // Create index and write data
-    createIndexFromSchemaOf[PairBean[String]]
+    createIndexFromSchemaOf[PairBean[String]](indexName)
     writeDocuments(indexName, documents)(PairBean.serializerFor[String])
 
     // Get actual count
