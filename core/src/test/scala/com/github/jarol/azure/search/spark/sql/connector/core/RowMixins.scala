@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector
+package com.github.jarol.azure.search.spark.sql.connector.core
 
 import org.apache.spark.sql.Row
 

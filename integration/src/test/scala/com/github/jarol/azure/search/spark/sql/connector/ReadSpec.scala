@@ -1,11 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException, RowMixins}
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.sql.{DataFrame, Row}
-import org.scalatest.{BeforeAndAfterAll, Inspectors}
+import org.scalatest.Inspectors
 
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
@@ -15,7 +15,7 @@ class ReadSpec
   extends SearchSparkIntegrationSpec
     with FieldFactory
     with Inspectors
-    with BeforeAndAfterAll {
+    with RowMixins {
 
   private lazy val simpleBeansIndex = "read-simple-beans"
   private lazy val atomicBeansIndex = "read-atomic-beans"
