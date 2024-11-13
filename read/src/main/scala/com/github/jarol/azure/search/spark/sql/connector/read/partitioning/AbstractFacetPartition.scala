@@ -108,7 +108,7 @@ object AbstractFacetPartition {
   @throws[IllegalStateException]
   private def getFunction(searchType: SearchFieldDataType): FacetToStringFunction = {
 
-    if (searchType.isString || searchType.isDateTime) {
+    if (searchType.isString) {
       new FacetToStringFunction {
         override def apply(v1: Any): String = s"'$v1'"
       }

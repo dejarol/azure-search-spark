@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, PropertyDeserializer}
+import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, DocumentSerializer, ITDocumentSerializer, PropertyDeserializer, PropertySerializer}
 
 import java.util.{UUID, Map => JMap}
 
@@ -25,6 +25,21 @@ object PairBean {
       UUID.randomUUID().toString,
       Some(value)
     )
+  }
+
+  /**
+   * Create an ad-hoc [[DocumentSerializer]]
+   * @tparam T value type (should have an implicit [[PropertySerializer]] in scope)
+   * @return a document serializer
+   */
+
+  def serializerFor[T: PropertySerializer]: DocumentSerializer[PairBean[T]] = {
+
+    new ITDocumentSerializer[PairBean[T]] {
+      override protected def extend(document: PairBean[T], map: JMap[String, AnyRef]): JMap[String, AnyRef] = {
+        map.maybeAddProperty[T]("value", document.value)
+      }
+    }
   }
 
   /**
