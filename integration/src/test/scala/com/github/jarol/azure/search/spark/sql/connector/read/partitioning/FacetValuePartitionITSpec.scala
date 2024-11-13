@@ -1,9 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
 import com.github.jarol.azure.search.spark.sql.connector.models._
 
 class FacetValuePartitionITSpec
-  extends SearchPartitionITSpec {
+  extends SearchSparkITSpec {
 
   private lazy val indexName = "facet-partition-index"
   private lazy val facetFieldName = "value"
@@ -42,7 +43,7 @@ class FacetValuePartitionITSpec
 
   describe(anInstanceOf[FacetValuePartition]) {
     describe(SHOULD) {
-      describe("retrieve values matching") {
+      describe("retrieve documents matching") {
         it("only facet value") {
 
           val documents: Seq[PairBean[String]] = Seq(

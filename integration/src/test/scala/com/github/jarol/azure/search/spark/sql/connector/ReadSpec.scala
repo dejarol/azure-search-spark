@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
-  extends SearchSparkIntegrationSpec
+  extends SearchSparkITSpec
     with FieldFactory
     with Inspectors {
 

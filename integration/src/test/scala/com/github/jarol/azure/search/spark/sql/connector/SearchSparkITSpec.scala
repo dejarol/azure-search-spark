@@ -13,8 +13,8 @@ import scala.reflect.runtime.universe.TypeTag
  * Mix-in trait for Search-Spark integration tests
  */
 
-trait SearchSparkIntegrationSpec
-  extends SearchSpec
+trait SearchSparkITSpec
+  extends SearchITSpec
     with SparkSpec
     with BeforeAndAfterAll {
 
