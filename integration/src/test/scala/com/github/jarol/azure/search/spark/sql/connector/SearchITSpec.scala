@@ -13,7 +13,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaSc
  * Trait to mix in for integration tests that require the interaction with a Search service
  */
 
-trait SearchSpec
+trait SearchITSpec
   extends BasicSpec {
 
   protected final lazy val SEARCH_END_POINT = sys.env("AZURE_SEARCH_ENDPOINT")

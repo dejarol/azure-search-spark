@@ -14,7 +14,7 @@ import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
 class WriteSpec
-  extends SearchSparkIntegrationSpec
+  extends SearchSparkITSpec
     with Inspectors {
 
   private lazy val atomicBeansIndex = "write-atomic-beans"
