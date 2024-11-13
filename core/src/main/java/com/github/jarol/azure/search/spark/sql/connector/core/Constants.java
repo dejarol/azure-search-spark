@@ -9,7 +9,17 @@ import java.time.format.DateTimeFormatter;
 
 public final class Constants {
 
-    public static final String DATASOURCE_NAME = "azure.search";
+    /**
+     * Datasource name
+     */
+
+    public static final String DATASOURCE_NAME = "azsearch";
+
+    /**
+     * Datasource key prefix
+     */
+
+    public static final String DATASOURCE_KEY_PREFIX = "azure.search";
 
     /**
      * Maximum number of documents that can be read per partition.

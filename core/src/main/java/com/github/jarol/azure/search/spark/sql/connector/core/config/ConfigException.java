@@ -27,7 +27,7 @@ public class ConfigException
                         "or configured at the session level prefixed by 'spark.datasource.%s.'",
                 DataFrameReader.class.getSimpleName(),
                 DataFrameWriter.class.getSimpleName(),
-                Constants.DATASOURCE_NAME
+                Constants.DATASOURCE_KEY_PREFIX
         );
 
         PATH_OR_INDEX_SUPPLIER = () -> String.format("The index name should be provided either as option 'path' " +
