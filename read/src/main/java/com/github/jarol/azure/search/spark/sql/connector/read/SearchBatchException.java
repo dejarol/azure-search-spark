@@ -42,7 +42,7 @@ public class SearchBatchException
 
         String message = String.format(
                 "Found %s partition(s) breaking the limit of %s documents per partition (%s). " +
-                        "Try to change the partitioner options",
+                        "Try to change the partitioner options, or use a different partitioner",
                 searchPartitions.size(),
                 Constants.DOCUMENTS_PER_PARTITION_LIMIT,
                 partitionDescription
