@@ -41,7 +41,9 @@ class SearchTable(
     new SearchScanBuilder(
       schema(),
       ReadConfig(
-        JavaScalaConverters.javaMapToScala(options)
+        JavaScalaConverters.javaMapToScala(
+          options
+        )
       )
     )
   }
@@ -50,7 +52,9 @@ class SearchTable(
 
     new SearchWriteBuilder(
       WriteConfig(
-        JavaScalaConverters.javaMapToScala(info.options())
+        JavaScalaConverters.javaMapToScala(
+          info.options()
+        )
       ),
       info.schema()
     )

@@ -91,5 +91,5 @@ class SearchTableProvider
    * @return prefix for datasource properties at session level
    */
 
-  override def keyPrefix(): String = Constants.DATASOURCE_NAME
+  override def keyPrefix(): String = Constants.DATASOURCE_KEY_PREFIX
 }
