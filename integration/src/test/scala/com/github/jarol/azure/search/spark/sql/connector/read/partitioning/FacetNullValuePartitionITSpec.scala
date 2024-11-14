@@ -16,6 +16,13 @@ class FacetNullValuePartitionITSpec
     case None => true
   }
 
+  override def beforeAll(): Unit = {
+
+    // Clean up and create index
+    super.beforeAll()
+    createIndexFromSchemaOf[PairBean[String]](indexName)
+  }
+
   private implicit lazy val serializer: DocumentSerializer[PairBean[String]] = PairBean.serializerFor[String]
   private implicit lazy val idGetter: DocumentIDGetter[PairBean[String]] = idGetterFor()
 
@@ -41,12 +48,11 @@ class FacetNullValuePartitionITSpec
             FacetNullValuePartition(None, None, facetField, Seq(john)),
             valueIsNullOrNotEqualToJohn
           )
-
-          deletedDocuments(indexName, documents)(idGetterFor[PairBean[String]]())
         }
 
         it(s"that match a filter and its $FACET_FIELD_IS_NULL or $NOT_MATCHING_OTHER_VALUES") {
 
+          truncateIndex(indexName)
           val documents: Seq[PairBean[String]] = Seq(
             PairBean("1", None),
             PairBean("2", Some(john)),

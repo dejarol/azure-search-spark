@@ -22,6 +22,29 @@ class FacetValuePartitionITSpec
     createIndexFromSchemaOf[PairBean[String]](indexName)
   }
 
+  /**
+   * Create a partition instance
+   * @param inputFilter filter
+   * @param facetField facet field
+   * @param facet facet value
+   * @return a partition
+   */
+
+  private def createPartition(
+                               inputFilter: Option[String],
+                               facetField: String,
+                               facet: String
+                             ): SearchPartition = {
+
+    FacetValuePartition(
+      0,
+      inputFilter,
+      None,
+      facetField,
+      f"'$facet'"
+    )
+  }
+
   describe(anInstanceOf[FacetValuePartition]) {
     describe(SHOULD) {
       describe("retrieve documents matching") {
@@ -34,19 +57,17 @@ class FacetValuePartitionITSpec
           )
 
           // Assertion
-          assertCountPerPartition(
+          assertCountPerPartition[PairBean[String]](
             documents,
             indexName,
-            FacetValuePartition(0, None, None, facetField, f"'$john'"),
+            createPartition(None, facetField, john),
             nameEqJohn
           )
-
-          // Delete document before next test
-          deletedDocuments(indexName, documents)(idGetterFor[PairBean[String]]())
         }
 
         it("both filter and facet value") {
 
+          truncateIndex(indexName)
           val documents: Seq[PairBean[String]] = Seq(
             PairBean(matchingId, Some(john)),
             PairBean("2", Some(john))
@@ -57,7 +78,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            FacetValuePartition(0, Some(s"id eq '$matchingId'"), None, facetField, f"'$john'"),
+            createPartition(Some(s"id eq '$matchingId'"), facetField, john),
             nameEqJohnAndMatchingId
           )
         }

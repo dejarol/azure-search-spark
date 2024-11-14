@@ -24,22 +24,26 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
  * @param upperBound range upper bound (exclusive)
  */
 
-case class RangePartition(override protected val partitionId: Int,
-                          override protected val inputFilter: Option[String],
-                          override protected val maybeSelect: Option[Seq[String]],
-                          private val fieldName: String,
-                          private val lowerBound: Option[String],
-                          private val upperBound: Option[String])
+case class RangePartition(
+                           override protected val partitionId: Int,
+                           override protected val inputFilter: Option[String],
+                           override protected val maybeSelect: Option[Seq[String]],
+                           private val fieldName: String,
+                           private val lowerBound: Option[String],
+                           private val upperBound: Option[String])
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
 
   override def getSearchFilter: String = {
 
-    // Collect defined filters
-    val lowerFilter = lowerBound.map(v => s"$fieldName ge $v")
-    val upperFilter = upperBound.map(v => s"$fieldName lt $v")
-    val definedFilters = Seq(lowerFilter, upperFilter, inputFilter)
-      .collect {
-        case Some(value) => value
+    val rangeFilter: Option[String] = (lowerBound, upperBound) match {
+      case (Some(l), Some(u)) => Some(s"${getGeFilter(l)} and ${getLtFilter(u)}")
+      case (Some(l), None) => Some(getGeFilter(l))
+      case (None, Some(u)) => Some(s"${getLtFilter(u)} or $fieldName eq null")
+      case (None, None) => None
+    }
+
+    val definedFilters: Seq[String] = Seq(rangeFilter, inputFilter).collect {
+      case Some(value) => value
     }
 
     if (definedFilters.isEmpty) {
@@ -48,6 +52,10 @@ case class RangePartition(override protected val partitionId: Int,
       definedFilters.mkString(" and ")
     }
   }
+
+  private def getGeFilter(value: String): String = s"$fieldName ge $value"
+
+  private def getLtFilter(value: String) = s"$fieldName lt $value"
 }
 
 object RangePartition {
