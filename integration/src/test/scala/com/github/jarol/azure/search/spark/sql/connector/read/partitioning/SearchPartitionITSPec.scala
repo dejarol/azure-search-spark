@@ -12,7 +12,7 @@ import com.github.jarol.azure.search.spark.sql.connector.models._
 trait SearchPartitionITSPec
   extends SearchSparkITSpec {
 
-  protected final val defaultIdGetter: DocumentIDGetter[SearchDocument] = (document: SearchDocument) => document.getProperty("id")
+  protected final val defaultIdGetter: DocumentIDGetter[SearchDocument] = (document: SearchDocument) => document.getProperty[String]("id")
 
   /**
    * Assert that a [[SearchPartition]] retrieves the proper set of documents
