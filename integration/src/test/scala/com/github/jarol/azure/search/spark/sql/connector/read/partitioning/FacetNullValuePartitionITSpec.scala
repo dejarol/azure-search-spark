@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer}
 import com.github.jarol.azure.search.spark.sql.connector.models._
 
@@ -45,7 +46,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            FacetNullValuePartition(None, None, facetField, Seq(john)),
+            FacetNullValuePartition(None, None, facetField, Seq(StringUtils.singleQuoted(john))),
             valueIsNullOrNotEqualToJohn
           )
         }
@@ -64,7 +65,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            FacetNullValuePartition(None, None, facetField, Seq(john)),
+            FacetNullValuePartition(None, None, facetField, Seq(StringUtils.singleQuoted(john))),
             expectedPredicate
           )
         }

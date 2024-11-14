@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.Time
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.{StringUtils, Time}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 
 import java.time.OffsetDateTime
@@ -206,7 +206,7 @@ object RangeFactory {
     override protected def getStride(delta: Long, numPartitions: Int): Long = delta / numPartitions
     override protected def add(value: OffsetDateTime, delta: Long): OffsetDateTime = value.plus(delta, ChronoUnit.SECONDS)
     override protected def tryFromString(value: String): Try[OffsetDateTime] = Time.tryFromDate(value).orElse(Time.tryFromTimestamp(value))
-    override protected def asString(value: OffsetDateTime): String = s"'${value.format(Constants.DATETIME_OFFSET_FORMATTER)}'"
+    override protected def asString(value: OffsetDateTime): String = StringUtils.singleQuoted(value.format(Constants.DATETIME_OFFSET_FORMATTER))
   }
 
   case object Double extends RangeFactory[Double, Double] {
