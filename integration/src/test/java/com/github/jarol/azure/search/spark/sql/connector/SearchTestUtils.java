@@ -9,10 +9,14 @@ import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
 import com.azure.search.documents.models.SearchOptions;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Utility for Java-based integration test methods
@@ -74,5 +78,50 @@ public final class SearchTestUtils {
         // Create the batch and index documents
         IndexDocumentsBatch<SearchDocument> batch = new IndexDocumentsBatch<SearchDocument>().addActions(actions);
         searchClient.indexDocuments(batch);
+    }
+
+    /**
+     * Delete documents from an index
+     * @param searchClient Search client
+     * @param documents documents
+     * @param idGetter id getter for given documents
+     * @param <TDocument> document type
+     */
+
+    public static <TDocument> void deleteDocuments(
+            @NotNull SearchClient searchClient,
+            @NotNull List<TDocument> documents,
+            @NotNull DocumentIDGetter<TDocument> idGetter
+    ) {
+
+        List<String> keyValues = documents.stream()
+                .map(idGetter::getId).
+                collect(Collectors.toList());
+
+        searchClient.indexDocuments(
+                new IndexDocumentsBatch<SearchDocument>()
+                .addDeleteActions("id", keyValues)
+        );
+    }
+
+    /**
+     * Get the set of documents retrieved by a {@link SearchPartition}
+     * @param partition partition
+     * @param client Search client
+     * @return the documents for this given partition
+     */
+
+    public static List<SearchDocument> getPartitionDocuments(
+            @NotNull SearchPartition partition,
+            @NotNull SearchClient client
+    ) {
+
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(
+                        partition.getPartitionResults(client),
+                        Spliterator.ORDERED
+                ), false
+        ).map(searchResult -> searchResult.getDocument(SearchDocument.class))
+                .collect(Collectors.toList());
     }
 }

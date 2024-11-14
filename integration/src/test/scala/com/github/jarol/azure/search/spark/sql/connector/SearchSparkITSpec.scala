@@ -22,7 +22,7 @@ trait SearchSparkITSpec
    * Clean up all created indexes, at spec start-up
    */
 
-  override final def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
 
     listIndexes().foreach {
       index => dropIndexIfExists(index, sleep = false)
