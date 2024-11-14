@@ -42,10 +42,14 @@ class RangePartitionSpec
         secondFilter should include (inputFilter)
         secondFilter should include (s"$fieldName ge $lb")
 
-        val thirdFilter = getSearchFilter(Some(inputFilter), Some(lb), Some(ub))
-        thirdFilter should include (inputFilter)
-        thirdFilter should include (s"$fieldName ge $lb")
+        val thirdFilter = getSearchFilter(None, None, Some(ub))
         thirdFilter should include (s"$fieldName lt $ub")
+        thirdFilter should include (s"$fieldName eq null")
+
+        val fourthFilter = getSearchFilter(Some(inputFilter), Some(lb), Some(ub))
+        fourthFilter should include (inputFilter)
+        fourthFilter should include (s"$fieldName ge $lb")
+        fourthFilter should include (s"$fieldName lt $ub")
       }
     }
   }
@@ -57,7 +61,9 @@ class RangePartitionSpec
         val values = Seq("1", "2", "3")
         val partitions = RangePartition.createCollection(None, None, fieldName, values)
         partitions should have size(values.size + 1)
-        partitions.head.getSearchFilter shouldBe s"$fieldName lt ${values.head}"
+        val headFilter = partitions.head.getSearchFilter
+        headFilter should include (s"$fieldName lt ${values.head}")
+        headFilter should include (s"$fieldName eq null")
         partitions.last.getSearchFilter shouldBe s"$fieldName ge ${values.last}"
       }
     }

@@ -49,21 +49,17 @@ trait SearchPartitionITSPec
   }
 
   /**
-   * Delete documents from an index
+   * Truncate an index, if it exists
    * @param index index name
-   * @param documents document to delete
-   * @tparam T document type (should have an implicit [[DocumentIDGetter]] in scope)
    */
 
-  protected final def deletedDocuments[T: DocumentIDGetter](
-                                                             index: String,
-                                                             documents: Seq[T]
-                                                           ): Unit = {
+  protected final def truncateIndex(index: String): Unit = {
 
-    SearchTestUtils.deleteDocuments(
-      getSearchClient(index),
-      JavaScalaConverters.seqToList(documents),
-      implicitly[DocumentIDGetter[T]]
-    )
+    if (indexExists(index)) {
+      SearchTestUtils.truncateIndex(
+        getSearchClient(index),
+        defaultIdGetter
+      )
+    }
   }
 }

@@ -22,10 +22,11 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTyp
  * @param facetFieldName name of the field used for faceting values
  */
 
-abstract class AbstractFacetPartition(override protected val partitionId: Int,
-                                      override protected val inputFilter: Option[String],
-                                      override protected val maybeSelect: Option[Seq[String]],
-                                      protected val facetFieldName: String)
+abstract class AbstractFacetPartition(
+                                       override protected val partitionId: Int,
+                                       override protected val inputFilter: Option[String],
+                                       override protected val maybeSelect: Option[Seq[String]],
+                                       protected val facetFieldName: String)
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
 
   override final def getSearchFilter: String = {
