@@ -35,6 +35,17 @@ package object models {
   }
 
   /**
+   * Create an instance of [[DocumentIDGetter]] for a generic document
+   * @tparam T document type (must extend [[ITDocument]])
+   * @return an id getter for given document type
+   */
+
+  implicit def idGetterFor[T <: ITDocument](): DocumentIDGetter[T] = {
+
+    (document: T) => document.id()
+  }
+
+  /**
    * Get the property deserializer for a type having an implicit [[DocumentDeserializer]] in scope
    * @tparam T deserializer type
    * @return a property deserializer for a sub document of type T
