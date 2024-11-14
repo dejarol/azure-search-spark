@@ -105,6 +105,21 @@ public final class SearchTestUtils {
     }
 
     /**
+     * Truncate an index by deleting all documents
+     * @param client client
+     * @param idGetter id getter for {@link SearchDocument}
+     */
+
+    public static void truncateIndex(
+            @NotNull SearchClient client,
+            @NotNull DocumentIDGetter<SearchDocument> idGetter
+    ) {
+
+        List<SearchDocument> allDocuments = readDocuments(client);
+        deleteDocuments(client, allDocuments, idGetter);
+    }
+
+    /**
      * Get the set of documents retrieved by a {@link SearchPartition}
      * @param partition partition
      * @param client Search client
