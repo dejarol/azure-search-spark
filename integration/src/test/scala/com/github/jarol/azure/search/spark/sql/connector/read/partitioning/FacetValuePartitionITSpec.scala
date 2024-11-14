@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer}
 
@@ -41,7 +42,7 @@ class FacetValuePartitionITSpec
       inputFilter,
       None,
       facetField,
-      f"'$facet'"
+      StringUtils.singleQuoted(facet)
     )
   }
 

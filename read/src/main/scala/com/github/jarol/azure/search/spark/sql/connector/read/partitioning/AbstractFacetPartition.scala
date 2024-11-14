@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -111,7 +112,7 @@ object AbstractFacetPartition {
 
     if (searchType.isString) {
       new FacetToStringFunction {
-        override def apply(v1: Any): String = s"'$v1'"
+        override def apply(v1: Any): String = StringUtils.singleQuoted(v1.asInstanceOf[String])
       }
     } else if (searchType.isNumeric) {
       new FacetToStringFunction {
