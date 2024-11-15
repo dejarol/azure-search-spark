@@ -27,13 +27,14 @@ abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
                                        override protected val inputFilter: Option[String],
                                        override protected val maybeSelect: Option[Seq[String]],
-                                       protected val facetFieldName: String)
+                                       protected val facetFieldName: String
+                                     )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
 
   override final def getSearchFilter: String = {
 
     inputFilter match {
-      case Some(value) => s"$value and $facetFilter"
+      case Some(value) => s"$value and ($facetFilter)"
       case None => facetFilter
     }
   }
