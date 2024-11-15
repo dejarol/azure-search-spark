@@ -8,6 +8,20 @@ import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 
 import java.util.{List => JList}
 
+/**
+ * Range partitioner
+ * <br>
+ * Given a field <b>f1</b> that is filterable, a number of partitions <b>n</b>, a lower bound value and an upper bound value for such field,
+ * it will generate <b>n</b> partitions according to the following behavior
+ *  - one partition will read documents whose value for <b>f1</b> are null or lower than the lower bound
+ *  - one partition will read document whose value for <b>f1</b> is greater or equal than the upper bound
+ *  - <b>n - 2</b> partitions will retrieve documents whose values for <b>f1</b> is greater or equal than the lower bound and less than the upper bound,
+ *  using <b>n - 2</b> uniformly distributed range of values
+ *
+ *  Suitable for cases where there exists a generally-speaking equally distributed field
+ * @param readConfig read configuration
+ */
+
 case class RangePartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
 

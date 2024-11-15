@@ -17,6 +17,9 @@ class FacetNullValuePartitionITSpec
     case None => true
   }
 
+  private implicit lazy val serializer: DocumentSerializer[PairBean[String]] = PairBean.serializerFor[String]
+  private implicit lazy val idGetter: DocumentIDGetter[PairBean[String]] = idGetterFor()
+
   override def beforeAll(): Unit = {
 
     // Clean up and create index
@@ -24,8 +27,25 @@ class FacetNullValuePartitionITSpec
     createIndexFromSchemaOf[PairBean[String]](indexName)
   }
 
-  private implicit lazy val serializer: DocumentSerializer[PairBean[String]] = PairBean.serializerFor[String]
-  private implicit lazy val idGetter: DocumentIDGetter[PairBean[String]] = idGetterFor()
+  /**
+   * Create a partition instance
+   * @param inputFilter input filter
+   * @param facets facets
+   * @return a partition instance
+   */
+
+  private def createPartition(
+                               inputFilter: Option[String],
+                               facets: Seq[String]
+                             ): SearchPartition = {
+
+    FacetNullValuePartition(
+      inputFilter,
+      None,
+      facetField,
+      facets.map(StringUtils.singleQuoted)
+    )
+  }
 
   describe(anInstanceOf[FacetNullValuePartition]) {
     describe(SHOULD) {
@@ -46,16 +66,16 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            FacetNullValuePartition(None, None, facetField, Seq(StringUtils.singleQuoted(john))),
+            createPartition(None, Seq(john)),
             valueIsNullOrNotEqualToJohn
           )
         }
 
-        it(s"that match a filter and its $FACET_FIELD_IS_NULL or $NOT_MATCHING_OTHER_VALUES") {
+        it(s"that match the input filter as well") {
 
           truncateIndex(indexName)
           val documents: Seq[PairBean[String]] = Seq(
-            PairBean("1", None),
+            PairBean(matchingId, None),
             PairBean("2", Some(john)),
             PairBean("3", Some(jane))
           )
@@ -65,7 +85,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            FacetNullValuePartition(None, None, facetField, Seq(StringUtils.singleQuoted(john))),
+            createPartition(Some(s"id eq '$matchingId'"), Seq(john)),
             expectedPredicate
           )
         }
