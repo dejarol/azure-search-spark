@@ -37,7 +37,7 @@ class AbstractFacetPartitionSpec
           val inputFilter = "inputFilter"
           createPartition(
             Some(inputFilter)
-          ).getSearchFilter shouldBe s"$inputFilter and $defaultFacetFilter"
+          ).getSearchFilter shouldBe s"$inputFilter and ($defaultFacetFilter)"
 
           // Empty input filter: partition filter should consist only of facet filter
           createPartition(None).getSearchFilter shouldBe defaultFacetFilter
