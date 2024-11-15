@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 
-import java.util
+import java.util.{Collections => JCollections, List => JList}
 
 /**
  * Simple partitioner that will generate a single partition
@@ -12,9 +12,9 @@ import java.util
 case class SinglePartitionPartitioner(override protected val readConfig: ReadConfig)
   extends AbstractSearchPartitioner(readConfig) {
 
-  override def createPartitions(): util.List[SearchPartition] = {
+  override def createPartitions(): JList[SearchPartition] = {
 
-    util.Collections.singletonList(
+    JCollections.singletonList(
       SimpleSearchPartition(
         0,
         readConfig.filter,

@@ -12,8 +12,8 @@ import java.util.{List => JList}
 
 /**
  * Faceted partitioner.
- *
- * Given a field <b>f1</b> which is filterable and facetable, it will generate partitions according to the following behavior
+ * <br>
+ * Given a field <b>f1</b> that is filterable and facetable, it will generate partitions according to the following behavior
  *  - if a value of <b>n</b> is given for [[ReadConfig.NUM_PARTITIONS_CONFIG]], it will generate <b>n</b> partitions
  *    where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
  *    most frequent value of field  <b>f1</b>,
