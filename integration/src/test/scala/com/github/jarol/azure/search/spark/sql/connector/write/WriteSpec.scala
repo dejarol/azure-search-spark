@@ -1,9 +1,9 @@
-package com.github.jarol.azure.search.spark.sql.connector
+package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.write.WriteConfig
+import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, SearchSparkITSpec}
 import org.apache.spark.sql.SaveMode
 import org.scalatest.Inspectors
 
