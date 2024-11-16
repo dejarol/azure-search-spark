@@ -4,14 +4,12 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataTy
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointType
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory}
 import org.apache.spark.sql.types._
-import org.scalatest.Inspectors
 
 import java.util.{List => JList}
 
 class SchemaUtilsSpec
   extends BasicSpec
-    with FieldFactory
-      with Inspectors {
+    with FieldFactory {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
 

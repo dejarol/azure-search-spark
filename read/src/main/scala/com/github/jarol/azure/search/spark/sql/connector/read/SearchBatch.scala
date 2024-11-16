@@ -7,8 +7,9 @@ import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionRead
 import org.apache.spark.sql.types.StructType
 
 /**
- * Batch for Search dataSource
+ * [[Batch]] implementation for Search dataSource
  * @param readConfig read configuration
+ * @param schema schema
  */
 
 class SearchBatch(private val readConfig: ReadConfig,
@@ -25,12 +26,7 @@ class SearchBatch(private val readConfig: ReadConfig,
     log.info(s"Generated ${partitionsList.size} partition(s) using ${partitioner.getClass.getName}")
 
     // Filter the generated partitions
-    val invalidPartitions = partitionsList.filter {
-      partition => readConfig.withSearchClientDo {
-        partition.getCountPerPartition
-      } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
-    }
-
+    val invalidPartitions = getInvalidPartitions(partitionsList)
     if (invalidPartitions.nonEmpty) {
       throw SearchBatchException.forInvalidPartitions(
         JavaScalaConverters.seqToList(
@@ -43,4 +39,24 @@ class SearchBatch(private val readConfig: ReadConfig,
   }
 
   override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, schema)
+
+  /**
+   * Filter the given set of partitions, preserving only invalid ones
+   * <br>
+   * A partition is considered invalid if it's expected to retrieve more documents than the threshold set by
+   * the service itself
+   * @param partitions partitions
+   * @return a list of invalid partitions
+   */
+
+  private def getInvalidPartitions(partitions: Seq[SearchPartition]): Seq[SearchPartition] = {
+
+    // Filter partitions, preserving the ones whose document count exceeds service threshold
+    partitions.filter {
+      partition =>
+        readConfig.withSearchClientDo {
+          partition.getCountPerPartition
+        } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
+    }
+  }
 }

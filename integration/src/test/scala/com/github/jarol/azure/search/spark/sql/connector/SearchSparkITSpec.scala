@@ -16,7 +16,7 @@ import scala.reflect.runtime.universe.TypeTag
 trait SearchSparkITSpec
   extends SearchITSpec
     with SparkSpec
-    with BeforeAndAfterAll {
+      with BeforeAndAfterAll {
 
   /**
    * Clean up all created indexes, at spec start-up

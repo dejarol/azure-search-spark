@@ -4,12 +4,10 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
-import org.scalatest.Inspectors
 
 class SearchFieldsCreationOptionsSpec
   extends BasicSpec
-    with FieldFactory
-      with Inspectors {
+    with FieldFactory {
 
   private type OSS = Option[Seq[String]]
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")

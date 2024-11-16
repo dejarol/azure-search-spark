@@ -1,15 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.FieldFactory
 import org.apache.spark.sql.types.{DataTypes, StructType}
-import org.scalatest.{BeforeAndAfterEach, Inspectors}
+import org.scalatest.BeforeAndAfterEach
 
-class SearchWriteBuilderSpec
+class SearchWriteBuilderITSpec
   extends SearchITSpec
-    with FieldFactory
-    with BeforeAndAfterEach
-    with Inspectors {
+    with BeforeAndAfterEach {
 
   private lazy val idFieldName = "id"
   private lazy val testIndex = "write-builder-index"

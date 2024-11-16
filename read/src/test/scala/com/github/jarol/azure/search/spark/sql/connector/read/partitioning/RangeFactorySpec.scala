@@ -1,14 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
-import org.scalatest.Inspectors
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 
 class RangeFactorySpec
-  extends BasicSpec
-    with Inspectors {
+  extends BasicSpec {
 
   describe(anInstanceOf[RangeFactory[_, _]]) {
     describe(SHOULD) {

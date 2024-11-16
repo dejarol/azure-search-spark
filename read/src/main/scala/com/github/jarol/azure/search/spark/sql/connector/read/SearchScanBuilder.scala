@@ -6,12 +6,12 @@ import org.apache.spark.sql.types.StructType
 
 /**
  * Scan builder for Search DataSource
- * @param schema index schema (either inferred or defined by the user)
  * @param readConfig read configuration
+ * @param schema index schema (either inferred or defined by the user)
  */
 
-class SearchScanBuilder(private val schema: StructType,
-                        private val readConfig: ReadConfig)
+class SearchScanBuilder(private val readConfig: ReadConfig,
+                        private val schema: StructType)
   extends ScanBuilder {
 
   /**
@@ -26,7 +26,7 @@ class SearchScanBuilder(private val schema: StructType,
     if (!readConfig.indexExists) {
       throw new IndexDoesNotExistException(readConfig.getIndex)
     } else {
-      new SearchScan(schema, readConfig)
+      new SearchScan(readConfig, schema)
     }
   }
 }
