@@ -5,7 +5,6 @@ import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, SearchSparkITSpec}
 import org.apache.spark.sql.SaveMode
-import org.scalatest.Inspectors
 
 import java.lang.{Double => JDouble, Long => JLong}
 import java.sql.{Date, Timestamp}
@@ -14,8 +13,7 @@ import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
 class WriteSpec
-  extends SearchSparkITSpec
-    with Inspectors {
+  extends SearchSparkITSpec {
 
   private lazy val atomicBeansIndex = "write-atomic-beans"
   private lazy val collectionBeansIndex = "write-collection-beans"

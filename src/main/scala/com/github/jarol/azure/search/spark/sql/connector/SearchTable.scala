@@ -39,12 +39,12 @@ class SearchTable(
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
     new SearchScanBuilder(
-      schema(),
       ReadConfig(
         JavaScalaConverters.javaMapToScala(
           options
         )
-      )
+      ),
+      schema()
     )
   }
 

@@ -3,13 +3,20 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
-import org.scalatest.Inspectors
 
 class WriteConfigSpec
-  extends BasicSpec
-    with Inspectors {
+  extends BasicSpec {
 
-  private def assertDefinedAndContaining(actual: Option[Seq[String]], expected: Seq[String]): Unit = {
+  /**
+   * Assert that an optional collection of strings is defined and contains the same elements w.r.t an expected set
+   * @param actual actual set (optional)
+   * @param expected expected set
+   */
+
+  private def assertDefinedAndContaining(
+                                          actual: Option[Seq[String]],
+                                          expected: Seq[String]
+                                        ): Unit = {
 
     actual shouldBe defined
     actual.get should contain theSameElementsAs expected

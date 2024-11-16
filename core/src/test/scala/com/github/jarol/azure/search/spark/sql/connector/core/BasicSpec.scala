@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core
 
+import org.scalatest.Inspectors
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -11,7 +12,7 @@ import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 trait BasicSpec
   extends AnyFunSpec
-    with Matchers {
+    with Matchers with Inspectors {
 
   protected final val SHOULD = "should"
   protected final val SHOULD_NOT = "should not"

@@ -1,12 +1,29 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, IndexDoesNotExistException}
-import org.apache.spark.sql.types.DataTypes
+import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
+import org.apache.spark.sql.types.{DataTypes, StructType}
 
 class SearchScanBuilderITSpec
-  extends SearchITSpec
-    with FieldFactory {
+  extends SearchITSpec {
+
+  /**
+   * Create a [[SearchScanBuilder]] instance
+   * @param options read options
+   * @param schema schema
+   * @return a builder instance
+   */
+
+  private def createScanBuilder(
+                                 options: Map[String, String],
+                                 schema: StructType
+                               ): SearchScanBuilder = {
+
+    new SearchScanBuilder(
+      ReadConfig(options),
+      schema
+    )
+  }
 
   describe(anInstanceOf[SearchScanBuilder]) {
     describe(SHOULD) {
@@ -14,12 +31,10 @@ class SearchScanBuilderITSpec
 
         val index = "sca-builder-index"
         indexExists(index) shouldBe false
-        val scanBuilder = new SearchScanBuilder(
+        val scanBuilder = createScanBuilder(
+          optionsForAuthAndIndex(index),
           createStructType(
             createStructField("name", DataTypes.StringType)
-          ),
-          ReadConfig(
-            optionsForAuthAndIndex(index)
           )
         )
 
