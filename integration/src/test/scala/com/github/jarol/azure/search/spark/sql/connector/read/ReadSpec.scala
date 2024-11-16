@@ -1,8 +1,8 @@
-package com.github.jarol.azure.search.spark.sql.connector
+package com.github.jarol.azure.search.spark.sql.connector.read
 
+import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.Inspectors

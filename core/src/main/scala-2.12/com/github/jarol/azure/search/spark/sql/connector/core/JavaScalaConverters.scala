@@ -19,7 +19,7 @@ object JavaScalaConverters {
   def seqToList[T](seq: Seq[T]): JList[T] = seq.asJava
 
   /**
-   * Convert a java list to a seq
+   * Convert a Java list to a seq
    * @param list java list
    * @tparam T list type
    * @return a seq
@@ -28,7 +28,7 @@ object JavaScalaConverters {
   def listToSeq[T](list: JList[T]): Seq[T] = list.asScala
 
   /**
-   * Convert a java map to a scala map
+   * Convert a Java map to a Scala map
    * @param map map
    * @tparam K key type
    * @tparam V value type
@@ -36,4 +36,14 @@ object JavaScalaConverters {
    */
 
   def javaMapToScala[K, V](map: JMap[K, V]): Map[K, V] = map.asScala.toMap
+
+  /**
+   * Convert a Scala map to a Java map
+   * @param map Scala map
+   * @tparam K key type
+   * @tparam V value type
+   * @return a Java map
+   */
+
+  def scalaMapToJava[K, V](map: Map[K, V]): JMap[K, V] = map.asJava
 }
