@@ -1,11 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import org.scalatest.Inspectors
 
 class GenericsSpec
-  extends BasicSpec
-    with Inspectors {
+  extends BasicSpec {
 
   private lazy val enumPredicate: (OperationType, String) => Boolean = (v, s) => v.name().equalsIgnoreCase(s)
 

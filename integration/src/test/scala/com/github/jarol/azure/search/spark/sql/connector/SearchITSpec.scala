@@ -7,14 +7,15 @@ import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientB
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 
 /**
  * Trait to mix in for integration tests that require the interaction with a Search service
  */
 
 trait SearchITSpec
-  extends BasicSpec {
+  extends BasicSpec
+    with FieldFactory {
 
   protected final lazy val SEARCH_END_POINT = sys.env("AZURE_SEARCH_ENDPOINT")
   protected final lazy val SEARCH_API_KEY = sys.env("AZURE_SEARCH_API_KEY")
@@ -74,6 +75,11 @@ trait SearchITSpec
       )
     )
   }
+
+  /**
+   * Get the names of existing Search indexes
+   * @return collection of existing indexes
+   */
 
   protected final def listIndexes(): Seq[String] = {
 

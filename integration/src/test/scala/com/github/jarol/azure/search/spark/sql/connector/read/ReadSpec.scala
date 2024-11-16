@@ -1,20 +1,17 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory, IndexDoesNotExistException}
+import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, FieldFactory}
 import com.github.jarol.azure.search.spark.sql.connector.models._
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.apache.spark.sql.{DataFrame, Row}
-import org.scalatest.Inspectors
 
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
-  extends SearchSparkITSpec
-    with FieldFactory
-    with Inspectors {
+  extends SearchSparkITSpec {
 
   private lazy val simpleBeansIndex = "read-simple-beans"
   private lazy val atomicBeansIndex = "read-atomic-beans"
@@ -94,18 +91,6 @@ class ReadSpec
 
   describe("Search dataSource") {
     describe(SHOULD) {
-      describe("throw an exception when") {
-        it("target index does not exist") {
-
-          val indexName = "non-existing"
-          dropIndexIfExists(indexName, sleep = true)
-          indexExists(indexName) shouldBe false
-          a [IndexDoesNotExistException] shouldBe thrownBy {
-            readUsingDatasource(indexName, None, None, None)
-          }
-        }
-      }
-
       describe("read documents") {
         it("that match a filter") {
 

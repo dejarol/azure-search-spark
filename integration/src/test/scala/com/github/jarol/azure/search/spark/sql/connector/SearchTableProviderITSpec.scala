@@ -1,11 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, IndexDoesNotExistException, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{IndexDoesNotExistException, JavaScalaConverters}
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 class SearchTableProviderITSpec
-  extends SearchITSpec
-    with FieldFactory {
+  extends SearchITSpec {
+
+  private lazy val tableProvider = new SearchTableProvider
 
   /**
    * Create a [[CaseInsensitiveStringMap]] from a simple Scala map
@@ -28,7 +29,7 @@ class SearchTableProviderITSpec
         indexExists(indexName) shouldBe false
         an[IndexDoesNotExistException] shouldBe thrownBy {
 
-          new SearchTableProvider().inferSchema(
+          tableProvider.inferSchema(
             createCIMap(
               optionsForAuthAndIndex(indexName)
             )

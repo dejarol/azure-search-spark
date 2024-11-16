@@ -3,12 +3,10 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
-import org.scalatest.Inspectors
 
 class SearchFieldOperationsSpec
   extends BasicSpec
-    with FieldFactory
-      with Inspectors {
+    with FieldFactory {
 
   private lazy val first = "first"
 

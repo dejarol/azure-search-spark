@@ -2,12 +2,10 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory}
-import org.scalatest.Inspectors
 
 class SearchFieldTypeOperationsSpec
   extends BasicSpec
-    with FieldFactory
-      with Inspectors {
+    with FieldFactory {
 
   private lazy val ATOMIC_TYPES = Set(
     SearchFieldDataType.STRING,

@@ -2,12 +2,10 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
-import org.scalatest.Inspectors
 
 class SearchFieldFeatureSpec
   extends BasicSpec
-    with FieldFactory
-      with Inspectors {
+    with FieldFactory {
 
   describe(anInstanceOf[SearchFieldFeature]) {
     describe(SHOULD) {

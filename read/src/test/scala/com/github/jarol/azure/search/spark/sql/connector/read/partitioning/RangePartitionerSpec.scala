@@ -3,13 +3,12 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
-import org.scalatest.{EitherValues, Inspectors}
+import org.scalatest.EitherValues
 
 class RangePartitionerSpec
   extends BasicSpec
     with FieldFactory
-      with EitherValues
-        with Inspectors {
+      with EitherValues {
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
   private lazy val validTypes = Seq(
@@ -25,9 +24,7 @@ class RangePartitionerSpec
         describe("is candidate for partitioning returning") {
           it("a Right for valid cases") {
 
-            forAll(
-              validTypes
-            ) {
+            forAll(validTypes) {
               tp =>
 
                 val field = SearchFieldFeature.FILTERABLE.enableOnField(
@@ -42,9 +39,7 @@ class RangePartitionerSpec
           describe("a Left for") {
             it("non filterable fields") {
 
-              forAll(
-                validTypes
-              ) {
+              forAll(validTypes) {
                 tp =>
 
                   val field = createSearchField("first", tp)

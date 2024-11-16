@@ -1,11 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import org.scalatest.Inspectors
 
 class FacetNullValuePartitionSpec
-  extends BasicSpec
-    with Inspectors {
+  extends BasicSpec {
 
   private lazy val facetFieldName = "field"
   private lazy val facetValues = Seq("v1", "v2")
