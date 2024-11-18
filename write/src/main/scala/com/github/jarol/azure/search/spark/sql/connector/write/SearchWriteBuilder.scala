@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.connector.write.{Write, WriteBuilder}
+import org.apache.spark.sql.connector.write.{SupportsTruncate, Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 
 import scala.util.Try
@@ -11,12 +11,29 @@ import scala.util.Try
  * Write builder for Search dataSource
  * @param writeConfig write configuration
  * @param schema schema of input [[org.apache.spark.sql.DataFrame]] (retrieved by [[org.apache.spark.sql.connector.write.LogicalWriteInfo]])
+ * @param shouldTruncate whether we should truncate target Search index or not (true for truncating)
  */
 
 class SearchWriteBuilder(private val writeConfig: WriteConfig,
-                         private val schema: StructType)
+                         private val schema: StructType,
+                         private val shouldTruncate: Boolean)
   extends WriteBuilder
-    with Logging {
+    with SupportsTruncate
+      with Logging {
+
+  /**
+   * Alternative constructor
+   * @param writeConfig write configuration
+   * @param schema schema of input [[org.apache.spark.sql.DataFrame]]
+   */
+
+  def this(
+            writeConfig: WriteConfig,
+            schema: StructType
+          ) = {
+
+    this(writeConfig, schema, false)
+  }
 
   /**
    * Build the Write for this dataSource
@@ -27,24 +44,59 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
   @throws[IndexCreationException]
   override def build(): Write = {
 
+    val indexName = writeConfig.getIndex
     if (writeConfig.indexExists) {
-      log.info(s"Index ${writeConfig.getIndex} already exists")
-    } else {
-
-      // Try to create target index
-      SearchWriteBuilder.createIndex(
-        writeConfig,
-        schema
-      ) match {
-        case Left(value) => throw value
-        case Right(_) => log.info(s"Successfully created index ${writeConfig.getIndex}")
+      if (shouldTruncate) {
+        truncateIndex(indexName)
       }
+    } else {
+      log.info(s"Index $indexName does not exist. Creating it now")
+      unsafelyCreateIndex(indexName)
     }
 
-    new SearchWrite(
-      writeConfig,
-      schema
-    )
+    new SearchWrite(writeConfig, schema)
+  }
+
+  /**
+   * Create the [[WriteBuilder]] implementation of this dataSource that supports table truncation
+   * @return the write builder that support truncation during write
+   */
+
+  override def truncate(): WriteBuilder = {
+
+    new SearchWriteBuilder(writeConfig, schema, true)
+  }
+
+  /**
+   * Truncate (i.e. drop and recreate) an existing Search index
+   * @param indexName Search index name
+   */
+
+  private def truncateIndex(indexName: String): Unit = {
+
+    // Truncate existing index
+    writeConfig.withSearchIndexClientDo {
+      sc =>
+        sc.deleteIndex(indexName)
+        log.info(s"Successfully deleted index $indexName")
+    }
+
+    // Recreate the index with the new schema
+    unsafelyCreateIndex(indexName)
+  }
+
+  /**
+   * Unsafely create an index using this instance's write config and schema
+   * @throws IndexCreationException if index could not be created
+   */
+
+  @throws[IndexCreationException]
+  private def unsafelyCreateIndex(indexName: String): Unit = {
+
+    SearchWriteBuilder.safelyCreateIndex(writeConfig, schema) match {
+      case Left(value) => throw value
+      case Right(_) => log.info(s"Successfully created index $indexName")
+    }
   }
 }
 
@@ -58,10 +110,10 @@ object SearchWriteBuilder {
    *         representing the created index
    */
 
-  def createIndex(
-                   writeConfig: WriteConfig,
-                   schema: StructType
-                 ): Either[IndexCreationException, SearchIndex] = {
+  def safelyCreateIndex(
+                         writeConfig: WriteConfig,
+                         schema: StructType
+                       ): Either[IndexCreationException, SearchIndex] = {
 
     // Try to create the index
     Try {

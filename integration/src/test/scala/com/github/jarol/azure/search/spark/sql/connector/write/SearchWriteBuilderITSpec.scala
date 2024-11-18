@@ -22,7 +22,13 @@ class SearchWriteBuilderITSpec
     super.afterEach()
   }
 
-  private def createSearchIndex(
+  /**
+   * Safely create an index
+   * @param schema schema
+   * @param options options
+   */
+
+  private def safelyCreateIndex(
                                  schema: StructType,
                                  options: Map[String, String]
                                ): Unit = {
@@ -33,7 +39,7 @@ class SearchWriteBuilderITSpec
       WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
       ) ++ options
 
-    SearchWriteBuilder.createIndex(
+    SearchWriteBuilder.safelyCreateIndex(
       WriteConfig(allOptions),
       schema
     )
@@ -58,7 +64,7 @@ class SearchWriteBuilderITSpec
 
     // Create index
     indexExists(testIndex) shouldBe false
-    createSearchIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + config -> fieldList.mkString(",")))
+    safelyCreateIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + config -> fieldList.mkString(",")))
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
@@ -98,7 +104,7 @@ class SearchWriteBuilderITSpec
           )
 
           indexExists(testIndex) shouldBe false
-          createSearchIndex(schema, Map.empty)
+          safelyCreateIndex(schema, Map.empty)
           indexExists(testIndex) shouldBe true
           val actualFields = getIndexFields(testIndex)
 
@@ -118,7 +124,7 @@ class SearchWriteBuilderITSpec
           )
 
           indexExists(testIndex) shouldBe false
-          createSearchIndex(
+          safelyCreateIndex(
             schema,
             Map(
               WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> actionTypeColName
@@ -229,6 +235,20 @@ class SearchWriteBuilderITSpec
             )
           }
         }
+      }
+    }
+  }
+
+  describe(anInstanceOf[SearchWriteBuilder]) {
+    describe(SHOULD) {
+      it("truncate an existing index") {
+
+        // TODO: test
+      }
+
+      it("leave an existing index as-is if truncation flag is disabled") {
+
+        // TODO: test
       }
     }
   }

@@ -14,6 +14,7 @@ import java.util.{HashSet => JHashSet, Set => JSet}
 /**
  * [[Table]] implementation for Search dataSource
  * @param tableSchema table schema (either inferred or user-provided)
+ * @param tableName table name
  */
 
 class SearchTable(
@@ -33,6 +34,7 @@ class SearchTable(
     new JHashSet[TableCapability]() {{
       add(TableCapability.BATCH_READ)
       add(TableCapability.BATCH_WRITE)
+      add(TableCapability.TRUNCATE)
     }}
   }
 
