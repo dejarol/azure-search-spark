@@ -3,7 +3,7 @@ lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
 lazy val compileTestDependency = "test->test;compile->compile"
 
-ThisBuild / version := "0.1.0"
+ThisBuild / version := "0.2.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
