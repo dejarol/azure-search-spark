@@ -78,6 +78,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
     writeConfig.withSearchIndexClientDo {
       sc =>
         sc.deleteIndex(indexName)
+        Thread.sleep(5000)
         log.info(s"Successfully deleted index $indexName")
     }
 
