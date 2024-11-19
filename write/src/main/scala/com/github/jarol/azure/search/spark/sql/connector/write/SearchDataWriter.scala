@@ -59,7 +59,7 @@ class SearchDataWriter(
     log.warn(s"Aborting writing task $taskId on partition $partitionId")
   }
 
-  override def close(): Unit = log.info(s"Closing writer task $taskId on partition $partitionId")
+  override def close(): Unit = log.info(s"Closing writing task $taskId on partition $partitionId")
 
   /**
    * Write documents to target Search index

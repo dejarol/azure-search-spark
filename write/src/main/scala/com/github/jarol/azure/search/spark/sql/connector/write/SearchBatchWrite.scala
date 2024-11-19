@@ -29,7 +29,7 @@ class SearchBatchWrite(
 
     val taskDescription = messages.collect {
       case SearchWriterCommitMessage(partitionId, taskId) =>
-        s"task $taskId on partition $partitionId"
+        s"writing task $taskId on partition $partitionId"
     }.mkString(", ")
 
     log.info(s"Committing $taskDescription")

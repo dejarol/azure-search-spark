@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.StructType
 import scala.util.Try
 
 /**
- * Write builder for Search dataSource
+ * [[WriteBuilder]] implementation for Search dataSource
  * @param writeConfig write configuration
  * @param schema schema of input [[org.apache.spark.sql.DataFrame]] (retrieved by [[org.apache.spark.sql.connector.write.LogicalWriteInfo]])
  * @param shouldTruncate whether we should truncate target Search index or not (true for truncating)
@@ -22,7 +22,7 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
       with Logging {
 
   /**
-   * Alternative constructor
+   * Constructor for non-truncating [[WriteBuilder]]
    * @param writeConfig write configuration
    * @param schema schema of input [[org.apache.spark.sql.DataFrame]]
    */

@@ -11,6 +11,9 @@ class SearchWriteBuilderITSpec
   private lazy val idFieldName = "id"
   private lazy val testIndex = "write-builder-index"
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
+  private lazy val minimumOptionsForIndexCreation = optionsForAuthAndIndex(testIndex) + (
+    WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
+    )
 
   /**
    * Delete index used for integration testing
@@ -35,12 +38,8 @@ class SearchWriteBuilderITSpec
 
     // Take options for auth and index,
     // add key field and provided options
-    val allOptions: Map[String, String] = optionsForAuthAndIndex(testIndex) + (
-      WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
-      ) ++ options
-
     SearchWriteBuilder.safelyCreateIndex(
-      WriteConfig(allOptions),
+      WriteConfig(minimumOptionsForIndexCreation ++ options),
       schema
     )
 
@@ -106,12 +105,7 @@ class SearchWriteBuilderITSpec
           indexExists(testIndex) shouldBe false
           safelyCreateIndex(schema, Map.empty)
           indexExists(testIndex) shouldBe true
-          val actualFields = getIndexFields(testIndex)
-
-          actualFields should have size schema.size
-          val expectedFieldNames = schema.map(_.name)
-          val actualFieldNames = actualFields.map(_.getName)
-          actualFieldNames should contain theSameElementsAs expectedFieldNames
+          assertMatchBetweenSchemaAndIndex(schema, testIndex)
         }
 
         it("not including the column used for index action type") {
@@ -241,14 +235,55 @@ class SearchWriteBuilderITSpec
 
   describe(anInstanceOf[SearchWriteBuilder]) {
     describe(SHOULD) {
+
+      // Schemas for test execution
+      lazy val previousSchema = createStructType(
+        keyField,
+        createStructField("name", DataTypes.StringType)
+      )
+
+      lazy val currentSchema = createStructType(
+        keyField,
+        createStructField("description", DataTypes.StringType),
+        createStructField("createdDate", DataTypes.TimestampType
+        )
+      )
+
       it("truncate an existing index") {
 
-        // TODO: test
+        indexExists(testIndex) shouldBe false
+        safelyCreateIndex(previousSchema, Map.empty)
+        indexExists(testIndex) shouldBe true
+        assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
+
+        // Trigger truncation and assert result
+        val truncatingBuilder = new SearchWriteBuilder(
+          WriteConfig(minimumOptionsForIndexCreation),
+          currentSchema
+        ).truncate()
+
+        truncatingBuilder.build()
+        indexExists(testIndex) shouldBe true
+        assertMatchBetweenSchemaAndIndex(currentSchema, testIndex)
       }
 
       it("leave an existing index as-is if truncation flag is disabled") {
 
-        // TODO: test
+        indexExists(testIndex) shouldBe false
+        safelyCreateIndex(previousSchema, Map.empty)
+        indexExists(testIndex) shouldBe true
+        assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
+
+        // Trigger truncation and assert result
+        val nonTruncatingBuilder = new SearchWriteBuilder(
+          WriteConfig(minimumOptionsForIndexCreation),
+          currentSchema,
+          false
+        )
+
+        nonTruncatingBuilder.build()
+        indexExists(testIndex) shouldBe true
+        assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
       }
     }
   }

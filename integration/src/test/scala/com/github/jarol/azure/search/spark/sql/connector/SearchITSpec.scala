@@ -8,6 +8,10 @@ import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
+import org.apache.spark.sql.Encoders
+import org.apache.spark.sql.types.StructType
+
+import scala.reflect.runtime.universe.TypeTag
 
 /**
  * Trait to mix in for integration tests that require the interaction with a Search service
@@ -184,6 +188,40 @@ trait SearchITSpec
     ).map {
       deserializer.deserialize(_)
     }
+  }
+
+  /**
+   * Assert that a Search index contains the same field names of a schema
+   * @param schema expected schema
+   * @param index Search index name
+   */
+
+  protected final def assertMatchBetweenSchemaAndIndex(
+                                                        schema: StructType,
+                                                        index: String
+                                                      ): Unit = {
+
+
+    val expectedFields = schema.map(_.name)
+    val actualFieldsNames = getIndexFields(index).map(_.getName)
+
+    // Assert same size and content
+    actualFieldsNames should have size expectedFields.size
+    actualFieldsNames should contain theSameElementsAs expectedFields
+  }
+
+  /**
+   * Assert that a Search index contains the same fields of a case class
+   * @param index Search index name
+   * @tparam T type of expected matching case class
+   */
+
+  protected final def assertMatchBetweenSchemaAndIndex[T <: Product: TypeTag](index: String): Unit = {
+
+    assertMatchBetweenSchemaAndIndex(
+      Encoders.product[T].schema,
+      index
+    )
   }
 }
 

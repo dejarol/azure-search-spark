@@ -25,13 +25,15 @@ class WriteSpec
    * @param documents data to write
    * @param columnNames names to use for Dataframe columns
    * @param extraOptions additional write options
+   * @param mode write [[SaveMode]]
    */
 
   private def writeUsingDataSource[T <: AbstractITDocument with Product: TypeTag](
                                                                                    index: String,
                                                                                    documents: Seq[T],
                                                                                    columnNames: Option[Seq[String]],
-                                                                                   extraOptions: Option[Map[String, String]]
+                                                                                   extraOptions: Option[Map[String, String]],
+                                                                                   mode: SaveMode = SaveMode.Append
                                                                                  ): Unit = {
 
     // Create dataFrame
@@ -48,7 +50,7 @@ class WriteSpec
     extraOptions
       .map(basicWriter.options)
       .getOrElse(basicWriter)
-      .mode(SaveMode.Append)
+      .mode(mode)
       .save()
 
     // Wait for some time in order to ensure test consistency
@@ -297,8 +299,31 @@ class WriteSpec
               GeoBean(Seq(3.14, 4.56)),
               SearchFieldDataType.GEOGRAPHY_POINT
             )
+
+            dropIndexIfExists(complexBeansIndex, sleep = false)
           }
         }
+      }
+
+      it("overwrite an existing index") {
+
+        val overwriteIndexName = "overwrite-test-index"
+        val previousDocuments: Seq[SimpleBean] = Seq(
+          SimpleBean("hello", Some(LocalDate.now()))
+        )
+
+        writeUsingDataSource(overwriteIndexName, previousDocuments, None, None)
+        indexExists(overwriteIndexName) shouldBe true
+        assertMatchBetweenSchemaAndIndex[SimpleBean](overwriteIndexName)
+
+        val actualDocuments: Seq[PairBean[Int]] = Seq(
+          PairBean(1),
+          PairBean(2)
+        )
+
+        writeUsingDataSource(overwriteIndexName, actualDocuments, None, None, SaveMode.Overwrite)
+        assertMatchBetweenSchemaAndIndex[PairBean[Int]](overwriteIndexName)
+        dropIndexIfExists(overwriteIndexName, sleep = false)
       }
     }
   }
