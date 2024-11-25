@@ -55,7 +55,7 @@ trait SearchSparkITSpec
     // Define Search fields
     val searchFields = Encoders.product[T].schema.map {
       spf =>
-        val sef = SchemaUtils.toSearchField(spf)
+        val sef = SchemaUtils.toSearchField(spf, Map.empty, None)
         if (sef.getName.equals("id")) {
           sef.setKey(true)
         } else sef
