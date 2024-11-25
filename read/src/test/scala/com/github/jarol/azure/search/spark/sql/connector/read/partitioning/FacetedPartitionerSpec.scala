@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.scalatest.EitherValues
 
@@ -11,6 +11,23 @@ class FacetedPartitionerSpec
       with EitherValues {
 
   private lazy val first = "first"
+
+  /**
+   * Enable features on a [[SearchField]]
+   * @param field    field
+   * @param features features to enable
+   */
+
+  private def enableFeatures(
+                              field: SearchField,
+                              features: SearchFieldFeature*
+                            ): SearchField = {
+
+    features.foldLeft(field) {
+      case (field, feature) =>
+        feature.enableOnField(field)
+    }
+  }
 
   describe(`object`[FacetedPartitioner]) {
     describe(SHOULD) {
@@ -48,11 +65,11 @@ class FacetedPartitionerSpec
             FacetedPartitioner.getCandidateFacetField(
               first,
               Seq(
-                createSearchField(first, SearchFieldDataType.STRING)
-                  .enableFeatures(
-                    SearchFieldFeature.FACETABLE,
-                    SearchFieldFeature.FILTERABLE
-                  )
+                enableFeatures(
+                  createSearchField(first, SearchFieldDataType.STRING),
+                  SearchFieldFeature.FACETABLE,
+                  SearchFieldFeature.FILTERABLE
+                )
               )
             ) shouldBe 'right
           }
@@ -72,16 +89,20 @@ class FacetedPartitionerSpec
             FacetedPartitioner.getCandidateFacetField(
               first,
               Seq(
-                createSearchField(first, SearchFieldDataType.STRING)
-                  .enableFeatures(SearchFieldFeature.FACETABLE)
+                enableFeatures(
+                  createSearchField(first, SearchFieldDataType.STRING),
+                  SearchFieldFeature.FACETABLE
+                )
               )
             ) shouldBe 'left
 
             FacetedPartitioner.getCandidateFacetField(
               first,
               Seq(
-                createSearchField(first, SearchFieldDataType.STRING)
-                  .enableFeatures(SearchFieldFeature.FILTERABLE)
+                enableFeatures(
+                  createSearchField(first, SearchFieldDataType.STRING),
+                  SearchFieldFeature.FILTERABLE
+                )
               )
             ) shouldBe 'left
           }
