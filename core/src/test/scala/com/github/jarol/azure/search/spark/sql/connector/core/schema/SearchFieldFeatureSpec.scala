@@ -14,10 +14,8 @@ class SearchFieldFeatureSpec
         val field = createSearchField("first", SearchFieldDataType.STRING)
         forAll(SearchFieldFeature.values().toSeq) {
           feature =>
-            feature.isEnabledOnField(field) shouldBe false
-            feature.isEnabledOnField(
-              feature.enableOnField(field)
-            ) shouldBe true
+            field should not be enabledFor(feature)
+            feature.enableOnField(field) shouldBe enabledFor(feature)
         }
       }
 
@@ -26,11 +24,11 @@ class SearchFieldFeatureSpec
         val field = createSearchField("second", SearchFieldDataType.INT32)
         forAll(SearchFieldFeature.values().toSeq) {
           feature =>
-            feature.isEnabledOnField(field) shouldBe false
+            field should not be enabledFor(feature)
             val enabled = feature.enableOnField(field)
-            feature.isEnabledOnField(enabled) shouldBe true
+            enabled shouldBe enabledFor(feature)
             val disabled = feature.disableOnField(enabled)
-            feature.isDisabledOnField(disabled) shouldBe true
+            disabled should not be enabledFor(feature)
         }
       }
     }

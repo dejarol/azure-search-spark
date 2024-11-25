@@ -1,7 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.core
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
+import org.scalatest.matchers.{BeMatcher, MatchResult}
 
 /**
  * Trait to mix-in for suites that have to deal with
@@ -10,6 +12,8 @@ import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
  */
 
 trait FieldFactory {
+
+  import FieldFactory._
 
   /**
    * Create a [[StructField]] with given name and type
@@ -105,5 +109,41 @@ trait FieldFactory {
       .setFields(
         JavaScalaConverters.seqToList(fields)
       )
+  }
+
+  /**
+   * Get a matcher for asserting that a field is enabled with respect to a feature, i.e. a matcher that allows the following syntax
+   * {{{
+   *   field shouldBe enabledFor feature
+   * }}}
+   * @param feature feature to match
+   * @return a matcher for asserting if a feature is enabled on a [[SearchField]]
+   */
+
+  protected final def enabledFor(feature: SearchFieldFeature): EnabledFor = EnabledFor(feature)
+}
+
+object FieldFactory {
+
+  /**
+   * Matcher that allows the following syntax
+   * {{{
+   *   field shouldBe enabledFor feature
+   * }}}
+   * according to the fact
+   *  - field is a [[SearchField]]
+   *  - feature is a [[SearchFieldFeature]]
+   * @param feature feature to evaluate
+   */
+
+  case class EnabledFor(private val feature: SearchFieldFeature)
+    extends BeMatcher[SearchField] {
+    override def apply(left: SearchField): MatchResult = {
+      new MatchResult(
+        feature.isEnabledOnField(left),
+        s"field '${left.getName}' is not ${feature.description()}",
+        s"field '${left.getName}' is ${feature.description()}"
+      )
+    }
   }
 }

@@ -145,17 +145,4 @@ public enum SearchFieldFeature {
                 featurePredicate.apply(searchField)
         ).orElse(false);
     }
-
-    /**
-     * Evaluate if the feature is disabled on a {@link SearchField}
-     * @param searchField Search field
-     * @return true for disabled features
-     */
-
-    public boolean isDisabledOnField(
-            SearchField searchField
-    ) {
-
-        return !isEnabledOnField(searchField);
-    }
 }

@@ -9,43 +9,36 @@ class SearchFieldOperationsSpec
     with FieldFactory {
 
   private lazy val first = "first"
+  private lazy val searchField = createSearchField(first, SearchFieldDataType.STRING)
 
   describe(anInstanceOf[SearchFieldOperations]) {
     describe(SHOULD) {
-      it(s"evaluate if the field has the same name with respect to a ${nameOf[StructField]}") {
+      describe("evaluate if") {
+        it(s"the field has the same name with respect to a ${nameOf[StructField]}") {
 
-        val searchField = createSearchField(first, SearchFieldDataType.STRING)
-        searchField
-          .sameNameOf(
+          searchField.sameNameOf(
             createStructField(first, DataTypes.IntegerType)
           ) shouldBe true
+        }
+
+        it("a feature is enabled") {
+
+          val feature = SearchFieldFeature.KEY
+          searchField should not be enabledFor(feature)
+          val enabled = feature.enableOnField(searchField)
+          enabled shouldBe enabledFor(feature)
+        }
       }
 
-      it("enable some field features") {
+      it("apply some actions") {
 
-        val searchField = createSearchField(first, SearchFieldDataType.STRING)
-        val features = Seq(
-          SearchFieldFeature.KEY,
-          SearchFieldFeature.FILTERABLE
+        val transformedField = searchField.applyActions(
+          SearchFieldActions.forDisablingFeature(SearchFieldFeature.SEARCHABLE),
+          SearchFieldActions.forEnablingFeature(SearchFieldFeature.FACETABLE)
         )
 
-        forAll(features) {
-          _.isEnabledOnField(searchField) shouldBe false
-        }
-
-        val enabledField = searchField.enableFeatures(features: _*)
-        forAll(features) {
-          _.isEnabledOnField(enabledField) shouldBe true
-        }
-      }
-
-      it("evaluate if a feature is enabled") {
-
-        val searchField = createSearchField(first, SearchFieldDataType.STRING)
-        val feature = SearchFieldFeature.KEY
-        searchField.isEnabledFor(feature) shouldBe false
-        val enabled = searchField.enableFeatures(feature)
-        enabled.isEnabledFor(feature) shouldBe true
+        transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
+        transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
       }
     }
   }

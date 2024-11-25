@@ -226,17 +226,29 @@ object SchemaUtils {
   }
 
   /**
-   * Convert a Spark field into a Search field
-   * @param structField Spark fields
+   * Convert a Spark field into a Search field, by inferring the equivalent Search data type
+   * and setting all the required field properties
+   * @param structField Spark field.
+   * @param fieldActions map with keys being field paths and values being a collection of actions to apply for such field
+   * @param parentPath parent path for the structField (empty for top-level fields)
    * @throws DataTypeException for Spark fields with unsupported types
    * @return the equivalent Search field
    */
 
   @throws[DataTypeException]
-  final def toSearchField(structField: StructField): SearchField = {
+  final def toSearchField(
+                           structField: StructField,
+                           fieldActions: Map[String, Seq[SearchFieldAction]],
+                           parentPath: Option[String]
+                         ): SearchField = {
 
     val (name, dType) = (structField.name, structField.dataType)
-    if (dType.isAtomic) {
+    val currentPath: String = parentPath match {
+      case Some(value) => s"$value.$name"
+      case None => name
+    }
+
+    val searchField: SearchField = if (dType.isAtomic) {
       new SearchField(name, inferSearchTypeFor(dType))
     } else if (dType.isCollection) {
 
@@ -246,7 +258,9 @@ object SchemaUtils {
       val innerDType = dType.unsafeCollectionInnerType
       val notEligibleAsGeoPoint = !SchemaUtils.isEligibleAsGeoPoint(innerDType)
       if (innerDType.isComplex && notEligibleAsGeoPoint) {
-        val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map(toSearchField)
+        val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map {
+          toSearchField(_, fieldActions, Some(currentPath))
+        }
         searchField.setFields(subFields: _*)
       } else {
         searchField
@@ -257,12 +271,22 @@ object SchemaUtils {
       if (inferredSearchType.isGeoPoint) {
         new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
       } else {
-        val subFields = dType.unsafeSubFields.map(toSearchField)
+        val subFields = dType.unsafeSubFields.map {
+          toSearchField(_, fieldActions, Some(currentPath))
+        }
         new SearchField(name, SearchFieldDataType.COMPLEX)
           .setFields(subFields: _*)
       }
     } else {
       throw DataTypeException.forUnsupportedSparkType(dType)
+    }
+
+    // Retrieve available actions, apply them if necessary
+    fieldActions.collectFirst {
+      case (k, v) if k.equalsIgnoreCase(currentPath) => v
+    } match {
+      case Some(value) => searchField.applyActions(value: _*)
+      case None => searchField
     }
   }
 }

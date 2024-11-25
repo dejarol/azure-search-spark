@@ -2,14 +2,13 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldsCreationOptionsSpec
   extends BasicSpec
     with FieldFactory {
 
-  private type OSS = Option[Seq[String]]
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
   private lazy val schema = Seq(
     createStructField(first, DataTypes.StringType),
@@ -18,39 +17,26 @@ class SearchFieldsCreationOptionsSpec
   )
 
   /**
-   * Create an instance of [[SearchFieldsCreationOptions]] by configuring a non-empty list of field names
-   * for a given feature, and an empty list for all other features
- *
-   * @param feature feature
+   * Create an instance of [[SearchFieldsCreationOptions]]
+   * @param actions feature
    * @param key name of key field
-   * @param list list of field names for which given feature should be disabled
    * @param indexActionColumn index action column
    * @return an instance of [[SearchFieldsCreationOptions]]
    */
 
-  private def createOptionsForFeature(
-                                       feature: SearchFieldFeature,
-                                       key: String,
-                                       list: Seq[String],
-                                       indexActionColumn: Option[String]
-                                     ): SearchFieldsCreationOptions = {
-
-    val (facetable, filterable, hidden, searchable, sortable): (OSS, OSS, OSS, OSS, OSS) = feature match {
-      case SearchFieldFeature.FACETABLE => (Some(list), None, None, None, None)
-      case SearchFieldFeature.FILTERABLE => (None, Some(list), None, None, None)
-      case SearchFieldFeature.HIDDEN => (None, None, Some(list), None, None)
-      case SearchFieldFeature.KEY => (None, None, None, None, None)
-      case SearchFieldFeature.SEARCHABLE => (None, None, None, Some(list), None)
-      case SearchFieldFeature.SORTABLE => (None, None, None, None, Some(list))
-    }
+  private def createOptions(
+                             actions: Map[SearchFieldFeature, Seq[String]],
+                             key: String,
+                             indexActionColumn: Option[String]
+                           ): SearchFieldsCreationOptions = {
 
     SearchFieldsCreationOptions(
       key,
-      disabledFromFiltering = filterable,
-      disabledFromSorting = sortable,
-      hiddenFields = hidden,
-      disabledFromSearch = searchable,
-      disabledFromFaceting = facetable,
+      disabledFromFiltering = actions.get(SearchFieldFeature.FILTERABLE),
+      disabledFromSorting = actions.get(SearchFieldFeature.SORTABLE),
+      hiddenFields = actions.get(SearchFieldFeature.HIDDEN),
+      disabledFromSearch = actions.get(SearchFieldFeature.SEARCHABLE),
+      disabledFromFaceting = actions.get(SearchFieldFeature.FACETABLE),
       indexActionColumn
     )
   }
@@ -73,48 +59,14 @@ class SearchFieldsCreationOptionsSpec
       }.toMap
   }
 
-  /**
-   * Assert that a feature has been enabled/disabled
-   * @param featureAssertion feature assertion
-   * @param key name of key field
-   * @param list list of candidate enabled fields
-   */
-
-  private def assertFeatureStatusesFor(
-                                        featureAssertion: FeatureAssertion,
-                                        key: String,
-                                        list: Seq[String]
-                                      ): Unit = {
-
-    val feature: SearchFieldFeature = featureAssertion.feature
-    val options = createOptionsForFeature(feature, key, list, None)
-    val (matchingFields, nonMatchingFields) = schema.partition(featureAssertion.shouldBeAltered(_, options))
-    val searchFields = getSearchFieldsMap(options, schema)
-    forAll(matchingFields) {
-      structField =>
-        val searchField = searchFields(structField.name)
-        if (featureAssertion.refersToDisablingFeature) {
-          featureAssertion.getFeatureValue(searchField) shouldBe Some(false)
-        } else {
-          featureAssertion.getFeatureValue(searchField) shouldBe Some(true)
-        }
-    }
-
-    forAll(nonMatchingFields) {
-      structField =>
-        val searchField = searchFields(structField.name)
-        featureAssertion.getFeatureValue(searchField) shouldBe None
-    }
-  }
-
   describe(anInstanceOf[SearchFieldsCreationOptions]) {
     describe(SHOULD) {
       it("not include index action column") {
 
         val indexActionColumn = fourth
         val input = schema :+ createStructField(indexActionColumn, DataTypes.StringType)
-        val actual = createOptionsForFeature(SearchFieldFeature.SEARCHABLE, "key", Seq.empty, Some(fourth))
-          .maybeExcludeIndexActionColumn(schema)
+        val actual = createOptions(Map.empty, "key", Some(fourth))
+          .excludeIndexActionColumn(schema)
 
         actual should not be empty
         val expectedFieldNames = input.collect {
@@ -125,59 +77,68 @@ class SearchFieldsCreationOptionsSpec
         actualFieldNames should contain theSameElementsAs expectedFieldNames
       }
 
-      describe("evaluate and disable enable a feature for fields in a schema") {
-        it("facetable") {
+      describe("apply some actions to Search fields, like") {
+        describe("enabling or disabling a feature on") {
+          it("a top-level field") {
 
-          assertFeatureStatusesFor(
-            FeatureAssertion.FACETABLE,
-            "key",
-            Seq(second)
-          )
-        }
+            val (keyField, matchingFieldName, otherField) = ("key", "description", "other")
+            val schema = createStructType(
+              createStructField(keyField, DataTypes.StringType),
+              createStructField(matchingFieldName, DataTypes.StringType),
+              createStructField(otherField, DataTypes.StringType)
+            )
 
-        it("filterable") {
+            val options = createOptions(
+              Map(
+                SearchFieldFeature.FILTERABLE -> Seq(matchingFieldName),
+                SearchFieldFeature.SEARCHABLE -> Seq(matchingFieldName)
+              ),
+              keyField,
+              None
+            )
 
-          assertFeatureStatusesFor(
-            FeatureAssertion.FILTERABLE,
-            "key",
-            Seq(first)
-          )
-        }
+            val searchFields = getSearchFieldsMap(options, schema)
+            searchFields(keyField) shouldBe enabledFor(SearchFieldFeature.KEY)
+            val matchingField = searchFields(matchingFieldName)
+            matchingField should not be enabledFor(SearchFieldFeature.FILTERABLE)
+            matchingField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
+          }
 
-        it("hidden") {
+          it("a nested field") {
 
-          assertFeatureStatusesFor(
-            FeatureAssertion.HIDDEN,
-            "key",
-            Seq(third)
-          )
-        }
+            val (keyField, matchingFieldName, parentField) = ("key", "description", "parent")
+            val schema = createStructType(
+              createStructField(keyField, DataTypes.StringType),
+              createStructField(
+                parentField,
+                createStructType(
+                  createStructField(matchingFieldName, DataTypes.StringType),
+                  createStructField("code", DataTypes.IntegerType)
+                )
+              )
+            )
 
-        it("key") {
+            val options = createOptions(
+              Map(
+                SearchFieldFeature.HIDDEN -> Seq(s"$parentField.$matchingFieldName"),
+                SearchFieldFeature.SORTABLE -> Seq(s"$parentField.$matchingFieldName")
+              ),
+              keyField,
+              None
+            )
 
-          assertFeatureStatusesFor(
-            FeatureAssertion.Key,
-            first,
-            Seq.empty
-          )
-        }
+            val searchFields = getSearchFieldsMap(options, schema)
+            searchFields(keyField) shouldBe enabledFor(SearchFieldFeature.KEY)
+            val subFields = JavaScalaConverters.listToSeq(searchFields(parentField).getFields)
+            val maybeSubField = subFields.find {
+              _.getName.equalsIgnoreCase(matchingFieldName)
+            }
 
-        it("searchable") {
-
-          assertFeatureStatusesFor(
-            FeatureAssertion.SEARCHABLE,
-            "key",
-            Seq(first)
-          )
-        }
-
-        it("sortable") {
-
-          assertFeatureStatusesFor(
-            FeatureAssertion.SORTABLE,
-            "key",
-            Seq(second)
-          )
+            maybeSubField shouldBe defined
+            val subField = maybeSubField.get
+            subField shouldBe enabledFor(SearchFieldFeature.HIDDEN)
+            subField should not be enabledFor(SearchFieldFeature.SORTABLE)
+          }
         }
       }
     }

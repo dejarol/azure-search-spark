@@ -64,7 +64,7 @@ object FeatureAssertion {
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isHidden)
   }
 
-  case object Key extends FeatureAssertion {
+  case object KEY extends FeatureAssertion {
     override def feature: SearchFieldFeature = SearchFieldFeature.KEY
     override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.isKey(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isKey)

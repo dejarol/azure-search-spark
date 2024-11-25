@@ -135,7 +135,7 @@ class SearchWriteBuilderITSpec
           actualFields.map(_.getName) should contain theSameElementsAs expectedSchema.map(_.name)
         }
 
-        describe("allowing the user to edit default field properties, like") {
+        describe("allowing the user to enrich fields with some properties, like") {
 
           it("facetable") {
 

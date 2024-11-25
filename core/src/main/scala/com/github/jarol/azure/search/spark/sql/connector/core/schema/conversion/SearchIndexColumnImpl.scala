@@ -4,9 +4,9 @@ import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
  * Implementation of [[SearchIndexColumn]]
- *
  * @param fieldName field name
  * @param schemaType Spark type
+ * @param fieldIndex field index
  */
 
 case class SearchIndexColumnImpl(

@@ -31,7 +31,7 @@ class RangePartitionerSpec
                   createSearchField("first", tp)
                 )
 
-                SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe true
+                field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
                 RangePartitioner.evaluateExistingCandidate(field) shouldBe 'right
             }
           }
@@ -43,7 +43,7 @@ class RangePartitionerSpec
                 tp =>
 
                   val field = createSearchField("first", tp)
-                  SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe false
+                  field should not be enabledFor(SearchFieldFeature.FILTERABLE)
                   RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
               }
             }
@@ -62,7 +62,7 @@ class RangePartitionerSpec
                     createSearchField("first", tp)
                   )
 
-                  SearchFieldFeature.FILTERABLE.isEnabledOnField(field) shouldBe true
+                  field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
                   RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
               }
             }

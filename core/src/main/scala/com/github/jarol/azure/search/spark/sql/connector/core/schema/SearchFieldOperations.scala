@@ -19,38 +19,24 @@ class SearchFieldOperations(private val field: SearchField) {
   final def sameNameOf(sparkField: StructField): Boolean = field.getName.equalsIgnoreCase(sparkField.name)
 
   /**
-   * Enable a set of features on this field
-   * @param features feature to enable
-   * @return this field with some features enabled
-   */
-
-  final def enableFeatures(features: SearchFieldFeature*): SearchField = {
-
-    features.foldLeft(field) {
-      case (field, feature) =>
-        feature.enableOnField(field)
-    }
-  }
-
-  /**
-   * Disable a set of features on this field
-   * @param features feature to enable
-   * @return this field with some features disabled
-   */
-
-  final def disableFeatures(features: SearchFieldFeature*): SearchField = {
-
-    features.foldLeft(field) {
-      case (field, feature) =>
-        feature.disableOnField(field)
-    }
-  }
-
-  /**
    * Evaluate if a feature is enabled on this field
    * @param feature feature
    * @return true for enabled features
    */
 
   final def isEnabledFor(feature: SearchFieldFeature): Boolean = feature.isEnabledOnField(field)
+
+  /**
+   * Apply a collection of actions on this field
+   * @param actions actions to apply
+   * @return this field transformed by the many actions provided
+   */
+
+  final def applyActions(actions: SearchFieldAction*): SearchField = {
+
+    actions.foldLeft(field) {
+      case (field, action) =>
+        action.apply(field)
+    }
+  }
 }

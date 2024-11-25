@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldFeature, toSearchFieldOperations}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldActions, SearchFieldFeature}
 import org.apache.spark.sql.types.StructField
 
 /**
@@ -95,7 +95,7 @@ case class SearchFieldsCreationOptions(
    * @return input schema filtered in order to exclude index action field
    */
 
-  final def maybeExcludeIndexActionColumn(schema: Seq[StructField]): Seq[StructField] = {
+  final def excludeIndexActionColumn(schema: Seq[StructField]): Seq[StructField] = {
 
     // If an index action column is defined, it should be excluded from the schema
     indexActionColumn match {
@@ -107,6 +107,39 @@ case class SearchFieldsCreationOptions(
   }
 
   /**
+   * Create a map that collects the set of actions to apply for each field.
+   * Keys will be field paths (i.e. <code>name</code> for a top-level atomic field,
+   * or <code>address.city</code> for a nested field)
+   * @return a map with keys begin field paths and values being the actions to apply on such field
+   */
+
+  private[write] def getActionsMap: Map[String, Seq[SearchFieldAction]] = {
+
+    // Collect defined actions
+    val actionTuples: Seq[(String, SearchFieldAction)] = Map(
+      SearchFieldActions.forEnablingFeature(SearchFieldFeature.KEY) -> Some(Seq(keyField)),
+      SearchFieldActions.forDisablingFeature(SearchFieldFeature.FILTERABLE) -> disabledFromFiltering,
+      SearchFieldActions.forDisablingFeature(SearchFieldFeature.SORTABLE) -> disabledFromSorting,
+      SearchFieldActions.forEnablingFeature(SearchFieldFeature.HIDDEN) -> hiddenFields,
+      SearchFieldActions.forDisablingFeature(SearchFieldFeature.SEARCHABLE) -> disabledFromSearch,
+      SearchFieldActions.forDisablingFeature(SearchFieldFeature.FACETABLE) -> disabledFromFaceting
+    ).collect {
+      case (action, Some(values)) => values.map {
+        s => (s, action)
+      }
+    }.flatten.toSeq
+
+    // Group the actions related to same field
+    actionTuples.groupBy {
+      case (str, _) => str
+    }.mapValues {
+      _.map {
+        case (_, action) => action
+      }
+    }
+  }
+
+  /**
    * Starting from a Spark schema, create a collection of [[SearchField]](s)
    * @param schema Dataframe schema
    * @return a collection of Search fields for index creation
@@ -114,56 +147,10 @@ case class SearchFieldsCreationOptions(
 
   def schemaToSearchFields(schema: Seq[StructField]): Seq[SearchField] = {
 
-    // For each schema field
-    maybeExcludeIndexActionColumn(schema).map {
+    val actions = getActionsMap
+    excludeIndexActionColumn(schema).map {
       structField =>
-        val searchField = SchemaUtils.toSearchField(structField)
-
-        // Features to enable (i.e. their flag should be set to true when defined by the user)
-        val featuresToEnable: Seq[SearchFieldFeature] = Seq(
-          SearchFieldsCreationOptions.featureForPredicate(searchField, isKey, SearchFieldFeature.KEY),
-          SearchFieldsCreationOptions.featureForPredicate(searchField, isHidden, SearchFieldFeature.HIDDEN)
-        ).collect {
-          case Some(value) => value
-        }
-
-        // Features to disable (i.e. their flag should be set to false when defined by the user)
-        val featuresToDisable: Seq[SearchFieldFeature] = Seq(
-          SearchFieldsCreationOptions.featureForPredicate(searchField, nonFacetable, SearchFieldFeature.FACETABLE),
-          SearchFieldsCreationOptions.featureForPredicate(searchField, nonFilterable, SearchFieldFeature.FILTERABLE),
-          SearchFieldsCreationOptions.featureForPredicate(searchField, nonSearchable, SearchFieldFeature.SEARCHABLE),
-          SearchFieldsCreationOptions.featureForPredicate(searchField, nonSortable, SearchFieldFeature.SORTABLE)
-        ).collect {
-          case Some(value) => value
-        }
-
-        searchField
-          .enableFeatures(featuresToEnable: _*)
-          .disableFeatures(featuresToDisable: _*)
-    }
-  }
-}
-
-object SearchFieldsCreationOptions {
-
-  /**
-   * Return an Option wrapping a feature, given that a field name matches a predicate
-   * @param field field
-   * @param predicate predicate to be matched by field's name
-   * @param feature feature to be returned, potentially wrapped by an Option
-   * @return a non-empty Option with given feature if the predicate matches
-   */
-
-  private def featureForPredicate(
-                                   field: SearchField,
-                                   predicate: String => Boolean,
-                                   feature: SearchFieldFeature
-                                 ): Option[SearchFieldFeature] = {
-
-    if (predicate(field.getName)) {
-      Some(feature)
-    } else {
-      None
+        SchemaUtils.toSearchField(structField, actions, None)
     }
   }
 }

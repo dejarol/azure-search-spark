@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.GeoPointType
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, DataTypeException, FieldFactory, JavaScalaConverters}
 import org.apache.spark.sql.types._
 
 import java.util.{List => JList}
@@ -12,6 +12,21 @@ class SchemaUtilsSpec
     with FieldFactory {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
+
+  /**
+   * Convert a [[StructField]] to a [[SearchField]]
+   * @param structField struct fields
+   * @return the equivalent Search field
+   */
+
+  private def simplyToSearchField(structField: StructField): SearchField = {
+
+    SchemaUtils.toSearchField(
+      structField,
+      Map.empty,
+      None
+    )
+  }
 
   /**
    * Assert that all Search fields exist within the expected field set
@@ -262,20 +277,20 @@ class SchemaUtilsSpec
       }
 
       describe("convert Struct fields to Search fields") {
-        it("atomic types") {
+        it("with atomic types") {
 
           val structField = createStructField(first, DataTypes.StringType)
-          val searchField = SchemaUtils.toSearchField(structField)
+          val searchField = simplyToSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.STRING
         }
 
-        describe("collection types") {
-          it("with atomic inner type") {
+        describe("with collection of") {
+          it("atomic types") {
 
             val structField = createArrayField(first, DataTypes.DateType)
-            val searchField = SchemaUtils.toSearchField(structField)
+            val searchField = simplyToSearchField(structField)
 
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
@@ -283,10 +298,10 @@ class SchemaUtilsSpec
             )
           }
 
-          it("with inner float type") {
+          it("floats") {
 
             val structField = createArrayField(first, DataTypes.FloatType)
-            val searchField = SchemaUtils.toSearchField(structField)
+            val searchField = simplyToSearchField(structField)
 
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
@@ -294,7 +309,7 @@ class SchemaUtilsSpec
             )
           }
 
-          it("with complex inner type") {
+          it("complex types") {
 
             val structField = createArrayField(
               first,
@@ -304,7 +319,7 @@ class SchemaUtilsSpec
               )
             )
 
-            val searchField = SchemaUtils.toSearchField(structField)
+            val searchField = simplyToSearchField(structField)
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.COMPLEX
@@ -319,10 +334,10 @@ class SchemaUtilsSpec
             )
           }
 
-          it("with geo inner type") {
+          it("geo points") {
 
             val structField = createArrayField(first, GeoPointType.SCHEMA)
-            val searchField = SchemaUtils.toSearchField(structField)
+            val searchField = simplyToSearchField(structField)
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
@@ -333,7 +348,7 @@ class SchemaUtilsSpec
           }
         }
 
-        it("for struct types") {
+        it("with complex types") {
 
           val structType = createStructType(
             createStructField(first, DataTypes.IntegerType),
@@ -341,7 +356,7 @@ class SchemaUtilsSpec
           )
 
           val structField = createStructField(third, structType)
-          val searchField = SchemaUtils.toSearchField(structField)
+          val searchField = simplyToSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.COMPLEX
@@ -355,14 +370,67 @@ class SchemaUtilsSpec
           )
         }
 
-        it("for geo compatible struct types") {
+        it("with geo points") {
 
           val structType = GeoPointType.SCHEMA
           val structField = createStructField(third, structType)
-          val searchField = SchemaUtils.toSearchField(structField)
+          val searchField = simplyToSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.GEOGRAPHY_POINT
+        }
+
+        describe("enriched with some special properties, like") {
+          describe("enable/disable a feature") {
+            it("for top-level fields") {
+
+              val (matchingFieldName, feature) = ("hello", SearchFieldFeature.SEARCHABLE)
+              val matchingStructField = createStructField(matchingFieldName, DataTypes.StringType)
+              val fieldActions = Map(
+                matchingFieldName -> Seq(
+                  SearchFieldActions.forEnablingFeature(feature)
+                )
+              )
+
+              val matchingSearchField = SchemaUtils.toSearchField(matchingStructField, fieldActions, None)
+              matchingSearchField shouldBe enabledFor(feature)
+
+              val nonMatchingStructField = createStructField("world", DataTypes.IntegerType)
+              val nonMatchingSearchField = SchemaUtils.toSearchField(nonMatchingStructField, fieldActions, None)
+              nonMatchingSearchField should not be enabledFor(feature)
+            }
+
+            it("for nested fields") {
+
+              val (parentName, matchingFieldName, feature) = ("address", "street", SearchFieldFeature.SEARCHABLE)
+              val structField = createStructField(
+                parentName,
+                createStructType(
+                  createStructField("city", DataTypes.StringType),
+                  createStructField("zipCode", DataTypes.IntegerType),
+                  createStructField(matchingFieldName, DataTypes.StringType)
+                )
+              )
+
+              val fieldActions = Map(
+                s"$parentName.$matchingFieldName" -> Seq(
+                  SearchFieldActions.forEnablingFeature(feature)
+                )
+              )
+
+              val searchField = SchemaUtils.toSearchField(structField, fieldActions, None)
+              val subFields = JavaScalaConverters.listToSeq(searchField.getFields)
+              val (matching, nonMatching) = subFields.partition {
+                _.getName.equalsIgnoreCase(matchingFieldName)
+              }
+
+              matching should have size 1
+              matching.head shouldBe enabledFor(feature)
+              forAll(nonMatching) {
+                _ should not be enabledFor(feature)
+              }
+            }
+          }
         }
       }
     }
