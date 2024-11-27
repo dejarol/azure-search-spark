@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
-import org.apache.spark.sql.types.StructField
 
 import java.lang.{Boolean => JBoolean}
 
@@ -10,7 +9,7 @@ import java.lang.{Boolean => JBoolean}
  * Assertion for testing the enabling/disabling process of a [[SearchFieldFeature]]
  */
 
-trait FeatureAssertion {
+trait FeatureAsserter {
 
   /**
    * Get the feature to test
@@ -33,52 +32,56 @@ trait FeatureAssertion {
   }
 
   /**
-   * Evaluate if a field matches with this assertion type
-   * @param field field to test
-   * @param options search field options
-   * @return true if the field should be altered
+   * Retrieve the feature flag from a field
+   * @param searchField Search field
+   * @return value of feature flag
    */
 
-  def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean
-
   def getFeatureValue(searchField: SearchField): Option[JBoolean]
+
+  /**
+   * Get the [[WriteConfig]] suffix related to this feature
+   * @return feature suffix
+   */
+
+  def suffix: String
 }
 
-object FeatureAssertion {
+object FeatureAsserter {
 
-  case object FACETABLE extends FeatureAssertion {
+  case object FACETABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FACETABLE
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.nonFacetable(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFacetable)
+    override def suffix: String = WriteConfig.DISABLE_FACETING_CONFIG
   }
 
-  case object FILTERABLE extends FeatureAssertion {
+  case object FILTERABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FILTERABLE
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.nonFilterable(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFilterable)
+    override def suffix: String = WriteConfig.DISABLE_FILTERING_CONFIG
   }
 
-  case object HIDDEN extends FeatureAssertion {
+  case object HIDDEN extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.HIDDEN
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.isHidden(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isHidden)
+    override def suffix: String = WriteConfig.HIDDEN_FIELDS_CONFIG
   }
 
-  case object KEY extends FeatureAssertion {
+  case object KEY extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.KEY
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.isKey(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isKey)
+    override def suffix: String = WriteConfig.KEY_FIELD_CONFIG
   }
 
-  case object SEARCHABLE extends FeatureAssertion {
+  case object SEARCHABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SEARCHABLE
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.nonSearchable(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSearchable)
+    override def suffix: String = WriteConfig.DISABLE_SEARCH_CONFIG
   }
 
-  case object SORTABLE extends FeatureAssertion {
+  case object SORTABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SORTABLE
-    override def shouldBeAltered(field: StructField, options: SearchFieldsCreationOptions): Boolean = options.nonSortable(field.name)
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSortable)
+    override def suffix: String = WriteConfig.DISABLE_SORTING_CONFIG
   }
 }

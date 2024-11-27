@@ -10,11 +10,13 @@ class SearchFieldsCreationOptionsSpec
     with FieldFactory {
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
-  private lazy val schema = Seq(
-    createStructField(first, DataTypes.StringType),
-    createStructField(second, DataTypes.IntegerType),
-    createStructField(third, DataTypes.DateType)
-  )
+
+  private def createCompleteFeaturesMap(fields: Seq[String]): Map[SearchFieldFeature, Seq[String]] = {
+
+    SearchFieldFeature.values().map {
+      v => (v, fields)
+    }.toMap
+  }
 
   /**
    * Create an instance of [[SearchFieldsCreationOptions]]
@@ -63,6 +65,12 @@ class SearchFieldsCreationOptionsSpec
     describe(SHOULD) {
       it("not include index action column") {
 
+        val schema = Seq(
+          createStructField(first, DataTypes.StringType),
+          createStructField(second, DataTypes.IntegerType),
+          createStructField(third, DataTypes.DateType)
+        )
+
         val indexActionColumn = fourth
         val input = schema :+ createStructField(indexActionColumn, DataTypes.StringType)
         val actual = createOptions(Map.empty, "key", Some(fourth))
@@ -81,62 +89,60 @@ class SearchFieldsCreationOptionsSpec
         describe("enabling or disabling a feature on") {
           it("a top-level field") {
 
-            val (keyField, matchingFieldName, otherField) = ("key", "description", "other")
             val schema = createStructType(
-              createStructField(keyField, DataTypes.StringType),
-              createStructField(matchingFieldName, DataTypes.StringType),
-              createStructField(otherField, DataTypes.StringType)
+              createStructField(first, DataTypes.StringType),
+              createStructField(second, DataTypes.StringType),
+              createStructField(third, DataTypes.StringType)
             )
 
             val options = createOptions(
-              Map(
-                SearchFieldFeature.FILTERABLE -> Seq(matchingFieldName),
-                SearchFieldFeature.SEARCHABLE -> Seq(matchingFieldName)
-              ),
-              keyField,
+              createCompleteFeaturesMap(Seq(second)),
+              first,
               None
             )
 
             val searchFields = getSearchFieldsMap(options, schema)
-            searchFields(keyField) shouldBe enabledFor(SearchFieldFeature.KEY)
-            val matchingField = searchFields(matchingFieldName)
+            searchFields(first) shouldBe enabledFor(SearchFieldFeature.KEY)
+            val matchingField = searchFields(second)
+            matchingField should not be enabledFor(SearchFieldFeature.FACETABLE)
             matchingField should not be enabledFor(SearchFieldFeature.FILTERABLE)
+            matchingField shouldBe enabledFor(SearchFieldFeature.HIDDEN)
             matchingField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
+            matchingField should not be enabledFor(SearchFieldFeature.SORTABLE)
           }
 
           it("a nested field") {
 
-            val (keyField, matchingFieldName, parentField) = ("key", "description", "parent")
             val schema = createStructType(
-              createStructField(keyField, DataTypes.StringType),
+              createStructField(first, DataTypes.StringType),
               createStructField(
-                parentField,
+                second,
                 createStructType(
-                  createStructField(matchingFieldName, DataTypes.StringType),
+                  createStructField(third, DataTypes.StringType),
                   createStructField("code", DataTypes.IntegerType)
                 )
               )
             )
 
             val options = createOptions(
-              Map(
-                SearchFieldFeature.HIDDEN -> Seq(s"$parentField.$matchingFieldName"),
-                SearchFieldFeature.SORTABLE -> Seq(s"$parentField.$matchingFieldName")
-              ),
-              keyField,
+              createCompleteFeaturesMap(Seq(s"$second.$third")),
+              first,
               None
             )
 
             val searchFields = getSearchFieldsMap(options, schema)
-            searchFields(keyField) shouldBe enabledFor(SearchFieldFeature.KEY)
-            val subFields = JavaScalaConverters.listToSeq(searchFields(parentField).getFields)
+            searchFields(first) shouldBe enabledFor(SearchFieldFeature.KEY)
+            val subFields = JavaScalaConverters.listToSeq(searchFields(second).getFields)
             val maybeSubField = subFields.find {
-              _.getName.equalsIgnoreCase(matchingFieldName)
+              _.getName.equalsIgnoreCase(third)
             }
 
             maybeSubField shouldBe defined
             val subField = maybeSubField.get
+            subField should not be enabledFor(SearchFieldFeature.FACETABLE)
+            subField should not be enabledFor(SearchFieldFeature.FILTERABLE)
             subField shouldBe enabledFor(SearchFieldFeature.HIDDEN)
+            subField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
             subField should not be enabledFor(SearchFieldFeature.SORTABLE)
           }
         }

@@ -50,20 +50,18 @@ class SearchWriteBuilderITSpec
    * Assert that a field has been properly enabled/disabled when creating a new index
    * @param schema schema for index creation
    * @param fieldList name of fields to enable
-   * @param config suffix for index creation property
-   * @param featureAssertion feature assertion
+   * @param asserter feature asserter
    */
 
   private def assertFeatureDisabling(
                                       schema: StructType,
                                       fieldList: Seq[String],
-                                      config: String,
-                                      featureAssertion: FeatureAssertion
+                                      asserter: FeatureAsserter
                                    ): Unit = {
 
     // Create index
     indexExists(testIndex) shouldBe false
-    safelyCreateIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + config -> fieldList.mkString(",")))
+    safelyCreateIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + asserter.suffix -> fieldList.mkString(",")))
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
@@ -76,10 +74,10 @@ class SearchWriteBuilderITSpec
     // Assertion for matching fields
     forAll(matchingFields) {
       field =>
-        if (featureAssertion.refersToDisablingFeature) {
-          featureAssertion.getFeatureValue(field) shouldBe Some(false)
+        if (asserter.refersToDisablingFeature) {
+          asserter.getFeatureValue(field) shouldBe Some(false)
         } else {
-          featureAssertion.getFeatureValue(field) shouldBe Some(true)
+          asserter.getFeatureValue(field) shouldBe Some(true)
         }
     }
   }
@@ -135,7 +133,7 @@ class SearchWriteBuilderITSpec
           actualFields.map(_.getName) should contain theSameElementsAs expectedSchema.map(_.name)
         }
 
-        describe("allowing the user to enrich fields with some properties, like") {
+        describe("enriching fields with some features, like") {
 
           it("facetable") {
 
@@ -146,12 +144,7 @@ class SearchWriteBuilderITSpec
               nonFacetableField
             )
 
-            assertFeatureDisabling(
-              schema,
-              Seq(nonFacetableField.name),
-              WriteConfig.DISABLE_FACETING_CONFIG,
-              FeatureAssertion.FACETABLE
-            )
+            assertFeatureDisabling(schema, Seq(nonFacetableField.name), FeatureAsserter.FACETABLE)
           }
 
           it("filterable") {
@@ -163,12 +156,7 @@ class SearchWriteBuilderITSpec
               createStructField("date", DataTypes.TimestampType)
             )
 
-            assertFeatureDisabling(
-              schema,
-              Seq(nonFilterableField.name),
-              WriteConfig.DISABLE_FILTERING_CONFIG,
-              FeatureAssertion.FILTERABLE
-            )
+            assertFeatureDisabling(schema, Seq(nonFilterableField.name), FeatureAsserter.FILTERABLE)
           }
 
           it("hidden") {
@@ -182,12 +170,7 @@ class SearchWriteBuilderITSpec
               createStructField("category", DataTypes.StringType)
             )
 
-            assertFeatureDisabling(
-              schema,
-              Seq(firstHidden.name, secondHidden.name),
-              WriteConfig.HIDDEN_FIELDS_CONFIG,
-              FeatureAssertion.HIDDEN
-            )
+            assertFeatureDisabling(schema, Seq(firstHidden.name, secondHidden.name), FeatureAsserter.HIDDEN)
           }
 
           it("searchable") {
@@ -199,12 +182,7 @@ class SearchWriteBuilderITSpec
               createStructField("date", DataTypes.DateType)
             )
 
-            assertFeatureDisabling(
-              schema,
-              Seq(nonSearchableField.name),
-              WriteConfig.DISABLE_SEARCH_CONFIG,
-              FeatureAssertion.SEARCHABLE
-            )
+            assertFeatureDisabling(schema, Seq(nonSearchableField.name), FeatureAsserter.SEARCHABLE)
           }
 
           it("sortable") {
@@ -221,12 +199,7 @@ class SearchWriteBuilderITSpec
               )
             )
 
-            assertFeatureDisabling(
-              schema,
-              Seq(nonSortableField.name),
-              WriteConfig.DISABLE_SORTING_CONFIG,
-              FeatureAssertion.SORTABLE
-            )
+            assertFeatureDisabling(schema, Seq(nonSortableField.name), FeatureAsserter.SORTABLE)
           }
         }
       }
