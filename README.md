@@ -161,13 +161,13 @@ Values within such column should be valid index actions according to the Azure S
         <td></td>
     </tr>
     <tr>
-        <td>createIndex.*</td>
-        <td>Options for index creation. See the <b>Index creation</b> section for more information about available options</td>
+        <td>fieldOptions.*</td>
+        <td>Options for defining field properties. See the <b>Field options</b> section for more information about available options</td>
         <td></td>
         <td></td>
     </tr>
 </table>
 
-### Index creation
+### Field options
 
 // TODO: add description

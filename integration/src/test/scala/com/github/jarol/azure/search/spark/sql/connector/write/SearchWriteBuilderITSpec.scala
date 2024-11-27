@@ -12,7 +12,7 @@ class SearchWriteBuilderITSpec
   private lazy val testIndex = "write-builder-index"
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
   private lazy val minimumOptionsForIndexCreation = optionsForAuthAndIndex(testIndex) + (
-    WriteConfig.CREATE_INDEX_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
+    WriteConfig.FIELD_OPTIONS_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
     )
 
   /**
@@ -61,7 +61,7 @@ class SearchWriteBuilderITSpec
 
     // Create index
     indexExists(testIndex) shouldBe false
-    safelyCreateIndex(schema, Map(WriteConfig.CREATE_INDEX_PREFIX + asserter.suffix -> fieldList.mkString(",")))
+    safelyCreateIndex(schema, Map(WriteConfig.FIELD_OPTIONS_PREFIX + asserter.suffix -> fieldList.mkString(",")))
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields

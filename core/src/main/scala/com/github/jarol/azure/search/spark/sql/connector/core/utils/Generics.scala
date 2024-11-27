@@ -29,9 +29,7 @@ object Generics {
 
     classFromClassTag[E]
       .getEnumConstants
-      .collectFirst {
-        case e if predicate(e, value) => e
-    }
+      .find(predicate(_, value))
   }
 
   /**

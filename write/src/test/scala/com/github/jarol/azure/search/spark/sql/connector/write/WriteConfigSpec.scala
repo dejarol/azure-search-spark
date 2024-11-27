@@ -91,12 +91,12 @@ class WriteConfigSpec
             val indexActionColumn = "world"
             val options = WriteConfig(
               Map(
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField,
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_FACETING_CONFIG}" -> facetable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_FILTERING_CONFIG}" -> filterable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.HIDDEN_FIELDS_CONFIG}" -> hidden.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_SEARCH_CONFIG}" -> searchable.mkString(","),
-                s"${WriteConfig.CREATE_INDEX_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField,
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FACETING_CONFIG}" -> facetable.mkString(","),
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FILTERING_CONFIG}" -> filterable.mkString(","),
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.HIDDEN_FIELDS_CONFIG}" -> hidden.mkString(","),
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SEARCH_CONFIG}" -> searchable.mkString(","),
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
                 WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
               )
             ).searchFieldOptions

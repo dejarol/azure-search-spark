@@ -77,14 +77,17 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
 
   def searchFieldOptions: SearchFieldsCreationOptions = {
 
-    val createIndexConfig = getAllWithPrefix(WriteConfig.CREATE_INDEX_PREFIX)
+    val fieldOptionsConfig = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
+    val analyzersConfig = AnalyzerOptions.forAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX))
+    val searchAnalyzersConfig = AnalyzerOptions.forSearchAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.SEARCH_ANALYZERS_PREFIX))
+    val indexAnalyzersConfig = AnalyzerOptions.forIndexAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.INDEX_ANALYZERS_PREFIX))
     SearchFieldsCreationOptions(
-      createIndexConfig.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.CREATE_INDEX_PREFIX), None),
-      createIndexConfig.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
-      createIndexConfig.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
-      createIndexConfig.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
-      createIndexConfig.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
-      createIndexConfig.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
+      fieldOptionsConfig.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None),
+      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
+      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
+      fieldOptionsConfig.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
+      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
+      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
       actionColumn
     )
   }
@@ -98,13 +101,20 @@ object WriteConfig {
   final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
 
-  final val CREATE_INDEX_PREFIX = "createIndex."
-  final val KEY_FIELD_CONFIG = "keyField"
+  final val FIELD_OPTIONS_PREFIX = "fieldOptions"
+  final val KEY_FIELD_CONFIG = "key"
   final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
   final val DISABLE_SORTING_CONFIG = "disableSortingOn"
   final val HIDDEN_FIELDS_CONFIG = "hiddenFields"
   final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
   final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
+
+  final val ALIASES_CONFIG = "aliases"
+  final val ANALYZERS_PREFIX = "analyzers"
+  final val SEARCH_ANALYZERS_PREFIX = "searchAnalyzers"
+  final val INDEX_ANALYZERS_PREFIX = "indexAnalyzers"
+  final val TYPE_SUFFIX = "type"
+  final val ON_FIELDS_SUFFIX = "onFields"
 
   /**
    * Create an instance from a simple map
@@ -125,7 +135,7 @@ object WriteConfig {
    * @return the [[IndexActionType]] with same case-insensitive name or inner value
    */
 
-  private def valueOfIndexActionType(value: String): IndexActionType = {
+  private[write] def valueOfIndexActionType(value: String): IndexActionType = {
 
     Generics.unsafeValueOfEnum[IndexActionType](
       value,
