@@ -37,8 +37,8 @@ class AnalyzerConfigSpec
       describe("provide an empty instance when") {
         it("type is not defined") {
 
-          AnalyzerConfig.fromConfig(firstAlias, emptyConfig, action) shouldBe empty
-          AnalyzerConfig.fromConfig(
+          AnalyzerConfig.createInstance(firstAlias, emptyConfig, action) shouldBe empty
+          AnalyzerConfig.createInstance(
             firstAlias,
             createConfig(
               Map(s"$firstAlias.${WriteConfig.ON_FIELDS_SUFFIX}" -> fieldList.mkString(","))
@@ -49,8 +49,8 @@ class AnalyzerConfigSpec
 
         it("field list is not defined") {
 
-          AnalyzerConfig.fromConfig(firstAlias, emptyConfig, action) shouldBe empty
-          AnalyzerConfig.fromConfig(
+          AnalyzerConfig.createInstance(firstAlias, emptyConfig, action) shouldBe empty
+          AnalyzerConfig.createInstance(
             firstAlias,
             createConfig(
               Map(s"$firstAlias.${WriteConfig.TYPE_SUFFIX}" -> analyzerType)
@@ -63,7 +63,7 @@ class AnalyzerConfigSpec
       describe("provide a non-empty instance when") {
         it("all options are defined") {
 
-          AnalyzerConfig.fromConfig(
+          AnalyzerConfig.createInstance(
             firstAlias,
             createConfig(
               Map(
@@ -81,7 +81,7 @@ class AnalyzerConfigSpec
 
           a [ConfigException] shouldBe thrownBy {
 
-            AnalyzerConfig.fromConfig(
+            AnalyzerConfig.createInstance(
               firstAlias,
               createConfig(
                 Map(

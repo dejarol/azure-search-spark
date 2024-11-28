@@ -79,35 +79,42 @@ class WriteConfigSpec
           it("throwing an exception for missing key fields") {
 
             a[ConfigException] shouldBe thrownBy {
-              emptyConfig.searchFieldOptions
+              emptyConfig.searchFieldFeatureOptions
             }
           }
 
-          it("collecting informations about features to enable") {
+          describe("collecting informations about features to enable") {
+            it("features to enable") {
 
-            val keyField = "hello"
-            val (facetable, filterable) = (Seq("f1"), Seq("f2"))
-            val (hidden, searchable, sortable) = (Seq("f3"), Seq("f4"), Seq("f5"))
-            val indexActionColumn = "world"
-            val options = WriteConfig(
-              Map(
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField,
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FACETING_CONFIG}" -> facetable.mkString(","),
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FILTERING_CONFIG}" -> filterable.mkString(","),
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.HIDDEN_FIELDS_CONFIG}" -> hidden.mkString(","),
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SEARCH_CONFIG}" -> searchable.mkString(","),
-                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
-                WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
-              )
-            ).searchFieldOptions
+              val keyField = "hello"
+              val (facetable, filterable) = (Seq("f1"), Seq("f2"))
+              val (hidden, searchable, sortable) = (Seq("f3"), Seq("f4"), Seq("f5"))
+              val indexActionColumn = "world"
+              val options = WriteConfig(
+                Map(
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField,
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FACETING_CONFIG}" -> facetable.mkString(","),
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_FILTERING_CONFIG}" -> filterable.mkString(","),
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.HIDDEN_FIELDS_CONFIG}" -> hidden.mkString(","),
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SEARCH_CONFIG}" -> searchable.mkString(","),
+                  s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
+                  WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
+                )
+              ).searchFieldFeatureOptions
 
-            options.keyField shouldBe keyField
-            assertDefinedAndContaining(options.disabledFromFaceting, facetable)
-            assertDefinedAndContaining(options.disabledFromFiltering, filterable)
-            assertDefinedAndContaining(options.hiddenFields, hidden)
-            assertDefinedAndContaining(options.disabledFromSearch, searchable)
-            assertDefinedAndContaining(options.disabledFromSorting, sortable)
-            options.indexActionColumn shouldBe Some(indexActionColumn)
+              options.keyField shouldBe keyField
+              assertDefinedAndContaining(options.disabledFromFaceting, facetable)
+              assertDefinedAndContaining(options.disabledFromFiltering, filterable)
+              assertDefinedAndContaining(options.hiddenFields, hidden)
+              assertDefinedAndContaining(options.disabledFromSearch, searchable)
+              assertDefinedAndContaining(options.disabledFromSorting, sortable)
+              options.indexActionColumn shouldBe Some(indexActionColumn)
+            }
+
+            it("analyzers to set") {
+
+              // TODO: test
+            }
           }
         }
       }

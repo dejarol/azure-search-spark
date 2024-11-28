@@ -75,19 +75,25 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return options for defining fields on target Search index
    */
 
-  def searchFieldOptions: SearchFieldsCreationOptions = {
+  def searchFieldFeatureOptions: SearchFieldCreationOptions = {
 
-    val fieldOptionsConfig = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
-    val analyzersConfig = AnalyzerOptions.forAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX))
-    val searchAnalyzersConfig = AnalyzerOptions.forSearchAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.SEARCH_ANALYZERS_PREFIX))
-    val indexAnalyzersConfig = AnalyzerOptions.forIndexAnalyzers(fieldOptionsConfig.getAllWithPrefix(WriteConfig.INDEX_ANALYZERS_PREFIX))
-    SearchFieldsCreationOptions(
-      fieldOptionsConfig.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None),
-      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
-      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
-      fieldOptionsConfig.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
-      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
-      fieldOptionsConfig.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
+    val fieldOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
+    val analyzerConfigs: Seq[AnalyzerConfig] = Seq(
+      AnalyzerConfig.forAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)),
+      AnalyzerConfig.forSearchAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.SEARCH_ANALYZERS_PREFIX)),
+      AnalyzerConfig.forIndexAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.INDEX_ANALYZERS_PREFIX))
+    ).collect {
+      case Some(value) => value
+    }.flatten
+
+    SearchFieldCreationOptions(
+      fieldOptions.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None),
+      fieldOptions.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
+      fieldOptions.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
+      fieldOptions.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
+      fieldOptions.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
+      fieldOptions.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
+      if (analyzerConfigs.isEmpty) None else Some(analyzerConfigs),
       actionColumn
     )
   }

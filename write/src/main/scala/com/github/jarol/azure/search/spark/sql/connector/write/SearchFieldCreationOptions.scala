@@ -12,18 +12,20 @@ import org.apache.spark.sql.types.StructField
  * @param hiddenFields list of fields that should be hidden (i.e. non-retrievable)
  * @param disabledFromSearch list of fields that should not be searchable
  * @param disabledFromFaceting list of fields that should not be facetable
+ * @param analyzerConfigs list of configuration for setting field analyzers
  * @param indexActionColumn column name for retrieving a per-document [[com.azure.search.documents.models.IndexActionType]]
  */
 
-case class SearchFieldsCreationOptions(
-                                        keyField: String,
-                                        disabledFromFiltering: Option[Seq[String]],
-                                        disabledFromSorting: Option[Seq[String]],
-                                        hiddenFields: Option[Seq[String]],
-                                        disabledFromSearch: Option[Seq[String]],
-                                        disabledFromFaceting: Option[Seq[String]],
-                                        indexActionColumn: Option[String]
-                                      ) {
+case class SearchFieldCreationOptions(
+                                       keyField: String,
+                                       disabledFromFiltering: Option[Seq[String]],
+                                       disabledFromSorting: Option[Seq[String]],
+                                       hiddenFields: Option[Seq[String]],
+                                       disabledFromSearch: Option[Seq[String]],
+                                       disabledFromFaceting: Option[Seq[String]],
+                                       analyzerConfigs: Option[Seq[AnalyzerConfig]],
+                                       indexActionColumn: Option[String]
+                                     ) {
 
   /**
    * If defined, remove the index action column field from a schema
@@ -43,16 +45,13 @@ case class SearchFieldsCreationOptions(
   }
 
   /**
-   * Create a map that collects the set of actions to apply for each field.
-   * Keys will be field paths (i.e. <code>name</code> for a top-level atomic field,
-   * or <code>address.city</code> for a nested field)
-   * @return a map with keys begin field paths and values being the actions to apply on such field
+   * Get the actions to apply on [[SearchField]](s) in order to enable/disable their features
+   * @return actions for enabling/disabling features
    */
 
-  private[write] def getActionsMap: Map[String, Seq[SearchFieldAction]] = {
+  private def actionsForFeatures: Seq[(String, SearchFieldAction)] = {
 
-    // Collect defined actions
-    val actionTuples: Seq[(String, SearchFieldAction)] = Map(
+    Map(
       SearchFieldActions.forEnablingFeature(SearchFieldFeature.KEY) -> Some(Seq(keyField)),
       SearchFieldActions.forDisablingFeature(SearchFieldFeature.FILTERABLE) -> disabledFromFiltering,
       SearchFieldActions.forDisablingFeature(SearchFieldFeature.SORTABLE) -> disabledFromSorting,
@@ -64,9 +63,31 @@ case class SearchFieldsCreationOptions(
         s => (s, action)
       }
     }.flatten.toSeq
+  }
 
-    // Group the actions related to same field
-    actionTuples.groupBy {
+  /**
+   * Get the actions to apply on [[SearchField]](s) in order to set analyzers
+   * @return actions for setting analyzers
+   */
+
+  private def actionsForAnalyzers: Seq[(String, SearchFieldAction)] = {
+
+    analyzerConfigs
+      .map(_.flatMap(_.actions))
+      .getOrElse(Seq.empty)
+  }
+
+  /**
+   * Create a map that collects the set of actions to apply for each field.
+   * Keys will be field paths (i.e. <code>name</code> for a top-level atomic field,
+   * or <code>address.city</code> for a nested field)
+   * @return a map with keys begin field paths and values being the actions to apply on such field
+   */
+
+  private[write] def getActionsMap: Map[String, Seq[SearchFieldAction]] = {
+
+    // Group all actions related to same field
+    (actionsForFeatures ++ actionsForAnalyzers).groupBy {
       case (str, _) => str
     }.mapValues {
       _.map {
@@ -81,7 +102,7 @@ case class SearchFieldsCreationOptions(
    * @return a collection of Search fields for index creation
    */
 
-  def schemaToSearchFields(schema: Seq[StructField]): Seq[SearchField] = {
+  def toSearchFields(schema: Seq[StructField]): Seq[SearchField] = {
 
     val actions = getActionsMap
     excludeIndexActionColumn(schema).map {
