@@ -10,7 +10,7 @@ class AnalyzerConfigSpec
 
   private lazy val firstAlias = "first"
   private lazy val fieldList = Seq("hello", "world")
-  private lazy val analyzerType = LexicalAnalyzerName.AR_LUCENE.toString
+  private lazy val analyzer = LexicalAnalyzerName.AR_LUCENE
   private lazy val action: LexicalAnalyzerName => SearchFieldAction = SearchFieldActions.forSettingAnalyzer
 
   /**
@@ -53,7 +53,7 @@ class AnalyzerConfigSpec
           AnalyzerConfig.createInstance(
             firstAlias,
             createConfig(
-              Map(s"$firstAlias.${WriteConfig.TYPE_SUFFIX}" -> analyzerType)
+              Map(s"$firstAlias.${WriteConfig.TYPE_SUFFIX}" -> analyzer.toString)
             ),
             action
           ) shouldBe empty
@@ -63,16 +63,21 @@ class AnalyzerConfigSpec
       describe("provide a non-empty instance when") {
         it("all options are defined") {
 
-          AnalyzerConfig.createInstance(
+          val maybeInstance = AnalyzerConfig.createInstance(
             firstAlias,
             createConfig(
               Map(
-                s"$firstAlias.${WriteConfig.TYPE_SUFFIX}" -> analyzerType,
+                s"$firstAlias.${WriteConfig.TYPE_SUFFIX}" -> analyzer.toString,
                 s"$firstAlias.${WriteConfig.ON_FIELDS_SUFFIX}" -> fieldList.mkString(",")
               )
             ),
             action
-          ) shouldBe defined
+          )
+
+          maybeInstance shouldBe defined
+          val instance = maybeInstance.get
+          instance.name shouldBe analyzer
+          instance.fields should contain theSameElementsAs fieldList
         }
       }
 

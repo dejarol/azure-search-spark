@@ -15,8 +15,8 @@ import java.util.stream.Collectors
  */
 
 case class AnalyzerConfig(
-                           private val name: LexicalAnalyzerName,
-                           private val fields: Seq[String],
+                           private[write] val name: LexicalAnalyzerName,
+                           private[write] val fields: Seq[String],
                            private val supplier: LexicalAnalyzerName => SearchFieldAction
                          ) {
 
@@ -25,7 +25,7 @@ case class AnalyzerConfig(
    * @return
    */
 
-  def actions: Set[(String, SearchFieldAction)] = fields.map((_, supplier(name))).toSet
+  def actions: Seq[(String, SearchFieldAction)] = fields.map((_, supplier(name)))
 }
 
 object AnalyzerConfig {

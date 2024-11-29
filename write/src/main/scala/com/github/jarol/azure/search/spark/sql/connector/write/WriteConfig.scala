@@ -75,7 +75,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return options for defining fields on target Search index
    */
 
-  def searchFieldFeatureOptions: SearchFieldCreationOptions = {
+  def searchFieldCreationOptions: SearchFieldCreationOptions = {
 
     val fieldOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
     val analyzerConfigs: Seq[AnalyzerConfig] = Seq(
@@ -107,7 +107,7 @@ object WriteConfig {
   final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
 
-  final val FIELD_OPTIONS_PREFIX = "fieldOptions"
+  final val FIELD_OPTIONS_PREFIX = "fieldOptions."
   final val KEY_FIELD_CONFIG = "key"
   final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
   final val DISABLE_SORTING_CONFIG = "disableSortingOn"
@@ -116,9 +116,9 @@ object WriteConfig {
   final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
 
   final val ALIASES_CONFIG = "aliases"
-  final val ANALYZERS_PREFIX = "analyzers"
-  final val SEARCH_ANALYZERS_PREFIX = "searchAnalyzers"
-  final val INDEX_ANALYZERS_PREFIX = "indexAnalyzers"
+  final val ANALYZERS_PREFIX = "analyzers."
+  final val SEARCH_ANALYZERS_PREFIX = "searchAnalyzers."
+  final val INDEX_ANALYZERS_PREFIX = "indexAnalyzers."
   final val TYPE_SUFFIX = "type"
   final val ON_FIELDS_SUFFIX = "onFields"
 

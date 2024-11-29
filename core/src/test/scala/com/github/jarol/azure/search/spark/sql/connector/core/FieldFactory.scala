@@ -121,6 +121,29 @@ trait FieldFactory {
    */
 
   protected final def enabledFor(feature: SearchFieldFeature): EnabledFor = EnabledFor(feature)
+
+  /**
+   * Maybe retrieve a subfield from a map
+   * @param searchFields map with Search fields
+   * @param parent parent field name
+   * @param child subField name
+   * @return an optional subField
+   */
+
+  protected def maybeGetSubField(
+                                  searchFields: Map[String, SearchField],
+                                  parent: String,
+                                  child: String
+                              ): Option[SearchField] = {
+
+    for {
+      parentField <- searchFields.get(parent)
+      subFields <- Option(parentField.getFields)
+      subField <- JavaScalaConverters.listToSeq(subFields).find {
+        _.getName.equalsIgnoreCase(child)
+      }
+    } yield subField
+  }
 }
 
 object FieldFactory {

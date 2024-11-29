@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldActions, SearchFieldFeature}
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldCreationOptionsSpec
@@ -67,29 +67,6 @@ class SearchFieldCreationOptionsSpec
       .map {
         sf => (sf.getName, sf)
       }.toMap
-  }
-
-  /**
-   * Maybe retrieve a subfield from a map
-   * @param searchFields map with Search fields
-   * @param parent parent field name
-   * @param child subField name
-   * @return an optional subField
-   */
-
-  private def maybeGetSubField(
-                                searchFields: Map[String, SearchField],
-                                parent: String,
-                                child: String
-                              ): Option[SearchField] = {
-
-    for {
-      parentField <- searchFields.get(parent)
-      subFields <- Option(parentField.getFields)
-      subField <- JavaScalaConverters.listToSeq(subFields).find {
-        _.getName.equalsIgnoreCase(child)
-      }
-    } yield subField
   }
 
   /**

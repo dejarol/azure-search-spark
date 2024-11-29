@@ -120,7 +120,7 @@ object SearchWriteBuilder {
     Try {
       val indexName = writeConfig.getIndex
       val searchFields: Seq[SearchField] = writeConfig
-        .searchFieldFeatureOptions
+        .searchFieldCreationOptions
         .toSearchFields(schema)
 
       writeConfig.withSearchIndexClientDo {

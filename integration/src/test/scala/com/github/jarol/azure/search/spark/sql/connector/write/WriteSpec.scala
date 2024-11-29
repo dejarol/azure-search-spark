@@ -107,7 +107,7 @@ class WriteSpec
 
     // Assert Search collection type
     val maybeArrayType = getIndexFields(collectionBeansIndex).collectFirst {
-      case field if field.getName.equalsIgnoreCase("array") => field.getType
+      case (k, field) if k.equalsIgnoreCase("array") => field.getType
     }
 
     maybeArrayType shouldBe defined
@@ -144,8 +144,8 @@ class WriteSpec
 
     // Assertion for sub document Search type
     val maybeType = getIndexFields(complexBeansIndex).collectFirst {
-      case sf if sf.getName.equals("value") && sf.getType.equals(expectedSearchFieldType) =>
-        sf.getType
+      case (k, field) if k.equals("value") && field.getType.equals(expectedSearchFieldType) =>
+        field.getType
     }
 
     maybeType shouldBe defined

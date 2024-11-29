@@ -1,11 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
+import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 
 class WriteConfigSpec
   extends BasicSpec {
+
+  private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
 
   /**
    * Assert that an optional collection of strings is defined and contains the same elements w.r.t an expected set
@@ -21,8 +24,6 @@ class WriteConfigSpec
     actual shouldBe defined
     actual.get should contain theSameElementsAs expected
   }
-
-  private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
 
   describe(anInstanceOf[WriteConfig]) {
     describe(SHOULD) {
@@ -75,16 +76,16 @@ class WriteConfigSpec
           ).actionColumn shouldBe Some(colName)
         }
 
-        describe("retrieve search field options") {
-          it("throwing an exception for missing key fields") {
+        describe("search field creation options") {
+          it("eventually throwing an exception for missing key fields") {
 
             a[ConfigException] shouldBe thrownBy {
-              emptyConfig.searchFieldFeatureOptions
+              emptyConfig.searchFieldCreationOptions
             }
           }
 
-          describe("collecting informations about features to enable") {
-            it("features to enable") {
+          describe("related to") {
+            it("field features") {
 
               val keyField = "hello"
               val (facetable, filterable) = (Seq("f1"), Seq("f2"))
@@ -100,7 +101,7 @@ class WriteConfigSpec
                   s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.DISABLE_SORTING_CONFIG}" -> sortable.mkString(","),
                   WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
                 )
-              ).searchFieldFeatureOptions
+              ).searchFieldCreationOptions
 
               options.keyField shouldBe keyField
               assertDefinedAndContaining(options.disabledFromFaceting, facetable)
@@ -111,9 +112,54 @@ class WriteConfigSpec
               options.indexActionColumn shouldBe Some(indexActionColumn)
             }
 
-            it("analyzers to set") {
+            it("field analyzers") {
 
-              // TODO: test
+              val (keyField, first, second) = ("uuid", "a1", "a2")
+              val aliases = Seq(first, second)
+
+              // Create a map with analyzers, their configuration prefix, and fields that should be enriched
+              val analyzersAndFields: Map[LexicalAnalyzerName, (SearchFieldAnalyzerType, Seq[String])] = Map(
+                LexicalAnalyzerName.EN_LUCENE -> (SearchFieldAnalyzerType.SEARCH_AND_INDEX, Seq("first", "second")),
+                LexicalAnalyzerName.BG_LUCENE -> (SearchFieldAnalyzerType.ONLY_SEARCH, Seq("second", "third")),
+                LexicalAnalyzerName.SIMPLE -> (SearchFieldAnalyzerType.ONLY_INDEX, Seq("third", "fourth"))
+              )
+
+              // Base map for index creation
+              val keyFieldMap = Map(
+                s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.KEY_FIELD_CONFIG}" -> keyField
+              )
+
+              // Create the whole configuration map
+              val configMap = analyzersAndFields.foldLeft(keyFieldMap) {
+                case (map, (analyzer, (analyzerType, fields))) =>
+                  map ++ analyzerType.rawConfigForAnalyzers(
+                    analyzer,
+                    aliases.map {
+                      alias => (alias, fields)
+                    }.toMap
+                  )
+              }
+
+              val maybeAnalyzerConfigs = WriteConfig(configMap).searchFieldCreationOptions.analyzerConfigs
+              maybeAnalyzerConfigs shouldBe defined
+
+              // Compute both expected and actual result
+              val expected = analyzersAndFields.mapValues {
+                case (_, fields) => fields
+              }
+
+              val actual = maybeAnalyzerConfigs.get.map {
+                config => (config.name, config.fields)
+              }.toMap
+
+              // Assert that the two results are equivalent
+              actual should have size expected.size
+              forAll(expected.toSeq) {
+                case (key, fields) =>
+                  val maybeFields = actual.get(key)
+                  maybeFields shouldBe defined
+                  maybeFields.get should contain theSameElementsAs fields
+              }
             }
           }
         }

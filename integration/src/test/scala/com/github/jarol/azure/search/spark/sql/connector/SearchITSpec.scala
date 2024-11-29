@@ -9,6 +9,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 import org.apache.spark.sql.Encoders
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 
 import scala.reflect.runtime.universe.TypeTag
@@ -144,10 +145,14 @@ trait SearchITSpec
    * @return a collection with defined index fields
    */
 
-  protected final def getIndexFields(name: String): Seq[SearchField] = {
+  protected final def getIndexFields(name: String): Map[String, SearchField] = {
 
-    JavaScalaConverters.listToSeq(
-      getSearchIndex(name).getFields
+    CaseInsensitiveMap[SearchField](
+      JavaScalaConverters.listToSeq(
+        getSearchIndex(name).getFields
+      ).map {
+        field => (field.getName, field)
+      }.toMap
     )
   }
 
@@ -203,7 +208,7 @@ trait SearchITSpec
 
 
     val expectedFields = schema.map(_.name)
-    val actualFieldsNames = getIndexFields(index).map(_.getName)
+    val actualFieldsNames = getIndexFields(index).keySet
 
     // Assert same size and content
     actualFieldsNames should have size expectedFields.size
