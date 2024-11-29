@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
-import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldActions, SearchFieldFeature}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
@@ -11,6 +11,7 @@ class SearchFieldCreationOptionsSpec
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
   private lazy val analyzer = LexicalAnalyzerName.BN_MICROSOFT
+  private lazy val analyzerType = SearchFieldAnalyzerType.SEARCH_AND_INDEX
 
   /**
    * Create a map with keys being all values from enum [[SearchFieldFeature]], and values the given list of string
@@ -169,18 +170,19 @@ class SearchFieldCreationOptionsSpec
               createStructField(second, DataTypes.StringType)
             )
 
+
             val searchFields = getSearchFieldsMap(
               createAnalyzerOptions(
                 Seq(
-                  AnalyzerConfig(analyzer, Seq(second), SearchFieldActions.forSettingAnalyzer)
+                  AnalyzerConfig("hello", analyzer, analyzerType, Seq(second))
                 )
               ),
               schema
             )
 
             searchFields should have size schema.size
-            searchFields(first).getAnalyzerName shouldBe null
-            searchFields(second).getAnalyzerName shouldBe analyzer
+            analyzerType.getFromField(searchFields(first)) shouldBe null
+            analyzerType.getFromField(searchFields(second)) shouldBe analyzer
           }
 
           it("nested fields") {
@@ -198,7 +200,7 @@ class SearchFieldCreationOptionsSpec
             val searchFields = getSearchFieldsMap(
               createAnalyzerOptions(
                 Seq(
-                  AnalyzerConfig(analyzer, Seq(s"$first.$second"), SearchFieldActions.forSettingAnalyzer)
+                  AnalyzerConfig("hello", analyzer, analyzerType, Seq(s"$first.$second"))
                 )
               ),
               schema

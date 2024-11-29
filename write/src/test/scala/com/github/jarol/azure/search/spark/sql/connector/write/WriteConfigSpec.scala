@@ -25,6 +25,57 @@ class WriteConfigSpec
     actual.get should contain theSameElementsAs expected
   }
 
+  /**
+   * Create a raw configuration object for a collection of analyzers
+   * @param analyzer analyzer to set
+   * @param onFields map with keys being analyzer aliases and values being the list of fields on which to set the analyzer
+   * @return a raw configuration for multiple analyzers
+   */
+
+  final def rawConfigForAnalyzers(
+                                   analyzer: LexicalAnalyzerName,
+                                   analyzerType: SearchFieldAnalyzerType,
+                                   onFields: Map[String, Seq[String]]
+                                 ): Map[String, String] = {
+
+    // Base configuration
+    val aliasesMap = Map(
+      s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.ANALYZERS_PREFIX}${WriteConfig.ALIASES_SUFFIX}" -> onFields.keys.mkString(","),
+    )
+
+    onFields.foldLeft(aliasesMap) {
+      case (map, (alias, fields)) =>
+        // Enrich the existing configuration with the current analyzer configuration
+        map ++ rawConfigForAnalyzer(alias, analyzer, analyzerType, fields)
+    }
+  }
+
+  /**
+   * Create a raw configuration object for a single analyzer
+   * <br>
+   * The output map will contain the following keys
+   *  - analyzer type
+   *  - list of fields on which the analyzer should be set
+   * @param analyzerName analyzer
+   * @param alias analyzer alias
+   * @param onFields fields on which the analyzer should be set
+   * @return a raw configuration for an analyzer
+   */
+
+  final def rawConfigForAnalyzer(
+                                  alias: String,
+                                  analyzerName: LexicalAnalyzerName,
+                                  analyzerType: SearchFieldAnalyzerType,
+                                  onFields: Seq[String]
+                                ): Map[String, String] = {
+
+    Map(
+      s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.ANALYZERS_PREFIX}$alias.${WriteConfig.NAME_SUFFIX}" -> analyzerName.toString,
+      s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.ANALYZERS_PREFIX}$alias.${WriteConfig.TYPE_SUFFIX}" -> analyzerType.name(),
+      s"${WriteConfig.FIELD_OPTIONS_PREFIX}${WriteConfig.ANALYZERS_PREFIX}$alias.${WriteConfig.ON_FIELDS_SUFFIX}" -> onFields.mkString(",")
+    )
+  }
+
   describe(anInstanceOf[WriteConfig]) {
     describe(SHOULD) {
       describe("retrieve") {
@@ -120,8 +171,8 @@ class WriteConfigSpec
               // Create a map with analyzers, their configuration prefix, and fields that should be enriched
               val analyzersAndFields: Map[LexicalAnalyzerName, (SearchFieldAnalyzerType, Seq[String])] = Map(
                 LexicalAnalyzerName.EN_LUCENE -> (SearchFieldAnalyzerType.SEARCH_AND_INDEX, Seq("first", "second")),
-                LexicalAnalyzerName.BG_LUCENE -> (SearchFieldAnalyzerType.ONLY_SEARCH, Seq("second", "third")),
-                LexicalAnalyzerName.SIMPLE -> (SearchFieldAnalyzerType.ONLY_INDEX, Seq("third", "fourth"))
+                LexicalAnalyzerName.BG_LUCENE -> (SearchFieldAnalyzerType.SEARCH, Seq("second", "third")),
+                LexicalAnalyzerName.SIMPLE -> (SearchFieldAnalyzerType.INDEX, Seq("third", "fourth"))
               )
 
               // Base map for index creation
@@ -132,8 +183,9 @@ class WriteConfigSpec
               // Create the whole configuration map
               val configMap = analyzersAndFields.foldLeft(keyFieldMap) {
                 case (map, (analyzer, (analyzerType, fields))) =>
-                  map ++ analyzerType.rawConfigForAnalyzers(
+                  map ++ rawConfigForAnalyzers(
                     analyzer,
+                    analyzerType,
                     aliases.map {
                       alias => (alias, fields)
                     }.toMap
@@ -153,6 +205,7 @@ class WriteConfigSpec
               }.toMap
 
               // Assert that the two results are equivalent
+              // TODO: fix test
               actual should have size expected.size
               forAll(expected.toSeq) {
                 case (key, fields) =>

@@ -78,14 +78,6 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
   def searchFieldCreationOptions: SearchFieldCreationOptions = {
 
     val fieldOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
-    val analyzerConfigs: Seq[AnalyzerConfig] = Seq(
-      AnalyzerConfig.forAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)),
-      AnalyzerConfig.forSearchAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.SEARCH_ANALYZERS_PREFIX)),
-      AnalyzerConfig.forIndexAnalyzers(fieldOptions.getAllWithPrefix(WriteConfig.INDEX_ANALYZERS_PREFIX))
-    ).collect {
-      case Some(value) => value
-    }.flatten
-
     SearchFieldCreationOptions(
       fieldOptions.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None),
       fieldOptions.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
@@ -93,7 +85,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
       fieldOptions.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
       fieldOptions.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
       fieldOptions.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
-      if (analyzerConfigs.isEmpty) None else Some(analyzerConfigs),
+      AnalyzerConfig.createCollection(fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)),
       actionColumn
     )
   }
@@ -115,10 +107,9 @@ object WriteConfig {
   final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
   final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
 
-  final val ALIASES_CONFIG = "aliases"
   final val ANALYZERS_PREFIX = "analyzers."
-  final val SEARCH_ANALYZERS_PREFIX = "searchAnalyzers."
-  final val INDEX_ANALYZERS_PREFIX = "indexAnalyzers."
+  final val ALIASES_SUFFIX = "aliases"
+  final val NAME_SUFFIX = "name"
   final val TYPE_SUFFIX = "type"
   final val ON_FIELDS_SUFFIX = "onFields"
 
