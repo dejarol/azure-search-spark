@@ -28,7 +28,15 @@ case class AnalyzerConfig(
    * @return
    */
 
-  def actions: Seq[(String, SearchFieldAction)] = fields.map((_, `type`.setterAction(name)))
+  def actions: Seq[(String, SearchFieldAction)] = {
+
+    fields.map {
+      field => (
+        field,
+        SearchFieldActions.forSettingAnalyzer(`type`, name)
+      )
+    }
+  }
 }
 
 object AnalyzerConfig {
