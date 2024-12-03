@@ -1,6 +1,7 @@
-package com.github.jarol.azure.search.spark.sql.connector.core.schema
+package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField, SearchFieldDataType}
+import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchFieldDataType}
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 
 class SearchFieldActionsSpec
@@ -13,21 +14,21 @@ class SearchFieldActionsSpec
 
   /**
    * Assert that an action added an analyzer to a Search field definition
+   * @param analyzerType analyzer type
    * @param analyzerName analyzer to add
-   * @param actionSupplier function for generating the action responsible for adding the analyzer
-   * @param analyzerGetter function for retrieving the analyzer from a Search field
    */
 
   private def assertAddedAnalyzer(
-                                   analyzerName: LexicalAnalyzerName,
-                                   actionSupplier: LexicalAnalyzerName => SearchFieldAction,
-                                   analyzerGetter: SearchField => LexicalAnalyzerName
+                                   analyzerType: SearchFieldAnalyzerType,
+                                   analyzerName: LexicalAnalyzerName
                                  ): Unit = {
 
-    // Original field should have no analyzer, while the transformed (actual) field should have it
-    analyzerGetter(sampleField) shouldBe null
-    val actual = actionSupplier(analyzerName).apply(sampleField)
-    analyzerGetter(actual) shouldBe analyzerName
+    // Original field should have no analyzer,
+    analyzerType.getFromField(sampleField) shouldBe null
+
+    // while the transformed (actual) field should have it
+    val actual = SearchFieldActions.forSettingAnalyzer(analyzerType, analyzerName).apply(sampleField)
+    analyzerType.getFromField(actual) shouldBe analyzerName
   }
 
   describe(`object`[SearchFieldActions.type ]) {
@@ -53,9 +54,13 @@ class SearchFieldActionsSpec
 
         it("add analyzers") {
 
-          assertAddedAnalyzer(analyzer, SearchFieldActions.forSettingAnalyzer, _.getAnalyzerName)
-          assertAddedAnalyzer(analyzer, SearchFieldActions.forSettingSearchAnalyzer, _.getSearchAnalyzerName)
-          assertAddedAnalyzer(analyzer, SearchFieldActions.forSettingIndexAnalyzer, _.getIndexAnalyzerName)
+          forAll(SearchFieldAnalyzerType.values().toSeq) {
+            analyzerType =>
+              assertAddedAnalyzer(
+                analyzerType,
+                analyzer
+              )
+          }
         }
       }
     }

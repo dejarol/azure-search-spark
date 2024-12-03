@@ -14,6 +14,14 @@ class SchemaUtilsSpec
   private lazy val (first, second, third) = ("field1", "field2", "field3")
 
   /**
+   * Create an action that will enable a field feature
+   * @param feature feature to enable
+   * @return a [[SearchFieldAction]] that will enable a feature
+   */
+
+  private def actionForEnablingFeature(feature: SearchFieldFeature): SearchFieldAction = (field: SearchField) => feature.enableOnField(field)
+
+  /**
    * Convert a [[StructField]] to a [[SearchField]]
    * @param structField struct fields
    * @return the equivalent Search field
@@ -387,9 +395,7 @@ class SchemaUtilsSpec
               val (matchingFieldName, feature) = ("hello", SearchFieldFeature.SEARCHABLE)
               val matchingStructField = createStructField(matchingFieldName, DataTypes.StringType)
               val fieldActions = Map(
-                matchingFieldName -> Seq(
-                  SearchFieldActions.forEnablingFeature(feature)
-                )
+                matchingFieldName -> Seq(actionForEnablingFeature(feature))
               )
 
               val matchingSearchField = SchemaUtils.toSearchField(matchingStructField, fieldActions, None)
@@ -414,7 +420,7 @@ class SchemaUtilsSpec
 
               val fieldActions = Map(
                 s"$parentName.$matchingFieldName" -> Seq(
-                  SearchFieldActions.forEnablingFeature(feature)
+                  actionForEnablingFeature(feature)
                 )
               )
 

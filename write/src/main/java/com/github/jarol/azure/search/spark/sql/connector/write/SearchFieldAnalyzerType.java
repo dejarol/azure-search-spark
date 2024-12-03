@@ -91,20 +91,12 @@ public enum SearchFieldAnalyzerType {
      * @return an action for setting an analyzer on a field
      */
 
-    @Contract(value = "_ -> new", pure = true)
-    public @NotNull SearchFieldAction setterAction(
+    public @NotNull SearchField setOnField(
+            @NotNull SearchField field,
             @NotNull LexicalAnalyzerName name
     ) {
 
-        return new SearchFieldAction() {
-
-            @Override
-            public @NotNull SearchField apply(
-                    @NotNull SearchField field
-            ) {
-                return setter.apply(field, name);
-            }
-        };
+        return setter.apply(field, name);
     }
 
     /**
