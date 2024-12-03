@@ -85,7 +85,9 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
       fieldOptions.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
       fieldOptions.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
       fieldOptions.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
-      AnalyzerConfig.createCollection(fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)),
+      AnalyzerConfig.createCollection(
+        fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)
+      ),
       actionColumn
     )
   }

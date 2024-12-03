@@ -36,7 +36,7 @@ class AnalyzerConfigSpec
           it("invalid analyzer types") {
 
             a [NoSuchElementException] shouldBe thrownBy {
-              AnalyzerConfig.resolveType("hello")
+              AnalyzerConfig.resolveAnalyzerType("hello")
             }
           }
         }

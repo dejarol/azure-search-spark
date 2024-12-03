@@ -92,7 +92,7 @@ object AnalyzerConfig {
 
     for {
       name <- config.getAs[LexicalAnalyzerName](WriteConfig.NAME_SUFFIX, resolveLexicalAnalyzer)
-      analyzerType <- config.getAs[SearchFieldAnalyzerType](WriteConfig.TYPE_SUFFIX, resolveType)
+      analyzerType <- config.getAs[SearchFieldAnalyzerType](WriteConfig.TYPE_SUFFIX, resolveAnalyzerType)
       fields <- config.getAsList(WriteConfig.ON_FIELDS_SUFFIX)
     } yield AnalyzerConfig(alias, name, analyzerType, fields)
   }
@@ -132,7 +132,7 @@ object AnalyzerConfig {
    * @return the matching enum value
    */
 
-  private[write] def resolveType(name: String): SearchFieldAnalyzerType = {
+  private[write] def resolveAnalyzerType(name: String): SearchFieldAnalyzerType = {
 
     Generics.unsafeValueOfEnum[SearchFieldAnalyzerType](
       name,
