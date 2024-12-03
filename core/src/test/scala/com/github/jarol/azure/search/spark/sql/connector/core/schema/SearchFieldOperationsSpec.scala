@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema
 
-import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
@@ -10,6 +10,8 @@ class SearchFieldOperationsSpec
 
   private lazy val first = "first"
   private lazy val searchField = createSearchField(first, SearchFieldDataType.STRING)
+  private lazy val notSearchable: SearchFieldAction = (field: SearchField) => field.setSearchable(false)
+  private lazy val makeFacetable: SearchFieldAction = (field: SearchField) => field.setFacetable(true)
 
   describe(anInstanceOf[SearchFieldOperations]) {
     describe(SHOULD) {
@@ -32,11 +34,7 @@ class SearchFieldOperationsSpec
 
       it("apply some actions") {
 
-        val transformedField = searchField.applyActions(
-          SearchFieldActions.forDisablingFeature(SearchFieldFeature.SEARCHABLE),
-          SearchFieldActions.forEnablingFeature(SearchFieldFeature.FACETABLE)
-        )
-
+        val transformedField = searchField.applyActions(notSearchable, makeFacetable)
         transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
         transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
       }
