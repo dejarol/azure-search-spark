@@ -17,15 +17,15 @@ class SearchWriteBuilderITSpec
     WriteConfig.FIELD_OPTIONS_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
     )
 
-  private lazy val uuidField = "uuid"
-  private lazy val (parent, subField) = ("parent", "child")
+  private lazy val uuidFieldName = "uuid"
+  private lazy val (parent, subFieldName) = ("parent", "child")
   private lazy val schemaForAnalyzerTests = createStructType(
     keyField,
-    createStructField(uuidField, DataTypes.StringType),
+    createStructField(uuidFieldName, DataTypes.StringType),
     createStructField(
       parent,
       createStructType(
-        createStructField(subField, DataTypes.StringType),
+        createStructField(subFieldName, DataTypes.StringType),
         createStructField("other", DataTypes.TimestampType)
       )
     )
@@ -100,41 +100,20 @@ class SearchWriteBuilderITSpec
 
   /**
    * Create a Search index, setting some field analyzers, and get back the list of generated Search fields
-   * @param analyzerType analyzer type
-   * @param onFields map with keys being analyzers aliases and values being list of fields on which setting the analyzer
+   * @param analyzers analyzer map
    * @return fields from the newly created Search index
    */
 
-  private def createIndexSettingAnalyzers(
-                                           analyzerType: SearchFieldAnalyzerType,
-                                           onFields: Seq[String]
-                                         ): Map[String, SearchField] = {
+  private def createIndexSettingAnalyzers(analyzers: AnalyzerMap): Map[String, SearchField] = {
 
     indexExists(testIndex) shouldBe false
     safelyCreateIndex(
       schemaForAnalyzerTests,
-      rawConfigForAnalyzer("a1", analyzer, analyzerType, onFields)
+      rawConfigForAnalyzers(analyzers)
     )
 
     indexExists(testIndex) shouldBe true
     getIndexFields(testIndex)
-  }
-
-  /**
-   * Assert that an analyzer has been set
-   * @param analyzerType analyzer type
-   */
-
-  private def assertAnalyzerPresence(analyzerType: SearchFieldAnalyzerType): Unit = {
-
-    // Create Search index and retrieve fields
-    val searchFields = createIndexSettingAnalyzers(analyzerType, Seq(uuidField, s"$parent.$subField"))
-
-    // Asser that the analyzer has been set on both top-level field and sub-field
-    analyzerType.getFromField(searchFields(uuidField)) shouldBe analyzer
-    val maybeSubField = maybeGetSubField(searchFields, parent, subField)
-    maybeSubField shouldBe defined
-    analyzerType.getFromField(maybeSubField.get) shouldBe analyzer
   }
 
   describe(`object`[SearchWriteBuilder]) {
@@ -259,20 +238,40 @@ class SearchWriteBuilderITSpec
           }
 
           describe("analyzers for") {
-
             it("both searching and indexing") {
 
-              assertAnalyzerPresence(SearchFieldAnalyzerType.SEARCH_AND_INDEX)
+              val analyzerType = SearchFieldAnalyzerType.SEARCH_AND_INDEX
+              val analyzers = Map(
+                "a1" -> (analyzerType, analyzer, Seq(uuidFieldName, s"$parent.$subFieldName"))
+              )
+
+              val searchFields = createIndexSettingAnalyzers(analyzers)
+              analyzerType.getFromField(searchFields(uuidFieldName)) shouldBe analyzer
+              val maybeSubField = maybeGetSubField(searchFields, parent, subFieldName)
+              maybeSubField shouldBe defined
+              val subFieldDefinition = maybeSubField.get
+              analyzerType.getFromField(subFieldDefinition) shouldBe analyzer
             }
 
-            it("only searching") {
+            it("only search and indexing") {
 
-              assertAnalyzerPresence(SearchFieldAnalyzerType.SEARCH)
-            }
+              val fields = Seq(uuidFieldName, s"$parent.$subFieldName")
+              val analyzers = Map(
+                "a1" -> (SearchFieldAnalyzerType.SEARCH, LexicalAnalyzerName.SIMPLE, fields),
+                "a2" -> (SearchFieldAnalyzerType.INDEX, LexicalAnalyzerName.STOP, fields)
+              )
 
-            it("only indexing") {
+              val searchFields = createIndexSettingAnalyzers(analyzers)
+              val uuidField = searchFields(uuidFieldName)
+              val maybeSubField = maybeGetSubField(searchFields, parent, subFieldName)
+              maybeSubField shouldBe defined
+              val subField = maybeSubField.get
 
-              assertAnalyzerPresence(SearchFieldAnalyzerType.INDEX)
+              forAll(analyzers.toSeq) {
+                case (_, (analyzerType, name, _)) =>
+                  analyzerType.getFromField(uuidField) shouldBe name
+                  analyzerType.getFromField(subField) shouldBe name
+              }
             }
           }
         }

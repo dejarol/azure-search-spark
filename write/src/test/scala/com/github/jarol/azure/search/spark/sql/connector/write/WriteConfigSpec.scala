@@ -120,15 +120,9 @@ class WriteConfigSpec
                 "third" -> (SearchFieldAnalyzerType.INDEX, LexicalAnalyzerName.IT_MICROSOFT, Seq("a5", "a6"))
               )
 
-              val baseMap = Map(
-                fieldOptionKey(WriteConfig.KEY_FIELD_CONFIG) -> keyField,
-                analyzerOptionKey(WriteConfig.ALIASES_SUFFIX) -> aliases.keySet.mkString(",")
-              )
-
-              val rawConfig = aliases.foldLeft(baseMap) {
-                case (map, (alias, (analyzerType, name, onFields))) =>
-                  map ++ rawConfigForAnalyzer(alias, name, analyzerType, onFields)
-              }
+              val rawConfig = Map(
+                fieldOptionKey(WriteConfig.KEY_FIELD_CONFIG) -> keyField
+              ) ++ rawConfigForAnalyzers(aliases)
 
               val options = WriteConfig(rawConfig).searchFieldCreationOptions
               options.keyField shouldBe keyField
