@@ -25,7 +25,6 @@ trait SearchITSpec
   protected final lazy val SEARCH_END_POINT = sys.env("AZURE_SEARCH_ENDPOINT")
   protected final lazy val SEARCH_API_KEY = sys.env("AZURE_SEARCH_API_KEY")
   protected final lazy val KEY_CREDENTIALS = new AzureKeyCredential(SEARCH_API_KEY)
-
   protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
       .endpoint(SEARCH_END_POINT)
       .credential(KEY_CREDENTIALS)
@@ -99,13 +98,7 @@ trait SearchITSpec
    * @return true for existing indexes
    */
 
-  protected final def indexExists(name: String): Boolean = {
-
-   SearchUtils.indexExists(
-     searchIndexClient,
-     name
-   )
-  }
+  protected final def indexExists(name: String): Boolean = SearchUtils.indexExists(searchIndexClient, name)
 
   /**
    * Count the documents within an index (approximately)
@@ -207,8 +200,8 @@ trait SearchITSpec
                                                       ): Unit = {
 
 
-    val expectedFields = schema.map(_.name)
-    val actualFieldsNames = getIndexFields(index).keySet
+    val expectedFields = schema.map(_.name.toLowerCase)
+    val actualFieldsNames = getIndexFields(index).keySet.map(_.toLowerCase)
 
     // Assert same size and content
     actualFieldsNames should have size expectedFields.size

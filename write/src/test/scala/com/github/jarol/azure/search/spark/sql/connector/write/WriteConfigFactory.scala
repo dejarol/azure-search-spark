@@ -8,6 +8,8 @@ import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 
 trait WriteConfigFactory {
 
+  protected final type AnalyzerMap = Map[String, (SearchFieldAnalyzerType, LexicalAnalyzerName, Seq[String])]
+
   /**
    * Create a write config key related to search field creation options
    * @param suffix suffix to append
@@ -38,8 +40,8 @@ trait WriteConfigFactory {
 
   protected final def rawConfigForAnalyzer(
                                             alias: String,
-                                            analyzerName: LexicalAnalyzerName,
                                             analyzerType: SearchFieldAnalyzerType,
+                                            analyzerName: LexicalAnalyzerName,
                                             onFields: Seq[String]
                                           ): Map[String, String] = {
 
@@ -48,5 +50,23 @@ trait WriteConfigFactory {
       analyzerOptionKey(s"$alias.${WriteConfig.TYPE_SUFFIX}") -> analyzerType.name(),
       analyzerOptionKey(s"$alias.${WriteConfig.ON_FIELDS_SUFFIX}") -> onFields.mkString(",")
     )
+  }
+
+  /**
+   * Create a raw configuration object that includes options for many analyzers
+   * @param analyzers analyzer map
+   * @return a raw configuration object
+   */
+
+  protected final def rawConfigForAnalyzers(analyzers: AnalyzerMap): Map[String, String] = {
+
+    val baseMap = Map(
+      analyzerOptionKey(WriteConfig.ALIASES_SUFFIX) -> analyzers.keySet.mkString(",")
+    )
+
+    analyzers.foldLeft(baseMap) {
+      case (map, (alias, (analyzerType, name, fields))) =>
+        map ++ rawConfigForAnalyzer(alias, analyzerType, name, fields)
+    }
   }
 }
