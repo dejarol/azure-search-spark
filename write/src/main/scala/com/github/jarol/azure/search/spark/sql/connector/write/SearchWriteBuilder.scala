@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
+import com.azure.search.documents.indexes.models.{SearchField, SearchIndex, SimilarityAlgorithm}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{SupportsTruncate, Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType

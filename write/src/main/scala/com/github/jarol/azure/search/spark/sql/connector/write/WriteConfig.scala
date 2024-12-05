@@ -32,7 +32,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return batch size for writing
    */
 
-  def batchSize: Int = {
+  final def batchSize: Int = {
 
     getOrDefaultAs(
       WriteConfig.BATCH_SIZE_CONFIG,
@@ -46,7 +46,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return action type for indexing all documents
    */
 
-  def maybeUserSpecifiedAction: Option[IndexActionType] = {
+  final def maybeUserSpecifiedAction: Option[IndexActionType] = {
 
     getAs(
       WriteConfig.ACTION_CONFIG,
@@ -60,7 +60,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return action type for indexing all documents
    */
 
-  def overallAction: IndexActionType = maybeUserSpecifiedAction.getOrElse(WriteConfig.DEFAULT_ACTION_TYPE)
+  final def overallAction: IndexActionType = maybeUserSpecifiedAction.getOrElse(WriteConfig.DEFAULT_ACTION_TYPE)
 
   /**
    * Return the name of a dataframe column that contains a per-document action type.
@@ -68,14 +68,14 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return column name for document action
    */
 
-  def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
+  final def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
 
   /**
    * Get the set of options for defining Search fields for target index
    * @return options for defining fields on target Search index
    */
 
-  def searchFieldCreationOptions: SearchFieldCreationOptions = {
+  final def searchFieldCreationOptions: SearchFieldCreationOptions = {
 
     val fieldOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
     SearchFieldCreationOptions(
