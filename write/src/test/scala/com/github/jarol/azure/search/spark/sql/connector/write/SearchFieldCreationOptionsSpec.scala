@@ -11,7 +11,7 @@ class SearchFieldCreationOptionsSpec
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
   private lazy val analyzer = LexicalAnalyzerName.BN_MICROSOFT
-  private lazy val analyzerType = SearchFieldAnalyzerType.SEARCH_AND_INDEX
+  private lazy val analyzerType = SearchFieldAnalyzerType.ANALYZER
 
   /**
    * Create a map with keys being all values from enum [[SearchFieldFeature]], and values the given list of string

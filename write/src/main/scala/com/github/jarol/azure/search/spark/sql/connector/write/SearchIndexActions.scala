@@ -1,12 +1,24 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{LexicalTokenizer, SearchIndex, SearchSuggester}
+import com.azure.search.documents.indexes.models.{LexicalTokenizer, SearchIndex, SearchSuggester, SimilarityAlgorithm}
 
 /**
  * Collection of factory methods for creating [[SearchIndexAction]]
  */
 
 object SearchIndexActions {
+
+  /**
+   * Action for setting a similarity algorithm
+   * @param algorithm algorithm
+   */
+
+  private case class SetSimilarityAlgorithm(private val algorithm: SimilarityAlgorithm)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setSimilarity(algorithm)
+    }
+  }
 
   /**
    * Action for setting tokenizers
@@ -31,6 +43,14 @@ object SearchIndexActions {
       index.setSuggesters(suggesters: _*)
     }
   }
+
+  /**
+   * Create an action for setting the similarity algorithm
+   * @param algorithm algorithm to set
+   * @return an action for setting the similarity algorithm
+   */
+
+  final def forSettingSimilarityAlgorithm(algorithm: SimilarityAlgorithm): SearchIndexAction = SetSimilarityAlgorithm(algorithm)
 
   /**
    * Create an action for setting some tokenizers on a [[SearchIndex]]

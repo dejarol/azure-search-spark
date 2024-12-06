@@ -27,8 +27,8 @@ public enum SearchFieldAnalyzerType {
      * Instance for both searching and indexing
      */
 
-    SEARCH_AND_INDEX(
-            "searchAndIndex",
+    ANALYZER(
+            "analyzer",
             SearchField::setAnalyzerName,
             SearchField::getAnalyzerName
     ),
@@ -37,8 +37,8 @@ public enum SearchFieldAnalyzerType {
      * Instance for only searching
      */
 
-    SEARCH(
-            "search",
+    SEARCH_ANALYZER(
+            "searchAnalyzer",
             SearchField::setSearchAnalyzerName,
             SearchField::getSearchAnalyzerName
     ),
@@ -47,8 +47,8 @@ public enum SearchFieldAnalyzerType {
      * Instance for only indexing
      */
 
-    INDEX(
-            "index",
+    INDEX_ANALYZER(
+            "indexAnalyzer",
             SearchField::setIndexAnalyzerName,
             SearchField::getIndexAnalyzerName
     );

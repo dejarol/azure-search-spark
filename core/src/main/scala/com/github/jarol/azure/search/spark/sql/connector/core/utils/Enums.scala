@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import scala.reflect.ClassTag
 
-object Generics {
+object Enums {
 
   /**
    * Retrieve the class of a type from its class tag
@@ -25,7 +25,7 @@ object Generics {
    * @return the first enum value that matches the predicate
    */
 
-  final def safeValueOfEnum[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): Option[E] = {
+  final def safeValueOf[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): Option[E] = {
 
     classFromClassTag[E]
       .getEnumConstants
@@ -42,9 +42,9 @@ object Generics {
    */
 
   @throws[NoSuchElementException]
-  final def unsafeValueOfEnum[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): E = {
+  final def unsafeValueOf[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): E = {
 
-    safeValueOfEnum[E](value, predicate) match {
+    safeValueOf[E](value, predicate) match {
       case Some(value) => value
       case None => throw new NoSuchElementException(
         s"Could not find a matching value on enum ${classFromClassTag[E].getName}"

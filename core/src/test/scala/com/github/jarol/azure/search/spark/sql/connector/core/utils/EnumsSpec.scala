@@ -2,38 +2,38 @@ package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
-class GenericsSpec
+class EnumsSpec
   extends BasicSpec {
 
   private lazy val enumPredicate: (OperationType, String) => Boolean = (v, s) => v.name().equalsIgnoreCase(s)
 
-  describe(`object`[Generics.type ]) {
+  describe(`object`[Enums.type ]) {
     describe(SHOULD) {
       describe("retrieve values from an enum") {
 
         it("safely") {
 
           forAll(OperationType.values().toSeq) {
-            v => Generics.safeValueOfEnum[OperationType](
+            v => Enums.safeValueOf[OperationType](
               v.name(),
               enumPredicate
             ) shouldBe defined
           }
 
-          Generics.safeValueOfEnum[OperationType]("hello", enumPredicate) shouldBe empty
+          Enums.safeValueOf[OperationType]("hello", enumPredicate) shouldBe empty
         }
 
         it("unsafely") {
 
           forAll(OperationType.values().toSeq) {
-            v => Generics.unsafeValueOfEnum[OperationType](
+            v => Enums.unsafeValueOf[OperationType](
               v.name(),
               enumPredicate
             ) shouldBe v
           }
 
           a[NoSuchElementException] shouldBe thrownBy {
-            Generics.unsafeValueOfEnum[OperationType]("hello", enumPredicate)
+            Enums.unsafeValueOf[OperationType]("hello", enumPredicate)
           }
         }
       }

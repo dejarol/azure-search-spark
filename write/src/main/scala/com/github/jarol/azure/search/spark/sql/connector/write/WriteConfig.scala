@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.IndexDocumentsBatch
+import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, SimilarityAlgorithm}
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -91,6 +91,31 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
       actionColumn
     )
   }
+
+  /**
+   * Get the (optional) similarity algorithm to set on the newly created Azure Search index
+   * @return the [[SimilarityAlgorithm]] for the new index
+   */
+
+  final def similarityAlgorithm: Option[SimilarityAlgorithm] = {
+
+    getAs[SimilarityAlgorithm](
+      WriteConfig.SIMILARITY,
+      JsonUtils.unsafelyReadAzModel[SimilarityAlgorithm](
+        _,
+        SimilarityAlgorithm.fromJson
+      )
+    )
+  }
+
+  final def collectSearchIndexActions: Seq[SearchIndexAction] = {
+
+    Seq(
+      similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm)
+    ).collect {
+      case Some(value) => value
+    }
+  }
 }
 
 object WriteConfig {
@@ -115,6 +140,8 @@ object WriteConfig {
   final val TYPE_SUFFIX = "type"
   final val ON_FIELDS_SUFFIX = "onFields"
 
+  final val SIMILARITY = "similarity"
+
   /**
    * Create an instance from a simple map
    * @param options local options
@@ -136,7 +163,7 @@ object WriteConfig {
 
   private[write] def valueOfIndexActionType(value: String): IndexActionType = {
 
-    Generics.unsafeValueOfEnum[IndexActionType](
+    Enums.unsafeValueOf[IndexActionType](
       value,
       (v, s) => v.name().equalsIgnoreCase(s) ||
         v.toString.equalsIgnoreCase(s)

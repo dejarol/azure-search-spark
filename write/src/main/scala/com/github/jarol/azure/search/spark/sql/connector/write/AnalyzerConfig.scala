@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldAction
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 
 import java.util.stream.Collectors
 
@@ -134,7 +134,7 @@ object AnalyzerConfig {
 
   private[write] def resolveAnalyzerType(name: String): SearchFieldAnalyzerType = {
 
-    Generics.unsafeValueOfEnum[SearchFieldAnalyzerType](
+    Enums.unsafeValueOf[SearchFieldAnalyzerType](
       name,
       (e, v) => e.name().equalsIgnoreCase(v) ||
         e.description().equalsIgnoreCase(v)

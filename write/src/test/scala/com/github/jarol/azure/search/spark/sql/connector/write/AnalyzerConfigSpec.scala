@@ -10,7 +10,7 @@ class AnalyzerConfigSpec
   private lazy val alias = "first"
   private lazy val fieldList = Seq("hello", "world")
   private lazy val lexicalAnalyzerName = LexicalAnalyzerName.AR_LUCENE
-  private lazy val analyzerType = SearchFieldAnalyzerType.INDEX
+  private lazy val analyzerType = SearchFieldAnalyzerType.INDEX_ANALYZER
 
   /**
    * Create a [[SearchConfig]] instance
@@ -148,8 +148,8 @@ class AnalyzerConfigSpec
 
         val (a1, a2) = ("a1", "a2")
         val expected: Map[String, (LexicalAnalyzerName, SearchFieldAnalyzerType, Seq[String])] = Map(
-          a1 -> (LexicalAnalyzerName.BN_MICROSOFT, SearchFieldAnalyzerType.SEARCH, Seq("first", "second")),
-          a2 -> (LexicalAnalyzerName.STOP, SearchFieldAnalyzerType.INDEX, Seq("third", "fourth"))
+          a1 -> (LexicalAnalyzerName.BN_MICROSOFT, SearchFieldAnalyzerType.SEARCH_ANALYZER, Seq("first", "second")),
+          a2 -> (LexicalAnalyzerName.STOP, SearchFieldAnalyzerType.INDEX_ANALYZER, Seq("third", "fourth"))
         )
 
         val rawConfig = expected.foldLeft(
@@ -185,7 +185,7 @@ class AnalyzerConfigSpec
       it("define a collection of actions") {
 
         val analyzer = LexicalAnalyzerName.BN_MICROSOFT
-        val actions = AnalyzerConfig(alias, analyzer, SearchFieldAnalyzerType.SEARCH, fieldList).actions
+        val actions = AnalyzerConfig(alias, analyzer, SearchFieldAnalyzerType.SEARCH_ANALYZER, fieldList).actions
         actions should have size fieldList.size
         actions.map {
           case (k, _) => k

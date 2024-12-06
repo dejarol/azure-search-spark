@@ -115,9 +115,9 @@ class WriteConfigSpec
             it("field analyzers") {
 
               val aliases: Map[String, (SearchFieldAnalyzerType, LexicalAnalyzerName, Seq[String])] = Map(
-                "first" -> (SearchFieldAnalyzerType.SEARCH_AND_INDEX, LexicalAnalyzerName.SIMPLE, Seq("a1", "a2")),
-                "second" -> (SearchFieldAnalyzerType.SEARCH, LexicalAnalyzerName.STOP, Seq("a3", "a4")),
-                "third" -> (SearchFieldAnalyzerType.INDEX, LexicalAnalyzerName.IT_MICROSOFT, Seq("a5", "a6"))
+                "first" -> (SearchFieldAnalyzerType.ANALYZER, LexicalAnalyzerName.SIMPLE, Seq("a1", "a2")),
+                "second" -> (SearchFieldAnalyzerType.SEARCH_ANALYZER, LexicalAnalyzerName.STOP, Seq("a3", "a4")),
+                "third" -> (SearchFieldAnalyzerType.INDEX_ANALYZER, LexicalAnalyzerName.IT_MICROSOFT, Seq("a5", "a6"))
               )
 
               val rawConfig = Map(
@@ -144,6 +144,16 @@ class WriteConfigSpec
               }
             }
           }
+        }
+
+        it("the similarity algorithm") {
+
+          // TODO: defined test
+        }
+
+        it("the set of actions to apply on a Search index") {
+
+          // TODO: defined test
         }
       }
     }

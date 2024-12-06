@@ -28,6 +28,15 @@ class SearchIndexActionsSpec
   describe(`object`[SearchIndexActions.type ]) {
     describe(SHOULD) {
       describe("provide methods for creating actions that") {
+
+        it("set a similarity algorithm") {
+
+          val algorithm = new ClassicSimilarityAlgorithm
+          emptyIndex.getSimilarity shouldBe null
+          val transformedIndex = SearchIndexActions.forSettingSimilarityAlgorithm(algorithm).apply(emptyIndex)
+          transformedIndex.getSimilarity shouldBe algorithm
+        }
+
         it("set tokenizers") {
 
           val tokenizers = Seq(

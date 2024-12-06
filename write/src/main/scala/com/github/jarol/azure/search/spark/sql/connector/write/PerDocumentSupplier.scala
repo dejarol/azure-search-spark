@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.Generics
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
@@ -20,7 +20,7 @@ case class PerDocumentSupplier private(private val actionColumnIndex: Int,
     if (row.isNullAt(actionColumnIndex)) {
       default
     } else {
-      Generics.safeValueOfEnum[IndexActionType](
+      Enums.safeValueOf[IndexActionType](
         row.getString(actionColumnIndex),
         (e, s) => e.name().equalsIgnoreCase(s) || e.toString.equalsIgnoreCase(s)
       ).getOrElse(

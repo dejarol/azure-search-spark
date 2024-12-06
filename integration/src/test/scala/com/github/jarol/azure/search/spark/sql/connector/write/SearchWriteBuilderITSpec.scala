@@ -240,7 +240,7 @@ class SearchWriteBuilderITSpec
           describe("analyzers for") {
             it("both searching and indexing") {
 
-              val analyzerType = SearchFieldAnalyzerType.SEARCH_AND_INDEX
+              val analyzerType = SearchFieldAnalyzerType.ANALYZER
               val analyzers = Map(
                 "a1" -> (analyzerType, analyzer, Seq(uuidFieldName, s"$parent.$subFieldName"))
               )
@@ -257,8 +257,8 @@ class SearchWriteBuilderITSpec
 
               val fields = Seq(uuidFieldName, s"$parent.$subFieldName")
               val analyzers = Map(
-                "a1" -> (SearchFieldAnalyzerType.SEARCH, LexicalAnalyzerName.SIMPLE, fields),
-                "a2" -> (SearchFieldAnalyzerType.INDEX, LexicalAnalyzerName.STOP, fields)
+                "a1" -> (SearchFieldAnalyzerType.SEARCH_ANALYZER, LexicalAnalyzerName.SIMPLE, fields),
+                "a2" -> (SearchFieldAnalyzerType.INDEX_ANALYZER, LexicalAnalyzerName.STOP, fields)
               )
 
               val searchFields = createIndexSettingAnalyzers(analyzers)
