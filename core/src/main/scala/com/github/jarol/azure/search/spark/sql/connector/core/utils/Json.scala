@@ -1,17 +1,17 @@
-package com.github.jarol.azure.search.spark.sql.connector.write
+package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import com.azure.json.implementation.DefaultJsonReader
 import com.azure.json.{JsonOptions, JsonReader}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 
-import scala.util.Try
 import java.util.{List => JList}
+import scala.util.Try
 
 /**
  * Collection of utility methods for dealing with json serialization/deserialization
  */
 
-object JsonUtils {
+object Json {
 
   /**
    * Deserialize a json to an Azure Search REST API model.

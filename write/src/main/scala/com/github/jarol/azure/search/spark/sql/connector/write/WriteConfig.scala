@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, LexicalTokenizer, SimilarityAlgorithm}
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.{Enums, Json}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -97,21 +97,43 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
    * @return the [[SimilarityAlgorithm]] for the new index
    */
 
-  final def similarityAlgorithm: Option[SimilarityAlgorithm] = {
+  private[write] def similarityAlgorithm: Option[SimilarityAlgorithm] = {
 
     getAs[SimilarityAlgorithm](
       WriteConfig.SIMILARITY,
-      JsonUtils.unsafelyReadAzModel[SimilarityAlgorithm](
+      Json.unsafelyReadAzModel[SimilarityAlgorithm](
         _,
         SimilarityAlgorithm.fromJson
       )
     )
   }
 
-  final def collectSearchIndexActions: Seq[SearchIndexAction] = {
+  /**
+   * Get the (optional) collection of tokenizers to set on the newly created Azure Search index
+   * @return the collection of [[LexicalTokenizer]] for the new index
+   */
+
+  private[write] def tokenizers: Option[Seq[LexicalTokenizer]] = {
+
+    getAs[Seq[LexicalTokenizer]](
+      WriteConfig.TOKENIZERS,
+      Json.unsafelyReadAzModelArray[LexicalTokenizer](
+        _,
+        LexicalTokenizer.fromJson
+      )
+    )
+  }
+
+  /**
+   * Get the set of actions to apply on a simple Search index
+   * @return actions to apply in order to enrich a Search index definition
+   */
+
+  final def searchIndexActions: Seq[SearchIndexAction] = {
 
     Seq(
-      similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm)
+      similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm),
+      tokenizers.map(SearchIndexActions.forSettingTokenizers)
     ).collect {
       case Some(value) => value
     }
@@ -141,6 +163,7 @@ object WriteConfig {
   final val ON_FIELDS_SUFFIX = "onFields"
 
   final val SIMILARITY = "similarity"
+  final val TOKENIZERS = "tokenizers"
 
   /**
    * Create an instance from a simple map

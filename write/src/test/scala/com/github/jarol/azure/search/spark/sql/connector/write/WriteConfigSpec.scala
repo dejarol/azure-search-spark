@@ -1,13 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.LexicalAnalyzerName
+import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, ClassicTokenizer, LexicalAnalyzerName}
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, SearchAPIModelFactory}
 
 class WriteConfigSpec
   extends BasicSpec
-    with WriteConfigFactory {
+    with WriteConfigFactory
+      with SearchAPIModelFactory {
 
   private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
   private lazy val (keyField, indexActionColumn) = ("hello", "world")
@@ -148,12 +149,75 @@ class WriteConfigSpec
 
         it("the similarity algorithm") {
 
-          // TODO: defined test
+          // No configuration
+          emptyConfig.similarityAlgorithm shouldBe empty
+
+          // Invalid case
+          a[ConfigException] shouldBe thrownBy {
+
+            WriteConfig(
+              Map(
+                WriteConfig.SIMILARITY -> createSimpleODataType("#hello")
+              )
+            ).similarityAlgorithm
+          }
+
+          // Valid case
+          val (k1, b) = (0.1, 0.2)
+          val maybeAlgorithm = WriteConfig(
+            Map(
+              WriteConfig.SIMILARITY -> createBM25SimilarityAlgorithm(k1, b)
+            )
+          ).similarityAlgorithm
+          maybeAlgorithm shouldBe defined
+          maybeAlgorithm.get shouldBe a [BM25SimilarityAlgorithm]
+        }
+
+        it("index tokenizers") {
+
+          // No configuration
+          emptyConfig.tokenizers shouldBe empty
+
+          // Invalid case
+          a [ConfigException] shouldBe thrownBy {
+
+            WriteConfig(
+              Map(
+                WriteConfig.TOKENIZERS -> createArray(
+                  createSimpleODataType("hello")
+                )
+              )
+            ).tokenizers
+          }
+
+          // Valid case
+          val maybeTokenizers = WriteConfig(
+            Map(
+              WriteConfig.TOKENIZERS -> createArray(
+                createClassicTokenizer("tokenizerName", 20)
+              )
+            )
+          ).tokenizers
+
+          maybeTokenizers shouldBe defined
+          val tokenizers = maybeTokenizers.get
+          tokenizers should have size 1
+          val head = tokenizers.head
+          head shouldBe a [ClassicTokenizer]
         }
 
         it("the set of actions to apply on a Search index") {
 
-          // TODO: defined test
+          val actions = WriteConfig(
+            Map(
+              WriteConfig.SIMILARITY -> createBM25SimilarityAlgorithm(0.1, 0.3),
+              WriteConfig.TOKENIZERS -> createArray(
+                createClassicTokenizer("classicTok", 10)
+              )
+            )
+          ).searchIndexActions
+
+          actions should have size 2
         }
       }
     }
