@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{LexicalTokenizer, SearchIndex, SearchSuggester, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models.{LexicalAnalyzer, LexicalTokenizer, SearchIndex, SearchSuggester, SimilarityAlgorithm}
 
 /**
  * Collection of factory methods for creating [[SearchIndexAction]]
@@ -45,6 +45,18 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting analyzers
+   * @param analyzers analyzers to set
+   */
+
+  private case class SetAnalyzers(private val analyzers: Seq[LexicalAnalyzer])
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setAnalyzers(analyzers: _*)
+    }
+  }
+
+  /**
    * Create an action for setting the similarity algorithm
    * @param algorithm algorithm to set
    * @return an action for setting the similarity algorithm
@@ -53,9 +65,9 @@ object SearchIndexActions {
   final def forSettingSimilarityAlgorithm(algorithm: SimilarityAlgorithm): SearchIndexAction = SetSimilarityAlgorithm(algorithm)
 
   /**
-   * Create an action for setting some tokenizers on a [[SearchIndex]]
+   * Create an action for setting some tokenizers
    * @param tokenizers tokenizer to set
-   * @return an action for setting some tokenizers on a [[SearchIndex]]
+   * @return an action for setting some tokenizers
    */
 
   final def forSettingTokenizers(tokenizers: Seq[LexicalTokenizer]): SearchIndexAction = SetTokenizers(tokenizers)
@@ -67,4 +79,12 @@ object SearchIndexActions {
    */
 
   final def forSettingSuggesters(suggesters: Seq[SearchSuggester]): SearchIndexAction = SetSuggesters(suggesters)
+
+  /**
+   * Create an action for setting analyzers
+   * @param analyzers analyzers to set
+   * @return an action for setting some lexical analyzers
+   */
+
+  final def forSettingAnalyzers(analyzers: Seq[LexicalAnalyzer]): SearchIndexAction = SetAnalyzers(analyzers)
 }

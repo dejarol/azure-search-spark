@@ -1,10 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.core
 
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
+
 /**
  * Mix-in trait for specs that deal with json representing Azure Search REST API models
  */
 
 trait SearchAPIModelFactory {
+
+  /**
+   * Create a json array by joining many json strings
+   * @param elements json strings
+   * @return a json array
+   */
 
   protected final def createArray(elements: String*): String = elements.mkString("[", ",", "]")
 
@@ -58,6 +66,44 @@ trait SearchAPIModelFactory {
        |  "${TestConstants.ODATA_TYPE}": "${TestConstants.CLASSIC_TOKENIZER}",
        |  "name": "$name",
        |  "maxTokenLength": $maxTokenLength
+       |}""".stripMargin
+  }
+
+  /**
+   * Create a json representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
+   * @param name name
+   * @param fields fields
+   * @return a json representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
+   */
+
+  protected final def createSearchSuggester(
+                                             name: String,
+                                             fields: Seq[String]
+                                           ): String = {
+    s"""
+       |{
+       |  "name": "$name",
+       |  "sourceFields": ${fields.map(StringUtils.quoted).mkString("[", ",", "]")}
+       |}""".stripMargin
+  }
+
+  /**
+   * Create a json representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
+   * @param name name
+   * @param stopWords stop words
+   * @return a json representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
+   */
+
+  protected final def createStopAnalyzer(
+                                          name: String,
+                                          stopWords: Seq[String]
+                                        ): String = {
+
+    s"""
+       |{
+       |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.StopAnalyzer",
+       |  "name": "$name",
+       |  "stopwords": ${stopWords.map(StringUtils.quoted).mkString("[", ",", "]")}
        |}""".stripMargin
   }
 }

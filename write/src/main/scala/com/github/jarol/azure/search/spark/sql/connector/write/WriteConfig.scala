@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
+import com.azure.json.JsonReader
 import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, LexicalTokenizer, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, LexicalAnalyzer, LexicalTokenizer, SearchSuggester, SimilarityAlgorithm}
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.{Enums, Json}
@@ -93,6 +94,30 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
   }
 
   /**
+   * Get an optional collection of instances representing Azure Search REST API models
+   * (like [[SimilarityAlgorithm]], [[LexicalTokenizer]], etc ...) from the json string
+   * related to a configuration key
+   * @param key configuration key
+   * @param function deserialization function
+   * @tparam T target type
+   * @return an optional collection of Azure API models
+   */
+
+  private def getArrayOfAzModels[T](
+                                     key: String,
+                                     function: JsonReader => T
+                                   ): Option[Seq[T]] = {
+
+    getAs[Seq[T]](
+      key,
+      jsonString => Json.unsafelyReadAzModelArray[T](
+        jsonString,
+        function
+      )
+    )
+  }
+
+  /**
    * Get the (optional) similarity algorithm to set on the newly created Azure Search index
    * @return the [[SimilarityAlgorithm]] for the new index
    */
@@ -100,7 +125,7 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
   private[write] def similarityAlgorithm: Option[SimilarityAlgorithm] = {
 
     getAs[SimilarityAlgorithm](
-      WriteConfig.SIMILARITY,
+      WriteConfig.SIMILARITY_CONFIG,
       Json.unsafelyReadAzModel[SimilarityAlgorithm](
         _,
         SimilarityAlgorithm.fromJson
@@ -115,12 +140,35 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
 
   private[write] def tokenizers: Option[Seq[LexicalTokenizer]] = {
 
-    getAs[Seq[LexicalTokenizer]](
-      WriteConfig.TOKENIZERS,
-      Json.unsafelyReadAzModelArray[LexicalTokenizer](
-        _,
-        LexicalTokenizer.fromJson
-      )
+    getArrayOfAzModels[LexicalTokenizer](
+      WriteConfig.TOKENIZERS_CONFIG,
+      LexicalTokenizer.fromJson
+    )
+  }
+
+  /**
+   * Get the (optional) collection of search suggesters to set on the newly created Azure Search index
+   * @return the collection of [[SearchSuggester]] for the new index
+   */
+
+  private[write] def searchSuggesters: Option[Seq[SearchSuggester]] = {
+
+    getArrayOfAzModels[SearchSuggester](
+      WriteConfig.SEARCH_SUGGESTERS_CONFIG,
+      SearchSuggester.fromJson
+    )
+  }
+
+  /**
+   * Get the (optional) collection of [[LexicalAnalyzer]] to set on newly created index
+   * @return collection of [[LexicalAnalyzer]] for the new index
+   */
+
+  private[write] def analyzers: Option[Seq[LexicalAnalyzer]] = {
+
+    getArrayOfAzModels[LexicalAnalyzer](
+      WriteConfig.ANALYZERS_CONFIG,
+      LexicalAnalyzer.fromJson
     )
   }
 
@@ -133,7 +181,9 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
 
     Seq(
       similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm),
-      tokenizers.map(SearchIndexActions.forSettingTokenizers)
+      tokenizers.map(SearchIndexActions.forSettingTokenizers),
+      searchSuggesters.map(SearchIndexActions.forSettingSuggesters),
+      analyzers.map(SearchIndexActions.forSettingAnalyzers)
     ).collect {
       case Some(value) => value
     }
@@ -162,8 +212,10 @@ object WriteConfig {
   final val TYPE_SUFFIX = "type"
   final val ON_FIELDS_SUFFIX = "onFields"
 
-  final val SIMILARITY = "similarity"
-  final val TOKENIZERS = "tokenizers"
+  final val SIMILARITY_CONFIG = "similarity"
+  final val TOKENIZERS_CONFIG = "tokenizers"
+  final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
+  final val ANALYZERS_CONFIG = "analyzers"
 
   /**
    * Create an instance from a simple map

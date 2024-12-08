@@ -60,6 +60,16 @@ class SearchIndexActionsSpec
           val transformedIndex = SearchIndexActions.forSettingSuggesters(suggesters).apply(emptyIndex)
           transformedIndex.getSuggesters should contain theSameElementsAs suggesters
         }
+
+        it("set analyzers") {
+
+          val analyzers = Seq(
+            new StopAnalyzer("stop")
+          )
+          emptyIndex.getAnalyzers shouldBe null
+          val transformedIndex = SearchIndexActions.forSettingAnalyzers(analyzers).apply(emptyIndex)
+          transformedIndex.getAnalyzers should contain theSameElementsAs analyzers
+        }
       }
     }
   }
