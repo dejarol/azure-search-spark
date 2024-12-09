@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.json.JsonReader
 import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, LexicalAnalyzer, LexicalTokenizer, SearchSuggester, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models.{CharFilter, IndexDocumentsBatch, LexicalAnalyzer, LexicalTokenizer, SearchSuggester, SimilarityAlgorithm}
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchIOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.{Enums, Json}
@@ -10,11 +10,11 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Write configuration
- * @param dsOptions  write options passed to the dataSource
+ * @param options  write options passed to the dataSource
  */
 
-case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[String])
-  extends SearchIOConfig(dsOptions) {
+case class WriteConfig(override protected val options: CaseInsensitiveMap[String])
+  extends SearchIOConfig(options) {
 
   /**
    * Index a batch of documents on target index
@@ -90,6 +90,13 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
         fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)
       ),
       actionColumn
+    )
+  }
+
+  def searchIndexCreationOptions: SearchIndexCreationOptions = {
+
+    SearchIndexCreationOptions(
+      getAllWithPrefix(WriteConfig.INDEX_OPTIONS_PREFIX)
     )
   }
 
@@ -173,6 +180,19 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
   }
 
   /**
+   * Get the (optional) collection of [[CharFilter]] to set on newly created index
+   * @return collection of [[CharFilter]] for the new index
+   */
+
+  private[write] def charFilters: Option[Seq[CharFilter]] = {
+
+    getArrayOfAzModels[CharFilter](
+      WriteConfig.CHAR_FILTERS,
+      CharFilter.fromJson
+    )
+  }
+
+  /**
    * Get the set of actions to apply on a simple Search index
    * @return actions to apply in order to enrich a Search index definition
    */
@@ -183,7 +203,8 @@ case class WriteConfig(override protected val dsOptions: CaseInsensitiveMap[Stri
       similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm),
       tokenizers.map(SearchIndexActions.forSettingTokenizers),
       searchSuggesters.map(SearchIndexActions.forSettingSuggesters),
-      analyzers.map(SearchIndexActions.forSettingAnalyzers)
+      analyzers.map(SearchIndexActions.forSettingAnalyzers),
+      charFilters.map(SearchIndexActions.forSettingCharFilters)
     ).collect {
       case Some(value) => value
     }
@@ -206,6 +227,8 @@ object WriteConfig {
   final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
   final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
 
+  final val INDEX_OPTIONS_PREFIX = "indexOptions."
+
   final val ANALYZERS_PREFIX = "analyzers."
   final val ALIASES_SUFFIX = "aliases"
   final val NAME_SUFFIX = "name"
@@ -216,6 +239,7 @@ object WriteConfig {
   final val TOKENIZERS_CONFIG = "tokenizers"
   final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
   final val ANALYZERS_CONFIG = "analyzers"
+  final val CHAR_FILTERS = "charFilters"
 
   /**
    * Create an instance from a simple map

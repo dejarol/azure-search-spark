@@ -10,11 +10,11 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Parent class for read/write configurations
- * @param dsOptions  options passed to the dataSource
+ * @param options  options passed to the dataSource
  */
 
-class SearchIOConfig(override protected val dsOptions: CaseInsensitiveMap[String])
-  extends SearchConfig(dsOptions)
+class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
+  extends SearchConfig(options)
     with IOConfig {
 
   /**

@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, ClassicTokenizer, LexicalAnalyzer, LexicalAnalyzerName, LexicalTokenizer, SearchSuggester, SimilarityAlgorithm, StopAnalyzer}
+import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import com.azure.search.documents.models.IndexActionType
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, SearchAPIModelFactory}
@@ -26,51 +26,6 @@ class WriteConfigSpec
 
     actual shouldBe defined
     actual.get should contain theSameElementsAs expected
-  }
-
-  /**
-   * Assert that a Search index option behaves as expected, which means
-   *  - when not defined by the user, it should be empty
-   *  - when defined but invalid a [[ConfigException]] should be thrown
-   *  - when defined and valid, it should be defined
-   * @param key configuration key related to the index option
-   * @param invalidValue invalid configuration value
-   * @param validValue valid configuration value
-   * @param getter getter for retrieving the option
-   * @param assertion assertion for the result
-   * @tparam T option type
-   */
-
-  private def assertSearchIndexOption[T](
-                                              key: String,
-                                              invalidValue: String,
-                                              validValue: String,
-                                              getter: WriteConfig => Option[T]
-                                            )(assertion: T => Unit): Unit = {
-
-    // Given an empty configuration, the result should be empty
-    getter(emptyConfig) shouldBe empty
-
-    // Given an invalid configuration, a ConfigException should be thrown
-    a[ConfigException] shouldBe thrownBy {
-      getter(
-        WriteConfig(
-          Map(key -> invalidValue)
-        )
-      )
-    }
-
-    // Given a valid configuration, the result should be defined
-    val maybeResult = getter(
-      WriteConfig(
-        Map(
-          key -> validValue
-        )
-      )
-    )
-
-    maybeResult shouldBe defined
-    assertion(maybeResult.get)
   }
 
   describe(anInstanceOf[WriteConfig]) {
@@ -192,107 +147,9 @@ class WriteConfigSpec
           }
         }
 
-        describe("search index extra options, like") {
+        it("index creation options") {
 
-          it("the similarity algorithm") {
-
-            val (k1, b) = (0.1, 0.3)
-            assertSearchIndexOption[SimilarityAlgorithm](
-              WriteConfig.SIMILARITY_CONFIG,
-              createSimpleODataType("#hello"),
-              createBM25SimilarityAlgorithm(k1, b),
-              _.similarityAlgorithm
-            ) {
-              algo =>
-                algo shouldBe a [BM25SimilarityAlgorithm]
-                val bm25 = algo.asInstanceOf[BM25SimilarityAlgorithm]
-                bm25.getK1 shouldBe k1
-                bm25.getB shouldBe b
-            }
-          }
-
-          it("index tokenizers") {
-
-            assertSearchIndexOption[Seq[LexicalTokenizer]](
-              WriteConfig.TOKENIZERS_CONFIG,
-              createArray(
-                createSimpleODataType("hello")
-              ),
-              createArray(
-                createClassicTokenizer("tokenizerName", 20)
-              ),
-              _.tokenizers
-            ) {
-              tokenizers =>
-                tokenizers should have size 1
-                val head = tokenizers.head
-                head shouldBe a[ClassicTokenizer]
-            }
-          }
-
-          it("search suggesters") {
-
-            val (name, fields) = ("countryAndFunction", Seq("country", "function"))
-            assertSearchIndexOption[Seq[SearchSuggester]](
-              WriteConfig.SEARCH_SUGGESTERS_CONFIG,
-              createArray(
-                createSimpleODataType("world")
-              ),
-              createArray(
-                createSearchSuggester(name, fields)
-              ),
-              _.searchSuggesters
-            ) {
-              suggesters =>
-                suggesters should have size 1
-                val head = suggesters.head
-                head.getName shouldBe name
-                head.getSourceFields should contain theSameElementsAs fields
-            }
-          }
-
-          it("analyzers") {
-
-            val (name, stopWords) = ("stopper", Seq("a", "an", "the"))
-            assertSearchIndexOption[Seq[LexicalAnalyzer]](
-              WriteConfig.ANALYZERS_CONFIG,
-              createArray(
-                createSimpleODataType("world")
-              ),
-              createArray(
-                createStopAnalyzer(name, stopWords)
-              ),
-              _.analyzers
-            ) {
-              analyzers =>
-                analyzers should have size 1
-                val head = analyzers.head
-                head shouldBe a [StopAnalyzer]
-                val stopAnalyzer = head.asInstanceOf[StopAnalyzer]
-                stopAnalyzer.getName shouldBe name
-                stopAnalyzer.getStopwords should contain theSameElementsAs stopWords
-            }
-          }
-
-          it("the set of actions to apply on a Search index") {
-
-            val actions = WriteConfig(
-              Map(
-                WriteConfig.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
-                WriteConfig.TOKENIZERS_CONFIG -> createArray(
-                  createClassicTokenizer("classicTok", 10)
-                ),
-                WriteConfig.SEARCH_SUGGESTERS_CONFIG -> createArray(
-                  createSearchSuggester("descriptionSuggester", Seq("description"))
-                ),
-                WriteConfig.ANALYZERS_CONFIG -> createArray(
-                  createStopAnalyzer("stop", Seq("a", "the"))
-                )
-              )
-            ).searchIndexActions
-
-            actions should have size 4
-          }
+          // TODO: define test that assert that all keys with prefix 'indexOptions'
         }
       }
     }

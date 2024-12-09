@@ -8,23 +8,30 @@ import scala.util.Try
 
 /**
  * Parent class for all Search configurations
- * @param dsOptions options passed to the dataSource
+ * @param options case-insensitive options
  */
 
-class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
+class SearchConfig(protected val options: CaseInsensitiveMap[String])
   extends Serializable {
 
   /**
    * Create an instance from a simple map
-   * @param dsOptions local options
+   * @param options local options
    */
 
-  def this(dsOptions: Map[String, String]) = {
+  def this(options: Map[String, String]) = {
 
     this(
-      CaseInsensitiveMap(dsOptions)
+      CaseInsensitiveMap(options)
     )
   }
+
+  /**
+   * Get the original, case-sensitive, underlying configuration map
+   * @return the original configuration object (case-sensitive)
+   */
+
+  final def toMap: Map[String, String] = options.toMap
 
   /**
    * Safely get the value of a key by inspecting local options and then [[org.apache.spark.SparkConf]] options
@@ -32,7 +39,7 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
    * @return the optional value related to given key
    */
 
-  final def get(key: String): Option[String] = dsOptions.get(key)
+  final def get(key: String): Option[String] = options.get(key)
 
   /**
    * Safely get a typed value for a key
@@ -138,7 +145,7 @@ class SearchConfig(protected val dsOptions: CaseInsensitiveMap[String])
   final def getAllWithPrefix(prefix: String): SearchConfig = {
 
     new SearchConfig(
-      SearchConfig.allWithPrefix(dsOptions, prefix)
+      SearchConfig.allWithPrefix(options, prefix)
     )
   }
 
