@@ -53,7 +53,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
                                      function: JsonReader => T
                                    ): Option[Seq[T]] = {
 
-    getAs[Seq[T]](
+    getAsListOf[T](
       key,
       jsonString => Json.unsafelyReadAzModelArray[T](
         jsonString,

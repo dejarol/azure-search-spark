@@ -150,6 +150,29 @@ class SearchConfig(protected val options: CaseInsensitiveMap[String])
   }
 
   /**
+   * Get the value of a key as a collection of a specific type instances
+   * @param key key
+   * @param function function for deserializing the value to the required collection type
+   * @tparam T collection inner type
+   * @return an optional collection of type instances
+   */
+
+  protected final def getAsListOf[T](
+                                      key: String,
+                                      function: String => Seq[T]
+                                    ): Option[Seq[T]] = {
+
+    getAs[Option[Seq[T]]](
+      key,
+      v => if (StringUtils.isBlank(v)) {
+        None
+      } else {
+        Some(function(v))
+      }
+    ).flatten
+  }
+
+  /**
    * Get the value of a key as list of non-empty strings
    * @param key key
    * @return a non-empty collection of strings if the original value is not blank
@@ -157,14 +180,7 @@ class SearchConfig(protected val options: CaseInsensitiveMap[String])
 
   final def getAsList(key: String): Option[Seq[String]] = {
 
-    get(key).flatMap {
-      v =>
-        if (StringUtils.isBlank(v)) {
-          None
-        } else {
-          Some(v.split(",").map(_.trim))
-        }
-    }
+    getAsListOf[String](key, _.split(",").map(_.trim))
   }
 }
 

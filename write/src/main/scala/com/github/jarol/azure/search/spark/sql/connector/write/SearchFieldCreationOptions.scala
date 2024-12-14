@@ -1,31 +1,73 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
+import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldFeature}
+import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructField
 
 /**
- * Options for creating a Search index
- * @param keyField field to use as document key
- * @param disabledFromFiltering list of fields that should be disabled from filtering
- * @param disabledFromSorting list of fields that should be disabled from sorting
- * @param hiddenFields list of fields that should be hidden (i.e. non-retrievable)
- * @param disabledFromSearch list of fields that should not be searchable
- * @param disabledFromFaceting list of fields that should not be facetable
- * @param analyzerConfigs list of configuration for setting field analyzers
+ * Options for enriching a field of a Search index
+ * <br>
+ * Among field enrichment options, there are
+ *  - setting the value for its boolean properties (filterable, sortable, etc ...)
+ *  - setting some analyzers
+ *
+ * <br>
+ * Field names should be referenced in a path-like fashion, i.e.
+ *  - a top-level field should be referenced simply by name
+ *  - a nested field should be referenced using the notation <b>parent.child</b>
+ * @param options options for field enrichment
  * @param indexActionColumn column name for retrieving a per-document [[com.azure.search.documents.models.IndexActionType]]
  */
 
 case class SearchFieldCreationOptions(
-                                       keyField: String,
-                                       disabledFromFiltering: Option[Seq[String]],
-                                       disabledFromSorting: Option[Seq[String]],
-                                       hiddenFields: Option[Seq[String]],
-                                       disabledFromSearch: Option[Seq[String]],
-                                       disabledFromFaceting: Option[Seq[String]],
-                                       analyzerConfigs: Option[Seq[AnalyzerConfig]],
+                                       override protected val options: CaseInsensitiveMap[String],
                                        indexActionColumn: Option[String]
-                                     ) {
+                                     )
+  extends SearchConfig(options) {
+
+  /**
+   * Get the name of the key field
+   * @return the key field name
+   */
+
+  private[write] def keyField: String = unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None)
+
+  /**
+   * Get the name of fields that should be disabled from filtering
+   * @return field for which the <b>filterable</b> property will be set to false
+   */
+
+  private[write] def disabledFromFiltering: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_FILTERING_CONFIG)
+
+  /**
+   * Get the name of fields that should be disabled from sorting
+   * @return field for which the <b>sortable</b> property should be set to false
+   */
+
+  private[write] def disabledFromSorting: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_SORTING_CONFIG)
+
+  /**
+   * Get the name of fields that should be hidden
+   * @return field for which the <b>hidden</b> property should be set to true
+   */
+
+  private[write] def hiddenFields: Option[Seq[String]] = getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG)
+
+  /**
+   * Get the name of fields that should be disabled from searching
+   * @return field for which the <b>searchable</b> property should be set to false
+   */
+
+  private[write] def disabledFromSearch: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_SEARCH_CONFIG)
+
+  /**
+   * Get the name of fields that should be disabled from faceting
+   * @return field for which the <b>facetable</b> property should be set to false
+   */
+
+  private[write] def disabledFromFaceting: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_FACETING_CONFIG)
 
   /**
    * If defined, remove the index action column field from a schema
@@ -63,6 +105,14 @@ case class SearchFieldCreationOptions(
         s => (s, action)
       }
     }.flatten.toSeq
+  }
+
+  private[write] def analyzerConfigs: Option[Seq[AnalyzerConfig]] = {
+
+    getAsListOf[AnalyzerConfig](
+      WriteConfig.ANALYZERS_CONFIG,
+      _ => Seq.empty[AnalyzerConfig]
+    )
   }
 
   /**
@@ -109,5 +159,21 @@ case class SearchFieldCreationOptions(
       structField =>
         SchemaUtils.toSearchField(structField, actions, None)
     }
+  }
+}
+
+object SearchFieldCreationOptions {
+
+  // TODO: add doc
+
+  def apply(
+             config: SearchConfig,
+             indexActionColumn: Option[String]
+           ): SearchFieldCreationOptions = {
+
+    SearchFieldCreationOptions(
+      CaseInsensitiveMap(config.toMap),
+      indexActionColumn
+    )
   }
 }

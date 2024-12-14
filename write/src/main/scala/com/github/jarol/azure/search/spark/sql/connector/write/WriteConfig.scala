@@ -78,17 +78,8 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
 
   final def searchFieldCreationOptions: SearchFieldCreationOptions = {
 
-    val fieldOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
     SearchFieldCreationOptions(
-      fieldOptions.unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None),
-      fieldOptions.getAsList(WriteConfig.DISABLE_FILTERING_CONFIG),
-      fieldOptions.getAsList(WriteConfig.DISABLE_SORTING_CONFIG),
-      fieldOptions.getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG),
-      fieldOptions.getAsList(WriteConfig.DISABLE_SEARCH_CONFIG),
-      fieldOptions.getAsList(WriteConfig.DISABLE_FACETING_CONFIG),
-      AnalyzerConfig.createCollection(
-        fieldOptions.getAllWithPrefix(WriteConfig.ANALYZERS_PREFIX)
-      ),
+      getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX),
       actionColumn
     )
   }

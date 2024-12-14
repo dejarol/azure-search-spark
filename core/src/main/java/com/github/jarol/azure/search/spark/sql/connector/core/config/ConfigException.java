@@ -72,10 +72,7 @@ public class ConfigException
                 extraInfo
         );
 
-        return new ConfigException(
-                messageSupplier,
-                null
-        );
+        return new ConfigException(messageSupplier, null);
    }
 
     /**
@@ -95,10 +92,8 @@ public class ConfigException
                "Illegal value for option '%s' (%s). Reason: %s",
                key, value, cause.getMessage()
        );
-       return new ConfigException(
-               supplier,
-               cause
-       );
+
+       return new ConfigException(supplier, cause);
    }
 
     /**
@@ -118,9 +113,7 @@ public class ConfigException
                 "Illegal value for option '%s' (%s). Reason: %s",
                 key, value, reason
         );
-        return new ConfigException(
-                supplier,
-                null
-        );
+
+        return new ConfigException(supplier, null);
     }
 }

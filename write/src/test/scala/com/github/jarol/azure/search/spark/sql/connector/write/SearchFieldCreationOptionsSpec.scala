@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
@@ -40,14 +41,9 @@ class SearchFieldCreationOptionsSpec
                                     indexActionColumn: Option[String]
                                   ): SearchFieldCreationOptions = {
 
+    // TODO: fix
     SearchFieldCreationOptions(
-      key,
-      disabledFromFiltering = actions.get(SearchFieldFeature.FILTERABLE),
-      disabledFromSorting = actions.get(SearchFieldFeature.SORTABLE),
-      hiddenFields = actions.get(SearchFieldFeature.HIDDEN),
-      disabledFromSearch = actions.get(SearchFieldFeature.SEARCHABLE),
-      disabledFromFaceting = actions.get(SearchFieldFeature.FACETABLE),
-      None,
+      new SearchConfig(Map.empty[String, String]),
       indexActionColumn
     )
   }
@@ -78,14 +74,9 @@ class SearchFieldCreationOptionsSpec
 
   private def createAnalyzerOptions(analyzerConfigs: Seq[AnalyzerConfig]): SearchFieldCreationOptions = {
 
+    // TODO: fix
     SearchFieldCreationOptions(
-      "key",
-      None,
-      None,
-      None,
-      None,
-      None,
-      Some(analyzerConfigs),
+      new SearchConfig(Map.empty[String, String]),
       None
     )
   }
