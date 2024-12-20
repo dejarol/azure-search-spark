@@ -1,13 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.github.jarol.azure.search.spark.sql.connector.core.JsonSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.{JsonMixIns, SearchAPIModelFactory}
 
 /**
  * Mix-in trait for creating raw configuration objects for write operations
  */
 
 trait WriteConfigFactory
-  extends JsonSpec {
+  extends JsonMixIns
+    with SearchAPIModelFactory {
 
   /**
    * Create a write config key related to search field creation options
@@ -26,14 +27,6 @@ trait WriteConfigFactory
   protected final def indexOptionKey(suffix: String): String = WriteConfig.INDEX_OPTIONS_PREFIX + suffix
 
   /**
-   * Create a write config key related to search field analyzer options
-   * @param suffix suffix to append
-   * @return config key for field analyzers
-   */
-
-  protected final def analyzerOptionKey(suffix: String): String = fieldOptionKey(WriteConfig.ANALYZERS_PREFIX + suffix)
-
-  /**
    * Create a raw configuration object that includes options for many analyzers
    * @param analyzers analyzer map
    * @return a raw configuration object
@@ -42,7 +35,7 @@ trait WriteConfigFactory
   protected final def rawConfigForAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, String] = {
 
     Map(
-      WriteConfig.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzers)
+      fieldOptionKey(WriteConfig.ANALYZERS_CONFIG) -> writeValueAs[Seq[AnalyzerConfig]](analyzers)
     )
   }
 }

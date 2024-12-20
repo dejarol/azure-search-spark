@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
+import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, LexicalAnalyzerName, SearchField, SearchIndex}
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.types.{DataTypes, StructType}
@@ -72,16 +72,17 @@ class SearchWriteBuilderITSpec
   private def safelyCreateIndex(
                                  schema: StructType,
                                  options: Map[String, String]
-                               ): Unit = {
+                               ): Either[IndexCreationException, SearchIndex] = {
 
     // Take options for auth and index,
     // add key field and provided options
-    SearchWriteBuilder.safelyCreateIndex(
+    val either = SearchWriteBuilder.safelyCreateIndex(
       WriteConfig(minimumOptionsForIndexCreation ++ options),
       schema
     )
 
     Thread.sleep(5000)
+    either
   }
 
   /**
@@ -275,7 +276,7 @@ class SearchWriteBuilderITSpec
               analyzerType.getFromField(subFieldDefinition) shouldBe analyzer
             }
 
-            it("only search and indexing") {
+            it("only search or indexing") {
 
               val fields = Seq(uuidFieldName, s"$parent.$subFieldName")
               val analyzersConfigs = Seq(
@@ -295,6 +296,43 @@ class SearchWriteBuilderITSpec
                   config.getType.getFromField(subField) shouldBe config.getName
               }
             }
+          }
+        }
+
+        describe("enriching an index with") {
+          it("a similarity algorithm") {
+
+            val (k1, b) = (1.5, 0.8)
+            val either = safelyCreateIndex(
+              schemaForAnalyzerTests,
+              Map(
+                indexOptionKey(WriteConfig.SIMILARITY_CONFIG) -> createBM25SimilarityAlgorithm(k1, b)
+              )
+            )
+
+            either shouldBe 'right
+            val algorithm = either.right.get.getSimilarity
+            algorithm shouldBe a [BM25SimilarityAlgorithm]
+          }
+
+          it("some tokenizers") {
+
+            // TODO: test
+          }
+
+          it("search suggesters") {
+
+            // TODO: test
+          }
+
+          it("analyzers") {
+
+            // TODO: test
+          }
+
+          it("char filters") {
+
+            // TODO: test
           }
         }
       }

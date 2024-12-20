@@ -175,17 +175,19 @@ class SearchIndexCreationOptionsSpec
 
         it("the set of actions to apply on a Search index") {
 
-          val actions = WriteConfig(
-            Map(
-              WriteConfig.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
-              WriteConfig.TOKENIZERS_CONFIG -> createArray(
-                createClassicTokenizer("classicTok", 10)
-              ),
-              WriteConfig.SEARCH_SUGGESTERS_CONFIG -> createArray(
-                createSearchSuggester("descriptionSuggester", Seq("description"))
-              ),
-              WriteConfig.ANALYZERS_CONFIG -> createArray(
-                createStopAnalyzer("stop", Seq("a", "the"))
+          val actions = SearchIndexCreationOptions(
+            createOptions(
+              Map(
+                WriteConfig.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
+                WriteConfig.TOKENIZERS_CONFIG -> createArray(
+                  createClassicTokenizer("classicTok", 10)
+                ),
+                WriteConfig.SEARCH_SUGGESTERS_CONFIG -> createArray(
+                  createSearchSuggester("descriptionSuggester", Seq("description"))
+                ),
+                WriteConfig.ANALYZERS_CONFIG -> createArray(
+                  createStopAnalyzer("stop", Seq("a", "the"))
+                )
               )
             )
           ).searchIndexActions

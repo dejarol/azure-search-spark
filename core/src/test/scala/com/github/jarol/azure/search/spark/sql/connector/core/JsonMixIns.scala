@@ -10,8 +10,7 @@ import scala.reflect.ClassTag
  * Trait to mix in suites that deal with JSON
  */
 
-trait JsonSpec
-  extends BasicSpec {
+trait JsonMixIns {
 
   protected final lazy val objMapper = new ObjectMapper()
     .registerModule(DefaultScalaModule)

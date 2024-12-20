@@ -3,12 +3,13 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
-import com.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, JavaScalaConverters, JsonSpec}
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters, JsonMixIns}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldCreationOptionsSpec
-  extends JsonSpec
-    with FieldFactory {
+  extends BasicSpec
+    with JsonMixIns
+      with FieldFactory {
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
   private lazy val analyzer = LexicalAnalyzerName.BN_MICROSOFT

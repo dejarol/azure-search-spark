@@ -1,14 +1,15 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
-import com.github.jarol.azure.search.spark.sql.connector.core.JsonSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JsonMixIns}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 
 import java.util.function.Supplier
 import scala.reflect.ClassTag
 
 class AnalyzerConfigSpec
-  extends JsonSpec {
+  extends BasicSpec
+    with JsonMixIns {
 
   private lazy val analyzerName = LexicalAnalyzerName.BN_MICROSOFT
   private lazy val analyzerType = SearchFieldAnalyzerType.ANALYZER
