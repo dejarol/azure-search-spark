@@ -12,14 +12,18 @@ jobs:
     steps:
       - name: 'Git Checkout'
         uses: 'actions/checkout@v3'
-      - name: 'Set up JDK and sbt'
+      - name: 'Set up JDK'
         uses: 'actions/setup-java@v4'
         with:
           java-version: '8'
           distribution: 'temurin'
+      - name: 'Set up sbt'
+        uses: sbt/setup-sbt@v1
       - name: 'Unit tests'
+        shell: bash
         run: sbt + clean test
       - name: 'Integration tests'
+        shell: bash
         run: sbt 'project integration' + clean test
         env:
           AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
