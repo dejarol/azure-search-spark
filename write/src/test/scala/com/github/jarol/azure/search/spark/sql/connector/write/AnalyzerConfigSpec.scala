@@ -1,195 +1,155 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
-import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.core.JsonSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
+
+import java.util.function.Supplier
+import scala.reflect.ClassTag
 
 class AnalyzerConfigSpec
-  extends BasicSpec {
+  extends JsonSpec {
 
-  private lazy val alias = "first"
-  private lazy val fieldList = Seq("hello", "world")
-  private lazy val lexicalAnalyzerName = LexicalAnalyzerName.AR_LUCENE
-  private lazy val analyzerType = SearchFieldAnalyzerType.INDEX_ANALYZER
+  private lazy val analyzerName = LexicalAnalyzerName.BN_MICROSOFT
+  private lazy val analyzerType = SearchFieldAnalyzerType.ANALYZER
+  private lazy val fields = Seq("first", "second")
 
   /**
-   * Create a [[SearchConfig]] instance
-   * @param options options
-   * @return a config instance
+   * Assert that the generated json string can be deserialized as an instance of [[AnalyzerConfig]]
+   *
+   * @param analyzerName analyzer name
+   * @param analyzerType analyzer type
+   * @param fields fields
+   * @param analyzerTypeToString function for converting the analyzer to string
    */
 
-  private def createConfig(options: Map[String, String]): SearchConfig = new SearchConfig(options)
+  private def assertCorrectDeserialization(
+                                            analyzerName: LexicalAnalyzerName,
+                                            analyzerType: SearchFieldAnalyzerType,
+                                            fields: Seq[String],
+                                            analyzerTypeToString: SearchFieldAnalyzerType => String
+                                          ): Unit = {
 
-  private lazy val emptyConfig = createConfig(Map.empty)
+    val json =
+      s"""
+         |{
+         |  "${AnalyzerConfig.NAME_PROPERTY}": "${analyzerName.toString}",
+         |  "${AnalyzerConfig.TYPE_PROPERTY}": "${analyzerTypeToString(analyzerType)}",
+         |  "${AnalyzerConfig.FIELDS_PROPERTY}": ${fields.map(StringUtils.quoted).mkString("[", "," ,"]")}
+         |}""".stripMargin
 
-  describe(`object`[AnalyzerConfig]) {
-    describe(SHOULD) {
-      describe(s"throw a") {
-        describe(s"${nameOf[NoSuchElementException]} for") {
-          it("invalid lexical analyzers") {
 
-            a [NoSuchElementException] shouldBe thrownBy {
-              AnalyzerConfig.resolveLexicalAnalyzer("hello")
-            }
-          }
-
-          it("invalid analyzer types") {
-
-            a [NoSuchElementException] shouldBe thrownBy {
-              AnalyzerConfig.resolveAnalyzerType("hello")
-            }
-          }
-        }
-      }
-
-      describe("provide an empty instance when") {
-        it("name is not defined") {
-
-          AnalyzerConfig.createInstance(alias, emptyConfig) shouldBe empty
-          AnalyzerConfig.createInstance(
-            alias,
-            createConfig(
-              Map(
-                WriteConfig.TYPE_SUFFIX -> analyzerType.name(),
-                WriteConfig.ON_FIELDS_SUFFIX -> fieldList.mkString(",")
-              )
-            )
-          ) shouldBe empty
-        }
-
-        it("type is not defined") {
-
-          AnalyzerConfig.createInstance(alias, emptyConfig) shouldBe empty
-          AnalyzerConfig.createInstance(
-            alias,
-            createConfig(
-              Map(
-                WriteConfig.NAME_SUFFIX -> lexicalAnalyzerName.toString,
-                WriteConfig.ON_FIELDS_SUFFIX -> fieldList.mkString(",")
-              )
-            )
-          ) shouldBe empty
-        }
-
-        it("field list is not defined") {
-
-          AnalyzerConfig.createInstance(alias, emptyConfig) shouldBe empty
-          AnalyzerConfig.createInstance(
-            alias,
-            createConfig(
-              Map(
-                WriteConfig.NAME_SUFFIX -> lexicalAnalyzerName.toString,
-                WriteConfig.TYPE_SUFFIX -> analyzerType.name()
-              )
-            )
-          ) shouldBe empty
-        }
-      }
-
-      describe("provide a non-empty instance when") {
-        it("all options are well-defined") {
-
-          val maybeInstance = AnalyzerConfig.createInstance(
-            alias,
-            createConfig(
-              Map(
-                WriteConfig.NAME_SUFFIX -> lexicalAnalyzerName.toString,
-                WriteConfig.TYPE_SUFFIX -> analyzerType.name(),
-                WriteConfig.ON_FIELDS_SUFFIX -> fieldList.mkString(",")
-              )
-            )
-          )
-
-          maybeInstance shouldBe defined
-          val instance = maybeInstance.get
-          instance.name shouldBe lexicalAnalyzerName
-          instance.`type` shouldBe analyzerType
-          instance.fields should contain theSameElementsAs fieldList
-        }
-      }
-
-      describe(s"throw a ${nameOf[ConfigException]} when") {
-        it("an invalid lexical analyzer is given") {
-
-          a [ConfigException] shouldBe thrownBy {
-
-            AnalyzerConfig.createInstance(
-              alias,
-              createConfig(
-                Map(
-                  WriteConfig.NAME_SUFFIX -> "wrongAnalyzer",
-                  WriteConfig.TYPE_SUFFIX -> analyzerType.name(),
-                  WriteConfig.ON_FIELDS_SUFFIX -> fieldList.mkString(",")
-                )
-              )
-            )
-          }
-        }
-
-        it("an invalid type is given") {
-
-          a [ConfigException] shouldBe thrownBy {
-
-            AnalyzerConfig.createInstance(
-              alias,
-              createConfig(
-                Map(
-                  WriteConfig.NAME_SUFFIX -> lexicalAnalyzerName.toString,
-                  WriteConfig.TYPE_SUFFIX -> "helloWorld",
-                  WriteConfig.ON_FIELDS_SUFFIX -> fieldList.mkString(",")
-                )
-              )
-            )
-          }
-        }
-      }
-
-      it("create a collection") {
-
-        val (a1, a2) = ("a1", "a2")
-        val expected: Map[String, (LexicalAnalyzerName, SearchFieldAnalyzerType, Seq[String])] = Map(
-          a1 -> (LexicalAnalyzerName.BN_MICROSOFT, SearchFieldAnalyzerType.SEARCH_ANALYZER, Seq("first", "second")),
-          a2 -> (LexicalAnalyzerName.STOP, SearchFieldAnalyzerType.INDEX_ANALYZER, Seq("third", "fourth"))
-        )
-
-        val rawConfig = expected.foldLeft(
-          Map(WriteConfig.ALIASES_SUFFIX -> s"$a1,$a2")
-        ) {
-          case (seed, (alias, (name, analyzerType, fields))) =>
-            seed ++ Map(
-              s"$alias.${WriteConfig.NAME_SUFFIX}" -> name.toString,
-              s"$alias.${WriteConfig.TYPE_SUFFIX}" -> analyzerType.name(),
-              s"$alias.${WriteConfig.ON_FIELDS_SUFFIX}" -> fields.mkString(",")
-            )
-        }
-
-        val maybeActual = AnalyzerConfig.createCollection(createConfig(rawConfig))
-        maybeActual shouldBe defined
-        val actual = maybeActual.get
-        actual should have size expected.size
-        forAll(actual) {
-          analyzerConfig =>
-
-            val maybeEntry = expected.get(analyzerConfig.alias)
-            maybeEntry shouldBe defined
-            val (_, analyzerType, fields) = maybeEntry.get
-            analyzerConfig.`type` shouldBe analyzerType
-            analyzerConfig.fields should contain theSameElementsAs fields
-        }
-      }
-    }
+    val instance = readValueAs[AnalyzerConfig](json)
+    instance.getName shouldBe analyzerName
+    instance.getType shouldBe analyzerType
+    instance.getFields should contain theSameElementsAs fields
   }
 
-  describe(anInstanceOf[AnalyzerConfig]) {
-    describe(SHOULD) {
-      it("define a collection of actions") {
+  /**
+   * Assert that the deserialization of an [[AnalyzerConfig]] instance fails
+   * @param analyzerName the name of the analyzer
+   * @param analyzerType the type of the analyzer
+   * @param fields the fields of the analyzer
+   * @param messageSupplier supplier whose string should be contained by the handled exception
+   * @tparam TypeEx expected exception type
+   */
 
-        val analyzer = LexicalAnalyzerName.BN_MICROSOFT
-        val actions = AnalyzerConfig(alias, analyzer, SearchFieldAnalyzerType.SEARCH_ANALYZER, fieldList).actions
-        actions should have size fieldList.size
-        actions.map {
-          case (k, _) => k
-        } should contain theSameElementsAs fieldList
+  private def assertDeserializationFails[TypeEx <: Throwable: ClassTag](
+                                                                         analyzerName: Option[String],
+                                                                         analyzerType: Option[String],
+                                                                         fields: Option[Seq[String]],
+                                                                         messageSupplier: Supplier[String]
+                                                                       ): Unit = {
+
+    // Create the json string
+    val json: String = Map(
+      AnalyzerConfig.NAME_PROPERTY -> analyzerName.map(StringUtils.quoted),
+      AnalyzerConfig.TYPE_PROPERTY -> analyzerType.map(StringUtils.quoted),
+      AnalyzerConfig.FIELDS_PROPERTY -> fields.map {
+        _.map(StringUtils.quoted).mkString("[", ",", "]")
+      }
+    ).collect {
+      case (key, Some(v)) => f"${StringUtils.quoted(key)}: $v"
+    }.mkString("{", ",", "}")
+
+    // Handle the deserialization failure
+    val throwable = the [Throwable] thrownBy {
+      readValueAs[AnalyzerConfig](json)
+    }
+
+    throwable shouldBe a [TypeEx]
+    throwable.getLocalizedMessage should include (messageSupplier.get())
+  }
+
+  describe(f"The deserialization of ${anInstanceOf[AnalyzerConfig]}") {
+    describe(SHOULD) {
+      describe("succeed when") {
+        it("all properties are present and well-defined") {
+
+          assertCorrectDeserialization(
+            analyzerName,
+            analyzerType,
+            fields,
+            _.name()
+          )
+        }
+
+        it("analyzer type should be resolved by description") {
+
+          assertCorrectDeserialization(
+            analyzerName,
+            analyzerType,
+            fields,
+            _.description()
+          )
+        }
+      }
+      describe("fail when") {
+        it("the name is not given or invalid") {
+
+          assertDeserializationFails[NullPointerException](
+            None,
+            Some(analyzerType.name()),
+            Some(fields),
+            AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.NAME_PROPERTY)
+          )
+
+          val invalidAnalyzerName = "hello"
+          assertDeserializationFails[NoSuchElementException](
+            Some(invalidAnalyzerName),
+            Some(analyzerType.description()),
+            Some(fields),
+            () => f"Analyzer '$invalidAnalyzerName' does not exist"
+          )
+        }
+
+        it("the type is not given or invalid") {
+
+          assertDeserializationFails[NullPointerException](
+            Some(analyzerName.toString),
+            None,
+            Some(fields),
+            AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.TYPE_PROPERTY)
+          )
+
+          val invalidTypeName = "hello"
+          assertDeserializationFails[NoSuchElementException](
+            Some(analyzerName.toString),
+            Some(invalidTypeName),
+            Some(fields),
+            () => f"Search analyzer type '$invalidTypeName' does not exist"
+          )
+        }
+
+        it("fields are not given") {
+
+          assertDeserializationFails[NullPointerException](
+            Some(analyzerName.toString),
+            Some(analyzerType.name()),
+            None,
+            AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.FIELDS_PROPERTY)
+          )
+        }
       }
     }
   }

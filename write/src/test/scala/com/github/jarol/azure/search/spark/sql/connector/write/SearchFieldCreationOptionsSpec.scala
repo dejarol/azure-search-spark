@@ -3,11 +3,11 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, JavaScalaConverters, JsonSpec}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldCreationOptionsSpec
-  extends BasicSpec
+  extends JsonSpec
     with FieldFactory {
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
@@ -41,9 +41,19 @@ class SearchFieldCreationOptionsSpec
                                     indexActionColumn: Option[String]
                                   ): SearchFieldCreationOptions = {
 
-    // TODO: fix
+    val featuresMap = Map(
+      WriteConfig.KEY_FIELD_CONFIG -> Some(Seq(key)),
+      WriteConfig.DISABLE_FACETING_CONFIG -> actions.get(SearchFieldFeature.FACETABLE),
+      WriteConfig.DISABLE_FILTERING_CONFIG -> actions.get(SearchFieldFeature.FILTERABLE),
+      WriteConfig.HIDDEN_FIELDS_CONFIG -> actions.get(SearchFieldFeature.HIDDEN),
+      WriteConfig.DISABLE_SEARCH_CONFIG -> actions.get(SearchFieldFeature.SEARCHABLE),
+      WriteConfig.DISABLE_SORTING_CONFIG -> actions.get(SearchFieldFeature.SORTABLE)
+    ).collect {
+      case (key, Some(values)) => (key, values.mkString(","))
+    }
+
     SearchFieldCreationOptions(
-      new SearchConfig(Map.empty[String, String]),
+      new SearchConfig(featuresMap),
       indexActionColumn
     )
   }
@@ -67,6 +77,27 @@ class SearchFieldCreationOptionsSpec
   }
 
   /**
+   * Creates an AnalyzerConfig object with the specified analyzer name, type, and fields.
+   * @param name analyzer name
+   * @param tpe analyzer type
+   * @param fields field names
+   * @return An AnalyzerConfig object containing the specified analyzer configuration.
+   */
+
+  private def createAnalyzerConfig(
+                                    name: LexicalAnalyzerName,
+                                    tpe: SearchFieldAnalyzerType,
+                                    fields: Seq[String]
+                                  ): AnalyzerConfig = {
+
+    new AnalyzerConfig(
+      name,
+      tpe,
+      JavaScalaConverters.seqToList(fields)
+    )
+  }
+
+  /**
    * Create an instance of [[SearchFieldCreationOptions]], providing only some [[AnalyzerConfig]]
    * @param analyzerConfigs collection of analyzer configurations
    * @return an instance of [[SearchFieldCreationOptions]]
@@ -74,9 +105,13 @@ class SearchFieldCreationOptionsSpec
 
   private def createAnalyzerOptions(analyzerConfigs: Seq[AnalyzerConfig]): SearchFieldCreationOptions = {
 
-    // TODO: fix
     SearchFieldCreationOptions(
-      new SearchConfig(Map.empty[String, String]),
+      new SearchConfig(
+        Map(
+          WriteConfig.KEY_FIELD_CONFIG -> "key",
+          WriteConfig.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzerConfigs)
+        )
+      ),
       None
     )
   }
@@ -165,7 +200,7 @@ class SearchFieldCreationOptionsSpec
             val searchFields = getSearchFieldsMap(
               createAnalyzerOptions(
                 Seq(
-                  AnalyzerConfig("hello", analyzer, analyzerType, Seq(second))
+                  createAnalyzerConfig(analyzer, analyzerType, Seq(second))
                 )
               ),
               schema
@@ -191,7 +226,7 @@ class SearchFieldCreationOptionsSpec
             val searchFields = getSearchFieldsMap(
               createAnalyzerOptions(
                 Seq(
-                  AnalyzerConfig("hello", analyzer, analyzerType, Seq(s"$first.$second"))
+                  createAnalyzerConfig(analyzer, analyzerType, Seq(s"$first.$second"))
                 )
               ),
               schema

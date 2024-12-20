@@ -106,4 +106,17 @@ trait SearchAPIModelFactory {
        |  "stopwords": ${stopWords.map(StringUtils.quoted).mkString("[", ",", "]")}
        |}""".stripMargin
   }
+
+  protected final def createMappingCharFilter(
+                                             name: String,
+                                             mappings: Seq[String]
+                                             ): String = {
+
+    s"""
+       |{
+       | "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.MappingCharFilter",
+       | "name": "$name",
+       | "mappings": ${mappings.map(StringUtils.quoted).mkString("[", ",", "]")}
+       |}""".stripMargin
+  }
 }

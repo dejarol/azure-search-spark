@@ -1,8 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldFeature}
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Json
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructField
 
@@ -107,11 +109,16 @@ case class SearchFieldCreationOptions(
     }.flatten.toSeq
   }
 
+  /**
+   * Get the (optional) list of analyzer configurations
+   * @return an optional collection of analyzer configurations
+   */
+
   private[write] def analyzerConfigs: Option[Seq[AnalyzerConfig]] = {
 
     getAsListOf[AnalyzerConfig](
       WriteConfig.ANALYZERS_CONFIG,
-      _ => Seq.empty[AnalyzerConfig]
+      Json.readAsCollectionUsingJackson[AnalyzerConfig]
     )
   }
 
@@ -123,7 +130,16 @@ case class SearchFieldCreationOptions(
   private def actionsForAnalyzers: Seq[(String, SearchFieldAction)] = {
 
     analyzerConfigs
-      .map(_.flatMap(_.actions))
+      .map {
+        _.flatMap {
+          config => JavaScalaConverters.listToSeq(config.getFields).map {
+            field => (field, SearchFieldActions.forSettingAnalyzer(
+              config.getType,
+              config.getName
+            ))
+          }
+        }
+      }
       .getOrElse(Seq.empty)
   }
 
@@ -164,7 +180,12 @@ case class SearchFieldCreationOptions(
 
 object SearchFieldCreationOptions {
 
-  // TODO: add doc
+  /**
+   * Create an instance extracting by extracting info from a configuration
+   * @param config configuration object
+   * @param indexActionColumn index action column
+   * @return a set of specifications for Search fields creation
+   */
 
   def apply(
              config: SearchConfig,

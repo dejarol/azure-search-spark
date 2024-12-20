@@ -2,9 +2,12 @@ package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import com.azure.json.implementation.DefaultJsonReader
 import com.azure.json.{JsonOptions, JsonReader}
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 
 import java.util.{List => JList}
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
@@ -13,8 +16,29 @@ import scala.util.Try
 
 object Json {
 
+  private lazy val DEFAULT_OBJECT_MAPPER = new ObjectMapper()
+    .registerModule(DefaultScalaModule)
+    .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
   /**
-   * Deserialize a json to an Azure Search REST API model.
+ * Deserializes a JSON string into a collection of objects using Jackson.
+ * @param json JSON string to be deserialized. It should represent a collection of objects.
+ * @tparam T type of objects in the resulting collection. Must have a ClassTag.
+ * @return a collection containing the deserialized objects.
+ */
+
+final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
+
+  val tClass = Reflection.classFromClassTag[T]
+  val collectionType = DEFAULT_OBJECT_MAPPER.getTypeFactory.constructCollectionType(classOf[JList[_]], tClass)
+  JavaScalaConverters.listToSeq[T](
+    DEFAULT_OBJECT_MAPPER.readValue[JList[T]](json, collectionType)
+  )
+}
+
+  /**
+   * Deserialize a JSON to an Azure Search REST API model.
    * <br>
    * This operation is unsafe, i.e. no exception handling is provided
    * @param json json string

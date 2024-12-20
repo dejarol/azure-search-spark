@@ -152,7 +152,25 @@ class SearchIndexCreationOptionsSpec
 
         it("char filters") {
 
-          // TODO: define test
+          val (name, mappings) = ("charFilterName", Seq("first_name", "last_name"))
+          assertSearchIndexOption[Seq[CharFilter]](
+            WriteConfig.CHAR_FILTERS_CONFIG,
+            createArray(
+              createSimpleODataType("john"),
+            ),
+            createArray(
+              createMappingCharFilter(name, mappings)
+            ),
+            _.charFilters
+          ) {
+            charFilters =>
+              charFilters should have size 1
+              val head = charFilters.head
+              head shouldBe a [MappingCharFilter]
+              val mappingCharFilter = head.asInstanceOf[MappingCharFilter]
+              mappingCharFilter.getName shouldBe name
+              mappingCharFilter.getMappings should contain theSameElementsAs mappings
+          }
         }
 
         it("the set of actions to apply on a Search index") {

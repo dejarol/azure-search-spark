@@ -2,20 +2,11 @@ package com.github.jarol.azure.search.spark.sql.connector.core.utils
 
 import scala.reflect.ClassTag
 
+/**
+ * Collection of utility methods for dealing with Java enums
+ */
+
 object Enums {
-
-  /**
-   * Retrieve the class of a type from its class tag
-   * @tparam C class tag type
-   * @return the type class
-   */
-
-  private def classFromClassTag[C: ClassTag]: Class[C] = {
-
-    implicitly[ClassTag[C]]
-      .runtimeClass
-      .asInstanceOf[Class[C]]
-  }
 
   /**
    * Safely get the first value of an enum that matches a predicate
@@ -27,7 +18,7 @@ object Enums {
 
   final def safeValueOf[E <: Enum[E]: ClassTag](value: String, predicate: (E, String) => Boolean): Option[E] = {
 
-    classFromClassTag[E]
+    Reflection.classFromClassTag[E]
       .getEnumConstants
       .find(predicate(_, value))
   }
@@ -47,7 +38,7 @@ object Enums {
     safeValueOf[E](value, predicate) match {
       case Some(value) => value
       case None => throw new NoSuchElementException(
-        s"Could not find a matching value on enum ${classFromClassTag[E].getName}"
+        s"Could not find a matching value on enum ${Reflection.classFromClassTag[E].getName}"
       )
     }
   }

@@ -122,7 +122,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def charFilters: Option[Seq[CharFilter]] = {
 
     getArrayOfAzModels[CharFilter](
-      WriteConfig.CHAR_FILTERS,
+      WriteConfig.CHAR_FILTERS_CONFIG,
       CharFilter.fromJson
     )
   }

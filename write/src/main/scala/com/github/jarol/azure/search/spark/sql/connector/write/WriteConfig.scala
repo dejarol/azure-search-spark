@@ -84,12 +84,18 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
     )
   }
 
-  def searchIndexCreationOptions: SearchIndexCreationOptions = {
+  /**
+ * Retrieves the options for creating a search index (i.e. all configurations that have the prefix defined by
+ * [[WriteConfig.INDEX_OPTIONS_PREFIX]])
+ * @return index creation options
+ */
 
-    SearchIndexCreationOptions(
-      getAllWithPrefix(WriteConfig.INDEX_OPTIONS_PREFIX)
-    )
-  }
+def searchIndexCreationOptions: SearchIndexCreationOptions = {
+
+  SearchIndexCreationOptions(
+    getAllWithPrefix(WriteConfig.INDEX_OPTIONS_PREFIX)
+  )
+}
 
   /**
    * Get an optional collection of instances representing Azure Search REST API models
@@ -178,7 +184,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   private[write] def charFilters: Option[Seq[CharFilter]] = {
 
     getArrayOfAzModels[CharFilter](
-      WriteConfig.CHAR_FILTERS,
+      WriteConfig.CHAR_FILTERS_CONFIG,
       CharFilter.fromJson
     )
   }
@@ -230,7 +236,7 @@ object WriteConfig {
   final val TOKENIZERS_CONFIG = "tokenizers"
   final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
   final val ANALYZERS_CONFIG = "analyzers"
-  final val CHAR_FILTERS = "charFilters"
+  final val CHAR_FILTERS_CONFIG = "charFilters"
 
   /**
    * Create an instance from a simple map

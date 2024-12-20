@@ -16,20 +16,26 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@JsonDeserialize(using = AnalyzerConfigV2.Deserializer.class)
-public class AnalyzerConfigV2 {
+@JsonDeserialize(using = AnalyzerConfig.Deserializer.class)
+public class AnalyzerConfig {
 
     public static final String NAME_PROPERTY = "name";
     public static final String TYPE_PROPERTY = "type";
     public static final String FIELDS_PROPERTY = "fields";
 
+    /**
+     * Create a supplier that will provide a string stating that an analyzer property cannot be null
+     * @param property property name
+     * @return a supplier to use for generating error messages
+     */
+
     @Contract(pure = true)
-    private static @NotNull Supplier<String> supplierForAnalyzerProperty(
+    protected static @NotNull Supplier<String> supplierForNonNullAnalyzerProperty(
             String property
     ) {
 
         return () -> String.format(
-                "Analyzer property %s cannot be null",
+                "Analyzer property '%s' cannot be null",
                 property
         );
     }
@@ -39,18 +45,18 @@ public class AnalyzerConfigV2 {
      */
 
     protected static class Deserializer
-            extends StdDeserializer<AnalyzerConfigV2> {
+            extends StdDeserializer<AnalyzerConfig> {
 
         /**
          * No-arg constructor
          */
 
         protected Deserializer() {
-            super(AnalyzerConfigV2.class);
+            super(AnalyzerConfig.class);
         }
 
         @Override
-        public AnalyzerConfigV2 deserialize(
+        public AnalyzerConfig deserialize(
                 @NotNull JsonParser p,
                 @NotNull DeserializationContext ctxt
         ) throws IOException {
@@ -58,12 +64,12 @@ public class AnalyzerConfigV2 {
             JsonNode node = p.getCodec().readTree(p);
 
             // All three properties should be not null
-            String name = Objects.requireNonNull(node.get(NAME_PROPERTY).asText(), supplierForAnalyzerProperty(NAME_PROPERTY));
-            String type = Objects.requireNonNull(node.get(TYPE_PROPERTY).asText(), supplierForAnalyzerProperty(TYPE_PROPERTY));
-            JsonNode fieldsNode = Objects.requireNonNull(node.get(FIELDS_PROPERTY), supplierForAnalyzerProperty(FIELDS_PROPERTY));
+            String name = Objects.requireNonNull(node.get(NAME_PROPERTY), supplierForNonNullAnalyzerProperty(NAME_PROPERTY)).asText();
+            String type = Objects.requireNonNull(node.get(TYPE_PROPERTY), supplierForNonNullAnalyzerProperty(TYPE_PROPERTY)).asText();
+            JsonNode fieldsNode = Objects.requireNonNull(node.get(FIELDS_PROPERTY), supplierForNonNullAnalyzerProperty(FIELDS_PROPERTY));
 
             // Resolve properties and create an instance
-            return new AnalyzerConfigV2(
+            return new AnalyzerConfig(
                     resolveName(name),
                     resolveType(type),
                     getFields(fieldsNode, ctxt)
@@ -79,6 +85,7 @@ public class AnalyzerConfigV2 {
          * @param values collection of values
          * @param predicate predicate to be match
          * @param messageProvider function for creating the message for the {@link NoSuchElementException}
+         * @param valueToStringFunction function for converting a value to a string
          * @param <T> value type
          * @return the first value matching the name according to the predicate
          */
@@ -87,15 +94,26 @@ public class AnalyzerConfigV2 {
                 @NotNull String name,
                 @NotNull Collection<T> values,
                 @NotNull BiPredicate<T, String> predicate,
-                @NotNull Function<String, String> messageProvider
+                @NotNull Function<String, String> messageProvider,
+                @NotNull Function<T, String> valueToStringFunction
         ) {
 
             return values.stream().filter(
                     value -> predicate.test(value, name)
             ).findFirst().orElseThrow(
-                    () -> new NoSuchElementException(
-                            messageProvider.apply(name)
-                    )
+                    () -> {
+
+                        String allValuesList = values.stream()
+                                .map(valueToStringFunction)
+                                .collect(Collectors.joining("|"));
+
+                        return new NoSuchElementException(
+                                String.format("%s. Should be one among (case-insensitive) [%s]",
+                                        messageProvider.apply(name),
+                                        allValuesList
+                                )
+                        );
+                    }
             );
         }
 
@@ -113,7 +131,8 @@ public class AnalyzerConfigV2 {
                     name,
                     LexicalAnalyzerName.values(),
                     (analyzerName, s) -> analyzerName.toString().equalsIgnoreCase(s),
-                    s -> String.format("Analyzer %s does not exist", s)
+                    s -> String.format("Analyzer '%s' does not exist", s),
+                    LexicalAnalyzerName::toString
             );
         }
 
@@ -131,7 +150,11 @@ public class AnalyzerConfigV2 {
                     nameOrDescription,
                     Arrays.asList(SearchFieldAnalyzerType.values()),
                     (e, s)-> e.name().equalsIgnoreCase(s) || e.description().equalsIgnoreCase(s),
-                    s -> String.format("Search analyzer type %s does not exist", s)
+                    s -> String.format("Search analyzer type '%s' does not exist", s),
+                    s -> String.format("%s|%s",
+                            s.description(),
+                            s.name()
+                    )
             );
         }
 
@@ -150,10 +173,7 @@ public class AnalyzerConfigV2 {
 
             return ctxt.<List<String>>readTreeAsValue(
                     node,
-                    ctxt.getTypeFactory().constructCollectionType(
-                            List.class,
-                            String.class
-                    )
+                    ctxt.getTypeFactory().constructCollectionType(List.class, String.class)
             ).stream().map(String::trim).collect(Collectors.toList());
         }
     }
@@ -170,7 +190,7 @@ public class AnalyzerConfigV2 {
      */
 
     @Contract(pure = true)
-    public AnalyzerConfigV2(
+    public AnalyzerConfig(
             @NotNull LexicalAnalyzerName name,
             @NotNull SearchFieldAnalyzerType type,
             @NotNull List<String> fields

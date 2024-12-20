@@ -19,6 +19,14 @@ trait WriteConfigFactory {
   protected final def fieldOptionKey(suffix: String): String = WriteConfig.FIELD_OPTIONS_PREFIX + suffix
 
   /**
+   * Create a write config key related to search index creation options
+   * @param suffix suffix to append
+   * @return config key for index creation
+   */
+
+  protected final def indexOptionKey(suffix: String): String = WriteConfig.INDEX_OPTIONS_PREFIX + suffix
+
+  /**
    * Create a write config key related to search field analyzer options
    * @param suffix suffix to append
    * @return config key for field analyzers

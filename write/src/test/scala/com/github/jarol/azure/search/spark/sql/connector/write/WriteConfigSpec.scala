@@ -1,32 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, SearchAPIModelFactory}
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 class WriteConfigSpec
   extends BasicSpec
-    with WriteConfigFactory
-      with SearchAPIModelFactory {
+    with WriteConfigFactory {
 
   private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
-  private lazy val (keyField, indexActionColumn) = ("hello", "world")
-
-  /**
-   * Assert that an optional collection of strings is defined and contains the same elements w.r.t an expected set
-   * @param actual actual set (optional)
-   * @param expected expected set
-   */
-
-  private def assertDefinedAndContaining(
-                                          actual: Option[Seq[String]],
-                                          expected: Seq[String]
-                                        ): Unit = {
-
-    actual shouldBe defined
-    actual.get should contain theSameElementsAs expected
-  }
+  private lazy val (k1, k2, k3, v1, v2, v3) = ("k1", "k2", "k3", "v1", "v2", "v3")
 
   describe(anInstanceOf[WriteConfig]) {
     describe(SHOULD) {
@@ -79,77 +61,33 @@ class WriteConfigSpec
           ).actionColumn shouldBe Some(colName)
         }
 
-        describe("search field creation options") {
-          it("eventually throwing an exception for missing key fields") {
-
-            a[ConfigException] shouldBe thrownBy {
-              emptyConfig.searchFieldCreationOptions
-            }
-          }
-
-          describe("related to") {
-            it("field features") {
-
-              val (facetable, filterable) = (Seq("f1"), Seq("f2"))
-              val (hidden, searchable, sortable) = (Seq("f3"), Seq("f4"), Seq("f5"))
-              val options = WriteConfig(
-                Map(
-                  fieldOptionKey(WriteConfig.KEY_FIELD_CONFIG) -> keyField,
-                  fieldOptionKey(WriteConfig.DISABLE_FACETING_CONFIG) -> facetable.mkString(","),
-                  fieldOptionKey(WriteConfig.DISABLE_FILTERING_CONFIG) -> filterable.mkString(","),
-                  fieldOptionKey(WriteConfig.HIDDEN_FIELDS_CONFIG) -> hidden.mkString(","),
-                  fieldOptionKey(WriteConfig.DISABLE_SEARCH_CONFIG) -> searchable.mkString(","),
-                  fieldOptionKey(WriteConfig.DISABLE_SORTING_CONFIG) -> sortable.mkString(","),
-                  WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> indexActionColumn
-                )
-              ).searchFieldCreationOptions
-
-              options.keyField shouldBe keyField
-              assertDefinedAndContaining(options.disabledFromFaceting, facetable)
-              assertDefinedAndContaining(options.disabledFromFiltering, filterable)
-              assertDefinedAndContaining(options.hiddenFields, hidden)
-              assertDefinedAndContaining(options.disabledFromSearch, searchable)
-              assertDefinedAndContaining(options.disabledFromSorting, sortable)
-              options.indexActionColumn shouldBe Some(indexActionColumn)
-            }
-
-            it("field analyzers") {
-
-              val aliases: Map[String, (SearchFieldAnalyzerType, LexicalAnalyzerName, Seq[String])] = Map(
-                "first" -> (SearchFieldAnalyzerType.ANALYZER, LexicalAnalyzerName.SIMPLE, Seq("a1", "a2")),
-                "second" -> (SearchFieldAnalyzerType.SEARCH_ANALYZER, LexicalAnalyzerName.STOP, Seq("a3", "a4")),
-                "third" -> (SearchFieldAnalyzerType.INDEX_ANALYZER, LexicalAnalyzerName.IT_MICROSOFT, Seq("a5", "a6"))
-              )
-
-              val rawConfig = Map(
-                fieldOptionKey(WriteConfig.KEY_FIELD_CONFIG) -> keyField
-              ) ++ rawConfigForAnalyzers(aliases)
-
-              val options = WriteConfig(rawConfig).searchFieldCreationOptions
-              options.keyField shouldBe keyField
-              options.analyzerConfigs shouldBe defined
-              val analyzerConfigs = options.analyzerConfigs.get
-              analyzerConfigs should have size aliases.size
-              forAll(aliases.toSeq) {
-                case (alias, (analyzerType, name, onFields)) =>
-
-                  val maybeAnalyzerConfig = analyzerConfigs.find {
-                    _.alias.equalsIgnoreCase(alias)
-                  }
-
-                  maybeAnalyzerConfig shouldBe defined
-                  val analyzerConfig = maybeAnalyzerConfig.get
-                  analyzerConfig.`type` shouldBe analyzerType
-                  analyzerConfig.name shouldBe name
-                  analyzerConfig.fields should contain theSameElementsAs onFields
-              }
-            }
-          }
-        }
-
         it("index creation options") {
 
-          // TODO: define test that assert that all keys with prefix 'indexOptions'
+          emptyConfig.searchIndexCreationOptions.toMap shouldBe empty
+          val configMap = Map(
+            indexOptionKey(k1) -> v1,
+            fieldOptionKey(k2) -> v2,
+            indexOptionKey(k3) -> v3
+          )
+          val fieldCreationOptions = WriteConfig(configMap).searchIndexCreationOptions.toMap
+          fieldCreationOptions should contain key k1
+          fieldCreationOptions shouldNot contain key k2
+          fieldCreationOptions should contain key k3
+        }
+
+        it("field creation options") {
+
+          emptyConfig.searchFieldCreationOptions.toMap shouldBe empty
+
+          val configMap = Map(
+            fieldOptionKey(k1) -> v1,
+            fieldOptionKey(k2) -> v2,
+            k3 -> v3
+          )
+          val fieldCreationOptions = WriteConfig(configMap).searchFieldCreationOptions.toMap
+          fieldCreationOptions should contain key k1
+          fieldCreationOptions should contain key k2
+          fieldCreationOptions shouldNot contain key k3
         }
       }
     }
