@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.BeforeAndAfterEach
 
@@ -39,6 +40,27 @@ class SearchWriteBuilderITSpec
 
     dropIndexIfExists(testIndex, sleep = true)
     super.afterEach()
+  }
+
+  /**
+   * Create an [[AnalyzerConfig]]
+   * @param analyzerName name
+   * @param tpe type
+   * @param fields fields
+   * @return an analyzer config
+   */
+
+  private def createAnalyzerConfig(
+                                    analyzerName: LexicalAnalyzerName,
+                                    tpe: SearchFieldAnalyzerType,
+                                    fields: Seq[String]
+                                  ): AnalyzerConfig = {
+
+    new AnalyzerConfig(
+      analyzerName,
+      tpe,
+      JavaScalaConverters.seqToList(fields),
+    )
   }
 
   /**
@@ -104,7 +126,7 @@ class SearchWriteBuilderITSpec
    * @return fields from the newly created Search index
    */
 
-  private def createIndexSettingAnalyzers(analyzers: AnalyzerMap): Map[String, SearchField] = {
+  private def createIndexSettingAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, SearchField] = {
 
     indexExists(testIndex) shouldBe false
     safelyCreateIndex(
@@ -241,8 +263,8 @@ class SearchWriteBuilderITSpec
             it("both searching and indexing") {
 
               val analyzerType = SearchFieldAnalyzerType.ANALYZER
-              val analyzers = Map(
-                "a1" -> (analyzerType, analyzer, Seq(uuidFieldName, s"$parent.$subFieldName"))
+              val analyzers = Seq(
+                createAnalyzerConfig(analyzer, analyzerType, Seq(uuidFieldName, s"$parent.$subFieldName"))
               )
 
               val searchFields = createIndexSettingAnalyzers(analyzers)
@@ -256,21 +278,21 @@ class SearchWriteBuilderITSpec
             it("only search and indexing") {
 
               val fields = Seq(uuidFieldName, s"$parent.$subFieldName")
-              val analyzers = Map(
-                "a1" -> (SearchFieldAnalyzerType.SEARCH_ANALYZER, LexicalAnalyzerName.SIMPLE, fields),
-                "a2" -> (SearchFieldAnalyzerType.INDEX_ANALYZER, LexicalAnalyzerName.STOP, fields)
+              val analyzersConfigs = Seq(
+                createAnalyzerConfig(LexicalAnalyzerName.SIMPLE, SearchFieldAnalyzerType.SEARCH_ANALYZER, fields),
+                createAnalyzerConfig(LexicalAnalyzerName.STOP, SearchFieldAnalyzerType.INDEX_ANALYZER, fields)
               )
 
-              val searchFields = createIndexSettingAnalyzers(analyzers)
+              val searchFields = createIndexSettingAnalyzers(analyzersConfigs)
               val uuidField = searchFields(uuidFieldName)
               val maybeSubField = maybeGetSubField(searchFields, parent, subFieldName)
               maybeSubField shouldBe defined
               val subField = maybeSubField.get
 
-              forAll(analyzers.toSeq) {
-                case (_, (analyzerType, name, _)) =>
-                  analyzerType.getFromField(uuidField) shouldBe name
-                  analyzerType.getFromField(subField) shouldBe name
+              forAll(analyzersConfigs) {
+                config =>
+                  config.getType.getFromField(uuidField) shouldBe config.getName
+                  config.getType.getFromField(subField) shouldBe config.getName
               }
             }
           }
