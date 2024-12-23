@@ -1,10 +1,12 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, LexicalAnalyzerName, SearchField, SearchIndex}
+import com.azure.search.documents.indexes.models._
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.BeforeAndAfterEach
+
+import java.util.{List => JList}
 
 class SearchWriteBuilderITSpec
   extends SearchITSpec
@@ -137,6 +139,33 @@ class SearchWriteBuilderITSpec
 
     indexExists(testIndex) shouldBe true
     getIndexFields(testIndex)
+  }
+
+  /**
+   * Assert that the definition of newly created index has been enriched with some specifications
+   * @param key key (to be added to a [[WriteConfig]] instance) related to the specification
+   * @param value specification value
+   * @param getter function for retrieving the specification definition from the Search index definition
+   * @param assertion assertion to run on retrieved specification
+   * @tparam A specification type
+   */
+
+  private def assertIndexHasBeenEnrichedWith[A](
+                                                 key: String,
+                                                 value: String,
+                                                 getter: SearchIndex => A
+                                               )(
+                                                 assertion: A => Unit
+                                               ): Unit = {
+
+    val either = safelyCreateIndex(
+      schemaForAnalyzerTests,
+      Map(indexOptionKey(key) -> value)
+    )
+
+    either shouldBe 'right
+    val result: A = getter(either.right.get)
+    assertion(result)
   }
 
   describe(`object`[SearchWriteBuilder]) {
@@ -299,40 +328,99 @@ class SearchWriteBuilderITSpec
           }
         }
 
-        describe("enriching an index with") {
+        describe("enriching its definition with") {
           it("a similarity algorithm") {
 
             val (k1, b) = (1.5, 0.8)
-            val either = safelyCreateIndex(
-              schemaForAnalyzerTests,
-              Map(
-                indexOptionKey(WriteConfig.SIMILARITY_CONFIG) -> createBM25SimilarityAlgorithm(k1, b)
-              )
-            )
-
-            either shouldBe 'right
-            val algorithm = either.right.get.getSimilarity
-            algorithm shouldBe a [BM25SimilarityAlgorithm]
+            assertIndexHasBeenEnrichedWith[SimilarityAlgorithm](
+              WriteConfig.SIMILARITY_CONFIG,
+              createBM25SimilarityAlgorithm(k1, b),
+              _.getSimilarity
+            ) {
+              algo =>
+                algo shouldBe a [BM25SimilarityAlgorithm]
+                val bm25 = algo.asInstanceOf[BM25SimilarityAlgorithm]
+                bm25.getK1 shouldBe k1
+                bm25.getB shouldBe b
+            }
           }
 
           it("some tokenizers") {
 
-            // TODO: test
+            val (name, maxTokenLength) = ("tokenizrName", 10)
+            assertIndexHasBeenEnrichedWith[JList[LexicalTokenizer]](
+              WriteConfig.TOKENIZERS_CONFIG,
+              createArray(
+                createClassicTokenizer(name, maxTokenLength)
+              ),
+              _.getTokenizers
+            ) {
+              tokenizers =>
+                tokenizers should have size 1
+                val head = tokenizers.get(0)
+                head shouldBe a [ClassicTokenizer]
+                val clsTokenizer = head.asInstanceOf[ClassicTokenizer]
+                clsTokenizer.getName shouldBe name
+                clsTokenizer.getMaxTokenLength shouldBe maxTokenLength
+            }
           }
 
           it("search suggesters") {
 
-            // TODO: test
+            val (name, fields) = ("uuidSuggstr", Seq(uuidFieldName))
+            assertIndexHasBeenEnrichedWith[JList[SearchSuggester]](
+              WriteConfig.SEARCH_SUGGESTERS_CONFIG,
+              createArray(
+                createSearchSuggester(name, fields)
+              ),
+              _.getSuggesters
+            ) {
+              suggesters =>
+                suggesters should have size 1
+                val head = suggesters.get(0)
+                head.getName shouldBe name
+                head.getSourceFields should contain theSameElementsAs fields
+            }
           }
 
           it("analyzers") {
 
-            // TODO: test
+            val (name, stopWords) = ("analyzrName", Seq("a", "the"))
+            assertIndexHasBeenEnrichedWith[JList[LexicalAnalyzer]](
+              WriteConfig.ANALYZERS_CONFIG,
+              createArray(
+                createStopAnalyzer(name, stopWords)
+              ),
+              _.getAnalyzers
+            ) {
+              analyzers =>
+                analyzers should have size 1
+                val head = analyzers.get(0)
+                head shouldBe a [StopAnalyzer]
+                val stopAnalyzer = head.asInstanceOf[StopAnalyzer]
+                stopAnalyzer.getName shouldBe name
+                stopAnalyzer.getStopwords should contain theSameElementsAs stopWords
+            }
           }
 
           it("char filters") {
 
-            // TODO: test
+            val (name, mappings) = ("filterName", Seq("john=>jane"))
+            assertIndexHasBeenEnrichedWith[JList[CharFilter]](
+              WriteConfig.CHAR_FILTERS_CONFIG,
+              createArray(
+                createMappingCharFilter(name, mappings)
+              ),
+              _.getCharFilters
+            ) {
+              charFilters =>
+                charFilters should have size 1
+                val head = charFilters.get(0)
+                head shouldBe a [MappingCharFilter]
+                val mappingCharFilter = head.asInstanceOf[MappingCharFilter]
+                mappingCharFilter.getName shouldBe name
+                mappingCharFilter.getMappings should contain theSameElementsAs mappings
+            }
           }
         }
       }

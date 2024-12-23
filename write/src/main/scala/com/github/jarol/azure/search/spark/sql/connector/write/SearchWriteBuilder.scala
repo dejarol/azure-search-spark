@@ -5,6 +5,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{SupportsTruncate, Write, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 
+import scala.language.implicitConversions
 import scala.util.Try
 
 /**
@@ -14,9 +15,11 @@ import scala.util.Try
  * @param shouldTruncate whether we should truncate target Search index or not (true for truncating)
  */
 
-class SearchWriteBuilder(private val writeConfig: WriteConfig,
-                         private val schema: StructType,
-                         private val shouldTruncate: Boolean)
+class SearchWriteBuilder(
+                          private val writeConfig: WriteConfig,
+                          private val schema: StructType,
+                          private val shouldTruncate: Boolean
+                        )
   extends WriteBuilder
     with SupportsTruncate
       with Logging {
@@ -104,6 +107,14 @@ class SearchWriteBuilder(private val writeConfig: WriteConfig,
 object SearchWriteBuilder {
 
   /**
+   * Convert a Search index instance to a [[SearchIndexOperations]]
+   * @param index Search index definition
+   * @return an instance of [[SearchIndexOperations]]
+   */
+
+  private implicit def toIndexOperations(index: SearchIndex): SearchIndexOperations = new SearchIndexOperations(index)
+
+  /**
    * Create the target Search index
    * @param writeConfig write configuration
    * @param schema dataFrame schema
@@ -123,10 +134,15 @@ object SearchWriteBuilder {
         .searchFieldCreationOptions
         .toSearchFields(schema)
 
+      val searchIndexActions: Seq[SearchIndexAction] = writeConfig
+        .searchIndexCreationOptions
+        .searchIndexActions
+
       writeConfig.withSearchIndexClientDo {
         _.createIndex(
           new SearchIndex(indexName)
             .setFields(searchFields: _*)
+            .applyActions(searchIndexActions: _*)
         )
       }
     }.toEither.left.map(

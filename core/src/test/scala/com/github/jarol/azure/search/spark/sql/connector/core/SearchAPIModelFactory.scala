@@ -83,7 +83,7 @@ trait SearchAPIModelFactory {
     s"""
        |{
        |  "name": "$name",
-       |  "sourceFields": ${fields.map(StringUtils.quoted).mkString("[", ",", "]")}
+       |  "sourceFields": ${createArray(fields.map(StringUtils.quoted): _*)}
        |}""".stripMargin
   }
 
@@ -103,20 +103,20 @@ trait SearchAPIModelFactory {
        |{
        |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.StopAnalyzer",
        |  "name": "$name",
-       |  "stopwords": ${stopWords.map(StringUtils.quoted).mkString("[", ",", "]")}
+       |  "stopwords": ${createArray(stopWords.map(StringUtils.quoted): _*)}
        |}""".stripMargin
   }
 
   protected final def createMappingCharFilter(
-                                             name: String,
-                                             mappings: Seq[String]
+                                               name: String,
+                                               mappings: Seq[String]
                                              ): String = {
 
     s"""
        |{
        | "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.MappingCharFilter",
        | "name": "$name",
-       | "mappings": ${mappings.map(StringUtils.quoted).mkString("[", ",", "]")}
+       | "mappings": ${createArray(mappings.map(StringUtils.quoted): _*)}
        |}""".stripMargin
   }
 }
