@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
-import com.azure.search.documents.indexes.models.{CharFilter, LexicalAnalyzer, LexicalTokenizer, SearchIndex, SearchSuggester, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models._
 
 /**
  * Collection of factory methods for creating [[SearchIndexAction]]
@@ -68,6 +68,13 @@ object SearchIndexActions {
     }
   }
 
+  private case class SetScoringProfiles(private val profiles: Seq[ScoringProfile])
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setScoringProfiles(profiles: _*)
+    }
+  }
+
   /**
    * Create an action for setting the similarity algorithm
    * @param algorithm algorithm to set
@@ -107,4 +114,12 @@ object SearchIndexActions {
    */
 
   final def forSettingCharFilters(charFilters: Seq[CharFilter]): SearchIndexAction = SetCharFilters(charFilters)
+
+  /**
+   * Create an action for setting the scoring profiles
+   * @param profiles profiles to add
+   * @return an action for setting the scoring profiles
+   */
+
+  final def forSettingScoringProfiles(profiles: Seq[ScoringProfile]): SearchIndexAction = SetScoringProfiles(profiles)
 }

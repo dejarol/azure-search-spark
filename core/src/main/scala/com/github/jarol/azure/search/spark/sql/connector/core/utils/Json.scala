@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
- * Collection of utility methods for dealing with json serialization/deserialization
+ * Collection of utility methods for dealing with JSON serialization/deserialization
  */
 
 object Json {
@@ -41,7 +41,7 @@ final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
    * Deserialize a JSON to an Azure Search REST API model.
    * <br>
    * This operation is unsafe, i.e. no exception handling is provided
-   * @param json json string
+   * @param json JSON string
    * @param function deserialization function
    * @tparam V target type
    * @return an instance of the target type
@@ -58,10 +58,10 @@ final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
   }
 
   /**
-   * Deserialize a json to an Azure Search REST API model.
+   * Deserialize a JSON to an Azure Search REST API model.
    * <br>
    * This operation is unsafe, i.e. no exception handling is provided
-   * @param json json
+   * @param json JSON
    * @param function deserialization function
    * @tparam V target type
    * @return an instance of target type
@@ -78,10 +78,10 @@ final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
   }
 
   /**
-   * Deserialize a json string to an array of Azure Search REST API models
+   * Deserialize a JSON string to an array of Azure Search REST API models
    * <br>
    * This operation is unsafe, i.e. no exception handling is provided
-   * @param json json string
+   * @param json JSON string
    * @param function deserialization function
    * @tparam V array inner type
    * @return either the exception raised by the deserialization function or an array of target type instances
@@ -102,8 +102,8 @@ final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
   }
 
   /**
-   * Safely deserialize a json string to an Azure Search REST API model
-   * @param json json string
+   * Safely deserialize a JSON string to an Azure Search REST API model
+   * @param json JSON string
    * @param function deserialization function
    * @tparam V target value type
    * @return either the exception raised by the deserialization function or an instance of the target type
@@ -120,8 +120,8 @@ final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
   }
 
   /**
-   * Safely deserialize a json string to an array of Azure Search REST API models
-   * @param json json string
+   * Safely deserialize a JSON string to an array of Azure Search REST API models
+   * @param json JSON string
    * @param function deserialization function
    * @tparam V array inner type
    * @return either the exception raised by the deserialization function or an array of target type instances

@@ -3,23 +3,23 @@ package com.github.jarol.azure.search.spark.sql.connector.core
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 
 /**
- * Mix-in trait for specs that deal with json representing Azure Search REST API models
+ * Mix-in trait for specs that deal with JSON representing Azure Search REST API models
  */
 
 trait SearchAPIModelFactory {
 
   /**
-   * Create a json array by joining many json strings
-   * @param elements json strings
-   * @return a json array
+   * Create a JSON array by joining many JSON strings
+   * @param elements JSON strings
+   * @return a JSON array
    */
 
   protected final def createArray(elements: String*): String = elements.mkString("[", ",", "]")
 
   /**
-   * Create a json string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
+   * Create a JSON string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
    * @param name algorithm name
-   * @return a json string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
+   * @return a JSON string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
    */
 
   protected final def createSimpleODataType(name: String): String = {
@@ -31,10 +31,10 @@ trait SearchAPIModelFactory {
   }
 
   /**
-   * Create a json representing a valid instance of [[com.azure.search.documents.indexes.models.BM25SimilarityAlgorithm]]
+   * Create a JSON representing a valid instance of [[com.azure.search.documents.indexes.models.BM25SimilarityAlgorithm]]
    * @param k1 k1 value
    * @param b b value
-   * @return a json representing a valid instance of [[com.azure.search.documents.indexes.models.BM25SimilarityAlgorithm]]
+   * @return a JSON representing a valid instance of [[com.azure.search.documents.indexes.models.BM25SimilarityAlgorithm]]
    */
 
   protected final def createBM25SimilarityAlgorithm(
@@ -50,10 +50,10 @@ trait SearchAPIModelFactory {
   }
 
   /**
-   * Create a json representing a [[com.azure.search.documents.indexes.models.ClassicTokenizer]]
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.ClassicTokenizer]]
    * @param name name
    * @param maxTokenLength max token length
-   * @return a json representing a [[com.azure.search.documents.indexes.models.ClassicTokenizer]]
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.ClassicTokenizer]]
    */
 
   protected final def createClassicTokenizer(
@@ -70,10 +70,10 @@ trait SearchAPIModelFactory {
   }
 
   /**
-   * Create a json representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
    * @param name name
    * @param fields fields
-   * @return a json representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.SearchSuggester]]
    */
 
   protected final def createSearchSuggester(
@@ -88,10 +88,10 @@ trait SearchAPIModelFactory {
   }
 
   /**
-   * Create a json representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
    * @param name name
    * @param stopWords stop words
-   * @return a json representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.StopAnalyzer]]
    */
 
   protected final def createStopAnalyzer(
@@ -117,6 +117,31 @@ trait SearchAPIModelFactory {
        | "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.MappingCharFilter",
        | "name": "$name",
        | "mappings": ${createArray(mappings.map(StringUtils.quoted): _*)}
+       |}""".stripMargin
+  }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.ScoringProfile]]
+   * @param name profile name
+   * @param weights weights
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.ScoringProfile]]
+   */
+
+  protected final def createScoringProfile(
+                                            name: String,
+                                            weights: Map[String, Double]
+                                          ): String = {
+
+    val weightsMap = weights.map {
+      case (k, v) => s"${StringUtils.quoted(k)}: $v"
+    }.mkString("{", ",", "}")
+
+    s"""
+       |{
+       |  "name": ${StringUtils.quoted(name)},
+       |  "text": {
+       |    "weights": $weightsMap
+       |  }
        |}""".stripMargin
   }
 }

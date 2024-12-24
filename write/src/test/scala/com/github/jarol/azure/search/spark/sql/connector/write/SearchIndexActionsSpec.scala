@@ -3,6 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models._
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 
+import java.lang.{Double => JDouble}
 import java.util.{List => JList}
 
 class SearchIndexActionsSpec
@@ -56,7 +57,9 @@ class SearchIndexActionsSpec
   private def assertEffectOfAction[T](
                                        getter: SearchIndex => T,
                                        action: SearchIndexAction
-                                     )(assertion: T => Unit): Unit = {
+                                     )(
+                                       assertion: T => Unit
+                                     ): Unit = {
 
     getter(emptyIndex) shouldBe null.asInstanceOf[T]
     val actionEffect: T = getter(action.apply(emptyIndex))
@@ -134,6 +137,42 @@ class SearchIndexActionsSpec
             SearchIndexActions.forSettingCharFilters(charFilters)
           ) {
             _ should contain theSameElementsAs charFilters
+          }
+        }
+
+        it("set scoring profiles") {
+
+          val (name, weights) = (
+            "profileName",
+            Map(
+              "hotel" -> JDouble.valueOf(0.2),
+              "description" -> JDouble.valueOf(0.5)
+            )
+          )
+
+          val scoringProfiles = Seq(
+            new ScoringProfile(name)
+              .setTextWeights(
+                new TextWeights(
+                  JavaScalaConverters.scalaMapToJava(weights)
+                )
+              )
+          )
+
+          assertEffectOfAction[JList[ScoringProfile]](
+            _.getScoringProfiles,
+            SearchIndexActions.forSettingScoringProfiles(scoringProfiles)
+          ) {
+            profiles =>
+              profiles should have size 1
+              val head = profiles.get(0)
+              head.getName shouldBe name
+              val actualWeights = head.getTextWeights.getWeights
+              forAll(weights.keySet) {
+                k =>
+                  actualWeights should contain key k
+                  actualWeights.get(k) shouldBe weights(k)
+              }
           }
         }
       }

@@ -41,7 +41,9 @@ class SearchIndexCreationOptionsSpec
                                           invalidValue: String,
                                           validValue: String,
                                           getter: SearchIndexCreationOptions => Option[T]
-                                        )(assertion: T => Unit): Unit = {
+                                        )(
+                                          assertion: T => Unit
+                                        ): Unit = {
 
     // Given an empty configuration, the result should be empty
     getter(emptyConfig) shouldBe empty
@@ -173,6 +175,39 @@ class SearchIndexCreationOptionsSpec
           }
         }
 
+        it("scoring profiles") {
+
+          val (name, weights) = (
+            "profileName",
+            Map(
+              "hotel" -> 0.2,
+              "description" -> 0.5
+            )
+          )
+
+          assertSearchIndexOption[Seq[ScoringProfile]](
+            WriteConfig.SCORING_PROFILES_CONFIG,
+            createArray(
+              createSimpleODataType("world")
+            ),
+            createArray(
+              createScoringProfile(name, weights)
+            ),
+            _.scoringProfiles
+          ) {
+            profiles =>
+              profiles should have size 1
+              val head = profiles.head
+              head.getName shouldBe name
+              val actualWeights = head.getTextWeights.getWeights
+              forAll(weights.keySet) {
+                k =>
+                  actualWeights should contain key k
+                  actualWeights.get(k) shouldBe weights(k)
+              }
+          }
+        }
+
         it("the set of actions to apply on a Search index") {
 
           val actions = SearchIndexCreationOptions(
@@ -187,12 +222,15 @@ class SearchIndexCreationOptionsSpec
                 ),
                 WriteConfig.ANALYZERS_CONFIG -> createArray(
                   createStopAnalyzer("stop", Seq("a", "the"))
+                ),
+                WriteConfig.SCORING_PROFILES_CONFIG -> createArray(
+                  createScoringProfile("profileName", Map("hotel" -> 0.5))
                 )
               )
             )
           ).searchIndexActions
 
-          actions should have size 4
+          actions should have size 5
         }
       }
     }

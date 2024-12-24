@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.json.JsonReader
-import com.azure.search.documents.indexes.models.{CharFilter, LexicalAnalyzer, LexicalTokenizer, SearchSuggester, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models.{CharFilter, LexicalAnalyzer, LexicalTokenizer, ScoringProfile, SearchSuggester, SimilarityAlgorithm}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Json
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
@@ -17,7 +17,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   /**
    * Get an optional instance representing an Azure Search API model
    * (like [[SimilarityAlgorithm]], [[LexicalTokenizer]], etc ...)
-   * from the json string related to a configuration key
+   * from the JSON string related to a configuration key
    * @param key configuration key
    * @param function deserialization function
    * @tparam T target type
@@ -41,7 +41,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   /**
    * Get an optional collection of instances representing Azure Search API models
    * (like [[SimilarityAlgorithm]], [[LexicalTokenizer]], etc ...)
-   * from the json string related to a configuration key
+   * from the JSON string related to a configuration key
    * @param key configuration key
    * @param function deserialization function
    * @tparam T target type
@@ -128,6 +128,19 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
+   * Get the (optional) collection of [[ScoringProfile]] to set on newly created index
+   * @return collection of [[ScoringProfile]] for the new index
+   */
+
+  private[write] def scoringProfiles: Option[Seq[ScoringProfile]] = {
+
+    getArrayOfAzModels[ScoringProfile](
+      WriteConfig.SCORING_PROFILES_CONFIG,
+      ScoringProfile.fromJson
+    )
+  }
+
+  /**
    * Get the set of actions to apply on a simple Search index
    * @return actions to apply in order to enrich a Search index definition
    */
@@ -139,7 +152,8 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       tokenizers.map(SearchIndexActions.forSettingTokenizers),
       searchSuggesters.map(SearchIndexActions.forSettingSuggesters),
       analyzers.map(SearchIndexActions.forSettingAnalyzers),
-      charFilters.map(SearchIndexActions.forSettingCharFilters)
+      charFilters.map(SearchIndexActions.forSettingCharFilters),
+      scoringProfiles.map(SearchIndexActions.forSettingScoringProfiles)
     ).collect {
       case Some(value) => value
     }

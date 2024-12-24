@@ -422,6 +422,29 @@ class SearchWriteBuilderITSpec
                 mappingCharFilter.getMappings should contain theSameElementsAs mappings
             }
           }
+
+          it("scoring profiles") {
+
+            val (name, weights) = ("customScoring1", Map(uuidFieldName -> 0.5))
+            assertIndexHasBeenEnrichedWith[JList[ScoringProfile]](
+              WriteConfig.SCORING_PROFILES_CONFIG,
+              createArray(
+                createScoringProfile(name, weights)
+              ),
+              _.getScoringProfiles
+            ) {
+              profiles =>
+                profiles should have size 1
+                val head = profiles.get(0)
+                head.getName shouldBe name
+                val actualWeights = head.getTextWeights.getWeights
+                forAll(weights.keySet) {
+                  k =>
+                    actualWeights should contain key k
+                    actualWeights.get(k) shouldBe weights(k)
+                }
+            }
+          }
         }
       }
     }

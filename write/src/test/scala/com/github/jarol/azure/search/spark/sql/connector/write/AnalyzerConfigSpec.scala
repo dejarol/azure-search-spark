@@ -16,7 +16,7 @@ class AnalyzerConfigSpec
   private lazy val fields = Seq("first", "second")
 
   /**
-   * Assert that the generated json string can be deserialized as an instance of [[AnalyzerConfig]]
+   * Assert that the generated JSON string can be deserialized as an instance of [[AnalyzerConfig]]
    *
    * @param analyzerName analyzer name
    * @param analyzerType analyzer type
@@ -62,7 +62,7 @@ class AnalyzerConfigSpec
                                                                          messageSupplier: Supplier[String]
                                                                        ): Unit = {
 
-    // Create the json string
+    // Create the JSON string
     val json: String = Map(
       AnalyzerConfig.NAME_PROPERTY -> analyzerName.map(StringUtils.quoted),
       AnalyzerConfig.TYPE_PROPERTY -> analyzerType.map(StringUtils.quoted),

@@ -125,6 +125,7 @@ object WriteConfig {
   final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
   final val ANALYZERS_CONFIG = "analyzers"
   final val CHAR_FILTERS_CONFIG = "charFilters"
+  final val SCORING_PROFILES_CONFIG = "scoringProfiles"
 
   /**
    * Create an instance from a simple map

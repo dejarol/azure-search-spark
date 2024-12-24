@@ -8,9 +8,9 @@ class JsonSpec
     with SearchAPIModelFactory {
 
   /**
-   * Create a json array of models representing [[SimilarityAlgorithm]](s)
+   * Create a JSON array of models representing [[SimilarityAlgorithm]](s)
    * @param names algorithm names
-   * @return a json array of models representing [[SimilarityAlgorithm]](s)
+   * @return a JSON array of models representing [[SimilarityAlgorithm]](s)
    */
 
   private def createJsonForArrayOfSimilarityAlgorithms(names: String*): String = {
@@ -22,7 +22,7 @@ class JsonSpec
 
   describe(`object`[Json.type]) {
     describe(SHOULD) {
-      describe("deserialize a json string to") {
+      describe("deserialize a JSON string to") {
         it("an API model") {
 
           val unsafeDeserialization = Json.unsafelyReadAzModel[SimilarityAlgorithm](_, SimilarityAlgorithm.fromJson)
