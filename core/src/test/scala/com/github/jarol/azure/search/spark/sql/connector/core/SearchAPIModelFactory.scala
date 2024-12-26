@@ -144,4 +144,27 @@ trait SearchAPIModelFactory {
        |  }
        |}""".stripMargin
   }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.PatternReplaceTokenFilter]]
+   * @param name filter name
+   * @param pattern pattern to replace
+   * @param replacement replacement for pattern occurrences
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.PatternReplaceTokenFilter]]
+   */
+
+  protected final def createPatternReplaceTokenFilter(
+                                                       name: String,
+                                                       pattern: String,
+                                                       replacement: String
+                                                     ): String = {
+
+    s"""
+       |{
+       |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.PatternReplaceTokenFilter",
+       |  "name": "$name",
+       |  "pattern": "$pattern",
+       |  "replacement": "$replacement"
+       |}""".stripMargin
+  }
 }

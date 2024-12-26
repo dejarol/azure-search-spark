@@ -66,9 +66,10 @@ class SearchWriteBuilderITSpec
   }
 
   /**
-   * Safely create an index
-   * @param schema schema
-   * @param options options
+   * Safely create an index, creating a [[WriteConfig]] instance based on a minimum set of
+   * index creation options
+   * @param schema schema for setting the index fields
+   * @param options options to add upon the minimum set required for index creation
    */
 
   private def safelyCreateIndex(
@@ -163,6 +164,7 @@ class SearchWriteBuilderITSpec
       Map(indexOptionKey(key) -> value)
     )
 
+    // Assert that the index has been created successfully
     either shouldBe 'right
     val result: A = getter(either.right.get)
     assertion(result)
@@ -443,6 +445,27 @@ class SearchWriteBuilderITSpec
                     actualWeights should contain key k
                     actualWeights.get(k) shouldBe weights(k)
                 }
+            }
+          }
+
+          it("token filters") {
+
+            val (name, pattern, replacement) = ("tfName", "a", "")
+            assertIndexHasBeenEnrichedWith[JList[TokenFilter]](
+              WriteConfig.TOKEN_FILTERS_CONFIG,
+              createArray(
+                createPatternReplaceTokenFilter(name, pattern, replacement)
+              ),
+              _.getTokenFilters
+            ) {
+              filters =>
+                filters should have size 1
+                val head = filters.get(0)
+                head shouldBe a [PatternReplaceTokenFilter]
+                val filter = head.asInstanceOf[PatternReplaceTokenFilter]
+                filter.getName shouldBe name
+                filter.getPattern shouldBe pattern
+                filter.getReplacement shouldBe replacement
             }
           }
         }

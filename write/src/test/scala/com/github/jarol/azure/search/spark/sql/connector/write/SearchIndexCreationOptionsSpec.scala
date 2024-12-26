@@ -210,12 +210,30 @@ class SearchIndexCreationOptionsSpec
 
         it("token filters") {
 
-          // TODO: test
+          val (name, pattern, replacement) = ("articlePattern", "article", "replace")
+          assertSearchIndexOption[Seq[TokenFilter]](
+            WriteConfig.TOKEN_FILTERS_CONFIG,
+            createArray(
+              createSimpleODataType("hello")
+            ),
+            createArray(
+              createPatternReplaceTokenFilter(name, pattern, replacement)
+            ),
+            _.tokenFilters
+          ) {
+            filters =>
+              filters should have size 1
+              val head = filters.head
+              head shouldBe a [PatternReplaceTokenFilter]
+              val filter = head.asInstanceOf[PatternReplaceTokenFilter]
+              filter.getName shouldBe name
+              filter.getPattern shouldBe pattern
+              filter.getReplacement shouldBe replacement
+          }
         }
 
         it("the set of actions to apply on a Search index") {
 
-          // TODO: update test
           val actions = SearchIndexCreationOptions(
             createOptions(
               Map(
@@ -231,12 +249,15 @@ class SearchIndexCreationOptionsSpec
                 ),
                 WriteConfig.SCORING_PROFILES_CONFIG -> createArray(
                   createScoringProfile("profileName", Map("hotel" -> 0.5))
+                ),
+                WriteConfig.TOKEN_FILTERS_CONFIG -> createArray(
+                  createPatternReplaceTokenFilter("filterName", "patt", "repl")
                 )
               )
             )
           ).searchIndexActions
 
-          actions should have size 5
+          actions should have size 6
         }
       }
     }
