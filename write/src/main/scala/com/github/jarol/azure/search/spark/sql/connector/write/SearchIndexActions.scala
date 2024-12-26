@@ -68,10 +68,27 @@ object SearchIndexActions {
     }
   }
 
+  /**
+   * Action for setting scoring profiles
+   * @param profiles profiles to set
+   */
+
   private case class SetScoringProfiles(private val profiles: Seq[ScoringProfile])
     extends SearchIndexAction {
     override def apply(index: SearchIndex): SearchIndex = {
       index.setScoringProfiles(profiles: _*)
+    }
+  }
+
+  /**
+   * Action for setting token filters
+   * @param filters filters to set
+   */
+
+  private case class SetTokenFilters(private val filters: Seq[TokenFilter])
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setTokenFilters(filters: _*)
     }
   }
 
@@ -122,4 +139,12 @@ object SearchIndexActions {
    */
 
   final def forSettingScoringProfiles(profiles: Seq[ScoringProfile]): SearchIndexAction = SetScoringProfiles(profiles)
+
+  /**
+   * Create an action for setting the token filters
+   * @param tokenFilters token filters
+   * @return an action for setting token filters
+   */
+
+  final def forSettingTokenFilters(tokenFilters: Seq[TokenFilter]): SearchIndexAction = SetTokenFilters(tokenFilters)
 }

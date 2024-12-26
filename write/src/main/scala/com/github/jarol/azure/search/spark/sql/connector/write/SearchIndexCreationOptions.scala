@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.json.JsonReader
-import com.azure.search.documents.indexes.models.{CharFilter, LexicalAnalyzer, LexicalTokenizer, ScoringProfile, SearchSuggester, SimilarityAlgorithm}
+import com.azure.search.documents.indexes.models._
 import com.github.jarol.azure.search.spark.sql.connector.core.config.SearchConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Json
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
@@ -63,7 +63,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) similarity algorithm to set on the newly created Azure Search index
+   * Get the (optional) similarity algorithm to set on index definition
    * @return the [[SimilarityAlgorithm]] for the new index
    */
 
@@ -76,7 +76,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of tokenizers to set on the newly created Azure Search index
+   * Get the (optional) collection of tokenizers to set on index definition
    * @return the collection of [[LexicalTokenizer]] for the new index
    */
 
@@ -89,7 +89,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of search suggesters to set on the newly created Azure Search index
+   * Get the (optional) collection of search suggesters to set on index definition
    * @return the collection of [[SearchSuggester]] for the new index
    */
 
@@ -102,7 +102,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[LexicalAnalyzer]] to set on newly created index
+   * Get the (optional) collection of [[LexicalAnalyzer]] to set on index definition
    * @return collection of [[LexicalAnalyzer]] for the new index
    */
 
@@ -115,7 +115,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[CharFilter]] to set on newly created index
+   * Get the (optional) collection of [[CharFilter]] to set on index definition
    * @return collection of [[CharFilter]] for the new index
    */
 
@@ -128,7 +128,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[ScoringProfile]] to set on newly created index
+   * Get the (optional) collection of [[ScoringProfile]] to set on index definition
    * @return collection of [[ScoringProfile]] for the new index
    */
 
@@ -139,6 +139,19 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       ScoringProfile.fromJson
     )
   }
+
+  /**
+   * Get the token filters to set on index definition
+   * @return
+   */
+    
+  private[write] def tokenFilters: Option[Seq[TokenFilter]] = {
+    
+    getArrayOfAzModels[TokenFilter](
+      WriteConfig.TOKEN_FILTERS_CONFIG,
+      TokenFilter.fromJson
+    )
+  } 
 
   /**
    * Get the set of actions to apply on a simple Search index
@@ -153,7 +166,8 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       searchSuggesters.map(SearchIndexActions.forSettingSuggesters),
       analyzers.map(SearchIndexActions.forSettingAnalyzers),
       charFilters.map(SearchIndexActions.forSettingCharFilters),
-      scoringProfiles.map(SearchIndexActions.forSettingScoringProfiles)
+      scoringProfiles.map(SearchIndexActions.forSettingScoringProfiles),
+      tokenFilters.map(SearchIndexActions.forSettingTokenFilters)
     ).collect {
       case Some(value) => value
     }

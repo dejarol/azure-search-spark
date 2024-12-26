@@ -208,8 +208,14 @@ class SearchIndexCreationOptionsSpec
           }
         }
 
+        it("token filters") {
+
+          // TODO: test
+        }
+
         it("the set of actions to apply on a Search index") {
 
+          // TODO: update test
           val actions = SearchIndexCreationOptions(
             createOptions(
               Map(

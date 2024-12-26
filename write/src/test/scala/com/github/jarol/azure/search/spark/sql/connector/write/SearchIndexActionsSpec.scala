@@ -175,6 +175,20 @@ class SearchIndexActionsSpec
               }
           }
         }
+
+        it("set token filters") {
+
+          val tokenFilters = Seq(
+            new PatternReplaceTokenFilter("name", "the", "")
+          )
+
+          assertEffectOfAction[JList[TokenFilter]](
+            _.getTokenFilters,
+            SearchIndexActions.forSettingTokenFilters(tokenFilters)
+          ) {
+            _ should contain theSameElementsAs tokenFilters
+          }
+        }
       }
     }
   }
