@@ -70,7 +70,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def similarityAlgorithm: Option[SimilarityAlgorithm] = {
 
     getAzModel[SimilarityAlgorithm](
-      WriteConfig.SIMILARITY_CONFIG,
+      SearchIndexCreationOptions.SIMILARITY_CONFIG,
       SimilarityAlgorithm.fromJson
     )
   }
@@ -83,7 +83,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def tokenizers: Option[Seq[LexicalTokenizer]] = {
 
     getArrayOfAzModels[LexicalTokenizer](
-      WriteConfig.TOKENIZERS_CONFIG,
+      SearchIndexCreationOptions.TOKENIZERS_CONFIG,
       LexicalTokenizer.fromJson
     )
   }
@@ -96,7 +96,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def searchSuggesters: Option[Seq[SearchSuggester]] = {
 
     getArrayOfAzModels[SearchSuggester](
-      WriteConfig.SEARCH_SUGGESTERS_CONFIG,
+      SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG,
       SearchSuggester.fromJson
     )
   }
@@ -109,7 +109,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def analyzers: Option[Seq[LexicalAnalyzer]] = {
 
     getArrayOfAzModels[LexicalAnalyzer](
-      WriteConfig.ANALYZERS_CONFIG,
+      SearchIndexCreationOptions.ANALYZERS_CONFIG,
       LexicalAnalyzer.fromJson
     )
   }
@@ -122,7 +122,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def charFilters: Option[Seq[CharFilter]] = {
 
     getArrayOfAzModels[CharFilter](
-      WriteConfig.CHAR_FILTERS_CONFIG,
+      SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
       CharFilter.fromJson
     )
   }
@@ -135,23 +135,37 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   private[write] def scoringProfiles: Option[Seq[ScoringProfile]] = {
 
     getArrayOfAzModels[ScoringProfile](
-      WriteConfig.SCORING_PROFILES_CONFIG,
+      SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
       ScoringProfile.fromJson
     )
   }
 
   /**
    * Get the token filters to set on index definition
-   * @return
+   * @return the (optional) collection of token filters
    */
     
   private[write] def tokenFilters: Option[Seq[TokenFilter]] = {
     
     getArrayOfAzModels[TokenFilter](
-      WriteConfig.TOKEN_FILTERS_CONFIG,
+      SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
       TokenFilter.fromJson
     )
-  } 
+  }
+
+  /**
+   * Get the CORS options to set on index definition
+   * @return the (optional) CORS options
+   */
+
+  private[write] def corsOptions: Option[CorsOptions] = {
+
+    getAzModel[CorsOptions](
+      SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+      CorsOptions.fromJson
+    )
+  }
+
 
   /**
    * Get the set of actions to apply on a simple Search index
@@ -167,7 +181,8 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       analyzers.map(SearchIndexActions.forSettingAnalyzers),
       charFilters.map(SearchIndexActions.forSettingCharFilters),
       scoringProfiles.map(SearchIndexActions.forSettingScoringProfiles),
-      tokenFilters.map(SearchIndexActions.forSettingTokenFilters)
+      tokenFilters.map(SearchIndexActions.forSettingTokenFilters),
+      corsOptions.map(SearchIndexActions.forSettingCorsOptions)
     ).collect {
       case Some(value) => value
     }
@@ -175,6 +190,15 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
 }
 
 object SearchIndexCreationOptions {
+
+  final val SIMILARITY_CONFIG = "similarity"
+  final val TOKENIZERS_CONFIG = "tokenizers"
+  final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
+  final val ANALYZERS_CONFIG = "analyzers"
+  final val CHAR_FILTERS_CONFIG = "charFilters"
+  final val SCORING_PROFILES_CONFIG = "scoringProfiles"
+  final val TOKEN_FILTERS_CONFIG = "tokenFilters"
+  final val CORS_OPTIONS_CONFIG = "corsOptions"
 
   /**
    * Create an instance from a [[SearchConfig]]

@@ -32,10 +32,10 @@ trait WriteConfigFactory
    * @return a raw configuration object
    */
 
-  protected final def rawConfigForAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, String] = {
+  protected final def configForAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, String] = {
 
     Map(
-      fieldOptionKey(WriteConfig.ANALYZERS_CONFIG) -> writeValueAs[Seq[AnalyzerConfig]](analyzers)
+      fieldOptionKey(SearchFieldCreationOptions.ANALYZERS_CONFIG) -> writeValueAs[Seq[AnalyzerConfig]](analyzers)
     )
   }
 }

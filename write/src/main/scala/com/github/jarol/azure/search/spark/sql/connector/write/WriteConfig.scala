@@ -110,23 +110,8 @@ object WriteConfig {
   final val ACTION_CONFIG = "action"
   final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
-
   final val FIELD_OPTIONS_PREFIX = "fieldOptions."
-  final val KEY_FIELD_CONFIG = "key"
-  final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
-  final val DISABLE_SORTING_CONFIG = "disableSortingOn"
-  final val HIDDEN_FIELDS_CONFIG = "hiddenFields"
-  final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
-  final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
-
   final val INDEX_OPTIONS_PREFIX = "indexOptions."
-  final val SIMILARITY_CONFIG = "similarity"
-  final val TOKENIZERS_CONFIG = "tokenizers"
-  final val SEARCH_SUGGESTERS_CONFIG = "searchSuggesters"
-  final val ANALYZERS_CONFIG = "analyzers"
-  final val CHAR_FILTERS_CONFIG = "charFilters"
-  final val SCORING_PROFILES_CONFIG = "scoringProfiles"
-  final val TOKEN_FILTERS_CONFIG = "tokenFilters"
 
   /**
    * Create an instance from a simple map

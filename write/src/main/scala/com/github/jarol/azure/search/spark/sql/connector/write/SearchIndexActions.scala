@@ -93,6 +93,18 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting CORS options
+   * @param corsOptions option to set
+   */
+
+  private case class SetCorsOptions(private val corsOptions: CorsOptions)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setCorsOptions(corsOptions)
+    }
+  }
+
+  /**
    * Create an action for setting the similarity algorithm
    * @param algorithm algorithm to set
    * @return an action for setting the similarity algorithm
@@ -147,4 +159,12 @@ object SearchIndexActions {
    */
 
   final def forSettingTokenFilters(tokenFilters: Seq[TokenFilter]): SearchIndexAction = SetTokenFilters(tokenFilters)
+
+  /**
+   * Create an action for setting CORS options
+   * @param corsOptions CORS options to set
+   * @return an action for setting CORS options
+   */
+
+  final def forSettingCorsOptions(corsOptions: CorsOptions): SearchIndexAction = SetCorsOptions(corsOptions)
 }

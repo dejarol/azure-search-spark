@@ -43,12 +43,12 @@ class SearchFieldCreationOptionsSpec
                                   ): SearchFieldCreationOptions = {
 
     val featuresMap = Map(
-      WriteConfig.KEY_FIELD_CONFIG -> Some(Seq(key)),
-      WriteConfig.DISABLE_FACETING_CONFIG -> actions.get(SearchFieldFeature.FACETABLE),
-      WriteConfig.DISABLE_FILTERING_CONFIG -> actions.get(SearchFieldFeature.FILTERABLE),
-      WriteConfig.HIDDEN_FIELDS_CONFIG -> actions.get(SearchFieldFeature.HIDDEN),
-      WriteConfig.DISABLE_SEARCH_CONFIG -> actions.get(SearchFieldFeature.SEARCHABLE),
-      WriteConfig.DISABLE_SORTING_CONFIG -> actions.get(SearchFieldFeature.SORTABLE)
+      SearchFieldCreationOptions.KEY_FIELD_CONFIG -> Some(Seq(key)),
+      SearchFieldCreationOptions.DISABLE_FACETING_CONFIG -> actions.get(SearchFieldFeature.FACETABLE),
+      SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG -> actions.get(SearchFieldFeature.FILTERABLE),
+      SearchFieldCreationOptions.HIDDEN_FIELDS_CONFIG -> actions.get(SearchFieldFeature.HIDDEN),
+      SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG -> actions.get(SearchFieldFeature.SEARCHABLE),
+      SearchFieldCreationOptions.DISABLE_SORTING_CONFIG -> actions.get(SearchFieldFeature.SORTABLE)
     ).collect {
       case (key, Some(values)) => (key, values.mkString(","))
     }
@@ -109,8 +109,8 @@ class SearchFieldCreationOptionsSpec
     SearchFieldCreationOptions(
       new SearchConfig(
         Map(
-          WriteConfig.KEY_FIELD_CONFIG -> "key",
-          WriteConfig.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzerConfigs)
+          SearchFieldCreationOptions.KEY_FIELD_CONFIG -> "key",
+          SearchFieldCreationOptions.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzerConfigs)
         )
       ),
       None

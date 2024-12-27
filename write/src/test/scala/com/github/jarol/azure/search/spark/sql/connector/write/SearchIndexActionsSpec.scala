@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models._
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
 
 import java.lang.{Double => JDouble}
-import java.util.{List => JList}
+import java.util.{Collections, List => JList}
 
 class SearchIndexActionsSpec
   extends BasicSpec {
@@ -187,6 +187,20 @@ class SearchIndexActionsSpec
             SearchIndexActions.forSettingTokenFilters(tokenFilters)
           ) {
             _ should contain theSameElementsAs tokenFilters
+          }
+        }
+
+        it("set CORS options") {
+
+          val corsOptions = new CorsOptions(
+            Collections.singletonList("first")
+          ).setMaxAgeInSeconds(30)
+
+          assertEffectOfAction[CorsOptions](
+            _.getCorsOptions,
+            SearchIndexActions.forSettingCorsOptions(corsOptions)
+          ) {
+            _ shouldBe corsOptions
           }
         }
       }

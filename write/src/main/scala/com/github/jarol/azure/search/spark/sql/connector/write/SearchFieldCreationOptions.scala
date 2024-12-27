@@ -34,42 +34,49 @@ case class SearchFieldCreationOptions(
    * @return the key field name
    */
 
-  private[write] def keyField: String = unsafelyGet(WriteConfig.KEY_FIELD_CONFIG, Some(WriteConfig.FIELD_OPTIONS_PREFIX), None)
+  private[write] def keyField: String = {
+
+    unsafelyGet(
+      SearchFieldCreationOptions.KEY_FIELD_CONFIG,
+      Some(WriteConfig.FIELD_OPTIONS_PREFIX),
+      None
+    )
+  }
 
   /**
    * Get the name of fields that should be disabled from filtering
    * @return field for which the <b>filterable</b> property will be set to false
    */
 
-  private[write] def disabledFromFiltering: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_FILTERING_CONFIG)
+  private[write] def disabledFromFiltering: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG)
 
   /**
    * Get the name of fields that should be disabled from sorting
    * @return field for which the <b>sortable</b> property should be set to false
    */
 
-  private[write] def disabledFromSorting: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_SORTING_CONFIG)
+  private[write] def disabledFromSorting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_SORTING_CONFIG)
 
   /**
    * Get the name of fields that should be hidden
    * @return field for which the <b>hidden</b> property should be set to true
    */
 
-  private[write] def hiddenFields: Option[Seq[String]] = getAsList(WriteConfig.HIDDEN_FIELDS_CONFIG)
+  private[write] def hiddenFields: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.HIDDEN_FIELDS_CONFIG)
 
   /**
    * Get the name of fields that should be disabled from searching
    * @return field for which the <b>searchable</b> property should be set to false
    */
 
-  private[write] def disabledFromSearch: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_SEARCH_CONFIG)
+  private[write] def disabledFromSearch: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG)
 
   /**
    * Get the name of fields that should be disabled from faceting
    * @return field for which the <b>facetable</b> property should be set to false
    */
 
-  private[write] def disabledFromFaceting: Option[Seq[String]] = getAsList(WriteConfig.DISABLE_FACETING_CONFIG)
+  private[write] def disabledFromFaceting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_FACETING_CONFIG)
 
   /**
    * If defined, remove the index action column field from a schema
@@ -117,7 +124,7 @@ case class SearchFieldCreationOptions(
   private[write] def analyzerConfigs: Option[Seq[AnalyzerConfig]] = {
 
     getAsListOf[AnalyzerConfig](
-      WriteConfig.ANALYZERS_CONFIG,
+      SearchFieldCreationOptions.ANALYZERS_CONFIG,
       Json.readAsCollectionUsingJackson[AnalyzerConfig]
     )
   }
@@ -179,6 +186,14 @@ case class SearchFieldCreationOptions(
 }
 
 object SearchFieldCreationOptions {
+
+  final val KEY_FIELD_CONFIG = "key"
+  final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
+  final val DISABLE_SORTING_CONFIG = "disableSortingOn"
+  final val HIDDEN_FIELDS_CONFIG = "hiddenFields"
+  final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
+  final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
+  final val ANALYZERS_CONFIG = "analyzers"
 
   /**
    * Create an instance extracting by extracting info from a configuration

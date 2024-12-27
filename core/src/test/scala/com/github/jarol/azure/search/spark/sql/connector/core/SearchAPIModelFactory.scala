@@ -17,6 +17,14 @@ trait SearchAPIModelFactory {
   protected final def createArray(elements: String*): String = elements.mkString("[", ",", "]")
 
   /**
+   * Create a JSON array of strings
+   * @param elements array strings
+   * @return a JSON array of strings
+   */
+
+  protected final def createArrayOfStrings(elements: Seq[String]): String = createArray(elements.map(StringUtils.quoted): _*)
+
+  /**
    * Create a JSON string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
    * @param name algorithm name
    * @return a JSON string representing a [[com.azure.search.documents.indexes.models.SimilarityAlgorithm]]
@@ -83,7 +91,7 @@ trait SearchAPIModelFactory {
     s"""
        |{
        |  "name": "$name",
-       |  "sourceFields": ${createArray(fields.map(StringUtils.quoted): _*)}
+       |  "sourceFields": ${createArrayOfStrings(fields)}
        |}""".stripMargin
   }
 
@@ -103,7 +111,7 @@ trait SearchAPIModelFactory {
        |{
        |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.StopAnalyzer",
        |  "name": "$name",
-       |  "stopwords": ${createArray(stopWords.map(StringUtils.quoted): _*)}
+       |  "stopwords": ${createArrayOfStrings(stopWords)}
        |}""".stripMargin
   }
 
@@ -116,7 +124,7 @@ trait SearchAPIModelFactory {
        |{
        | "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.MappingCharFilter",
        | "name": "$name",
-       | "mappings": ${createArray(mappings.map(StringUtils.quoted): _*)}
+       | "mappings": ${createArrayOfStrings(mappings)}
        |}""".stripMargin
   }
 
@@ -165,6 +173,25 @@ trait SearchAPIModelFactory {
        |  "name": "$name",
        |  "pattern": "$pattern",
        |  "replacement": "$replacement"
+       |}""".stripMargin
+  }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.CorsOptions]] instance
+   * @param allowedOrigins allowed origins
+   * @param maxAgeInSeconds max age in seconds
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.CorsOptions]] instance
+   */
+
+  protected final def createCorsOptions(
+                                         allowedOrigins: Seq[String],
+                                         maxAgeInSeconds: Int
+                                       ): String = {
+
+    s"""
+       |{
+       |  "allowedOrigins": ${createArrayOfStrings(allowedOrigins)},
+       |  "maxAgeInSeconds": $maxAgeInSeconds
        |}""".stripMargin
   }
 }

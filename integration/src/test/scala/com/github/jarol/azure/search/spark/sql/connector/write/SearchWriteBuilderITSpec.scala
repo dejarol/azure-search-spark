@@ -17,7 +17,7 @@ class SearchWriteBuilderITSpec
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
   private lazy val analyzer = LexicalAnalyzerName.STANDARD_ASCII_FOLDING_LUCENE
   private lazy val minimumOptionsForIndexCreation = optionsForAuthAndIndex(testIndex) + (
-    WriteConfig.FIELD_OPTIONS_PREFIX + WriteConfig.KEY_FIELD_CONFIG -> idFieldName
+    WriteConfig.FIELD_OPTIONS_PREFIX + SearchFieldCreationOptions.KEY_FIELD_CONFIG -> idFieldName
     )
 
   private lazy val uuidFieldName = "uuid"
@@ -135,7 +135,7 @@ class SearchWriteBuilderITSpec
     indexExists(testIndex) shouldBe false
     safelyCreateIndex(
       schemaForAnalyzerTests,
-      rawConfigForAnalyzers(analyzers)
+      configForAnalyzers(analyzers)
     )
 
     indexExists(testIndex) shouldBe true
@@ -335,7 +335,7 @@ class SearchWriteBuilderITSpec
 
             val (k1, b) = (1.5, 0.8)
             assertIndexHasBeenEnrichedWith[SimilarityAlgorithm](
-              WriteConfig.SIMILARITY_CONFIG,
+              SearchIndexCreationOptions.SIMILARITY_CONFIG,
               createBM25SimilarityAlgorithm(k1, b),
               _.getSimilarity
             ) {
@@ -351,7 +351,7 @@ class SearchWriteBuilderITSpec
 
             val (name, maxTokenLength) = ("tokenizrName", 10)
             assertIndexHasBeenEnrichedWith[JList[LexicalTokenizer]](
-              WriteConfig.TOKENIZERS_CONFIG,
+              SearchIndexCreationOptions.TOKENIZERS_CONFIG,
               createArray(
                 createClassicTokenizer(name, maxTokenLength)
               ),
@@ -371,7 +371,7 @@ class SearchWriteBuilderITSpec
 
             val (name, fields) = ("uuidSuggstr", Seq(uuidFieldName))
             assertIndexHasBeenEnrichedWith[JList[SearchSuggester]](
-              WriteConfig.SEARCH_SUGGESTERS_CONFIG,
+              SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG,
               createArray(
                 createSearchSuggester(name, fields)
               ),
@@ -389,7 +389,7 @@ class SearchWriteBuilderITSpec
 
             val (name, stopWords) = ("analyzrName", Seq("a", "the"))
             assertIndexHasBeenEnrichedWith[JList[LexicalAnalyzer]](
-              WriteConfig.ANALYZERS_CONFIG,
+              SearchIndexCreationOptions.ANALYZERS_CONFIG,
               createArray(
                 createStopAnalyzer(name, stopWords)
               ),
@@ -409,7 +409,7 @@ class SearchWriteBuilderITSpec
 
             val (name, mappings) = ("filterName", Seq("john=>jane"))
             assertIndexHasBeenEnrichedWith[JList[CharFilter]](
-              WriteConfig.CHAR_FILTERS_CONFIG,
+              SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
               createArray(
                 createMappingCharFilter(name, mappings)
               ),
@@ -429,7 +429,7 @@ class SearchWriteBuilderITSpec
 
             val (name, weights) = ("customScoring1", Map(uuidFieldName -> 0.5))
             assertIndexHasBeenEnrichedWith[JList[ScoringProfile]](
-              WriteConfig.SCORING_PROFILES_CONFIG,
+              SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
               createArray(
                 createScoringProfile(name, weights)
               ),
@@ -452,7 +452,7 @@ class SearchWriteBuilderITSpec
 
             val (name, pattern, replacement) = ("tfName", "a", "")
             assertIndexHasBeenEnrichedWith[JList[TokenFilter]](
-              WriteConfig.TOKEN_FILTERS_CONFIG,
+              SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
               createArray(
                 createPatternReplaceTokenFilter(name, pattern, replacement)
               ),
@@ -466,6 +466,20 @@ class SearchWriteBuilderITSpec
                 filter.getName shouldBe name
                 filter.getPattern shouldBe pattern
                 filter.getReplacement shouldBe replacement
+            }
+          }
+
+          it("CORS options") {
+
+            val (allowedOrigins, maxAge) = (Seq("*"), 15)
+            assertIndexHasBeenEnrichedWith[CorsOptions](
+              SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+              createCorsOptions(allowedOrigins, maxAge),
+              _.getCorsOptions
+            ) {
+              cors =>
+                cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
+                cors.getMaxAgeInSeconds shouldBe maxAge
             }
           }
         }

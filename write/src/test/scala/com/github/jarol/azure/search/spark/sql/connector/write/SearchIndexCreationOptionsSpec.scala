@@ -36,14 +36,14 @@ class SearchIndexCreationOptionsSpec
    * @tparam T option type
    */
 
-  private def assertSearchIndexOption[T](
-                                          key: String,
-                                          invalidValue: String,
-                                          validValue: String,
-                                          getter: SearchIndexCreationOptions => Option[T]
-                                        )(
-                                          assertion: T => Unit
-                                        ): Unit = {
+  private def assertBehaviorForIndexOption[T](
+                                               key: String,
+                                               invalidValue: String,
+                                               validValue: String,
+                                               getter: SearchIndexCreationOptions => Option[T]
+                                             )(
+                                               assertion: T => Unit
+                                             ): Unit = {
 
     // Given an empty configuration, the result should be empty
     getter(emptyConfig) shouldBe empty
@@ -75,8 +75,8 @@ class SearchIndexCreationOptionsSpec
         it("the similarity algorithm") {
 
           val (k1, b) = (0.1, 0.3)
-          assertSearchIndexOption[SimilarityAlgorithm](
-            WriteConfig.SIMILARITY_CONFIG,
+          assertBehaviorForIndexOption[SimilarityAlgorithm](
+            SearchIndexCreationOptions.SIMILARITY_CONFIG,
             createSimpleODataType("#hello"),
             createBM25SimilarityAlgorithm(k1, b),
             _.similarityAlgorithm
@@ -91,8 +91,8 @@ class SearchIndexCreationOptionsSpec
 
         it("index tokenizers") {
 
-          assertSearchIndexOption[Seq[LexicalTokenizer]](
-            WriteConfig.TOKENIZERS_CONFIG,
+          assertBehaviorForIndexOption[Seq[LexicalTokenizer]](
+            SearchIndexCreationOptions.TOKENIZERS_CONFIG,
             createArray(
               createSimpleODataType("hello")
             ),
@@ -111,8 +111,8 @@ class SearchIndexCreationOptionsSpec
         it("search suggesters") {
 
           val (name, fields) = ("countryAndFunction", Seq("country", "function"))
-          assertSearchIndexOption[Seq[SearchSuggester]](
-            WriteConfig.SEARCH_SUGGESTERS_CONFIG,
+          assertBehaviorForIndexOption[Seq[SearchSuggester]](
+            SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG,
             createArray(
               createSimpleODataType("world")
             ),
@@ -132,8 +132,8 @@ class SearchIndexCreationOptionsSpec
         it("analyzers") {
 
           val (name, stopWords) = ("stopper", Seq("a", "an", "the"))
-          assertSearchIndexOption[Seq[LexicalAnalyzer]](
-            WriteConfig.ANALYZERS_CONFIG,
+          assertBehaviorForIndexOption[Seq[LexicalAnalyzer]](
+            SearchIndexCreationOptions.ANALYZERS_CONFIG,
             createArray(
               createSimpleODataType("world")
             ),
@@ -155,8 +155,8 @@ class SearchIndexCreationOptionsSpec
         it("char filters") {
 
           val (name, mappings) = ("charFilterName", Seq("first_name", "last_name"))
-          assertSearchIndexOption[Seq[CharFilter]](
-            WriteConfig.CHAR_FILTERS_CONFIG,
+          assertBehaviorForIndexOption[Seq[CharFilter]](
+            SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
             createArray(
               createSimpleODataType("john"),
             ),
@@ -185,8 +185,8 @@ class SearchIndexCreationOptionsSpec
             )
           )
 
-          assertSearchIndexOption[Seq[ScoringProfile]](
-            WriteConfig.SCORING_PROFILES_CONFIG,
+          assertBehaviorForIndexOption[Seq[ScoringProfile]](
+            SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
             createArray(
               createSimpleODataType("world")
             ),
@@ -211,8 +211,8 @@ class SearchIndexCreationOptionsSpec
         it("token filters") {
 
           val (name, pattern, replacement) = ("articlePattern", "article", "replace")
-          assertSearchIndexOption[Seq[TokenFilter]](
-            WriteConfig.TOKEN_FILTERS_CONFIG,
+          assertBehaviorForIndexOption[Seq[TokenFilter]](
+            SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
             createArray(
               createSimpleODataType("hello")
             ),
@@ -232,32 +232,50 @@ class SearchIndexCreationOptionsSpec
           }
         }
 
+        it("CORS options") {
+
+          val (allowedOrigins, maxAge) = (Seq("first"), 15)
+          assertBehaviorForIndexOption[CorsOptions](
+            SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+            "{}",
+            createCorsOptions(allowedOrigins, maxAge),
+            _.corsOptions
+          ) {
+            cors =>
+              cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
+              cors.getMaxAgeInSeconds shouldBe maxAge
+          }
+        }
+
         it("the set of actions to apply on a Search index") {
 
           val actions = SearchIndexCreationOptions(
             createOptions(
               Map(
-                WriteConfig.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
-                WriteConfig.TOKENIZERS_CONFIG -> createArray(
+                SearchIndexCreationOptions.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
+                SearchIndexCreationOptions.TOKENIZERS_CONFIG -> createArray(
                   createClassicTokenizer("classicTok", 10)
                 ),
-                WriteConfig.SEARCH_SUGGESTERS_CONFIG -> createArray(
+                SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG -> createArray(
                   createSearchSuggester("descriptionSuggester", Seq("description"))
                 ),
-                WriteConfig.ANALYZERS_CONFIG -> createArray(
+                SearchIndexCreationOptions.ANALYZERS_CONFIG -> createArray(
                   createStopAnalyzer("stop", Seq("a", "the"))
                 ),
-                WriteConfig.SCORING_PROFILES_CONFIG -> createArray(
+                SearchIndexCreationOptions.SCORING_PROFILES_CONFIG -> createArray(
                   createScoringProfile("profileName", Map("hotel" -> 0.5))
                 ),
-                WriteConfig.TOKEN_FILTERS_CONFIG -> createArray(
+                SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG -> createArray(
                   createPatternReplaceTokenFilter("filterName", "patt", "repl")
+                ),
+                SearchIndexCreationOptions.CORS_OPTIONS_CONFIG -> createCorsOptions(
+                  Seq("second"), 10
                 )
               )
             )
           ).searchIndexActions
 
-          actions should have size 6
+          actions should have size 7
         }
       }
     }
