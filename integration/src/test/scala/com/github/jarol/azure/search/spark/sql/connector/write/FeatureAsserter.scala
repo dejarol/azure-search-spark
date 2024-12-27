@@ -52,36 +52,36 @@ object FeatureAsserter {
   case object FACETABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FACETABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFacetable)
-    override def suffix: String = WriteConfig.DISABLE_FACETING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.DISABLE_FACETING_CONFIG
   }
 
   case object FILTERABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FILTERABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFilterable)
-    override def suffix: String = WriteConfig.DISABLE_FILTERING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG
   }
 
   case object HIDDEN extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.HIDDEN
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isHidden)
-    override def suffix: String = WriteConfig.HIDDEN_FIELDS_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.HIDDEN_FIELDS_CONFIG
   }
 
   case object KEY extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.KEY
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isKey)
-    override def suffix: String = WriteConfig.KEY_FIELD_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.KEY_FIELD_CONFIG
   }
 
   case object SEARCHABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SEARCHABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSearchable)
-    override def suffix: String = WriteConfig.DISABLE_SEARCH_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG
   }
 
   case object SORTABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SORTABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSortable)
-    override def suffix: String = WriteConfig.DISABLE_SORTING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.DISABLE_SORTING_CONFIG
   }
 }

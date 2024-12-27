@@ -44,7 +44,7 @@ class WriteSpec
     // Set up the writer
     val basicWriter = dataFrame.write.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(index))
-      .option(WriteConfig.FIELD_OPTIONS_PREFIX + WriteConfig.KEY_FIELD_CONFIG, "id")
+      .option(WriteConfig.FIELD_OPTIONS_PREFIX + SearchFieldCreationOptions.KEY_FIELD_CONFIG, "id")
 
     // Add extra options, if needed
     extraOptions
