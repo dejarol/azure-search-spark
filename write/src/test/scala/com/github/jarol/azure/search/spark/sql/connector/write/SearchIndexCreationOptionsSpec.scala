@@ -112,7 +112,7 @@ class SearchIndexCreationOptionsSpec
 
           val (name, fields) = ("countryAndFunction", Seq("country", "function"))
           assertBehaviorForIndexOption[Seq[SearchSuggester]](
-            SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG,
+            SearchIndexCreationOptions.SUGGESTERS_CONFIG,
             createArray(
               createSimpleODataType("world")
             ),
@@ -247,6 +247,17 @@ class SearchIndexCreationOptionsSpec
           }
         }
 
+        it("default scoring profile") {
+
+          val name = "profileName"
+          emptyConfig.defaultScoringProfile shouldBe empty
+          createOptions(
+            Map(
+              SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
+            )
+          ).defaultScoringProfile shouldBe Some(name)
+        }
+
         it("the set of actions to apply on a Search index") {
 
           val actions = SearchIndexCreationOptions(
@@ -256,7 +267,7 @@ class SearchIndexCreationOptionsSpec
                 SearchIndexCreationOptions.TOKENIZERS_CONFIG -> createArray(
                   createClassicTokenizer("classicTok", 10)
                 ),
-                SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG -> createArray(
+                SearchIndexCreationOptions.SUGGESTERS_CONFIG -> createArray(
                   createSearchSuggester("descriptionSuggester", Seq("description"))
                 ),
                 SearchIndexCreationOptions.ANALYZERS_CONFIG -> createArray(
@@ -270,12 +281,13 @@ class SearchIndexCreationOptionsSpec
                 ),
                 SearchIndexCreationOptions.CORS_OPTIONS_CONFIG -> createCorsOptions(
                   Seq("second"), 10
-                )
+                ),
+                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> "profileName"
               )
             )
           ).searchIndexActions
 
-          actions should have size 7
+          actions should have size 8
         }
       }
     }

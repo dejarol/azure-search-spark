@@ -371,7 +371,7 @@ class SearchWriteBuilderITSpec
 
             val (name, fields) = ("uuidSuggstr", Seq(uuidFieldName))
             assertIndexHasBeenEnrichedWith[JList[SearchSuggester]](
-              SearchIndexCreationOptions.SEARCH_SUGGESTERS_CONFIG,
+              SearchIndexCreationOptions.SUGGESTERS_CONFIG,
               createArray(
                 createSearchSuggester(name, fields)
               ),
@@ -481,6 +481,23 @@ class SearchWriteBuilderITSpec
                 cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
                 cors.getMaxAgeInSeconds shouldBe maxAge
             }
+          }
+
+          it("default scoring profile") {
+
+            val (name, weights) = ("customScoring1", Map(uuidFieldName -> 0.5))
+            val either = safelyCreateIndex(
+              schemaForAnalyzerTests,
+              Map(
+                indexOptionKey(SearchIndexCreationOptions.SCORING_PROFILES_CONFIG) -> createArray(createScoringProfile(name, weights)),
+                indexOptionKey(SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG) -> name
+              )
+            )
+
+            either shouldBe 'right
+            val index = either.right.get
+            index.getScoringProfiles should have size 1
+            index.getDefaultScoringProfile shouldBe name
           }
         }
       }

@@ -203,6 +203,17 @@ class SearchIndexActionsSpec
             _ shouldBe corsOptions
           }
         }
+
+        it("set default scoring profile") {
+
+          val name = "profileName"
+          assertEffectOfAction[String](
+            _.getDefaultScoringProfile,
+            SearchIndexActions.forSettingDefaultScoringProfile(name)
+          ) {
+            _ shouldBe name
+          }
+        }
       }
     }
   }

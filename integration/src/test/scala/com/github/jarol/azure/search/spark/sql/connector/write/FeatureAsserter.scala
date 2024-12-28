@@ -52,13 +52,13 @@ object FeatureAsserter {
   case object FACETABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FACETABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFacetable)
-    override def suffix: String = SearchFieldCreationOptions.DISABLE_FACETING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.NON_FACETABLE_CONFIG
   }
 
   case object FILTERABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.FILTERABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isFilterable)
-    override def suffix: String = SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.NON_FILTERABLE_CONFIG
   }
 
   case object HIDDEN extends FeatureAsserter {
@@ -76,12 +76,12 @@ object FeatureAsserter {
   case object SEARCHABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SEARCHABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSearchable)
-    override def suffix: String = SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.NON_SEARCHABLE_CONFIG
   }
 
   case object SORTABLE extends FeatureAsserter {
     override def feature: SearchFieldFeature = SearchFieldFeature.SORTABLE
     override def getFeatureValue(searchField: SearchField): Option[JBoolean] = Option(searchField.isSortable)
-    override def suffix: String = SearchFieldCreationOptions.DISABLE_SORTING_CONFIG
+    override def suffix: String = SearchFieldCreationOptions.NON_SORTABLE_CONFIG
   }
 }

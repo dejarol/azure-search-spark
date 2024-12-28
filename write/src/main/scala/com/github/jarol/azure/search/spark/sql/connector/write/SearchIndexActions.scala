@@ -105,6 +105,18 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting default scoring profile
+   * @param name profile name
+   */
+
+  private case class SetDefaultScoringProfile(private val name: String)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setDefaultScoringProfile(name)
+    }
+  }
+
+  /**
    * Create an action for setting the similarity algorithm
    * @param algorithm algorithm to set
    * @return an action for setting the similarity algorithm
@@ -167,4 +179,12 @@ object SearchIndexActions {
    */
 
   final def forSettingCorsOptions(corsOptions: CorsOptions): SearchIndexAction = SetCorsOptions(corsOptions)
+
+  /**
+   * Create an action for setting the default scoring profile
+   * @param name profile name
+   * @return an action for setting the default scoring profile
+   */
+
+  final def forSettingDefaultScoringProfile(name: String): SearchIndexAction = SetDefaultScoringProfile(name)
 }

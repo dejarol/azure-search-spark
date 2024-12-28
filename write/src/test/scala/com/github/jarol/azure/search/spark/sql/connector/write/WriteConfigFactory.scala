@@ -24,7 +24,7 @@ trait WriteConfigFactory
    * @return config key for index creation
    */
 
-  protected final def indexOptionKey(suffix: String): String = WriteConfig.INDEX_OPTIONS_PREFIX + suffix
+  protected final def indexOptionKey(suffix: String): String = WriteConfig.INDEX_ATTRIBUTES_PREFIX + suffix
 
   /**
    * Create a raw configuration object that includes options for many analyzers

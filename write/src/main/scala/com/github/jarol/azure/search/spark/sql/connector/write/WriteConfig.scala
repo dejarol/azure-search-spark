@@ -90,7 +90,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
 
   /**
    * Retrieves the options for creating a search index (i.e. all configurations that have the prefix defined by
-   * [[WriteConfig.INDEX_OPTIONS_PREFIX]])
+   * [[WriteConfig.INDEX_ATTRIBUTES_PREFIX]])
    *
    * @return index creation options
    */
@@ -98,7 +98,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   def searchIndexCreationOptions: SearchIndexCreationOptions = {
 
     SearchIndexCreationOptions(
-      getAllWithPrefix(WriteConfig.INDEX_OPTIONS_PREFIX)
+      getAllWithPrefix(WriteConfig.INDEX_ATTRIBUTES_PREFIX)
     )
   }
 }
@@ -111,7 +111,7 @@ object WriteConfig {
   final val INDEX_ACTION_COLUMN_CONFIG = "actionColumn"
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
   final val FIELD_OPTIONS_PREFIX = "fieldOptions."
-  final val INDEX_OPTIONS_PREFIX = "indexOptions."
+  final val INDEX_ATTRIBUTES_PREFIX = "indexAttributes."
 
   /**
    * Create an instance from a simple map

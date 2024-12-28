@@ -110,7 +110,7 @@ Of course, you can create your own partitioner implementation, given that
 
 ---
 
-### Write options
+### Batch Write
 
 Here is the list of available datasource options for writing
 
@@ -162,7 +162,13 @@ Values within such column should be valid index actions according to the Azure S
     </tr>
     <tr>
         <td>fieldOptions.*</td>
-        <td>Options for defining field properties. See the <b>Field options</b> section for more information about available options</td>
+        <td>Options for defining field properties. Used only at index creation time. See the <b>Field options</b> section for more information about available options</td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>indexAttributes.*</td>
+        <td>Options for defining Search index properties. Used only at index creation time. See the <b>Index attributes</b> section for more information about supported attributes</td>
         <td></td>
         <td></td>
     </tr>
@@ -170,4 +176,71 @@ Values within such column should be valid index actions according to the Azure S
 
 ### Field options
 
-// TODO: add description
+Here is the list of supported field attributes
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Required</th>
+    </tr>
+    <tr>
+        <td>key</td>
+        <td>Name of key field</td>
+        <td>&#9989</td>
+    </tr>
+    <tr>
+        <td>nonFilterable</td>
+        <td>Comma-separated list of fields that should be marked as non-filterable</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>nonSortable</td>
+        <td>Comma-separated list of fields that should be marked as non-sortable</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>hidden</td>
+        <td>Comma-separated list of fields that should be marked as non-retrievable</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>nonSearchable</td>
+        <td>Comma-separated list of string fields that should be marked as non-searchable</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>nonFacetable</td>
+        <td>Comma-separated list of fields that should be marked as non-facetable</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>analyzers</td>
+        <td>List of field analyzer configurations</td>
+        <td></td>
+    </tr>
+</table>
+
+### Index attributes
+
+Here is the list of supported index attributes. They resemble the same definition stated by the Search Service REST API
+(see <a href="#api_index_creation">this reference</a> for description and concrete examples for each attribute)
+<ul>
+    <li>similarity</li>
+    <li>tokenizers</li>
+    <li>suggesters</li>
+    <li>analyzers</li>
+    <li>charFilters</li>
+    <li>scoringProfiles</li>
+    <li>tokenFilters</li>
+    <li>corsOptions</li>
+    <li>defaultScoringProfile</li>
+</ul>
+
+---
+
+## Azure Search References
+
+<ol type="1">
+    <li><a id="api_index_creation" href="https://learn.microsoft.com/en-us/rest/api/searchservice/indexes?view=rest-searchservice-2023-11-01">API for index creation</a></li>
+</ol>

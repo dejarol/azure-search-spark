@@ -48,14 +48,14 @@ case class SearchFieldCreationOptions(
    * @return field for which the <b>filterable</b> property will be set to false
    */
 
-  private[write] def disabledFromFiltering: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG)
+  private[write] def disabledFromFiltering: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.NON_FILTERABLE_CONFIG)
 
   /**
    * Get the name of fields that should be disabled from sorting
    * @return field for which the <b>sortable</b> property should be set to false
    */
 
-  private[write] def disabledFromSorting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_SORTING_CONFIG)
+  private[write] def disabledFromSorting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.NON_SORTABLE_CONFIG)
 
   /**
    * Get the name of fields that should be hidden
@@ -69,14 +69,14 @@ case class SearchFieldCreationOptions(
    * @return field for which the <b>searchable</b> property should be set to false
    */
 
-  private[write] def disabledFromSearch: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG)
+  private[write] def disabledFromSearch: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.NON_SEARCHABLE_CONFIG)
 
   /**
    * Get the name of fields that should be disabled from faceting
    * @return field for which the <b>facetable</b> property should be set to false
    */
 
-  private[write] def disabledFromFaceting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.DISABLE_FACETING_CONFIG)
+  private[write] def disabledFromFaceting: Option[Seq[String]] = getAsList(SearchFieldCreationOptions.NON_FACETABLE_CONFIG)
 
   /**
    * If defined, remove the index action column field from a schema
@@ -188,11 +188,11 @@ case class SearchFieldCreationOptions(
 object SearchFieldCreationOptions {
 
   final val KEY_FIELD_CONFIG = "key"
-  final val DISABLE_FILTERING_CONFIG = "disableFilteringOn"
-  final val DISABLE_SORTING_CONFIG = "disableSortingOn"
-  final val HIDDEN_FIELDS_CONFIG = "hiddenFields"
-  final val DISABLE_SEARCH_CONFIG = "disableSearchOn"
-  final val DISABLE_FACETING_CONFIG = "disableFacetingOn"
+  final val NON_FILTERABLE_CONFIG = "nonFilterable"
+  final val NON_SORTABLE_CONFIG = "nonSortable"
+  final val HIDDEN_FIELDS_CONFIG = "hidden"
+  final val NON_SEARCHABLE_CONFIG = "nonSearchable"
+  final val NON_FACETABLE_CONFIG = "nonFacetable"
   final val ANALYZERS_CONFIG = "analyzers"
 
   /**

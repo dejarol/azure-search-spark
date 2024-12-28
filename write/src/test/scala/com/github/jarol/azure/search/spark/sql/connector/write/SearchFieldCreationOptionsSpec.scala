@@ -44,11 +44,11 @@ class SearchFieldCreationOptionsSpec
 
     val featuresMap = Map(
       SearchFieldCreationOptions.KEY_FIELD_CONFIG -> Some(Seq(key)),
-      SearchFieldCreationOptions.DISABLE_FACETING_CONFIG -> actions.get(SearchFieldFeature.FACETABLE),
-      SearchFieldCreationOptions.DISABLE_FILTERING_CONFIG -> actions.get(SearchFieldFeature.FILTERABLE),
+      SearchFieldCreationOptions.NON_FACETABLE_CONFIG -> actions.get(SearchFieldFeature.FACETABLE),
+      SearchFieldCreationOptions.NON_FILTERABLE_CONFIG -> actions.get(SearchFieldFeature.FILTERABLE),
       SearchFieldCreationOptions.HIDDEN_FIELDS_CONFIG -> actions.get(SearchFieldFeature.HIDDEN),
-      SearchFieldCreationOptions.DISABLE_SEARCH_CONFIG -> actions.get(SearchFieldFeature.SEARCHABLE),
-      SearchFieldCreationOptions.DISABLE_SORTING_CONFIG -> actions.get(SearchFieldFeature.SORTABLE)
+      SearchFieldCreationOptions.NON_SEARCHABLE_CONFIG -> actions.get(SearchFieldFeature.SEARCHABLE),
+      SearchFieldCreationOptions.NON_SORTABLE_CONFIG -> actions.get(SearchFieldFeature.SORTABLE)
     ).collect {
       case (key, Some(values)) => (key, values.mkString(","))
     }
