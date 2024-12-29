@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
-import org.apache.spark.sql.connector.read.{Scan, ScanBuilder}
+import org.apache.spark.sql.connector.expressions.filter.Predicate
+import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}
 import org.apache.spark.sql.types.StructType
 
 /**
@@ -10,9 +11,12 @@ import org.apache.spark.sql.types.StructType
  * @param schema index schema (either inferred or defined by the user)
  */
 
-class SearchScanBuilder(private val readConfig: ReadConfig,
-                        private val schema: StructType)
-  extends ScanBuilder {
+class SearchScanBuilder(
+                         private val readConfig: ReadConfig,
+                         private val schema: StructType
+                       )
+  extends ScanBuilder
+    with SupportsPushDownV2Filters {
 
   /**
    * Build the scan
@@ -29,4 +33,12 @@ class SearchScanBuilder(private val readConfig: ReadConfig,
       new SearchScan(readConfig, schema)
     }
   }
+
+  override def pushPredicates(predicates: Array[Predicate]): Array[Predicate] = {
+
+    val head = predicates.head
+    predicates
+  }
+
+  override def pushedPredicates(): Array[Predicate] = Array.empty
 }
