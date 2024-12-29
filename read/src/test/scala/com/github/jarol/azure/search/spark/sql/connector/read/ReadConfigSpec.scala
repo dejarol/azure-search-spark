@@ -1,12 +1,21 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{EmptyPartitioner, SinglePartitionPartitioner}
 
 class ReadConfigSpec
   extends BasicSpec {
 
-  private lazy val emptyConfig = ReadConfig(Map.empty[String, String])
+  /**
+   * Create a configuration instance
+   * @param options configuration options
+   * @return a configuration instance
+   */
+
+  private def createConfig(options: Map[String, String]): ReadConfig = ReadConfig(options)
+
+  private lazy val emptyConfig = createConfig(Map.empty)
 
   describe(anInstanceOf[ReadConfig]) {
     describe(SHOULD) {
@@ -15,7 +24,7 @@ class ReadConfigSpec
 
           val expected = "filterValue"
           emptyConfig.filter shouldBe empty
-          ReadConfig(
+          createConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> expected
             )
@@ -26,7 +35,7 @@ class ReadConfigSpec
 
           val expected = Seq("f1", "f2")
           emptyConfig.select shouldBe empty
-          val actual: Option[Seq[String]] = ReadConfig(
+          val actual: Option[Seq[String]] = createConfig(
             Map(
               ReadConfig.SELECT_CONFIG -> expected.mkString(",")
             )
@@ -39,7 +48,7 @@ class ReadConfigSpec
         it("the partitioner options") {
 
           val (facet, partitions) = ("facet", 10)
-          val partitionerOptions = ReadConfig(
+          val partitionerOptions = createConfig(
             Map(
               ReadConfig.FILTER_CONFIG -> "filter",
               ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.FACET_FIELD_CONFIG -> facet,
@@ -60,13 +69,43 @@ class ReadConfigSpec
 
           it("a user provided partitioner") {
 
-            val config = ReadConfig(
+            val config = createConfig(
               Map(
                 ReadConfig.PARTITIONER_CONFIG -> classOf[EmptyPartitioner].getName
               )
             )
 
             config.partitioner shouldBe a [EmptyPartitioner]
+          }
+        }
+
+        it("the predicate pushdown flag") {
+
+          // Default
+          emptyConfig.pushdownPredicate shouldBe true
+
+          // Expecting false
+          createConfig(
+            Map(
+              ReadConfig.PUSHDOWN_PREDICATE_CONFIG -> "false"
+            )
+          ).pushdownPredicate shouldBe false
+
+          // Expecting true
+          createConfig(
+            Map(
+              ReadConfig.PUSHDOWN_PREDICATE_CONFIG -> "true"
+            )
+          ).pushdownPredicate shouldBe true
+
+          // Invalid value
+          a [ConfigException] shouldBe thrownBy {
+
+            createConfig(
+              Map(
+                ReadConfig.PUSHDOWN_PREDICATE_CONFIG -> "hello"
+              )
+            ).pushdownPredicate
           }
         }
       }

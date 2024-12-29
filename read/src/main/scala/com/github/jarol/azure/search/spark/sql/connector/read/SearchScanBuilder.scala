@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.PredicateParser
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}
 import org.apache.spark.sql.types.StructType
@@ -17,6 +18,8 @@ class SearchScanBuilder(
                        )
   extends ScanBuilder
     with SupportsPushDownV2Filters {
+
+  private var supportedPredicates: Option[Array[Predicate]] = None
 
   /**
    * Build the scan
@@ -36,9 +39,16 @@ class SearchScanBuilder(
 
   override def pushPredicates(predicates: Array[Predicate]): Array[Predicate] = {
 
-    val head = predicates.head
-    predicates
+    if (readConfig.pushdownPredicate) {
+      val (supported, unsupported) = predicates.partition {
+        PredicateParser.compile(_).isDefined
+      }
+      supportedPredicates = Some(supported)
+      unsupported
+    } else {
+      predicates
+    }
   }
 
-  override def pushedPredicates(): Array[Predicate] = Array.empty
+  override def pushedPredicates(): Array[Predicate] = supportedPredicates.getOrElse(Array.empty)
 }

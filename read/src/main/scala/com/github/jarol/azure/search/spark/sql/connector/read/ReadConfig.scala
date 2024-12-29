@@ -68,6 +68,13 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    */
 
   def select: Option[Seq[String]] = getAsList(ReadConfig.SELECT_CONFIG)
+
+  /**
+   * Return the flag that indicates if predicate pushdown should be enabled when querying data
+   * @return true for enabling predicate pushdown
+   */
+
+  def pushdownPredicate: Boolean = getOrDefaultAs[Boolean](ReadConfig.PUSHDOWN_PREDICATE_CONFIG, true, _.toBoolean)
 }
 
 object ReadConfig {
@@ -75,6 +82,7 @@ object ReadConfig {
   final val FILTER_CONFIG = "filter"
   final val PARTITIONER_CONFIG = "partitioner"
   final val SELECT_CONFIG = "select"
+  final val PUSHDOWN_PREDICATE_CONFIG = "pushDownPredicate"
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
   final val FACET_FIELD_CONFIG = "facetField"
   final val NUM_PARTITIONS_CONFIG = "numPartitions"
