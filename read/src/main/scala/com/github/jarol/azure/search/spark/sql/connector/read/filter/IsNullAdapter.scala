@@ -10,7 +10,7 @@ private[filter] case class IsNullAdapter(
                                           private val fieldNames: Seq[String],
                                           private val negate: Boolean
                                         )
-  extends V2PushDownFilterAdapter {
+  extends V2ExpressionAdapter {
 
   override def getODataFilter: String = {
 

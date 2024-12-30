@@ -1,11 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output;
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils;
 import org.apache.spark.unsafe.types.UTF8String;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -42,9 +42,8 @@ public final class AtomicDecoders {
         return new TransformDecoder<String>() {
             @Override
             protected String transform(Object value) {
-                return new String(
-                        ((UTF8String) value).getBytes(),
-                        StandardCharsets.UTF_8
+                return StringUtils.fromUTF8String(
+                        (UTF8String) value
                 );
             }
         };

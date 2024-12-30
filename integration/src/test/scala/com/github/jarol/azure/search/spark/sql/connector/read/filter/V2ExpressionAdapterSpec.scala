@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe.TypeTag
  * Parent class for integration tests that deal with pushed predicates adapters
  */
 
-trait V2PushDownFilterAdapterSpec
+trait V2ExpressionAdapterSpec
   extends SearchSparkITSpec {
 
   protected final val indexName = this.getClass.getSimpleName.toLowerCase
@@ -39,7 +39,8 @@ trait V2PushDownFilterAdapterSpec
   }
 
   /**
-   * Retrieve document from an index, filtering documents according to the filter provided by a [[V2PushDownFilterAdapter]] instance
+   * Retrieve document from an index, filtering documents according to the filter provided by a [[V2ExpressionAdapter]] instance
+ *
    * @param index index name
    * @param adapter adapter instance (will provide the OData filter string)
    * @return indexed documents that match the OData filter provided by the adapter
@@ -47,7 +48,7 @@ trait V2PushDownFilterAdapterSpec
 
   protected final def readDocumentsUsingV2Adapter(
                                                    index: String,
-                                                   adapter: V2PushDownFilterAdapter
+                                                   adapter: V2ExpressionAdapter
                                                  ): Seq[SearchDocument] = {
 
     val documents: JList[SearchDocument] = SearchTestUtils.readDocuments(

@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter
 import com.github.jarol.azure.search.spark.sql.connector.models.{PairBean, _}
 
 class IsNullAdapterSpec
-  extends V2PushDownFilterAdapterSpec {
+  extends V2ExpressionAdapterSpec {
 
   /**
    * Create an adapter instance
@@ -15,7 +15,7 @@ class IsNullAdapterSpec
   private def createAdapter(
                              fields: Seq[String],
                              negate: Boolean
-                           ): V2PushDownFilterAdapter = {
+                           ): V2ExpressionAdapter = {
 
     IsNullAdapter(fields, negate)
   }

@@ -1,5 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
+import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.StructType
 
@@ -11,7 +12,8 @@ import org.apache.spark.sql.types.StructType
 
 class SearchScan(
                   private val readConfig: ReadConfig,
-                  private val schema: StructType
+                  private val schema: StructType,
+                  val pushedPredicates: Array[Predicate]
                 )
   extends Scan {
 
@@ -27,7 +29,8 @@ class SearchScan(
   override def description(): String = {
 
     s"${this.getClass.getSimpleName}(" +
-      s"${readConfig.getIndex}" +
+      s"${readConfig.getIndex}, " +
+      s"pushedPredicates: ${pushedPredicates.mkString("(", ",", ")")}" +
       s")"
   }
 }

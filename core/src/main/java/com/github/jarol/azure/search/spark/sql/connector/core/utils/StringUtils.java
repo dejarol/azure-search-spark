@@ -1,9 +1,33 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.utils;
 
+import org.apache.spark.unsafe.types.UTF8String;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
+
+/**
+ * Collection of utility methods for strings
+ */
+
 public final class StringUtils {
+
+    /**
+     * Convert an UTF8String to a simple Java string
+     * @param string UTF8 instance
+     * @return a simple Java string
+     */
+
+    @Contract("_ -> new")
+    public static @NotNull String fromUTF8String(
+            @NotNull UTF8String string
+    ) {
+
+        return new String(
+                string.getBytes(),
+                StandardCharsets.UTF_8
+        );
+    }
 
     /**
      * Get a quoted string

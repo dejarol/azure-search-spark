@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2PushDownFilterAdapters
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionODataBuilder
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}
 import org.apache.spark.sql.types.StructType
@@ -19,7 +19,7 @@ class SearchScanBuilder(
   extends ScanBuilder
     with SupportsPushDownV2Filters {
 
-  private var supportedPredicates: Option[Array[Predicate]] = None
+  private var supportedPredicates: Array[Predicate] = Array.empty
 
   /**
    * Build the scan
@@ -33,22 +33,24 @@ class SearchScanBuilder(
     if (!readConfig.indexExists) {
       throw new IndexDoesNotExistException(readConfig.getIndex)
     } else {
-      new SearchScan(readConfig, schema)
+      new SearchScan(readConfig, schema, supportedPredicates)
     }
   }
 
   override def pushPredicates(predicates: Array[Predicate]): Array[Predicate] = {
 
     if (readConfig.pushdownPredicate) {
+
+      // Separate supported predicates from unsupported ones
       val (supported, unsupported) = predicates.partition {
-        V2PushDownFilterAdapters.safeApply(_).isDefined
+        V2ExpressionODataBuilder.build(_).isDefined
       }
-      supportedPredicates = Some(supported)
+      supportedPredicates = supported
       unsupported
     } else {
       predicates
     }
   }
 
-  override def pushedPredicates(): Array[Predicate] = supportedPredicates.getOrElse(Array.empty)
+  override def pushedPredicates(): Array[Predicate] = supportedPredicates
 }

@@ -8,7 +8,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter;
  */
 
 @FunctionalInterface
-public interface V2PushDownFilterAdapter {
+public interface V2ExpressionAdapter {
 
     /**
      * Get the corresponding OData filter
