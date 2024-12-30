@@ -71,7 +71,7 @@ class FacetNullValuePartitionITSpec
           )
         }
 
-        it(s"that match the input filter as well") {
+        it("that match the input filter as well") {
 
           truncateIndex(indexName)
           val documents: Seq[PairBean[String]] = Seq(

@@ -11,8 +11,10 @@ import com.azure.search.documents.models.SearchOptions;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -40,18 +42,34 @@ public final class SearchTestUtils {
     }
 
     /**
+     * Read documents from an index
+     * @param client Search client
+     * @param searchOptions search options (can be null if not required)
+     * @return a collection with all index document
+     */
+
+    public static List<SearchDocument> readDocuments(
+            @NotNull SearchClient client,
+            @Nullable SearchOptions searchOptions
+    ) {
+
+        SearchOptions inputOptions = Objects.isNull(searchOptions) ? new SearchOptions() : searchOptions;
+        return SearchUtils.getSearchPagedIterable(client, inputOptions)
+                .stream().map(result -> result.getDocument(SearchDocument.class))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Read all documents
      * @param client Search client
      * @return a collection with all index document
      */
 
-    public static List<SearchDocument> readDocuments(
-            SearchClient client
+    public static List<SearchDocument> readAllDocuments(
+            @NotNull SearchClient client
     ) {
 
-        return SearchUtils.getSearchPagedIterable(client, new SearchOptions())
-                .stream().map(result -> result.getDocument(SearchDocument.class))
-                .collect(Collectors.toList());
+        return readDocuments(client, null);
     }
 
     /**
@@ -115,7 +133,7 @@ public final class SearchTestUtils {
             @NotNull DocumentIDGetter<SearchDocument> idGetter
     ) {
 
-        List<SearchDocument> allDocuments = readDocuments(client);
+        List<SearchDocument> allDocuments = readAllDocuments(client);
         deleteDocuments(client, allDocuments, idGetter);
     }
 

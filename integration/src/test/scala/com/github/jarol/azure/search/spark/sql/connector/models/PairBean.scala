@@ -4,6 +4,13 @@ import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, 
 
 import java.util.{UUID, Map => JMap}
 
+/**
+ * Simple model for documents to use for integration testing
+ * @param id document id
+ * @param value value
+ * @tparam T value type
+ */
+
 case class PairBean[T](
                         override val id: String,
                         value: Option[T]
@@ -13,7 +20,7 @@ case class PairBean[T](
 object PairBean {
 
   /**
-   * Create an instance
+   * Create an instance with a random id and a value
    * @param value value
    * @tparam T value type
    * @return an instance
@@ -24,6 +31,20 @@ object PairBean {
     PairBean(
       UUID.randomUUID().toString,
       Some(value)
+    )
+  }
+
+  /**
+   * Create an instance with just a random id
+   * @tparam T value type
+   * @return an instance with just a random id
+   */
+
+  def empty[T]: PairBean[T] = {
+
+    PairBean[T](
+      UUID.randomUUID().toString,
+      None
     )
   }
 

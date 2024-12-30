@@ -178,11 +178,11 @@ trait SearchITSpec
    * @return a collection of typed documents
    */
 
-  protected final def readDocumentsAs[T: DocumentDeserializer](index: String): Seq[T] = {
+  protected final def readAllDocumentsAs[T: DocumentDeserializer](index: String): Seq[T] = {
 
     val deserializer = implicitly[DocumentDeserializer[T]]
     JavaScalaConverters.listToSeq(
-      SearchTestUtils.readDocuments(getSearchClient(index))
+      SearchTestUtils.readAllDocuments(getSearchClient(index))
     ).map {
       deserializer.deserialize(_)
     }

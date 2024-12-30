@@ -77,7 +77,7 @@ class WriteSpec
     writeUsingDataSource(atomicBeansIndex, Seq(expected), Some(Seq("id", colName)), None)
 
     // Retrieve the document using standard Java client API
-    val output = readDocumentsAs[PairBean[TOutput]](atomicBeansIndex)(PairBean.deserializerFor[TOutput](colName))
+    val output = readAllDocumentsAs[PairBean[TOutput]](atomicBeansIndex)(PairBean.deserializerFor[TOutput](colName))
       .collectFirst {
         case bean if bean.id.equals(expected.id) => bean
       }
@@ -114,7 +114,7 @@ class WriteSpec
     maybeArrayType.get shouldBe SearchFieldDataType.collection(expectedSearchType)
 
     // Read documents and run assertion
-    val documents = readDocumentsAs[CollectionBean[T]](collectionBeansIndex)(CollectionBean.deserializerFor[T])
+    val documents = readAllDocumentsAs[CollectionBean[T]](collectionBeansIndex)(CollectionBean.deserializerFor[T])
     documents should have size 1
     val actual = documents.head
     actual.id shouldBe input.id
@@ -151,7 +151,7 @@ class WriteSpec
     maybeType shouldBe defined
 
     // Assertion on retrieved document
-    val output: Seq[PairBean[T]] = readDocumentsAs[PairBean[T]](complexBeansIndex)(
+    val output: Seq[PairBean[T]] = readAllDocumentsAs[PairBean[T]](complexBeansIndex)(
       PairBean.deserializerFor[T]("value")
     )
 
