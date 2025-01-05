@@ -39,7 +39,7 @@ class PredicatePushDowITSpec
 
     customScanExec.scan match {
       case scan: SearchScan =>
-        val pushedFilters = scan.toBatch.planInputPartitions() .pushedPredicates
+        val pushedFilters = scan.pushedPredicates
         println(s"Pushed filters: ${pushedFilters.map(V2ExpressionODataBuilder.build).collect {
           case Some(value) => value
         }.mkString("(", ",", ")")}")

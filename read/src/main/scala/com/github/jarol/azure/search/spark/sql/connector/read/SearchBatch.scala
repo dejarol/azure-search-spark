@@ -67,6 +67,8 @@ class SearchBatch(
 
 object SearchBatch {
 
+  // TODO: javadoc, test and method for creating exception
+
   @throws[SearchBatchException]
   private[read] def createPartitioner(
                                        readConfig: ReadConfig,
