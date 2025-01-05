@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.filter
 
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.{StringUtils, TimeUtils}
 import org.apache.spark.sql.connector.expressions.{Expression, GeneralScalarExpression, Literal, NamedReference}
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String
@@ -35,6 +36,13 @@ object V2ExpressionODataBuilder {
             build(children.head),
             build(children(1))
           )
+          case "in" => fromInExpression(
+            build(children.head),
+            children.drop(1).map(build)
+          )
+          case "not" => fromNotExpression(
+            build(children.head)
+          )
 
           case _ => None
         }
@@ -60,6 +68,14 @@ object V2ExpressionODataBuilder {
           )
         )
       )
+      case DataTypes.DateType | DataTypes.TimestampType =>
+        val offsetDateTime = if (literal.dataType().equals(DataTypes.DateType)) {
+          TimeUtils.fromEpochDays(literal.value().asInstanceOf[Integer])
+        } else {
+          TimeUtils.fromEpochMicros(literal.value().asInstanceOf[Long])
+        }
+
+        Some(offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER))
       case _ => Some(String.valueOf(literal.value()))
     }
   }
@@ -101,11 +117,11 @@ object V2ExpressionODataBuilder {
     } yield s"$l $op $r"
   }
 
-  private[filter] def fromStartWithOrEndWithExpression(
-                                                        expression: Option[String],
-                                                        prefixOrSuffix: Option[String],
-                                                        forStartsWith: Boolean
-                                                      ): Option[String] = {
+  private def fromStartWithOrEndWithExpression(
+                                                expression: Option[String],
+                                                prefixOrSuffix: Option[String],
+                                                forStartsWith: Boolean
+                                              ): Option[String] = {
 
     val oDataFunction = if (forStartsWith) "startsWith" else "endsWith"
     for {
@@ -114,13 +130,40 @@ object V2ExpressionODataBuilder {
     } yield s"$oDataFunction($exp, $p)"
   }
 
-  private[filter] def fromContainsExpression(
-                                              expression: Option[String],
-                                              subString: Option[String]
-                                            ): Option[String] = {
+  private def fromContainsExpression(
+                                      expression: Option[String],
+                                      subString: Option[String]
+                                    ): Option[String] = {
     for {
       exp <- expression
       s <- subString
     } yield s"substringof($s, $exp)"
+  }
+
+  private def fromInExpression(
+                                expression: Option[String],
+                                inExpressions: Seq[Option[String]]
+                              ): Option[String] = {
+
+    val allInExpressionsAreDefined = inExpressions.forall(_.isDefined)
+    if (allInExpressionsAreDefined) {
+      expression.map {
+        exp =>
+          val inList: String = inExpressions.collect {
+            case Some(value) => value
+          }.mkString(", ")
+
+          s"$exp in ($inList)"
+      }
+    } else {
+      None
+    }
+  }
+
+  private def fromNotExpression(expression: Option[String]): Option[String] = {
+
+    expression.map {
+      expr => s"not ($expr)"
+    }
   }
 }

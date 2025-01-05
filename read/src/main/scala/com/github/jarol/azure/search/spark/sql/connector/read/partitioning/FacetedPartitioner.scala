@@ -7,6 +7,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigExce
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
+import org.apache.spark.sql.connector.expressions.filter.Predicate
 
 import java.util.{List => JList}
 
@@ -23,10 +24,14 @@ import java.util.{List => JList}
  * Suitable for cases where there exists a filterable and facetable field with few distinct values
  *
  * @param readConfig read configuration
+ * @param pushedPredicates predicates that support predicate pushdown
  */
 
-case class FacetedPartitioner(override protected val readConfig: ReadConfig)
-  extends AbstractSearchPartitioner(readConfig) {
+case class FacetedPartitioner(
+                               override protected val readConfig: ReadConfig,
+                               override protected val pushedPredicates: Array[Predicate]
+                             )
+  extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
 
   /**
    * Generate a number of partitions equal to
@@ -79,6 +84,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     val partitions = AbstractFacetPartition.createCollection(
       readConfig.filter,
       readConfig.select,
+      pushedPredicates,
       field,
       facets.map(_.getAdditionalProperties.get("value"))
     )

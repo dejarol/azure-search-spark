@@ -1,5 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import org.apache.spark.sql.connector.expressions.filter.Predicate
+
 /**
  * Search partition returned by a [[RangePartitioner]]
  * <br>
@@ -16,6 +18,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
  *   field >= lowerBound and field < upperbound and inputFilter
  * }}}
  * i.e. it represents the logical AND of the 3 sub filters
+ *
  * @param partitionId partition id
  * @param inputFilter optional filter to apply during data retrieval
  * @param maybeSelect optional list of index fields to select
@@ -28,28 +31,19 @@ case class RangePartition(
                            override protected val partitionId: Int,
                            override protected val inputFilter: Option[String],
                            override protected val maybeSelect: Option[Seq[String]],
+                           override protected val pushedPredicates: Array[Predicate],
                            private val fieldName: String,
                            private val lowerBound: Option[String],
                            private val upperBound: Option[String])
-  extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect) {
+  extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
 
-  override def getSearchFilter: String = {
+  override final protected[partitioning] def partitionFilter: Option[String] = {
 
-    val rangeFilter: Option[String] = (lowerBound, upperBound) match {
+    (lowerBound, upperBound) match {
       case (Some(l), Some(u)) => Some(s"${getGeFilter(l)} and ${getLtFilter(u)}")
       case (Some(l), None) => Some(getGeFilter(l))
       case (None, Some(u)) => Some(s"${getLtFilter(u)} or $fieldName eq null")
       case (None, None) => None
-    }
-
-    val definedFilters: Seq[String] = Seq(rangeFilter, inputFilter).collect {
-      case Some(value) => value
-    }
-
-    if (definedFilters.isEmpty) {
-      null
-    } else {
-      definedFilters.mkString(" and ")
     }
   }
 
@@ -72,6 +66,7 @@ object RangePartition {
   def createCollection(
                         inputFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
+                        pushedPredicates: Array[Predicate],
                         fieldName: String,
                         values: Seq[String]
                       ): Seq[RangePartition] = {
@@ -85,6 +80,7 @@ object RangePartition {
         index,
         inputFilter,
         maybeSelect,
+        pushedPredicates,
         fieldName,
         lb, ub
       )

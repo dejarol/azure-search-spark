@@ -25,10 +25,11 @@ class RangePartitionSpec
       0,
       inputFilter,
       None,
+      Array.empty,
       fieldName,
       lowerBound,
       upperBound
-    ).getSearchFilter
+    ).getODataFilter
   }
 
   describe(anInstanceOf[RangePartition]) {
@@ -59,12 +60,12 @@ class RangePartitionSpec
       it("create a collection of partitions") {
 
         val values = Seq("1", "2", "3")
-        val partitions = RangePartition.createCollection(None, None, fieldName, values)
+        val partitions = RangePartition.createCollection(None, None, Array.empty, fieldName, values)
         partitions should have size(values.size + 1)
-        val headFilter = partitions.head.getSearchFilter
+        val headFilter = partitions.head.getODataFilter
         headFilter should include (s"$fieldName lt ${values.head}")
         headFilter should include (s"$fieldName eq null")
-        partitions.last.getSearchFilter shouldBe s"$fieldName ge ${values.last}"
+        partitions.last.getODataFilter shouldBe s"$fieldName ge ${values.last}"
       }
     }
   }

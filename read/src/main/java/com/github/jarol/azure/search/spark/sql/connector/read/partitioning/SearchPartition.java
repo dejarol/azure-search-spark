@@ -5,6 +5,7 @@ import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.models.SearchResult;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
+import org.apache.spark.sql.connector.expressions.filter.Predicate;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +33,7 @@ public interface SearchPartition
      * @return the search filter
      */
 
-    String getSearchFilter();
+    String getODataFilter();
 
     /**
      * Get the list of fields to be retrieved from Search documents.
@@ -40,7 +41,14 @@ public interface SearchPartition
      * @return list of fields to select
      */
 
-    List<String> getSearchSelect();
+    List<String> getSelectedFields();
+
+    /**
+     * Get the collection of predicates that can be pushed down
+     * @return predicates eligible for pushdown
+     */
+
+    Predicate[] getPushedPredicates();
 
     /**
      * Return the search options that will be used for retrieving documents belonging to this partition
@@ -49,13 +57,13 @@ public interface SearchPartition
 
     default SearchOptions getSearchOptions() {
 
-        List<String> select = getSearchSelect();
+        List<String> select = getSelectedFields();
         String[] selectArray = Objects.isNull(select) || select.isEmpty() ?
                 null :
                 select.toArray(new String[0]);
 
         return new SearchOptions()
-                .setFilter(getSearchFilter())
+                .setFilter(getODataFilter())
                 .setSelect(selectArray);
     }
 

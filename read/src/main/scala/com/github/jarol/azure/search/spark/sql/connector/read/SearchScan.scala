@@ -19,7 +19,7 @@ class SearchScan(
 
   override def readSchema(): StructType = schema
 
-  override def toBatch: Batch = new SearchBatch(readConfig, schema)
+  override def toBatch: Batch = new SearchBatch(readConfig, schema, pushedPredicates)
 
   /**
    * Get the scan description

@@ -1,8 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
+import org.apache.spark.sql.connector.expressions.filter.Predicate
 
-import java.util.{List => JList, Collections => JCollections}
+import java.util.{Collections => JCollections, List => JList}
 import java.util.function.Supplier
 
 class SearchPartitionSpec
@@ -23,8 +24,9 @@ class SearchPartitionSpec
 
     new SearchPartition {
       override def getPartitionId: Int = 0
-      override def getSearchFilter: String = filterSupplier.get()
-      override def getSearchSelect: JList[String] = selectSupplier.get()
+      override def getODataFilter: String = filterSupplier.get()
+      override def getSelectedFields: JList[String] = selectSupplier.get()
+      override def getPushedPredicates: Array[Predicate] = Array.empty
     }
   }
 

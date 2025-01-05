@@ -7,28 +7,24 @@ class FacetNullValuePartitionSpec
 
   private lazy val facetFieldName = "field"
   private lazy val facetValues = Seq("v1", "v2")
+  private lazy val partition = FacetNullValuePartition(
+    None,
+    None,
+    Array.empty,
+    facetFieldName,
+    facetValues
+  )
 
   describe(anInstanceOf[FacetNullValuePartition]) {
     describe(SHOULD) {
       it("have partitionId equal to the size of facet values") {
 
-        FacetNullValuePartition(
-          None,
-          None,
-          facetFieldName,
-          facetValues
-        ).getPartitionId shouldBe facetValues.size
+        partition.getPartitionId shouldBe facetValues.size
       }
 
       it("create a facet filter that includes null or different values") {
 
-        val actual: String = FacetNullValuePartition(
-          None,
-          None,
-          facetFieldName,
-          facetValues
-        ).facetFilter
-
+        val actual = partition.facetFilter
         val eqNull = s"$facetFieldName eq null"
         val equalToOtherValues = facetValues.map {
           value => s"$facetFieldName eq $value"

@@ -39,18 +39,26 @@ class SearchScanBuilder(
 
   override def pushPredicates(predicates: Array[Predicate]): Array[Predicate] = {
 
+    // The method should return predicates to be evaluated after scanning
+    // So, if pushdown is enabled, we should separate supported predicates from unsupported
     if (readConfig.pushdownPredicate) {
 
-      // Separate supported predicates from unsupported ones
       val (supported, unsupported) = predicates.partition {
         V2ExpressionODataBuilder.build(_).isDefined
       }
       supportedPredicates = supported
       unsupported
     } else {
+
+      // If pushdown is disabled, return all predicates
       predicates
     }
   }
+
+  /**
+   * Return the predicates that this datasource supports for pushdown
+   * @return predicates that can be pushed
+   */
 
   override def pushedPredicates(): Array[Predicate] = supportedPredicates
 }

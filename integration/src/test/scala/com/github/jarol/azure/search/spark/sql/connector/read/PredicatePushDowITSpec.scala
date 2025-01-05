@@ -28,7 +28,7 @@ class PredicatePushDowITSpec
 
     val df = spark.read.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(indexName))
-      .load().filter(col("id").contains("rst"))
+      .load().filter(!col("id").isin("first", "second"))
 
     val customScanExec = df.queryExecution.executedPlan.collect {
       case scan: BatchScanExec =>
@@ -39,7 +39,7 @@ class PredicatePushDowITSpec
 
     customScanExec.scan match {
       case scan: SearchScan =>
-        val pushedFilters = scan.pushedPredicates
+        val pushedFilters = scan.toBatch.planInputPartitions() .pushedPredicates
         println(s"Pushed filters: ${pushedFilters.map(V2ExpressionODataBuilder.build).collect {
           case Some(value) => value
         }.mkString("(", ",", ")")}")

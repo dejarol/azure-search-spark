@@ -1,17 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.output;
 
-import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils;
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.TimeUtils;
 import org.apache.spark.unsafe.types.UTF8String;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 /**
  * Collection of atomic {@link SearchDecoder}
@@ -77,11 +74,7 @@ public final class AtomicDecoders {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
 
-                return OffsetDateTime.of(
-                        LocalDate.ofEpochDay((Integer) value),
-                        LocalTime.MIDNIGHT,
-                        Constants.UTC_OFFSET
-                );
+                return TimeUtils.fromEpochDays((Integer) value);
             }
         };
     }
@@ -116,10 +109,7 @@ public final class AtomicDecoders {
         return new TimeDecoder() {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
-                return Instant.EPOCH.plus(
-                        (Long) value,
-                        ChronoUnit.MICROS
-                ).atOffset(Constants.UTC_OFFSET);
+                return TimeUtils.fromEpochMicros((Long) value);
             }
         };
     }

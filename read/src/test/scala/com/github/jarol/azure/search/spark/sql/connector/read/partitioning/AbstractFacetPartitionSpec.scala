@@ -11,16 +11,16 @@ class AbstractFacetPartitionSpec
 
   /**
    * Create a partition instance
-   * @param inputFilter input filter
    * @return a partition instance
    */
 
-  private def createPartition(inputFilter: Option[String]): AbstractFacetPartition = {
+  private def createPartition(): AbstractFacetPartition = {
 
     new AbstractFacetPartition(
       0,
-      inputFilter,
       None,
+      None,
+      Array.empty,
       "facetFieldName"
     ) {
 
@@ -31,16 +31,11 @@ class AbstractFacetPartitionSpec
   describe(anInstanceOf[AbstractFacetPartition]) {
     describe(SHOULD) {
       describe("create a partition filter") {
-        it("combining facet filter and input filter") {
+        it("that simply contains the facet filter") {
 
-          // Non-empty input filter: the partition filter should combine the two
-          val inputFilter = "inputFilter"
-          createPartition(
-            Some(inputFilter)
-          ).getSearchFilter shouldBe s"$inputFilter and ($defaultFacetFilter)"
-
-          // Empty input filter: partition filter should consist only of facet filter
-          createPartition(None).getSearchFilter shouldBe defaultFacetFilter
+          val partition = createPartition()
+          partition.facetFilter shouldBe defaultFacetFilter
+          partition.partitionFilter shouldBe Some(defaultFacetFilter)
         }
       }
     }
@@ -55,6 +50,7 @@ class AbstractFacetPartitionSpec
         val actual = AbstractFacetPartition.createCollection(
           None,
           None,
+          Array.empty,
           createSearchField(facetFieldName, SearchFieldDataType.STRING),
           facetValues
         )

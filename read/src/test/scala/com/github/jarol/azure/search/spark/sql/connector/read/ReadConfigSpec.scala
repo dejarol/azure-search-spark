@@ -64,7 +64,7 @@ class ReadConfigSpec
         describe("a partitioner instance using either") {
           it("a default") {
 
-            emptyConfig.partitioner shouldBe a[SinglePartitionPartitioner]
+            emptyConfig.partitionerClass shouldBe a[SinglePartitionPartitioner]
           }
 
           it("a user provided partitioner") {
@@ -75,7 +75,7 @@ class ReadConfigSpec
               )
             )
 
-            config.partitioner shouldBe a [EmptyPartitioner]
+            config.partitionerClass shouldBe a [EmptyPartitioner]
           }
         }
 

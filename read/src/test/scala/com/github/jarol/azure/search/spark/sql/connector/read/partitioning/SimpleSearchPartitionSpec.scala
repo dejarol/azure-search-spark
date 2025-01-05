@@ -16,13 +16,16 @@ class SimpleSearchPartitionSpec
    * @return a partition instance
    */
 
-  private def createPartition(maybeFilter: Option[String],
-                              maybeSelect: Option[Seq[String]]): SimpleSearchPartition = {
+  private def createPartition(
+                               maybeFilter: Option[String],
+                               maybeSelect: Option[Seq[String]]
+                             ): SimpleSearchPartition = {
 
     SimpleSearchPartition(
       0,
       maybeFilter,
-      maybeSelect
+      maybeSelect,
+      Array.empty
     )
   }
 
@@ -33,8 +36,10 @@ class SimpleSearchPartitionSpec
    * @return search options
    */
 
-  private def searchOptions(maybeFilter: Option[String],
-                            maybeSelect: Option[Seq[String]]): SearchOptions = {
+  private def searchOptions(
+                             maybeFilter: Option[String],
+                             maybeSelect: Option[Seq[String]]
+                           ): SearchOptions = {
 
     createPartition(
       maybeFilter,
@@ -47,12 +52,12 @@ class SimpleSearchPartitionSpec
       describe("return its inner filter") {
         it("as a null value when not provided") {
 
-          createPartition(None, None).getSearchFilter shouldBe null
+          createPartition(None, None).getODataFilter shouldBe null
         }
 
         it("as a non-null value when defined") {
 
-          createPartition(Some(filterString), None).getSearchFilter shouldBe filterString
+          createPartition(Some(filterString), None).getODataFilter shouldBe filterString
         }
       }
 

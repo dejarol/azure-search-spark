@@ -42,16 +42,12 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * @return a search partitioner instance
    */
 
-  def partitioner: SearchPartitioner = {
+  def partitionerClass: Class[SearchPartitioner] = {
 
-    getOrDefaultAs[SearchPartitioner](
+    getOrDefaultAs[Class[SearchPartitioner]](
       ReadConfig.PARTITIONER_CONFIG,
-      SinglePartitionPartitioner(this),
-      s => {
-        Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
-          .getConstructor(classOf[ReadConfig])
-          .newInstance(this)
-      }
+      classOf[SinglePartitionPartitioner].asInstanceOf[Class[SearchPartitioner]],
+      s => Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
     )
   }
 

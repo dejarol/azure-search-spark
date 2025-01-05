@@ -1,8 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartition, SearchPartitioner}
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType
 
@@ -12,8 +13,11 @@ import org.apache.spark.sql.types.StructType
  * @param schema schema
  */
 
-class SearchBatch(private val readConfig: ReadConfig,
-                  private val schema: StructType)
+class SearchBatch(
+                   private val readConfig: ReadConfig,
+                   private val schema: StructType,
+                   private val pushedPredicates: Array[Predicate]
+                 )
   extends Batch
     with Logging {
 
@@ -21,7 +25,7 @@ class SearchBatch(private val readConfig: ReadConfig,
   override def planInputPartitions(): Array[InputPartition] = {
 
     // Retrieve the partitioner instance and create the input partitions
-    val partitioner = readConfig.partitioner
+    val partitioner = SearchBatch.createPartitioner(readConfig, pushedPredicates)
     val partitionsList: Seq[SearchPartition] = JavaScalaConverters.listToSeq(partitioner.createPartitions())
     log.info(s"Generated ${partitionsList.size} partition(s) using ${partitioner.getClass.getName}")
 
@@ -58,5 +62,23 @@ class SearchBatch(private val readConfig: ReadConfig,
           partition.getCountPerPartition
         } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
     }
+  }
+}
+
+object SearchBatch {
+
+  @throws[SearchBatchException]
+  private[read] def createPartitioner(
+                                       readConfig: ReadConfig,
+                                       pushedPredicates: Array[Predicate]
+                                     ): SearchPartitioner = {
+
+    readConfig.partitionerClass.getDeclaredConstructor(
+      classOf[ReadConfig],
+      classOf[Array[Predicate]]
+    ).newInstance(
+      readConfig,
+      pushedPredicates
+    )
   }
 }

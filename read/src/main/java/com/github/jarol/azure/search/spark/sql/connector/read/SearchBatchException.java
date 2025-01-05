@@ -22,10 +22,7 @@ public class SearchBatchException
     }
 
     /**
-     * Create a new instance, due to some {@link SearchPartition} breaking the
-     * limit of retrievable documents
-     * (see this link <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.search.models.searchparameters.skip?view=azure-dotnet-legacy">
-     *     SearchParameters.Skip Property</a>}
+     * Create a new instance, due to some {@link SearchPartition} breaking the limit of retrievable documents
      * @param searchPartitions Search partitions that break the limit of retrievable documents per partition
      * @return a new exception instance
      */
@@ -37,7 +34,7 @@ public class SearchBatchException
         String partitionDescription = searchPartitions.stream().map(
                 partition -> String.format("id %s, filter '%s'",
                         partition.getPartitionId(),
-                        partition.getSearchFilter())
+                        partition.getODataFilter())
         ).collect(Collectors.joining(", "));
 
         String message = String.format(

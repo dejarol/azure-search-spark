@@ -1,13 +1,16 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
+import org.apache.spark.sql.connector.expressions.filter.Predicate
+
 /**
  * Partition related to facet field value
  * <br>
- * Given a field named <b>field</b> and a value <b>value</b>, this partition will generate a facet filter which is
+ * Given a field named <b>f</b> and a value <b>v</b>, this partition will generate a facet filter which is
  * {{{
- *   field = value
+ *   f = v
  * }}}
  * to be then used together with the input filter (if defined)
+ *
  * @param partitionId    partition id
  * @param inputFilter    optional filter to apply during data retrieval
  * @param maybeSelect    optional list of index fields to select
@@ -15,12 +18,15 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
  * @param facetValue facet value for this partition
  */
 
-case class FacetValuePartition(override protected val partitionId: Int,
-                               override protected val inputFilter: Option[String],
-                               override protected val maybeSelect: Option[Seq[String]],
-                               override protected val facetFieldName: String,
-                               protected val facetValue: String)
-  extends AbstractFacetPartition(partitionId, inputFilter, maybeSelect, facetFieldName) {
+case class FacetValuePartition(
+                                override protected val partitionId: Int,
+                                override protected val inputFilter: Option[String],
+                                override protected val maybeSelect: Option[Seq[String]],
+                                override protected val pushedPredicates: Array[Predicate],
+                                override protected val facetFieldName: String,
+                                protected val facetValue: String
+                              )
+  extends AbstractFacetPartition(partitionId, inputFilter, maybeSelect, pushedPredicates, facetFieldName) {
 
   override def facetFilter: String = s"$facetFieldName eq $facetValue"
 }
