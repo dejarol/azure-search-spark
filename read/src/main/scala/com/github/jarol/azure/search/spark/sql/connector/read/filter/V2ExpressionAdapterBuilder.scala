@@ -16,7 +16,6 @@ object V2ExpressionAdapterBuilder {
 
   final def build(expression: Expression): Option[V2ExpressionAdapter] = {
 
-    import org.apache.olingo.server.api.uri.queryoption.expression.Expression
     expression match {
       case literal: Literal[_] => Some(fromLiteral(literal))
       case ref: NamedReference => Some(fromNamedReference(ref))

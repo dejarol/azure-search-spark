@@ -38,7 +38,6 @@ object V2ExpressionAdapters {
 
     override def getODataExpression: String = {
 
-      import org.apache.olingo.commons.api.http
       dataType match {
         // Create a single quoted string
         case DataTypes.StringType => StringUtils.singleQuoted(
