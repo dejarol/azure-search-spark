@@ -9,7 +9,7 @@ import org.apache.spark.unsafe.types.UTF8String
  * Collection of concrete implementations and factory methods for [[V2ExpressionAdapter]]
  * <br>
  * In order to create a [[V2ExpressionAdapter]] from an [[org.apache.spark.sql.connector.expressions.Expression]],
- * use [[V2ExpressionAdapterFactory]] instead
+ * use [[V2ExpressionAdapterBuilder]] instead
  */
 
 object V2ExpressionAdapters {
@@ -38,6 +38,7 @@ object V2ExpressionAdapters {
 
     override def getODataExpression: String = {
 
+      import org.apache.olingo.commons.api.http
       dataType match {
         // Create a single quoted string
         case DataTypes.StringType => StringUtils.singleQuoted(

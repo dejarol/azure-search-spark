@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 /**
  * A partition to use for retrieving all the documents that do not match a set of facet values covered by other partitions
@@ -16,7 +16,7 @@ import org.apache.spark.sql.connector.expressions.filter.Predicate
 case class FacetNullValuePartition(
                                     override protected val inputFilter: Option[String],
                                     override protected val maybeSelect: Option[Seq[String]],
-                                    override protected val pushedPredicates: Array[Predicate],
+                                    override protected val pushedPredicates: Array[V2ExpressionAdapter],
                                     override protected val facetFieldName: String,
                                     protected val facetValues: Seq[String])
   extends AbstractFacetPartition(facetValues.size, inputFilter, maybeSelect, pushedPredicates, facetFieldName) {

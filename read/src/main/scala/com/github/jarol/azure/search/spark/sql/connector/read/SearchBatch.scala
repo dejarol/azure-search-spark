@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartition, SearchPartitioner}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.expressions.filter.Predicate
@@ -18,7 +19,7 @@ import scala.util.Try
 class SearchBatch(
                    private val readConfig: ReadConfig,
                    private val schema: StructType,
-                   private val pushedPredicates: Array[Predicate]
+                   private val pushedPredicates: Array[V2ExpressionAdapter]
                  )
   extends Batch
     with Logging {
@@ -93,7 +94,7 @@ object SearchBatch {
 
   private[read] def createPartitioner(
                                        readConfig: ReadConfig,
-                                       pushedPredicates: Array[Predicate]
+                                       pushedPredicates: Array[V2ExpressionAdapter]
                                      ): Either[SearchBatchException, SearchPartitioner] = {
 
     Try {

@@ -2,8 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapterFactory
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 import java.util.{Collections => JColl, List => JList}
 
@@ -19,7 +18,7 @@ abstract class AbstractSearchPartition(
                                         protected val partitionId: Int,
                                         protected val inputFilter: Option[String],
                                         protected val maybeSelect: Option[Seq[String]],
-                                        protected val pushedPredicates: Array[Predicate]
+                                        protected val pushedPredicates: Array[V2ExpressionAdapter]
                                       )
   extends SearchPartition {
 
@@ -28,15 +27,11 @@ abstract class AbstractSearchPartition(
   override final def getODataFilter: String = {
 
     // Create the filter related to pushed predicates
-    val oDataFiltersFromPredicates: Array[String] = pushedPredicates.map {
-      V2ExpressionAdapterFactory.build
-    }.collect {
-      case Some(value) => value
-    }
-
     val predicatesFilter: Option[String] = Option(
       StringUtils.createODataFilter(
-        JavaScalaConverters.seqToList(oDataFiltersFromPredicates)
+        JavaScalaConverters.seqToList(
+          pushedPredicates.map(_.getODataExpression)
+        )
       )
     )
 
@@ -50,7 +45,7 @@ abstract class AbstractSearchPartition(
     )
   }
 
-  override final def getPushedPredicates: Array[Predicate] = pushedPredicates
+  override final def getPushedPredicates: Array[V2ExpressionAdapter] = pushedPredicates
 
   override final def getSelectedFields: JList[String] = {
 

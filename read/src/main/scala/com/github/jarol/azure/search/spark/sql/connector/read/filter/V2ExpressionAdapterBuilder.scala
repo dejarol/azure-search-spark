@@ -6,7 +6,7 @@ import org.apache.spark.sql.connector.expressions.{Expression, GeneralScalarExpr
  * Builder for generating OData expression adapters
  */
 
-object V2ExpressionAdapterFactory {
+object V2ExpressionAdapterBuilder {
 
   /**
    * Convert an [[Expression]] to an OData filter, if possible
@@ -16,6 +16,7 @@ object V2ExpressionAdapterFactory {
 
   final def build(expression: Expression): Option[V2ExpressionAdapter] = {
 
+    import org.apache.olingo.server.api.uri.queryoption.expression.Expression
     expression match {
       case literal: Literal[_] => Some(fromLiteral(literal))
       case ref: NamedReference => Some(fromNamedReference(ref))

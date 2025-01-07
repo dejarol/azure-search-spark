@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapterFactory
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapterBuilder
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}
 import org.apache.spark.sql.types.StructType
@@ -44,8 +44,9 @@ class SearchScanBuilder(
     if (readConfig.pushdownPredicate) {
 
       val (supported, unsupported) = predicates.partition {
-        V2ExpressionAdapterFactory.build(_).isDefined
+        predicate => V2ExpressionAdapterBuilder.build(predicate).isDefined
       }
+
       supportedPredicates = supported
       unsupported
     } else {

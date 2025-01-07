@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -29,7 +29,7 @@ abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
                                        override protected val inputFilter: Option[String],
                                        override protected val maybeSelect: Option[Seq[String]],
-                                       override protected val pushedPredicates: Array[Predicate],
+                                       override protected val pushedPredicates: Array[V2ExpressionAdapter],
                                        protected val facetFieldName: String
                                      )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
@@ -67,7 +67,7 @@ object AbstractFacetPartition {
   def createCollection(
                         maybeFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Array[Predicate],
+                        pushedPredicates: Array[V2ExpressionAdapter],
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {

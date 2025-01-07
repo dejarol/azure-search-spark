@@ -5,7 +5,7 @@ import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.models.SearchResult;
 import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
-import org.apache.spark.sql.connector.expressions.filter.Predicate;
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,11 +44,11 @@ public interface SearchPartition
     List<String> getSelectedFields();
 
     /**
-     * Get the collection of predicates that can be pushed down
+     * Get the collection of predicates that can be pushed down to this partition
      * @return predicates eligible for pushdown
      */
 
-    Predicate[] getPushedPredicates();
+    V2ExpressionAdapter[] getPushedPredicates();
 
     /**
      * Return the search options that will be used for retrieving documents belonging to this partition

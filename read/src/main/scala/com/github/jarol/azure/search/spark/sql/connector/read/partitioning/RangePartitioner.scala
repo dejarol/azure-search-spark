@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverter
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 import java.util.{List => JList}
 
@@ -25,7 +25,7 @@ import java.util.{List => JList}
 
 case class RangePartitioner(
                              override protected val readConfig: ReadConfig,
-                             override protected val pushedPredicates: Array[Predicate]
+                             override protected val pushedPredicates: Array[V2ExpressionAdapter]
                            )
   extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
 

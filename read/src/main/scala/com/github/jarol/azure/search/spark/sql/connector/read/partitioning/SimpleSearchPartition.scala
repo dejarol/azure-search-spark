@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 /**
  * Simple Search partition
@@ -13,7 +13,7 @@ case class SimpleSearchPartition(
                                   override protected val partitionId: Int,
                                   override protected val inputFilter: Option[String],
                                   override protected val maybeSelect: Option[Seq[String]],
-                                  override protected val pushedPredicates: Array[Predicate]
+                                  override protected val pushedPredicates: Array[V2ExpressionAdapter]
                                 )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
 

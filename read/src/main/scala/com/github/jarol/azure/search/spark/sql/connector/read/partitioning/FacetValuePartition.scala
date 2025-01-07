@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
 
 /**
  * Partition related to facet field value
@@ -22,7 +22,7 @@ case class FacetValuePartition(
                                 override protected val partitionId: Int,
                                 override protected val inputFilter: Option[String],
                                 override protected val maybeSelect: Option[Seq[String]],
-                                override protected val pushedPredicates: Array[Predicate],
+                                override protected val pushedPredicates: Array[V2ExpressionAdapter],
                                 override protected val facetFieldName: String,
                                 protected val facetValue: String
                               )
