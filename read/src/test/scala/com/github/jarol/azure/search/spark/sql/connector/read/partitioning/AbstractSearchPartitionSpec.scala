@@ -9,12 +9,26 @@ class AbstractSearchPartitionSpec
   extends BasicSpec
     with V2PredicateFactory {
 
+  /**
+   * Retrieve the OData filter related to given predicate, invoking [[V2ExpressionODataBuilder$.build]]
+   * @param predicate predicate to parse
+   * @return the OData filter for given predicate
+   */
+
   private def getPredicateFilter(predicate: Predicate): String = {
 
     val maybeResult = V2ExpressionODataBuilder.build(predicate)
     maybeResult shouldBe defined
     maybeResult.get
   }
+
+  /**
+   * Create a partition instance
+   * @param inputFilter input (user-specified) filter
+   * @param partFilter partition filter
+   * @param predicates predicates to push down
+   * @return a partition instance
+   */
 
   private def createPartitionAndGetFilter(
                                            inputFilter: Option[String],

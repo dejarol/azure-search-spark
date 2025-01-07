@@ -8,6 +8,7 @@ import org.apache.spark.sql.types.StructType
  * Scan for Search dataSource
  * @param readConfig read configuration
  * @param schema input schema (either inferred or user-defined)
+ * @param pushedPredicates predicates that can be pushed down to partitions
  */
 
 class SearchScan(

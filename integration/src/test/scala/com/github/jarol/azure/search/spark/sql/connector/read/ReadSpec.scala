@@ -3,8 +3,9 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
+import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.types.{DataTypes, StructType}
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{Column, DataFrame, Row}
 
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
@@ -16,6 +17,7 @@ class ReadSpec
   private lazy val simpleBeansIndex = "read-simple-beans"
   private lazy val atomicBeansIndex = "read-atomic-beans"
   private lazy val collectionBeansIndex = "read-collection-beans"
+  private lazy val pushdownPredicateIndex = "pushdown"
 
   /**
    * Read data from a target index
@@ -87,6 +89,38 @@ class ReadSpec
                                                ): Unit = {
 
     output.getAsOpt[TOutput](colName) shouldBe encodingFunction(input)
+  }
+
+  private def readUsingPredicatePushdown[TDocument <: AbstractITDocument](
+                                                                           predicate: Column,
+                                                                           expectedPredicateNames: Seq[String],
+                                                                           inputDocuments: Seq[TDocument],
+                                                                           expectedPredicate: TDocument => Boolean
+                                                                         ): Unit = {
+
+    val df = spark.read.format(Constants.DATASOURCE_NAME)
+      .options(optionsForAuthAndIndex(pushdownPredicateIndex))
+      .load().filter(predicate)
+
+    // Retrieve pushed predicates
+    val maybePushedPredicates = df.queryExecution.executedPlan.collect {
+      case scan: BatchScanExec =>
+        scan.scan
+    }.headOption.collect {
+      case scan: SearchScan => scan.pushedPredicates
+    }
+
+    // Assert that some predicates have been pushed down
+    maybePushedPredicates shouldBe defined
+    val predicates = maybePushedPredicates.get
+    predicates should not be empty
+    predicates.map(_.name()) should contain allElementsOf expectedPredicateNames
+
+    // Assert that retrieved documents match
+    val expectedDocuments: Seq[TDocument] = inputDocuments.filter(expectedPredicate)
+    val ids: Seq[String] = df.collect().map(_.getAs[String]("id"))
+    ids should have size expectedDocuments.size
+    ids should contain theSameElementsAs expectedDocuments.map(_.id)
   }
 
   describe("Search dataSource") {
@@ -358,6 +392,14 @@ class ReadSpec
                   }
               }
             }
+          }
+        }
+
+        describe("pushing down some predicates, like") {
+          it("null equality") {
+
+            // TODO: implement
+            dropIndexIfExists(collectionBeansIndex, sleep = true)
           }
         }
       }

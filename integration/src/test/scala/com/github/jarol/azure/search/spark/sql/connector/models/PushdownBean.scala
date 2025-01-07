@@ -14,7 +14,8 @@ case class PushdownBean(
 
 object PushdownBean {
 
-  implicit object Serializer extends ITDocumentSerializer[PushdownBean] {
+  implicit object Serializer
+    extends ITDocumentSerializer[PushdownBean] {
 
     override protected def extend(
                                    document: PushdownBean,

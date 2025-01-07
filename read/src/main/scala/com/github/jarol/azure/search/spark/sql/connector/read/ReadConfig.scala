@@ -45,7 +45,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   def partitionerClass: Class[SearchPartitioner] = {
 
     getOrDefaultAs[Class[SearchPartitioner]](
-      ReadConfig.PARTITIONER_CONFIG,
+      ReadConfig.PARTITIONER_CLASS_CONFIG,
       classOf[SinglePartitionPartitioner].asInstanceOf[Class[SearchPartitioner]],
       s => Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
     )
@@ -76,7 +76,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 object ReadConfig {
 
   final val FILTER_CONFIG = "filter"
-  final val PARTITIONER_CONFIG = "partitioner"
+  final val PARTITIONER_CLASS_CONFIG = "partitioner"
   final val SELECT_CONFIG = "select"
   final val PUSHDOWN_PREDICATE_CONFIG = "pushDownPredicate"
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."

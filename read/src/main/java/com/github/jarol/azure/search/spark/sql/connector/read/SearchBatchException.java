@@ -2,10 +2,16 @@ package com.github.jarol.azure.search.spark.sql.connector.read;
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+/**
+ * Exception raised by the {@link org.apache.spark.sql.connector.read.Scan} implementation of this dataSource
+ */
 
 public class SearchBatchException
         extends IllegalArgumentException {
@@ -19,6 +25,20 @@ public class SearchBatchException
             String message
     ) {
         super(message);
+    }
+
+    /**
+     * Create new instance, given a message and a cause
+     * @param message message
+     * @param cause cause
+     */
+
+    private SearchBatchException(
+            String message,
+            Throwable cause
+    ) {
+
+        super(message, cause);
     }
 
     /**
@@ -46,5 +66,27 @@ public class SearchBatchException
         );
 
         return new SearchBatchException(message);
+    }
+
+    /**
+     * Create a new instance, due to an exception caught when trying to create a {@link SearchPartitioner} instance
+     * @param partitionerClass class of the attempted partitioner instance
+     * @param cause cause
+     * @return a new exception instance
+     */
+
+    @Contract("_, _ -> new")
+    public static @NotNull SearchBatchException forFailedPartitionerCreation(
+            @NotNull Class<? extends SearchPartitioner> partitionerClass,
+            @NotNull Throwable cause
+    ) {
+
+        String message = String.format(
+                "Cannot create an instance of %s. Reason: %s",
+                partitionerClass.getName(),
+                cause.getMessage()
+        );
+
+        return new SearchBatchException(message, cause);
     }
 }

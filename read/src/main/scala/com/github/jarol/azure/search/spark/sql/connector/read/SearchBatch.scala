@@ -7,6 +7,8 @@ import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType
 
+import scala.util.Try
+
 /**
  * [[Batch]] implementation for Search dataSource
  * @param readConfig read configuration
@@ -25,7 +27,24 @@ class SearchBatch(
   override def planInputPartitions(): Array[InputPartition] = {
 
     // Retrieve the partitioner instance and create the input partitions
-    val partitioner = SearchBatch.createPartitioner(readConfig, pushedPredicates)
+    SearchBatch.createPartitioner(readConfig, pushedPredicates) match {
+      case Left(value) => throw value
+      case Right(value) => createPartitions(value)
+    }
+  }
+
+  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, schema)
+
+  /**
+   * Create an array of partitions from a partitioner
+   * @param partitioner partitioner instance
+   * @throws SearchBatchException if some partitions exceed the number of retrieved documents
+   * @return the created partitions
+   */
+
+  @throws[SearchBatchException]
+  private def createPartitions(partitioner: SearchPartitioner): Array[InputPartition] = {
+
     val partitionsList: Seq[SearchPartition] = JavaScalaConverters.listToSeq(partitioner.createPartitions())
     log.info(s"Generated ${partitionsList.size} partition(s) using ${partitioner.getClass.getName}")
 
@@ -41,8 +60,6 @@ class SearchBatch(
       partitionsList.toArray
     }
   }
-
-  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, schema)
 
   /**
    * Filter the given set of partitions, preserving only invalid ones
@@ -67,20 +84,31 @@ class SearchBatch(
 
 object SearchBatch {
 
-  // TODO: javadoc, test and method for creating exception
+  /**
+   * Try to create an instance of [[SearchPartitioner]]
+   * @param readConfig read configuration
+   * @param pushedPredicates predicates that can be pushed down to partitions
+   * @return either a [[SearchBatchException]] or the created partitioner
+   */
 
-  @throws[SearchBatchException]
   private[read] def createPartitioner(
                                        readConfig: ReadConfig,
                                        pushedPredicates: Array[Predicate]
-                                     ): SearchPartitioner = {
+                                     ): Either[SearchBatchException, SearchPartitioner] = {
 
-    readConfig.partitionerClass.getDeclaredConstructor(
-      classOf[ReadConfig],
-      classOf[Array[Predicate]]
-    ).newInstance(
-      readConfig,
-      pushedPredicates
-    )
+    Try {
+      readConfig.partitionerClass.getDeclaredConstructor(
+        classOf[ReadConfig],
+        classOf[Array[Predicate]]
+      ).newInstance(
+        readConfig,
+        pushedPredicates
+      )
+    }.toEither.left.map {
+      SearchBatchException.forFailedPartitionerCreation(
+        readConfig.partitionerClass,
+        _
+      )
+    }
   }
 }

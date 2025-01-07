@@ -57,25 +57,25 @@ class ReadConfigSpec
           ).partitionerOptions
 
           partitionerOptions.get(ReadConfig.FILTER_CONFIG) shouldBe empty
-          partitionerOptions.get( ReadConfig.FACET_FIELD_CONFIG) shouldBe defined
+          partitionerOptions.get(ReadConfig.FACET_FIELD_CONFIG) shouldBe defined
           partitionerOptions.get(ReadConfig.NUM_PARTITIONS_CONFIG) shouldBe defined
         }
 
         describe("a partitioner instance using either") {
           it("a default") {
 
-            emptyConfig.partitionerClass shouldBe a[SinglePartitionPartitioner]
+            emptyConfig.partitionerClass shouldBe classOf[SinglePartitionPartitioner]
           }
 
           it("a user provided partitioner") {
 
             val config = createConfig(
               Map(
-                ReadConfig.PARTITIONER_CONFIG -> classOf[EmptyPartitioner].getName
+                ReadConfig.PARTITIONER_CLASS_CONFIG -> classOf[EmptyPartitioner].getName
               )
             )
 
-            config.partitionerClass shouldBe a [EmptyPartitioner]
+            config.partitionerClass shouldBe classOf[EmptyPartitioner]
           }
         }
 
