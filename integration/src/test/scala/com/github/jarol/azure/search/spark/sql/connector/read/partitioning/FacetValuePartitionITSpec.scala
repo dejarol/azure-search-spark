@@ -37,10 +37,12 @@ class FacetValuePartitionITSpec
                                facet: String
                              ): SearchPartition = {
 
+    // TODO: fix method for adding predicates
     FacetValuePartition(
       0,
       inputFilter,
       None,
+      Array.empty,
       facetField,
       StringUtils.singleQuoted(facet)
     )

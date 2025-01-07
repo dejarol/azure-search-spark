@@ -54,7 +54,7 @@ trait V2ExpressionAdapterSpec
     val documents: JList[SearchDocument] = SearchTestUtils.readDocuments(
       getSearchClient(index),
       new SearchOptions().setFilter(
-        adapter.getODataFilter
+        adapter.getODataExpression
       )
     )
 

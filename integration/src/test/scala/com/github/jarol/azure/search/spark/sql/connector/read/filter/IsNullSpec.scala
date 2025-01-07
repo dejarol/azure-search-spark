@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter
 
 import com.github.jarol.azure.search.spark.sql.connector.models.{PairBean, _}
 
-class IsNullAdapterSpec
+class IsNullSpec
   extends V2ExpressionAdapterSpec {
 
   /**
@@ -17,7 +17,7 @@ class IsNullAdapterSpec
                              negate: Boolean
                            ): V2ExpressionAdapter = {
 
-    IsNullAdapter(fields, negate)
+    null
   }
 
   /**
@@ -46,7 +46,7 @@ class IsNullAdapterSpec
     assertSameSizeAndIds(actualNonNull, expectedNonNull)
   }
 
-  describe(anInstanceOf[IsNullAdapter]) {
+  describe("IsNullAdapter") {
     describe(SHOULD) {
       describe("allow to retrieve documents that have a") {
         describe("top-level field") {

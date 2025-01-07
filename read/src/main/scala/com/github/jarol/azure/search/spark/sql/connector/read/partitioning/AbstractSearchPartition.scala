@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionODataBuilder
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapterFactory
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 
 import java.util.{Collections => JColl, List => JList}
@@ -29,7 +29,7 @@ abstract class AbstractSearchPartition(
 
     // Create the filter related to pushed predicates
     val oDataFiltersFromPredicates: Array[String] = pushedPredicates.map {
-      V2ExpressionODataBuilder.build
+      V2ExpressionAdapterFactory.build
     }.collect {
       case Some(value) => value
     }

@@ -36,12 +36,14 @@ class FacetNullValuePartitionITSpec
 
   private def createPartition(
                                inputFilter: Option[String],
-                               facets: Seq[String]
+                               facets: Seq[String],
                              ): SearchPartition = {
 
+    // TODO: fix method in order to accept predicates
     FacetNullValuePartition(
       inputFilter,
       None,
+      Array.empty,
       facetField,
       facets.map(StringUtils.singleQuoted)
     )

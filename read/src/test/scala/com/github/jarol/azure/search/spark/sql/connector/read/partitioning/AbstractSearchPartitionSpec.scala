@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.read.V2PredicateFactory
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionODataBuilder
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapterFactory
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 
 class AbstractSearchPartitionSpec
@@ -10,14 +10,15 @@ class AbstractSearchPartitionSpec
     with V2PredicateFactory {
 
   /**
-   * Retrieve the OData filter related to given predicate, invoking [[V2ExpressionODataBuilder$.build]]
+   * Retrieve the OData filter related to given predicate, invoking [[V2ExpressionAdapterFactory.build]]
+ *
    * @param predicate predicate to parse
    * @return the OData filter for given predicate
    */
 
   private def getPredicateFilter(predicate: Predicate): String = {
 
-    val maybeResult = V2ExpressionODataBuilder.build(predicate)
+    val maybeResult = V2ExpressionAdapterFactory.build(predicate)
     maybeResult shouldBe defined
     maybeResult.get
   }

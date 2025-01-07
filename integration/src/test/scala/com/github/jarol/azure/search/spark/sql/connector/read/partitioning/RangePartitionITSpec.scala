@@ -49,10 +49,12 @@ class RangePartitionITSpec
                                upper: Option[Int]
                              ): SearchPartition = {
 
+    // TODO: fix method for adding predicates
     RangePartition(
       0,
       inputFilter,
       None,
+      Array.empty,
       partitionField,
       lower.map(String.valueOf),
       upper.map(String.valueOf)
@@ -138,14 +140,17 @@ class RangePartitionITSpec
       describe("combine input filter with") {
         it("only upper bound filter") {
 
+          // TODO: add tests
         }
 
         it("only lower bound filter") {
 
+          // TODO: add tests
         }
 
         it("range filter") {
 
+          // TODO: add tests
         }
       }
     }

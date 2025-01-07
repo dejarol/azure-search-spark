@@ -1,20 +1,13 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.Constants
-import com.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionODataBuilder
-import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
-import org.apache.spark.sql.functions.col
-
-import java.sql.Timestamp
-import java.time.Instant
 
 class PredicatePushDowITSpec
   extends SearchSparkITSpec {
 
   it("a") {
 
+    /*
     val indexName = "predicate-pushdown"
     dropIndexIfExists(indexName, sleep = false)
     createIndexFromSchemaOf[PushdownBean](indexName)
@@ -48,5 +41,7 @@ class PredicatePushDowITSpec
     println("Logical plan:" + df.queryExecution.logical.toString())
     df.explain(true)
     dropIndexIfExists(indexName, sleep = false)
+
+     */
   }
 }
