@@ -72,7 +72,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition(
             documents,
             indexName,
-            createPartition(None, Seq(john)),
+            createPartition(None, Seq(john), Seq.empty),
             valueIsNullOrNotEqualToJohn
           )
         }
@@ -85,7 +85,7 @@ class FacetNullValuePartitionITSpec
             assertCountPerPartition(
               documents,
               indexName,
-              createPartition(Some(s"id eq '$matchingId'"), Seq(john)),
+              createPartition(Some(s"id eq '$matchingId'"), Seq(john), Seq.empty),
               expectedPredicate
             )
 
