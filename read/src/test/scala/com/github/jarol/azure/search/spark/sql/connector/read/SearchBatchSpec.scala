@@ -26,7 +26,7 @@ class SearchBatchSpec
           ReadConfig.PARTITIONER_CLASS_CONFIG -> classOfT.getName
         )
       ),
-      Array.empty
+      Seq.empty
     )
   }
 

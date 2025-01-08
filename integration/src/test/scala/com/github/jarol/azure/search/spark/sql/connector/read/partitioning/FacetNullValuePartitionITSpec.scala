@@ -3,7 +3,9 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer}
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
+import org.apache.spark.sql.types.DataTypes
+import org.apache.spark.unsafe.types.UTF8String
 
 class FacetNullValuePartitionITSpec
   extends SearchPartitionITSPec {
@@ -41,7 +43,6 @@ class FacetNullValuePartitionITSpec
                                pushedExpressions: Seq[ODataExpression]
                              ): SearchPartition = {
 
-    // TODO: fix method in order to accept predicates
     FacetNullValuePartition(
       inputFilter,
       None,
@@ -59,7 +60,9 @@ class FacetNullValuePartitionITSpec
           PairBean(matchingId, None),
           PairBean("2", Some(john)),
           PairBean("3", Some(jane)),
-          PairBean("4", Some("jack"))
+          PairBean("first", Some(john)),
+          PairBean("second", Some(john)),
+          PairBean("fifth", Some(john))
         )
 
         it(s"whose $FACET_FIELD_IS_NULL or $NOT_MATCHING_OTHER_VALUES") {
@@ -88,11 +91,24 @@ class FacetNullValuePartitionITSpec
               createPartition(Some(s"id eq '$matchingId'"), Seq(john), Seq.empty),
               expectedPredicate
             )
-
           }
 
           it("both input filter and pushed predicate") {
 
+            val idStartsWithF: PairBean[String] => Boolean = _.id.startsWith("f")
+            val idContainsIst: PairBean[String] => Boolean = _.id.contains("irst")
+            val expectedPredicate: PairBean[String] => Boolean = p => valueIsNullOrNotEqualToJohn(p) && idStartsWithF(p) && idContainsIst(p)
+            assertCountPerPartition(
+              documents,
+              indexName,
+              createPartition(Some("search.ismatch('f', 'id')"), Seq(john), Seq(
+                ODataExpressions.contains(
+                  ODataExpressions.fieldReference(Seq("id")),
+                  ODataExpressions.literal(DataTypes.StringType, UTF8String.fromString("irst")),
+                )
+              )),
+              expectedPredicate
+            )
           }
         }
       }

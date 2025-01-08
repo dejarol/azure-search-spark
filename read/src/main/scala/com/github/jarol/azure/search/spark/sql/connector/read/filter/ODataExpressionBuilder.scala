@@ -31,11 +31,6 @@ object ODataExpressionBuilder {
             build(children.head),
             build(children(1))
           )
-          case "starts_with" | "ends_with" => startsOrEndWithExpression(
-            build(children.head),
-            build(children(1)),
-            exprName.startsWith("starts")
-          )
           case "contains" => containsExpression(build(children.head), build(children(1)))
           case "in" => inExpression(build(children.head), children.drop(1).map(build))
           case "not" => notExpression(build(children.head))
@@ -81,9 +76,9 @@ object ODataExpressionBuilder {
    */
 
   private[filter] def nullEqualityExpression(
-                                                  left: Option[ODataExpression],
-                                                  notNull: Boolean
-                                                ): Option[ODataExpression] = {
+                                              left: Option[ODataExpression],
+                                              notNull: Boolean
+                                            ): Option[ODataExpression] = {
 
     left.map {
       expr => ODataExpressions.isNull(expr, notNull)
@@ -92,7 +87,6 @@ object ODataExpressionBuilder {
 
   /**
    * Create a comparison expression
- *
    * @param exprName  expression name (to be resolved against a [[ODataComparator]])
    * @param leftSide  left side
    * @param rightSide right side
@@ -100,10 +94,10 @@ object ODataExpressionBuilder {
    */
 
   private[filter] def comparisonExpression(
-                                                exprName: String,
-                                                leftSide: Option[ODataExpression],
-                                                rightSide: Option[ODataExpression]
-                                              ): Option[ODataExpression] = {
+                                            exprName: String,
+                                            leftSide: Option[ODataExpression],
+                                            rightSide: Option[ODataExpression]
+                                          ): Option[ODataExpression] = {
 
     // Match the expression name to an OData comparison operator
     val maybeComparator = Enums.safeValueOf[ODataComparator](
@@ -117,26 +111,6 @@ object ODataExpressionBuilder {
       right <- rightSide
       op <- maybeComparator
     } yield ODataExpressions.comparison(left, right, op)
-  }
-
-  /**
-   * Create a <code>startsWith</code> or <code>endsWith</code> expression
-   * @param expression expression
-   * @param prefixOrSuffix prefix (in case of <code>startsWith</code>) or suffix
-   * @param forStartsWith true for creating a <code>startsWith</code> expression
-   * @return a <code>startsWith</code> or <code>endsWith</code> expression
-   */
-
-  private def startsOrEndWithExpression(
-                                         expression: Option[ODataExpression],
-                                         prefixOrSuffix: Option[ODataExpression],
-                                         forStartsWith: Boolean
-                                       ): Option[ODataExpression] = {
-
-    for {
-      exp <- expression
-      pOrs <- prefixOrSuffix
-    } yield ODataExpressions.startsOrEndsWith(exp, pOrs, forStartsWith)
   }
 
   /**
@@ -170,18 +144,30 @@ object ODataExpressionBuilder {
 
     val allDefined = inExpressions.forall(_.isDefined)
     if (allDefined) {
-      expression.map {
-        exp =>
-          ODataExpressions.in(
-            exp,
-            inExpressions.collect {
-              case Some(value) => value
-            }
-          )
+
+      val expressions: Seq[ODataExpression] = inExpressions.collect {
+        case Some(value) => value
       }
+
+      val expressionsAsStrings: Seq[String] = expressions.map(_.toUriLiteral)
+      val maybeSeparator: Option[String] = maybeSetSeparator(expressionsAsStrings, ",")
+        .orElse(maybeSetSeparator(expressionsAsStrings, ";"))
+        .orElse(maybeSetSeparator(expressionsAsStrings, "|"))
+
+      for {
+        exp <- expression
+        separator <- maybeSeparator
+      } yield ODataExpressions.in(exp, expressions, separator)
     } else {
       None
     }
+  }
+
+  private def maybeSetSeparator(a: Seq[String], sep: String): Option[String] = {
+
+    if (a.exists(_.contains(sep))) {
+      None
+    } else Some(sep)
   }
 
   /**

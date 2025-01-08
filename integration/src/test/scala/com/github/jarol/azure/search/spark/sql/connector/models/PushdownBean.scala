@@ -1,9 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
 import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
+import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 
 import java.sql.Timestamp
-import java.time.Instant
+import java.time.{LocalDate, LocalTime}
 import java.util.{UUID, Map => JMap}
 
 case class PushdownBean(
@@ -33,14 +34,21 @@ object PushdownBean {
   def apply(
              stringValue: Option[String],
              intValue: Option[Int],
-             dateValue: Option[Instant]
+             dateValue: Option[LocalDate]
            ): PushdownBean = {
 
     PushdownBean(
       UUID.randomUUID().toString,
       stringValue,
       intValue,
-      dateValue.map(Timestamp.from)
+      dateValue.map {
+        date =>
+        Timestamp.from(
+          date.atTime(LocalTime.MIDNIGHT)
+            .atZone(Constants.UTC_OFFSET)
+            .toInstant
+        )
+      }
     )
   }
 }

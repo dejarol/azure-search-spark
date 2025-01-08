@@ -42,7 +42,7 @@ class FacetValuePartitionITSpec
       0,
       inputFilter,
       None,
-      Array.empty,
+      Seq.empty,
       facetField,
       StringUtils.singleQuoted(facet)
     )

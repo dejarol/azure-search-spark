@@ -54,7 +54,7 @@ class RangePartitionITSpec
       0,
       inputFilter,
       None,
-      Array.empty,
+      Seq.empty,
       partitionField,
       lower.map(String.valueOf),
       upper.map(String.valueOf)

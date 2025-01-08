@@ -10,7 +10,7 @@ import org.apache.spark.sql.{Column, DataFrame, Row}
 
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDate, OffsetDateTime}
+import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
   extends SearchSparkITSpec {
@@ -398,13 +398,13 @@ class ReadSpec
 
         describe("pushing down some predicates, like") {
 
-          lazy val now = Instant.now()
+          lazy val now = LocalDate.now()
           lazy val pushdownBeans: Seq[PushdownBean] = Seq(
             PushdownBean(Some("hello"), Some(1), Some(now)),
-            PushdownBean(Some("world"), None, Some(now.minusSeconds(10))),
-            PushdownBean(None, Some(2), Some(now.plusSeconds(10))),
+            PushdownBean(Some("world"), None, Some(now.minusDays(1))),
+            PushdownBean(None, Some(2), Some(now.plusDays(1))),
             PushdownBean(None, Some(2), None),
-            PushdownBean(None, Some(3), Some(now.plusSeconds(20))),
+            PushdownBean(None, Some(3), Some(now.plusDays(2))),
             PushdownBean(None, None, None)
           )
 

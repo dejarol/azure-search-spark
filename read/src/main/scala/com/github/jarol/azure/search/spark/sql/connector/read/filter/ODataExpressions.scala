@@ -96,27 +96,6 @@ object ODataExpressions {
   }
 
   /**
-   * A <code>startsWith</code> or <code>endsWith</code> expression
-   * @param left left expression
-   * @param right right expression
-   * @param startsWith true for creating a <code>startsWith</code> expression
-   */
-
-  private case class StartsOrEndsWith(
-                                       private val left: ODataExpression,
-                                       private val right: ODataExpression,
-                                       private val startsWith: Boolean
-                                     )
-    extends ODataExpression {
-
-    override def toUriLiteral: String = {
-
-      val oDataFunction = if (startsWith) "startsWith" else "endsWith"
-      s"$oDataFunction(${left.toUriLiteral}, ${right.toUriLiteral})"
-    }
-  }
-
-  /**
    * A <code>contains</code> expression (used for checking that a string field contains a substring)
    * @param left left expression
    * @param substring right expression
@@ -128,7 +107,7 @@ object ODataExpressions {
                              )
     extends ODataExpression {
 
-    override def toUriLiteral: String = s"contains(${left.toUriLiteral}, ${substring.toUriLiteral})"
+    override def toUriLiteral: String = s"search.ismatch(${substring.toUriLiteral}, '${left.toUriLiteral}')"
   }
 
   /**
@@ -149,14 +128,15 @@ object ODataExpressions {
 
   private case class In(
                          private val left: ODataExpression,
-                         private val inList: Seq[ODataExpression]
+                         private val inList: Seq[ODataExpression],
+                         private val separator: String
                        )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
 
-      val inListString = inList.map(_.toUriLiteral).mkString(",")
-      s"${left.toUriLiteral} in ($inListString)"
+      val inListString = inList.map(_.toUriLiteral).mkString(separator)
+      s"search.in(${left.toUriLiteral}, ${StringUtils.singleQuoted(inListString)}, ${StringUtils.singleQuoted(separator)})"
     }
   }
 
@@ -247,27 +227,6 @@ object ODataExpressions {
   }
 
   /**
-   * Create a <code>startsWith</code> or <code>endsWith</code> expression
-   * @param left left side
-   * @param prefixOrSuffix prefix in case of <code>startsWith</code>, suffix for a <code>endsWith</code>
-   * @param starts true for generating a <code>startsWith</code> expression
-   * @return an expression for filtering documents based on string start or end
-   */
-
-  def startsOrEndsWith(
-                        left: ODataExpression,
-                        prefixOrSuffix: ODataExpression,
-                        starts: Boolean
-                      ): ODataExpression = {
-
-    StartsOrEndsWith(
-      left,
-      prefixOrSuffix,
-      starts
-    )
-  }
-
-  /**
    * Create a <code>contains</code> expression
    * @param left left side
    * @param subString substring
@@ -302,12 +261,14 @@ object ODataExpressions {
 
   def in(
           left: ODataExpression,
-          inList: Seq[ODataExpression]
+          inList: Seq[ODataExpression],
+          separator: String
         ): ODataExpression = {
 
     In(
       left,
-      inList
+      inList,
+      separator
     )
   }
 
