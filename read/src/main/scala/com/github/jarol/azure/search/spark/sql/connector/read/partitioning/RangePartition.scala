@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 /**
  * Search partition returned by a [[RangePartitioner]]
@@ -31,7 +31,7 @@ case class RangePartition(
                            override protected val partitionId: Int,
                            override protected val inputFilter: Option[String],
                            override protected val maybeSelect: Option[Seq[String]],
-                           override protected val pushedPredicates: Array[V2ExpressionAdapter],
+                           override protected val pushedPredicates: Array[ODataExpression],
                            private val fieldName: String,
                            private val lowerBound: Option[String],
                            private val upperBound: Option[String])
@@ -66,7 +66,7 @@ object RangePartition {
   def createCollection(
                         inputFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Array[V2ExpressionAdapter],
+                        pushedPredicates: Array[ODataExpression],
                         fieldName: String,
                         values: Seq[String]
                       ): Seq[RangePartition] = {

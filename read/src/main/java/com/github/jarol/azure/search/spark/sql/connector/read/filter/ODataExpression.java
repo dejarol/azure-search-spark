@@ -9,12 +9,12 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter;
  */
 
 @FunctionalInterface
-public interface V2ExpressionAdapter {
+public interface ODataExpression {
 
     /**
      * Get the corresponding OData expression
      * @return an OData-syntax compliant expression
      */
 
-    String getODataExpression();
+    String toUriLiteral();
 }

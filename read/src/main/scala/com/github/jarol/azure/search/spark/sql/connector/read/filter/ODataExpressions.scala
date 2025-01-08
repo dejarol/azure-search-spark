@@ -6,13 +6,13 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 
 /**
- * Collection of concrete implementations and factory methods for [[V2ExpressionAdapter]]
+ * Collection of concrete implementations and factory methods for [[ODataExpression]]
  * <br>
- * In order to create a [[V2ExpressionAdapter]] from an [[org.apache.spark.sql.connector.expressions.Expression]],
- * use [[V2ExpressionAdapterBuilder]] instead
+ * In order to create a [[ODataExpression]] from an [[org.apache.spark.sql.connector.expressions.Expression]],
+ * use [[ODataExpressionBuilder]] instead
  */
 
-object V2ExpressionAdapters {
+object ODataExpressions {
 
   /**
    * A field reference
@@ -20,9 +20,9 @@ object V2ExpressionAdapters {
    */
 
   private case class FieldReference(private val names: Seq[String])
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = names.mkString("/")
+    override def toUriLiteral: String = names.mkString("/")
   }
 
   /**
@@ -34,9 +34,10 @@ object V2ExpressionAdapters {
   private case class Literal(
                               private val dataType: DataType,
                               private val value: Any
-                            ) extends V2ExpressionAdapter {
+                            )
+    extends ODataExpression {
 
-    override def getODataExpression: String = {
+    override def toUriLiteral: String = {
 
       dataType match {
         // Create a single quoted string
@@ -65,33 +66,33 @@ object V2ExpressionAdapters {
    */
 
   private case class IsNull(
-                             private val left: V2ExpressionAdapter,
+                             private val left: ODataExpression,
                              private val negate: Boolean
                            )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = {
+    override def toUriLiteral: String = {
 
       val operator = if (negate) "ne" else "eq"
-      s"${left.getODataExpression} $operator null"
+      s"${left.toUriLiteral} $operator null"
     }
   }
 
   /**
    * A comparison expression
-   * @param operator comparison operator
    * @param left left expression
    * @param right right expression
+   * @param comparator comparison operator
    */
 
   private case class Comparison(
-                                 private val operator: String,
-                                 private val left: V2ExpressionAdapter,
-                                 private val right: V2ExpressionAdapter
+                                 private val left: ODataExpression,
+                                 private val right: ODataExpression,
+                                 private val comparator: Comparator
                                )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = s"${left.getODataExpression} $operator ${right.getODataExpression}"
+    override def toUriLiteral: String = s"${left.toUriLiteral} ${comparator.oDataValue()} ${right.toUriLiteral}"
   }
 
   /**
@@ -102,16 +103,16 @@ object V2ExpressionAdapters {
    */
 
   private case class StartsOrEndsWith(
-                                       private val left: V2ExpressionAdapter,
-                                       private val right: V2ExpressionAdapter,
+                                       private val left: ODataExpression,
+                                       private val right: ODataExpression,
                                        private val startsWith: Boolean
                                      )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = {
+    override def toUriLiteral: String = {
 
       val oDataFunction = if (startsWith) "startsWith" else "endsWith"
-      s"$oDataFunction(${left.getODataExpression}, ${right.getODataExpression})"
+      s"$oDataFunction(${left.toUriLiteral}, ${right.toUriLiteral})"
     }
   }
 
@@ -122,12 +123,12 @@ object V2ExpressionAdapters {
    */
 
   private case class Contains(
-                               private val left: V2ExpressionAdapter,
-                               private val substring: V2ExpressionAdapter
+                               private val left: ODataExpression,
+                               private val substring: ODataExpression
                              )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = s"contains(${left.getODataExpression}, ${substring.getODataExpression})"
+    override def toUriLiteral: String = s"contains(${left.toUriLiteral}, ${substring.toUriLiteral})"
   }
 
   /**
@@ -135,9 +136,9 @@ object V2ExpressionAdapters {
    * @param child expression to negate
    */
 
-  private case class Not(private val child: V2ExpressionAdapter)
-    extends V2ExpressionAdapter {
-    override def getODataExpression: String = s"not (${child.getODataExpression})"
+  private case class Not(private val child: ODataExpression)
+    extends ODataExpression {
+    override def toUriLiteral: String = s"not (${child.toUriLiteral})"
   }
 
   /**
@@ -147,36 +148,36 @@ object V2ExpressionAdapters {
    */
 
   private case class In(
-                         private val left: V2ExpressionAdapter,
-                         private val inList: Seq[V2ExpressionAdapter]
+                         private val left: ODataExpression,
+                         private val inList: Seq[ODataExpression]
                        )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = {
+    override def toUriLiteral: String = {
 
-      val inListString = inList.map(_.getODataExpression).mkString(",")
-      s"${left.getODataExpression} in ($inListString)"
+      val inListString = inList.map(_.toUriLiteral).mkString(",")
+      s"${left.toUriLiteral} in ($inListString)"
     }
   }
 
   /**
    * A logical expression (<code>and</code> or <code>or</code>)
-   * @param left left side
-   * @param right right side
+   * @param expressions expressions to combine
    * @param isAnd true for creating an <code>and</code> expression
    */
 
   private case class Logical(
-                              private val left: V2ExpressionAdapter,
-                              private val right: V2ExpressionAdapter,
+                              private val expressions: Seq[ODataExpression],
                               private val isAnd: Boolean
                             )
-    extends V2ExpressionAdapter {
+    extends ODataExpression {
 
-    override def getODataExpression: String = {
+    override def toUriLiteral: String = {
 
       val operator = if (isAnd) "and" else "or"
-      s"(${left.getODataExpression}) $operator (${right.getODataExpression})"
+      expressions.map {
+        exp => s"(${exp.toUriLiteral})"
+      }.mkString(s" $operator ")
     }
   }
 
@@ -186,7 +187,7 @@ object V2ExpressionAdapters {
    * @return an expression representing a field reference
    */
 
-  def fieldReference(names: Seq[String]): V2ExpressionAdapter = FieldReference(names)
+  def fieldReference(names: Seq[String]): ODataExpression = FieldReference(names)
 
   /**
    * Create a literal (i.e. constant) expression
@@ -198,7 +199,7 @@ object V2ExpressionAdapters {
   def literal(
                dataType: DataType,
                value: Any
-             ): V2ExpressionAdapter = {
+             ): ODataExpression = {
 
     Literal(
       dataType,
@@ -214,9 +215,9 @@ object V2ExpressionAdapters {
    */
 
   def isNull(
-              left: V2ExpressionAdapter,
+              left: ODataExpression,
               negate: Boolean
-            ): V2ExpressionAdapter = {
+            ): ODataExpression = {
 
     IsNull(
       left,
@@ -226,22 +227,22 @@ object V2ExpressionAdapters {
 
   /**
    * Create a comparison expression
-   * @param op operator
    * @param left left side
    * @param right right side
+   * @param comparator comparator
    * @return an expression for filtering documents by comparing two expressions
    */
 
   def comparison(
-                  op: String,
-                  left: V2ExpressionAdapter,
-                  right: V2ExpressionAdapter
-                ): V2ExpressionAdapter = {
+                  left: ODataExpression,
+                  right: ODataExpression,
+                  comparator: Comparator
+                ): ODataExpression = {
 
     Comparison(
-      op,
       left,
-      right
+      right,
+      comparator
     )
   }
 
@@ -254,10 +255,10 @@ object V2ExpressionAdapters {
    */
 
   def startsOrEndsWith(
-                        left: V2ExpressionAdapter,
-                        prefixOrSuffix: V2ExpressionAdapter,
+                        left: ODataExpression,
+                        prefixOrSuffix: ODataExpression,
                         starts: Boolean
-                      ): V2ExpressionAdapter = {
+                      ): ODataExpression = {
 
     StartsOrEndsWith(
       left,
@@ -274,9 +275,9 @@ object V2ExpressionAdapters {
    */
 
   def contains(
-                left: V2ExpressionAdapter,
-                subString: V2ExpressionAdapter
-              ): V2ExpressionAdapter = {
+                left: ODataExpression,
+                subString: ODataExpression
+              ): ODataExpression = {
 
     Contains(
       left,
@@ -290,7 +291,7 @@ object V2ExpressionAdapters {
    * @return a negation expression
    */
 
-  def not(child: V2ExpressionAdapter): V2ExpressionAdapter = Not(child)
+  def not(child: ODataExpression): ODataExpression = Not(child)
 
   /**
    * Create an <code>in</code> expression
@@ -300,9 +301,9 @@ object V2ExpressionAdapters {
    */
 
   def in(
-          left: V2ExpressionAdapter,
-          inList: Seq[V2ExpressionAdapter]
-        ): V2ExpressionAdapter = {
+          left: ODataExpression,
+          inList: Seq[ODataExpression]
+        ): ODataExpression = {
 
     In(
       left,
@@ -312,22 +313,16 @@ object V2ExpressionAdapters {
 
   /**
    * Create a logical expression
-   * @param left left side
-   * @param right right side
+   * @param expressions expressions to combine
    * @param isAnd true for creating an <code>and</code> expression
    * @return
    */
 
   def logical(
-               left: V2ExpressionAdapter,
-               right: V2ExpressionAdapter,
+               expressions: Seq[ODataExpression],
                isAnd: Boolean
-             ): V2ExpressionAdapter = {
+             ): ODataExpression = {
 
-    Logical(
-      left,
-      right,
-      isAnd
-    )
+    Logical(expressions, isAnd)
   }
 }

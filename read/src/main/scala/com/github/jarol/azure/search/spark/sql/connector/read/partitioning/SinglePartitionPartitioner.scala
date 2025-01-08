@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.util.{Collections => JCollections, List => JList}
 
@@ -13,7 +13,7 @@ import java.util.{Collections => JCollections, List => JList}
 
 case class SinglePartitionPartitioner(
                                        override protected val readConfig: ReadConfig,
-                                       override protected val pushedPredicates: Array[V2ExpressionAdapter]
+                                       override protected val pushedPredicates: Array[ODataExpression]
                                      )
   extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
 

@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.{V2ExpressionAdapter, V2ExpressionAdapterBuilder}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressionBuilder}
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.StructType
@@ -24,8 +24,8 @@ class SearchScan(
   override def toBatch: Batch = {
 
     // Convert pushed predicates to OData expression adapters
-    val pushedAdapters: Array[V2ExpressionAdapter] = pushedPredicates.map {
-      V2ExpressionAdapterBuilder.build
+    val pushedAdapters: Array[ODataExpression] = pushedPredicates.map {
+      ODataExpressionBuilder.build
     }.collect {
       case Some(value) => value
     }

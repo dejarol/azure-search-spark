@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -18,6 +18,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2Expressio
  *    case None => facet filter
  *   }
  * }}}
+ *
  * @param partitionId partition id
  * @param inputFilter optional filter to apply during data retrieval
  * @param maybeSelect optional list of index fields to select
@@ -29,7 +30,7 @@ abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
                                        override protected val inputFilter: Option[String],
                                        override protected val maybeSelect: Option[Seq[String]],
-                                       override protected val pushedPredicates: Array[V2ExpressionAdapter],
+                                       override protected val pushedPredicates: Array[ODataExpression],
                                        protected val facetFieldName: String
                                      )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
@@ -67,7 +68,7 @@ object AbstractFacetPartition {
   def createCollection(
                         maybeFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Array[V2ExpressionAdapter],
+                        pushedPredicates: Array[ODataExpression],
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {

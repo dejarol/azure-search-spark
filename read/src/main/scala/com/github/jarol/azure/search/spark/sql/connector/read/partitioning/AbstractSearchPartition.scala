@@ -1,8 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.util.{Collections => JColl, List => JList}
 
@@ -18,7 +17,7 @@ abstract class AbstractSearchPartition(
                                         protected val partitionId: Int,
                                         protected val inputFilter: Option[String],
                                         protected val maybeSelect: Option[Seq[String]],
-                                        protected val pushedPredicates: Array[V2ExpressionAdapter]
+                                        protected val pushedPredicates: Array[ODataExpression]
                                       )
   extends SearchPartition {
 
@@ -27,25 +26,17 @@ abstract class AbstractSearchPartition(
   override final def getODataFilter: String = {
 
     // Create the filter related to pushed predicates
-    val predicatesFilter: Option[String] = Option(
-      StringUtils.createODataFilter(
-        JavaScalaConverters.seqToList(
-          pushedPredicates.map(_.getODataExpression)
-        )
-      )
-    )
+    val predicatesFilter: Option[String] = AbstractSearchPartition.createODataFilter(pushedPredicates.map(_.toUriLiteral))
 
     // Combine input filter, partition filter and predicates filter
-    StringUtils.createODataFilter(
-      JavaScalaConverters.seqToList(
-        Seq(inputFilter, partitionFilter, predicatesFilter).collect {
-          case Some(value) => value
-        }
-      )
-    )
+    AbstractSearchPartition.createODataFilter(
+      Seq(inputFilter, partitionFilter, predicatesFilter).collect {
+        case Some(value) => value
+      }
+    ).orNull
   }
 
-  override final def getPushedPredicates: Array[V2ExpressionAdapter] = pushedPredicates
+  override final def getPushedPredicates: Array[ODataExpression] = pushedPredicates
 
   override final def getSelectedFields: JList[String] = {
 
@@ -62,4 +53,28 @@ abstract class AbstractSearchPartition(
    */
 
   protected[partitioning] def partitionFilter: Option[String]
+}
+
+object AbstractSearchPartition {
+
+  /**
+   * Combine a collection of filters into a single OData filter
+   * @param filters filters to combine
+   * @return an overall filters that combine the input ones using <code>and</code>
+   */
+
+  private[partitioning] def createODataFilter(filters: Seq[String]): Option[String] = {
+
+    if (filters.isEmpty) {
+      None
+    } else if (filters.size.equals(1)) {
+      filters.headOption
+    } else {
+      Some(
+        filters.map {
+          filter => s"($filter)"
+        }.mkString(" and ")
+      )
+    }
+  }
 }

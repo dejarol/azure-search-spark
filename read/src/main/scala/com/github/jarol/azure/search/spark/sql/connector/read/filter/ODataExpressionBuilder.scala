@@ -1,12 +1,13 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.filter
 
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 import org.apache.spark.sql.connector.expressions.{Expression, GeneralScalarExpression, Literal, NamedReference}
 
 /**
  * Builder for generating OData expression adapters
  */
 
-object V2ExpressionAdapterBuilder {
+object ODataExpressionBuilder {
 
   /**
    * Convert an [[Expression]] to an OData filter, if possible
@@ -14,7 +15,7 @@ object V2ExpressionAdapterBuilder {
    * @return an OData filter if the input expression is supported, an empty Option otherwise
    */
 
-  final def build(expression: Expression): Option[V2ExpressionAdapter] = {
+  final def build(expression: Expression): Option[ODataExpression] = {
 
     expression match {
       case literal: Literal[_] => Some(fromLiteral(literal))
@@ -50,8 +51,7 @@ object V2ExpressionAdapterBuilder {
             build(children.head)
           )
           case "and" | "or" => fromLogicalExpression(
-            build(children.head),
-            build(children(1)),
+            children.map(build),
             exprName.equals("and")
           )
 
@@ -67,9 +67,9 @@ object V2ExpressionAdapterBuilder {
    * @return a string representing a top-level or nested field
    */
 
-  private[filter] def fromNamedReference(ref: NamedReference): V2ExpressionAdapter = {
+  private[filter] def fromNamedReference(ref: NamedReference): ODataExpression = {
 
-    V2ExpressionAdapters.fieldReference(
+    ODataExpressions.fieldReference(
       ref.fieldNames()
     )
   }
@@ -80,9 +80,9 @@ object V2ExpressionAdapterBuilder {
    * @return
    */
 
-  private[filter] def fromLiteral(literal: Literal[_]): V2ExpressionAdapter = {
+  private[filter] def fromLiteral(literal: Literal[_]): ODataExpression = {
 
-    V2ExpressionAdapters.literal(
+    ODataExpressions.literal(
       literal.dataType(),
       literal.value()
     )
@@ -96,12 +96,12 @@ object V2ExpressionAdapterBuilder {
    */
 
   private[filter] def fromNullEqualityExpression(
-                                                  left: Option[V2ExpressionAdapter],
+                                                  left: Option[ODataExpression],
                                                   notNull: Boolean
-                                                ): Option[V2ExpressionAdapter] = {
+                                                ): Option[ODataExpression] = {
 
     left.map {
-      expr => V2ExpressionAdapters.isNull(
+      expr => ODataExpressions.isNull(
         expr,
         notNull
       )
@@ -110,61 +110,56 @@ object V2ExpressionAdapterBuilder {
 
   private[filter] def fromComparisonExpression(
                                                 exprName: String,
-                                                leftSide: Option[V2ExpressionAdapter],
-                                                rightSide: Option[V2ExpressionAdapter]
-                                              ): Option[V2ExpressionAdapter] = {
+                                                leftSide: Option[ODataExpression],
+                                                rightSide: Option[ODataExpression]
+                                              ): Option[ODataExpression] = {
 
     // Match the expression name to an OData comparison operator
-    val maybeODataOperator = exprName match {
-      case ">" => Some("gt")
-      case ">=" => Some("ge")
-      case "=" => Some("eq")
-      case "<>" => Some("ne")
-      case "<" => Some("lt")
-      case "<=" => Some("le")
-      case _ => None
-    }
+    val maybeComparator = Enums.safeValueOf[Comparator](
+      exprName,
+      (c, s) => c.predicateName().equalsIgnoreCase(s)
+    )
 
     // Create the OData filter
     for {
       left <- leftSide
       right <- rightSide
-      op <- maybeODataOperator
-    } yield V2ExpressionAdapters.comparison(op, left, right)
+      op <- maybeComparator
+    } yield ODataExpressions.comparison(left, right, op)
   }
 
   private def fromStartWithOrEndWithExpression(
-                                                expression: Option[V2ExpressionAdapter],
-                                                prefixOrSuffix: Option[V2ExpressionAdapter],
+                                                expression: Option[ODataExpression],
+                                                prefixOrSuffix: Option[ODataExpression],
                                                 forStartsWith: Boolean
-                                              ): Option[V2ExpressionAdapter] = {
+                                              ): Option[ODataExpression] = {
 
     for {
       exp <- expression
       p <- prefixOrSuffix
-    } yield V2ExpressionAdapters.startsOrEndsWith(exp, p, forStartsWith)
+    } yield ODataExpressions.startsOrEndsWith(exp, p, forStartsWith)
   }
 
   private def fromContainsExpression(
-                                      expression: Option[V2ExpressionAdapter],
-                                      subString: Option[V2ExpressionAdapter]
-                                    ): Option[V2ExpressionAdapter] = {
+                                      expression: Option[ODataExpression],
+                                      subString: Option[ODataExpression]
+                                    ): Option[ODataExpression] = {
     for {
       exp <- expression
       s <- subString
-    } yield V2ExpressionAdapters.contains(exp, s)
+    } yield ODataExpressions.contains(exp, s)
   }
 
   private def fromInExpression(
-                                expression: Option[V2ExpressionAdapter],
-                                inExpressions: Seq[Option[V2ExpressionAdapter]]
-                              ): Option[V2ExpressionAdapter] = {
+                                expression: Option[ODataExpression],
+                                inExpressions: Seq[Option[ODataExpression]]
+                              ): Option[ODataExpression] = {
 
-    val allInExpressionsAreDefined = inExpressions.forall(_.isDefined)
-    if (allInExpressionsAreDefined) {
+    val allDefined = inExpressions.forall(_.isDefined)
+    if (allDefined) {
       expression.map {
         exp =>
-          V2ExpressionAdapters.in(
+          ODataExpressions.in(
             exp,
             inExpressions.collect {
               case Some(value) => value
@@ -176,17 +171,25 @@ object V2ExpressionAdapterBuilder {
     }
   }
 
-  private def fromNotExpression(expression: Option[V2ExpressionAdapter]): Option[V2ExpressionAdapter] = expression.map(V2ExpressionAdapters.not)
+  private def fromNotExpression(expression: Option[ODataExpression]): Option[ODataExpression] = expression.map(ODataExpressions.not)
 
   private def fromLogicalExpression(
-                                     leftSide: Option[V2ExpressionAdapter],
-                                     rightSide: Option[V2ExpressionAdapter],
+                                     expressions: Seq[Option[ODataExpression]],
                                      isAnd: Boolean
-                                   ): Option[V2ExpressionAdapter] = {
+                                   ): Option[ODataExpression] = {
 
-    for {
-      left <- leftSide
-      right <- rightSide
-    } yield V2ExpressionAdapters.logical(left, right, isAnd)
+    val allDefined = expressions.forall(_.isDefined)
+    if (allDefined) {
+      Some(
+        ODataExpressions.logical(
+          expressions.collect {
+            case Some(value) => value
+          },
+          isAnd
+        )
+      )
+    } else {
+      None
+    }
   }
 }

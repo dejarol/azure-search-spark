@@ -1,10 +1,10 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
-import org.apache.spark.sql.connector.expressions.filter.Predicate
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
-import java.util.{Collections => JCollections, List => JList}
 import java.util.function.Supplier
+import java.util.{Collections => JCollections, List => JList}
 
 class SearchPartitionSpec
   extends BasicSpec {
@@ -19,14 +19,16 @@ class SearchPartitionSpec
    * @return a Search partition
    */
 
-  private def createAbstractPartition(filterSupplier: Supplier[String],
-                                      selectSupplier: Supplier[JList[String]]): SearchPartition = {
+  private def createAbstractPartition(
+                                       filterSupplier: Supplier[String],
+                                       selectSupplier: Supplier[JList[String]]
+                                     ): SearchPartition = {
 
     new SearchPartition {
       override def getPartitionId: Int = 0
       override def getODataFilter: String = filterSupplier.get()
       override def getSelectedFields: JList[String] = selectSupplier.get()
-      override def getPushedPredicates: Array[Predicate] = Array.empty
+      override def getPushedPredicates: Array[ODataExpression] = Array.empty
     }
   }
 

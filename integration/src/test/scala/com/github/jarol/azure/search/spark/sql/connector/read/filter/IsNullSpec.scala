@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter
 import com.github.jarol.azure.search.spark.sql.connector.models.{PairBean, _}
 
 class IsNullSpec
-  extends V2ExpressionAdapterSpec {
+  extends ODataExpressionSpec {
 
   /**
    * Create an adapter instance
@@ -15,7 +15,7 @@ class IsNullSpec
   private def createAdapter(
                              fields: Seq[String],
                              negate: Boolean
-                           ): V2ExpressionAdapter = {
+                           ): ODataExpression = {
 
     null
   }

@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe.TypeTag
  * Parent class for integration tests that deal with pushed predicates adapters
  */
 
-trait V2ExpressionAdapterSpec
+trait ODataExpressionSpec
   extends SearchSparkITSpec {
 
   protected final val indexName = this.getClass.getSimpleName.toLowerCase
@@ -39,7 +39,7 @@ trait V2ExpressionAdapterSpec
   }
 
   /**
-   * Retrieve document from an index, filtering documents according to the filter provided by a [[V2ExpressionAdapter]] instance
+   * Retrieve document from an index, filtering documents according to the filter provided by a [[ODataExpression]] instance
  *
    * @param index index name
    * @param adapter adapter instance (will provide the OData filter string)
@@ -48,13 +48,13 @@ trait V2ExpressionAdapterSpec
 
   protected final def readDocumentsUsingV2Adapter(
                                                    index: String,
-                                                   adapter: V2ExpressionAdapter
+                                                   adapter: ODataExpression
                                                  ): Seq[SearchDocument] = {
 
     val documents: JList[SearchDocument] = SearchTestUtils.readDocuments(
       getSearchClient(index),
       new SearchOptions().setFilter(
-        adapter.getODataExpression
+        adapter.toUriLiteral
       )
     )
 

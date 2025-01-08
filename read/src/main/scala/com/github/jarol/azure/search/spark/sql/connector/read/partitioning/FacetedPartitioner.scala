@@ -7,7 +7,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigExce
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.V2ExpressionAdapter
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.util.{List => JList}
 
@@ -29,7 +29,7 @@ import java.util.{List => JList}
 
 case class FacetedPartitioner(
                                override protected val readConfig: ReadConfig,
-                               override protected val pushedPredicates: Array[V2ExpressionAdapter]
+                               override protected val pushedPredicates: Array[ODataExpression]
                              )
   extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
 
