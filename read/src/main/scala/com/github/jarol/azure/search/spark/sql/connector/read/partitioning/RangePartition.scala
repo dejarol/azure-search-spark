@@ -31,7 +31,7 @@ case class RangePartition(
                            override protected val partitionId: Int,
                            override protected val inputFilter: Option[String],
                            override protected val maybeSelect: Option[Seq[String]],
-                           override protected val pushedPredicates: Array[ODataExpression],
+                           override protected val pushedPredicates: Seq[ODataExpression],
                            private val fieldName: String,
                            private val lowerBound: Option[String],
                            private val upperBound: Option[String])
@@ -66,7 +66,7 @@ object RangePartition {
   def createCollection(
                         inputFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Array[ODataExpression],
+                        pushedPredicates: Seq[ODataExpression],
                         fieldName: String,
                         values: Seq[String]
                       ): Seq[RangePartition] = {

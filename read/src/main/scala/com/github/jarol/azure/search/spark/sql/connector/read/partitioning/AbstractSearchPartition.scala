@@ -17,7 +17,7 @@ abstract class AbstractSearchPartition(
                                         protected val partitionId: Int,
                                         protected val inputFilter: Option[String],
                                         protected val maybeSelect: Option[Seq[String]],
-                                        protected val pushedPredicates: Array[ODataExpression]
+                                        protected val pushedPredicates: Seq[ODataExpression]
                                       )
   extends SearchPartition {
 
@@ -36,7 +36,7 @@ abstract class AbstractSearchPartition(
     ).orNull
   }
 
-  override final def getPushedPredicates: Array[ODataExpression] = pushedPredicates
+  override final def getPushedPredicates: Array[ODataExpression] = pushedPredicates.toArray
 
   override final def getSelectedFields: JList[String] = {
 

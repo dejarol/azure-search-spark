@@ -13,7 +13,7 @@ case class SimpleSearchPartition(
                                   override protected val partitionId: Int,
                                   override protected val inputFilter: Option[String],
                                   override protected val maybeSelect: Option[Seq[String]],
-                                  override protected val pushedPredicates: Array[ODataExpression]
+                                  override protected val pushedPredicates: Seq[ODataExpression]
                                 )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
 

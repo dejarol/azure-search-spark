@@ -88,7 +88,7 @@ object ODataExpressions {
   private case class Comparison(
                                  private val left: ODataExpression,
                                  private val right: ODataExpression,
-                                 private val comparator: Comparator
+                                 private val comparator: ODataComparator
                                )
     extends ODataExpression {
 
@@ -236,7 +236,7 @@ object ODataExpressions {
   def comparison(
                   left: ODataExpression,
                   right: ODataExpression,
-                  comparator: Comparator
+                  comparator: ODataComparator
                 ): ODataExpression = {
 
     Comparison(

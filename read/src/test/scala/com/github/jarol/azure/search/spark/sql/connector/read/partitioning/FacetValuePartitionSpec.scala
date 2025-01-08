@@ -12,7 +12,7 @@ class FacetValuePartitionSpec
     describe(SHOULD) {
       it("create a facet filter related to given value") {
 
-        FacetValuePartition(0, None, None, Array.empty, fieldName, fieldValue).facetFilter shouldBe s"$fieldName eq $fieldValue"
+        FacetValuePartition(0, None, None, Seq.empty, fieldName, fieldValue).facetFilter shouldBe s"$fieldName eq $fieldValue"
       }
     }
   }

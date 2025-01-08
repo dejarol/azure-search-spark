@@ -30,7 +30,7 @@ abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
                                        override protected val inputFilter: Option[String],
                                        override protected val maybeSelect: Option[Seq[String]],
-                                       override protected val pushedPredicates: Array[ODataExpression],
+                                       override protected val pushedPredicates: Seq[ODataExpression],
                                        protected val facetFieldName: String
                                      )
   extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
@@ -68,7 +68,7 @@ object AbstractFacetPartition {
   def createCollection(
                         maybeFilter: Option[String],
                         maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Array[ODataExpression],
+                        pushedPredicates: Seq[ODataExpression],
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {

@@ -10,7 +10,7 @@ class FacetNullValuePartitionSpec
   private lazy val partition = FacetNullValuePartition(
     None,
     None,
-    Array.empty,
+    Seq.empty,
     facetFieldName,
     facetValues
   )
@@ -35,6 +35,8 @@ class FacetNullValuePartitionSpec
         actual.contains(equalToOtherValues) shouldBe true
         actual shouldBe expected
       }
+
+      // TODO: add test for combining odata expr
     }
   }
 }

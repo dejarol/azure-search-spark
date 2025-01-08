@@ -24,13 +24,13 @@ class SearchScan(
   override def toBatch: Batch = {
 
     // Convert pushed predicates to OData expression adapters
-    val pushedAdapters: Array[ODataExpression] = pushedPredicates.map {
+    val pushedExpressions: Array[ODataExpression] = pushedPredicates.map {
       ODataExpressionBuilder.build
     }.collect {
       case Some(value) => value
     }
 
-    new SearchBatch(readConfig, schema, pushedAdapters)
+    new SearchBatch(readConfig, schema, pushedExpressions)
   }
 
   /**

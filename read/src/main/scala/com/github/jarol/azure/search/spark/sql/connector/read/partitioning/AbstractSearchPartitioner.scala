@@ -12,7 +12,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpres
 
 abstract class AbstractSearchPartitioner(
                                           protected val readConfig: ReadConfig,
-                                          protected val pushedPredicates: Array[ODataExpression]
+                                          protected val pushedPredicates: Seq[ODataExpression]
                                         )
   extends SearchPartitioner {
 

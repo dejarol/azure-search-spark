@@ -16,7 +16,7 @@ import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpres
 case class FacetNullValuePartition(
                                     override protected val inputFilter: Option[String],
                                     override protected val maybeSelect: Option[Seq[String]],
-                                    override protected val pushedPredicates: Array[ODataExpression],
+                                    override protected val pushedPredicates: Seq[ODataExpression],
                                     override protected val facetFieldName: String,
                                     protected val facetValues: Seq[String])
   extends AbstractFacetPartition(facetValues.size, inputFilter, maybeSelect, pushedPredicates, facetFieldName) {

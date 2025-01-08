@@ -25,7 +25,7 @@ class RangePartitionSpec
       0,
       inputFilter,
       None,
-      Array.empty,
+      Seq.empty,
       fieldName,
       lowerBound,
       upperBound
@@ -60,7 +60,7 @@ class RangePartitionSpec
       it("create a collection of partitions") {
 
         val values = Seq("1", "2", "3")
-        val partitions = RangePartition.createCollection(None, None, Array.empty, fieldName, values)
+        val partitions = RangePartition.createCollection(None, None, Seq.empty, fieldName, values)
         partitions should have size(values.size + 1)
         val headFilter = partitions.head.getODataFilter
         headFilter should include (s"$fieldName lt ${values.head}")

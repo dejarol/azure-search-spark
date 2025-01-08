@@ -17,7 +17,7 @@ class AbstractSearchPartitionSpec
   private def createPartitionAndGetFilter(
                                            inputFilter: Option[String],
                                            partFilter: Option[String],
-                                           predicates: Array[ODataExpression]
+                                           predicates: Seq[ODataExpression]
                                          ): String = {
 
     new AbstractSearchPartition(
@@ -41,18 +41,18 @@ class AbstractSearchPartitionSpec
           }
 
           // Assert behavior without predicates
-          createPartitionAndGetFilter(None, None, Array.empty) shouldBe null
-          createPartitionAndGetFilter(Some(first), None, Array.empty) shouldBe first
-          createPartitionAndGetFilter(None, Some(first), Array.empty) shouldBe first
+          createPartitionAndGetFilter(None, None, Seq.empty) shouldBe null
+          createPartitionAndGetFilter(Some(first), None, Seq.empty) shouldBe first
+          createPartitionAndGetFilter(None, Some(first), Seq.empty) shouldBe first
 
           // Assert behavior with only predicates
-          createPartitionAndGetFilter(None, None, Array(thirdIsNotNullPredicate)) shouldBe thirdIsNotNullPredicate.toUriLiteral
-          createPartitionAndGetFilter(None, None, Array(thirdIsNotNullPredicate, fourthIsNotNullPredicate)) shouldBe
+          createPartitionAndGetFilter(None, None, Seq(thirdIsNotNullPredicate)) shouldBe thirdIsNotNullPredicate.toUriLiteral
+          createPartitionAndGetFilter(None, None, Seq(thirdIsNotNullPredicate, fourthIsNotNullPredicate)) shouldBe
             s"(${thirdIsNotNullPredicate.toUriLiteral}) and (${fourthIsNotNullPredicate.toUriLiteral})"
 
           // Assert behavior when combining
-          createPartitionAndGetFilter(Some(first), Some(second), Array.empty) shouldBe s"($first) and ($second)"
-          createPartitionAndGetFilter(Some(first), Some(second), Array(thirdIsNotNullPredicate)) shouldBe
+          createPartitionAndGetFilter(Some(first), Some(second), Seq.empty) shouldBe s"($first) and ($second)"
+          createPartitionAndGetFilter(Some(first), Some(second), Seq(thirdIsNotNullPredicate)) shouldBe
             s"($first) and ($second) and (${thirdIsNotNullPredicate.toUriLiteral})"
         }
       }

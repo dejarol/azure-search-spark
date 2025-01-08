@@ -25,7 +25,7 @@ class SimpleSearchPartitionSpec
       0,
       maybeFilter,
       maybeSelect,
-      Array.empty
+      Seq.empty
     )
   }
 

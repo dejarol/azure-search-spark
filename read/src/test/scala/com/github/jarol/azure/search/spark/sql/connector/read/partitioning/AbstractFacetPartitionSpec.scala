@@ -20,7 +20,7 @@ class AbstractFacetPartitionSpec
       0,
       None,
       None,
-      Array.empty,
+      Seq.empty,
       "facetFieldName"
     ) {
 
@@ -50,7 +50,7 @@ class AbstractFacetPartitionSpec
         val actual = AbstractFacetPartition.createCollection(
           None,
           None,
-          Array.empty,
+          Seq.empty,
           createSearchField(facetFieldName, SearchFieldDataType.STRING),
           facetValues
         )

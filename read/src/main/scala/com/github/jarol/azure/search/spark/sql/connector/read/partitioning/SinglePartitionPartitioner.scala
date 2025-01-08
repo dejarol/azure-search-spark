@@ -13,7 +13,7 @@ import java.util.{Collections => JCollections, List => JList}
 
 case class SinglePartitionPartitioner(
                                        override protected val readConfig: ReadConfig,
-                                       override protected val pushedPredicates: Array[ODataExpression]
+                                       override protected val pushedPredicates: Seq[ODataExpression]
                                      )
   extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
 

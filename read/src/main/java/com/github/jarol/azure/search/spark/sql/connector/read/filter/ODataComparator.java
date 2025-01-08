@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Contract;
  * OData comparison operators
  */
 
-public enum Comparator {
+public enum ODataComparator {
 
     GT(">", "gt"),
     GEQ(">=", "ge"),
@@ -24,7 +24,7 @@ public enum Comparator {
      */
 
     @Contract(pure = true)
-    Comparator(
+    ODataComparator(
             String predicateName,
             String odataValue
     ) {

@@ -22,7 +22,7 @@ case class FacetValuePartition(
                                 override protected val partitionId: Int,
                                 override protected val inputFilter: Option[String],
                                 override protected val maybeSelect: Option[Seq[String]],
-                                override protected val pushedPredicates: Array[ODataExpression],
+                                override protected val pushedPredicates: Seq[ODataExpression],
                                 override protected val facetFieldName: String,
                                 protected val facetValue: String
                               )
