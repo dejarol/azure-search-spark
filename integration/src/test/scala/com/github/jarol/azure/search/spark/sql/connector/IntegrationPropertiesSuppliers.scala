@@ -76,11 +76,7 @@ object IntegrationPropertiesSuppliers {
       properties.load(Source.fromFile(fileName).reader())
       properties
     }.toEither.right.map(FileSupplier) match {
-      case Left(value) => throw new IllegalStateException(
-        s"Could not load local secrets file $fileName. " +
-          s"Cause: ${value.getMessage}",
-        value
-      )
+      case Left(value) => throw new IllegalStateException(s"Could not load local secrets file $fileName", value)
       case Right(value) => value
     }
   }

@@ -2,8 +2,8 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.SearchDocument
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer, SearchITSpec, SearchTestUtils}
 import com.github.jarol.azure.search.spark.sql.connector.models._
+import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTestUtils}
 
 /**
  * Trait for integration tests related to [[SearchPartition]](s)
@@ -18,7 +18,7 @@ trait SearchPartitionITSPec
    * @param index target Search index
    * @param partition partition
    * @param expectedPredicate predicate for computing the expected set of documents
-   * @tparam T document type (should have both a [[DocumentSerializer]] and [[DocumentIDGetter]] in scope)
+   * @tparam T document type (should extend [[ITDocument]])
    */
 
   protected final def assertCountPerPartition[T <: ITDocument](

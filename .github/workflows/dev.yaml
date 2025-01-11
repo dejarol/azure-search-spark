@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: sbt 'project integration' + clean test
         env:
+          IS_CI_CD_ENV: true
           AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
           AZURE_SEARCH_API_KEY: ${{ secrets.AZURE_SEARCH_API_KEY }}
       

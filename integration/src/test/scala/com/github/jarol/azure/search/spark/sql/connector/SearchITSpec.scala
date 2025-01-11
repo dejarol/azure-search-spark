@@ -8,7 +8,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ITDocument}
+import com.github.jarol.azure.search.spark.sql.connector.models.ITDocument
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
@@ -109,18 +109,18 @@ trait SearchITSpec
   /**
    * Create an index from the schema of a document that extends [[ITDocument]]
    * @param indexName index name
-   * @tparam T type of document (must extend [[AbstractITDocument]] and be a case class)
+   * @tparam T type of document (must extend [[ITDocument]] and be a case class)
    */
 
   protected final def createIndexFromSchemaOf[T <: ITDocument with Product: TypeTag](indexName: String): Unit = {
 
     // Define Search fields
     val searchFields = Encoders.product[T].schema.map {
-      spf =>
-        val sef = SchemaUtils.toSearchField(spf, Map.empty, None)
-        if (sef.getName.equals("id")) {
-          sef.setKey(true)
-        } else sef
+      structField =>
+        val searchField = SchemaUtils.toSearchField(structField, Map.empty, None)
+        if (searchField.getName.equals("id")) {
+          searchField.setKey(true)
+        } else searchField
     }
 
     // Create index
