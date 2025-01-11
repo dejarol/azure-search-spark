@@ -23,15 +23,14 @@ trait SearchPartitionITSPec
    * @tparam T document type (should have both a [[DocumentSerializer]] and [[DocumentIDGetter]] in scope)
    */
 
-  protected final def assertCountPerPartition[T: DocumentSerializer: DocumentIDGetter](
-                                                                                        documents: Seq[T],
-                                                                                        index: String,
-                                                                                        partition: SearchPartition,
-                                                                                        expectedPredicate: T => Boolean
-                                                                                      ): Unit = {
+  protected final def assertCountPerPartition[T <: AbstractITDocument](
+                                                                        documents: Seq[T],
+                                                                        index: String,
+                                                                        partition: SearchPartition,
+                                                                        expectedPredicate: T => Boolean
+                                                                      ): Unit = {
 
     // Write documents
-    writeDocuments(index, documents)
     val expected: Seq[T] = documents.filter(expectedPredicate)
 
     // Retrieve matching documents
@@ -43,9 +42,8 @@ trait SearchPartitionITSPec
     )
 
     // Assertions: same size, same set of document ids
-    val idGetter = implicitly[DocumentIDGetter[T]]
     actual should have size expected.size
-    actual.map(defaultIdGetter.getId) should contain theSameElementsAs expected.map(idGetter.getId)
+    actual.map(defaultIdGetter.getId) should contain theSameElementsAs expected.map(_.id)
   }
 
   /**

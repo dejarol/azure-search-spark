@@ -22,12 +22,21 @@ class ODataExpressionsSpec
     PushdownBean(Some("three"), None, Some(now.plusDays(1))),
     PushdownBean(Some("one"), Some(3), Some(now.plusDays(2))),
     PushdownBean(None, Some(4), Some(now)),
-    PushdownBean(None, Some(4), Some(now.plusDays(3)))
+    PushdownBean(None, Some(4), Some(now.plusDays(3))),
+    PushdownBean(Some("two"), Some(6), None),
+    PushdownBean(Some("three"), Some(5), None)
   )
 
   private lazy val stringValue = topLevelField("stringValue")
   private lazy val intValue = topLevelField("intValue")
   private lazy val dateValue  = topLevelField("dateValue")
+
+  override def beforeAll(): Unit = {
+
+    super.beforeAll()
+    createIndexFromSchemaOf[PushdownBean](indexName)
+    writeDocuments[PushdownBean](indexName, documents)
+  }
 
   /**
    * Create an expression for a top-level field
@@ -37,11 +46,47 @@ class ODataExpressionsSpec
 
   private def topLevelField(name: String): ODataExpression = ODataExpressions.fieldReference(Seq(name))
 
-  private def createStringLiteral(string: String): ODataExpression = ODataExpressions.literal(DataTypes.StringType, UTF8String.fromString(string))
+  /**
+   * Create a string literal
+   * @param value literal value
+   * @return an [[ODataExpression]] representing a string literal
+   */
 
-  private def createIntLiteral(int: Integer): ODataExpression = ODataExpressions.literal(DataTypes.IntegerType, int)
+  private def createStringLiteral(value: String): ODataExpression = {
 
-  private def createDateLiteral(date: LocalDate): ODataExpression = ODataExpressions.literal(DataTypes.DateType, date.toEpochDay.toInt)
+    ODataExpressions.literal(
+      DataTypes.StringType,
+      UTF8String.fromString(value)
+    )
+  }
+
+  /**
+   * Create an integer literal
+   * @param value literal value
+   * @return an [[ODataExpression]] representing a numeric literal
+   */
+
+  private def createIntLiteral(value: Int): ODataExpression = {
+
+    ODataExpressions.literal(
+      DataTypes.IntegerType,
+      value
+    )
+  }
+
+  /**
+   * Create a datetime literal
+   * @param value literal value
+   * @return an [[ODataExpression]] representing a datetime literal
+   */
+
+  private def createDateLiteral(value: LocalDate): ODataExpression = {
+
+    ODataExpressions.literal(
+      DataTypes.DateType,
+      value.toEpochDay.toInt
+    )
+  }
 
   /**
    * Retrieve document from an index, filtering documents according to the filter provided by a [[ODataExpression]] instance
@@ -73,26 +118,23 @@ class ODataExpressionsSpec
 
   describe(`object`[ODataExpressions.type ]) {
     describe(SHOULD) {
-      describe("create OData expressions") {
-        it("for null equality checks") {
-
-          createIndexFromSchemaOf[PushdownBean](indexName)
-          writeDocuments[PushdownBean](indexName, documents)
+      describe("create OData expressions for") {
+        it("null equality conditions") {
 
           // IS_NULL
           assertExpressionBehavior(
-            ODataExpressions.isNull(topLevelField("stringValue"), negate = false),
+            ODataExpressions.isNull(stringValue, negate = false),
             _.stringValue.isEmpty
           )
 
           // IS_NOT_NULL
           assertExpressionBehavior(
-            ODataExpressions.isNull(topLevelField("stringValue"), negate = true),
+            ODataExpressions.isNull(stringValue, negate = true),
             _.stringValue.isDefined
           )
         }
 
-        it("for comparisons") {
+        it("comparisons") {
 
           // [a] EQUAL
           // [a.1] equal: string
@@ -110,7 +152,7 @@ class ODataExpressionsSpec
           // [a.3] equal: date
           assertExpressionBehavior(
             ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.EQ),
-            _.dateValue.exists(_.toLocalDateTime.toLocalDate.equals(now))
+            _.dateValueAsLocalDate.exists(_.equals(now))
           )
 
           // [b] NOT_EQUAL
@@ -129,7 +171,10 @@ class ODataExpressionsSpec
           )
 
           // [c.2] greater: date
-          // TODO
+          assertExpressionBehavior(
+            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GT),
+            _.dateValueAsLocalDate.exists(_.isAfter(now))
+          )
 
           // [d] GREATER_EQUAL
           // [d.1] geq: int
@@ -139,7 +184,12 @@ class ODataExpressionsSpec
           )
 
           // [d.2] geq: date
-          // TODO
+          assertExpressionBehavior(
+            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GEQ),
+            _.dateValueAsLocalDate.exists {
+              d => d.equals(now) || d.isAfter(now)
+            }
+          )
 
           // [e] LESS
           // [e.1] lt: int
@@ -149,7 +199,10 @@ class ODataExpressionsSpec
           )
 
           // [e.2] lt: date
-          // TODO
+          assertExpressionBehavior(
+            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LT),
+            _.dateValueAsLocalDate.exists(_.isBefore(now))
+          )
 
           // [f] LESS_EQUAL
           // [f.1] leq: int
@@ -159,7 +212,70 @@ class ODataExpressionsSpec
           )
 
           // [f.2] leq: date
-          // TODO
+          assertExpressionBehavior(
+            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LEQ),
+            _.dateValueAsLocalDate.exists {
+              d => d.equals(now) || d.isBefore(now)
+            }
+          )
+        }
+
+        it("negating an expression") {
+
+          val value = "one"
+          assertExpressionBehavior(
+            ODataExpressions.not(
+              ODataExpressions.comparison(
+                stringValue, createStringLiteral(value), ODataComparator.EQ
+              )
+            ),
+            _.stringValue.forall {
+              v => !v.equals(value)
+            }
+          )
+        }
+
+        it("SQL-style IN conditions for strings") {
+
+          val stringValues = Seq("one", "two")
+          println(ODataExpressions.in(
+            stringValue,
+            stringValues.map(createStringLiteral),
+            ","
+          ).toUriLiteral)
+
+          assertExpressionBehavior(
+            ODataExpressions.in(
+              stringValue,
+              stringValues.map(createStringLiteral),
+              ","
+            ),
+            _.stringValue.exists(stringValues.contains)
+          )
+        }
+
+        it("logically combine other expressions") {
+
+          // AND
+          val stringValueNotNull = ODataExpressions.isNull(stringValue, negate = true)
+          val intValueEqTwo = ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.EQ)
+
+          assertExpressionBehavior(
+            ODataExpressions.logical(
+              Seq(stringValueNotNull, intValueEqTwo),
+              isAnd = true
+            ),
+            b => b.stringValue.isDefined && b.intValue.exists(_.equals(2))
+          )
+
+          // OR
+          assertExpressionBehavior(
+            ODataExpressions.logical(
+              Seq(stringValueNotNull, intValueEqTwo),
+              isAnd = false
+            ),
+            b => b.stringValue.isDefined || b.intValue.exists(_.equals(2))
+          )
         }
       }
     }

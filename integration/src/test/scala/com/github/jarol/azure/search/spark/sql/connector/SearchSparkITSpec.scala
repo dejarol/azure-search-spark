@@ -24,11 +24,10 @@ trait SearchSparkITSpec
 
   override def beforeAll(): Unit = {
 
+    super.beforeAll()
     listIndexes().foreach {
       index => dropIndexIfExists(index, sleep = false)
     }
-
-    super.beforeAll()
   }
 
   /**
@@ -37,11 +36,10 @@ trait SearchSparkITSpec
 
   override final def afterAll(): Unit = {
 
+    super.afterAll()
     listIndexes().foreach {
       index => dropIndexIfExists(index, sleep = false)
     }
-
-    super.afterAll()
   }
 
   /**

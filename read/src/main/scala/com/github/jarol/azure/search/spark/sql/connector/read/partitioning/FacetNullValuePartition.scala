@@ -18,7 +18,8 @@ case class FacetNullValuePartition(
                                     override protected val maybeSelect: Option[Seq[String]],
                                     override protected val pushedPredicates: Seq[ODataExpression],
                                     override protected val facetFieldName: String,
-                                    protected val facetValues: Seq[String])
+                                    protected val facetValues: Seq[String]
+                                  )
   extends AbstractFacetPartition(facetValues.size, inputFilter, maybeSelect, pushedPredicates, facetFieldName) {
 
   override def facetFilter: String = {

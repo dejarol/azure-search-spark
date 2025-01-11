@@ -72,4 +72,26 @@ public final class StringUtils {
 
         return surroundedBy(value, '\'');
     }
+
+    @Contract(pure = true)
+    public static @NotNull String removePrefix(
+            @NotNull String s,
+            @NotNull String prefix
+    ) {
+
+        return s.startsWith(prefix) ?
+                s.substring(prefix.length()) :
+                s;
+
+    }
+
+    public static @NotNull String removeSuffix(
+            @NotNull String s,
+            @NotNull String suffix
+    ) {
+
+        return s.endsWith(suffix) ?
+                s.substring(0, s.length() - suffix.length()) :
+                s;
+    }
 }

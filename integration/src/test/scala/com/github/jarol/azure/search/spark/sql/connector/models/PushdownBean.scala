@@ -13,7 +13,10 @@ case class PushdownBean(
                          intValue: Option[Int],
                          dateValue: Option[Timestamp]
                        )
-  extends AbstractITDocument(id)
+  extends AbstractITDocument(id) {
+
+  def dateValueAsLocalDate: Option[LocalDate] = dateValue.map(_.toLocalDateTime.toLocalDate)
+}
 
 object PushdownBean {
 

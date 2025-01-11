@@ -19,7 +19,7 @@ object ODataExpressions {
    * @param names field names (only 1 name for a top-level field, a list of names for nested field)
    */
 
-  private case class FieldReference(private val names: Seq[String])
+  private[filter] case class FieldReference(private val names: Seq[String])
     extends ODataExpression {
 
     override def toUriLiteral: String = names.mkString("/")
@@ -31,10 +31,10 @@ object ODataExpressions {
    * @param value literal value
    */
 
-  private case class Literal(
-                              private val dataType: DataType,
-                              private val value: Any
-                            )
+  private[filter] case class Literal(
+                                      private val dataType: DataType,
+                                      private val value: Any
+                                    )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -65,10 +65,10 @@ object ODataExpressions {
    * @param negate true for creating a filter that evaluates non-null equality
    */
 
-  private case class IsNull(
-                             private val left: ODataExpression,
-                             private val negate: Boolean
-                           )
+  private[filter] case class IsNull(
+                                     private val left: ODataExpression,
+                                     private val negate: Boolean
+                                   )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -85,29 +85,14 @@ object ODataExpressions {
    * @param comparator comparison operator
    */
 
-  private case class Comparison(
-                                 private val left: ODataExpression,
-                                 private val right: ODataExpression,
-                                 private val comparator: ODataComparator
-                               )
+  private[filter] case class Comparison(
+                                         private val left: ODataExpression,
+                                         private val right: ODataExpression,
+                                         private val comparator: ODataComparator
+                                       )
     extends ODataExpression {
 
     override def toUriLiteral: String = s"${left.toUriLiteral} ${comparator.oDataValue()} ${right.toUriLiteral}"
-  }
-
-  /**
-   * A <code>contains</code> expression (used for checking that a string field contains a substring)
-   * @param left left expression
-   * @param substring right expression
-   */
-
-  private case class Contains(
-                               private val left: ODataExpression,
-                               private val substring: ODataExpression
-                             )
-    extends ODataExpression {
-
-    override def toUriLiteral: String = s"search.ismatch(${substring.toUriLiteral}, '${left.toUriLiteral}')"
   }
 
   /**
@@ -115,7 +100,7 @@ object ODataExpressions {
    * @param child expression to negate
    */
 
-  private case class Not(private val child: ODataExpression)
+  private[filter] case class Not(private val child: ODataExpression)
     extends ODataExpression {
     override def toUriLiteral: String = s"not (${child.toUriLiteral})"
   }
@@ -126,17 +111,28 @@ object ODataExpressions {
    * @param inList collection of expressions to match
    */
 
-  private case class In(
-                         private val left: ODataExpression,
-                         private val inList: Seq[ODataExpression],
-                         private val separator: String
-                       )
+  private[filter] case class In(
+                                 private val left: ODataExpression,
+                                 private val inList: Seq[ODataExpression],
+                                 private val separator: String
+                               )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
 
-      val inListString = inList.map(_.toUriLiteral).mkString(separator)
-      s"search.in(${left.toUriLiteral}, ${StringUtils.singleQuoted(inListString)}, ${StringUtils.singleQuoted(separator)})"
+      val exprList = inList.map {
+        expr =>
+          StringUtils.removeSuffix(
+            StringUtils.removePrefix(expr.toUriLiteral, "'"),
+            "'"
+          )
+      }.mkString(separator)
+
+      s"search.in(" +
+        s"${left.toUriLiteral}, " +
+        s"${StringUtils.singleQuoted(exprList)}, " +
+        s"${StringUtils.singleQuoted(separator)}" +
+        s")"
     }
   }
 
@@ -146,10 +142,10 @@ object ODataExpressions {
    * @param isAnd true for creating an <code>and</code> expression
    */
 
-  private case class Logical(
-                              private val expressions: Seq[ODataExpression],
-                              private val isAnd: Boolean
-                            )
+  private[filter] case class Logical(
+                                      private val expressions: Seq[ODataExpression],
+                                      private val isAnd: Boolean
+                                    )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -227,24 +223,6 @@ object ODataExpressions {
   }
 
   /**
-   * Create a <code>contains</code> expression
-   * @param left left side
-   * @param subString substring
-   * @return an expression for filtering documents where a string field contains a substring
-   */
-
-  def contains(
-                left: ODataExpression,
-                subString: ODataExpression
-              ): ODataExpression = {
-
-    Contains(
-      left,
-      subString
-    )
-  }
-
-  /**
    * Create an expression that negates another
    * @param child expression to negate
    * @return a negation expression
@@ -271,7 +249,6 @@ object ODataExpressions {
       separator
     )
   }
-
   /**
    * Create a logical expression
    * @param expressions expressions to combine

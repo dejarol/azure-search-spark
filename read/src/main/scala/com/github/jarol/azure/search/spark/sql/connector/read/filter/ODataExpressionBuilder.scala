@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter
 
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 import org.apache.spark.sql.connector.expressions.{Expression, GeneralScalarExpression, Literal, NamedReference}
+import org.apache.spark.sql.types.DataTypes
 
 /**
  * Builder for generating OData expressions
@@ -31,7 +32,6 @@ object ODataExpressionBuilder {
             build(children.head),
             build(children(1))
           )
-          case "contains" => containsExpression(build(children.head), build(children(1)))
           case "in" => inExpression(build(children.head), children.drop(1).map(build))
           case "not" => notExpression(build(children.head))
           case "and" | "or" => logicalExpression(children.map(build), exprName.equals("and"))
@@ -114,53 +114,51 @@ object ODataExpressionBuilder {
   }
 
   /**
-   * Create a <code>contains</code> expression
-   * @param expression expression
-   * @param subString substring to be contained within first expression
-   * @return a <code>contains</code> expression
-   */
-
-  private def containsExpression(
-                                  expression: Option[ODataExpression],
-                                  subString: Option[ODataExpression]
-                                ): Option[ODataExpression] = {
-    for {
-      exp <- expression
-      s <- subString
-    } yield ODataExpressions.contains(exp, s)
-  }
-
-  /**
    * Create a <code>in</code> expression
-   * @param expression expression
+   * @param leftSide left side expression
    * @param inExpressions expressions to match by <code>in</code> clause
    * @return a <code>in</code> expression
    */
 
   private def inExpression(
-                            expression: Option[ODataExpression],
+                            leftSide: Option[ODataExpression],
                             inExpressions: Seq[Option[ODataExpression]]
                           ): Option[ODataExpression] = {
 
     val allDefined = inExpressions.forall(_.isDefined)
-    if (allDefined) {
-
-      val expressions: Seq[ODataExpression] = inExpressions.collect {
-        case Some(value) => value
+    val allStringLiterals: Boolean = inExpressions.forall {
+      case Some(value) => value match {
+        case ODataExpressions.Literal(dataType, _) => dataType.equals(DataTypes.StringType)
+        case _ => false
       }
+    }
 
-      val expressionsAsStrings: Seq[String] = expressions.map(_.toUriLiteral)
-      val maybeSeparator: Option[String] = maybeSetSeparator(expressionsAsStrings, ",")
-        .orElse(maybeSetSeparator(expressionsAsStrings, ";"))
-        .orElse(maybeSetSeparator(expressionsAsStrings, "|"))
-
-      for {
-        exp <- expression
-        separator <- maybeSeparator
-      } yield ODataExpressions.in(exp, expressions, separator)
+    if (allDefined && allStringLiterals) {
+      createInExpressionForStringField(
+        leftSide,
+        inExpressions.collect {
+          case Some(value) => value
+        }
+      )
     } else {
       None
     }
+  }
+
+  private def createInExpressionForStringField(
+                                                leftSide: Option[ODataExpression],
+                                                expressions: Seq[ODataExpression]
+                                              ): Option[ODataExpression] = {
+
+    val expressionsAsStrings: Seq[String] = expressions.map(_.toUriLiteral)
+    val maybeSeparator: Option[String] = maybeSetSeparator(expressionsAsStrings, ",")
+      .orElse(maybeSetSeparator(expressionsAsStrings, ";"))
+      .orElse(maybeSetSeparator(expressionsAsStrings, "|"))
+
+    for {
+      leftS <- leftSide
+      separator <- maybeSeparator
+    } yield ODataExpressions.in(leftS, expressions, separator)
   }
 
   private def maybeSetSeparator(a: Seq[String], sep: String): Option[String] = {
