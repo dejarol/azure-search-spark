@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, SearchSparkITSpec}
+import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, SearchITSpec, SparkSpec}
 import org.apache.spark.sql.SaveMode
 
 import java.lang.{Double => JDouble, Long => JLong}
@@ -13,7 +13,8 @@ import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
 class WriteSpec
-  extends SearchSparkITSpec {
+  extends SearchITSpec
+    with SparkSpec {
 
   private lazy val atomicBeansIndex = "write-atomic-beans"
   private lazy val collectionBeansIndex = "write-collection-beans"

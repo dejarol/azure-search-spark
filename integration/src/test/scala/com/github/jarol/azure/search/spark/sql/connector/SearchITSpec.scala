@@ -4,31 +4,57 @@ import com.azure.core.credential.AzureKeyCredential
 import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
-import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
+import com.github.jarol.azure.search.spark.sql.connector.models.{AbstractITDocument, ITDocument}
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
+import org.scalatest.BeforeAndAfterAll
 
 import scala.reflect.runtime.universe.TypeTag
 
 /**
- * Trait to mix in for integration tests that require the interaction with a Search service
+ * Trait to mix in for integration tests that require interacting with a Search service
  */
 
 trait SearchITSpec
   extends BasicSpec
-    with FieldFactory {
+    with FieldFactory
+      with BeforeAndAfterAll {
 
-  protected final lazy val SEARCH_END_POINT = sys.env("AZURE_SEARCH_ENDPOINT")
-  protected final lazy val SEARCH_API_KEY = sys.env("AZURE_SEARCH_API_KEY")
-  protected final lazy val KEY_CREDENTIALS = new AzureKeyCredential(SEARCH_API_KEY)
+  private lazy val propertiesSupplier: IntegrationPropertiesSupplier = IntegrationPropertiesSuppliers.resolve()
+  private lazy val credentials = new AzureKeyCredential(propertiesSupplier.apiKey())
   protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
-      .endpoint(SEARCH_END_POINT)
-      .credential(KEY_CREDENTIALS)
+      .endpoint(propertiesSupplier.endPoint())
+      .credential(credentials)
       .buildClient
+
+  /**
+   * Clean up all created indexes, at spec start-up
+   */
+
+  override def beforeAll(): Unit = {
+
+    super.beforeAll()
+    listIndexes().foreach {
+      index => dropIndexIfExists(index, sleep = false)
+    }
+  }
+
+  /**
+   * Clean up all created indexes, at spec tear-down
+   */
+
+  override final def afterAll(): Unit = {
+
+    super.afterAll()
+    listIndexes().foreach {
+      index => dropIndexIfExists(index, sleep = false)
+    }
+  }
 
   /**
    * Get the minimum set of options required for reading or writing to a Search index
@@ -39,8 +65,8 @@ trait SearchITSpec
   protected final def optionsForAuthAndIndex(name: String): Map[String, String] = {
 
     Map(
-      IOConfig.END_POINT_CONFIG -> SEARCH_END_POINT,
-      IOConfig.API_KEY_CONFIG -> SEARCH_API_KEY,
+      IOConfig.END_POINT_CONFIG -> propertiesSupplier.endPoint(),
+      IOConfig.API_KEY_CONFIG -> propertiesSupplier.apiKey(),
       IOConfig.INDEX_CONFIG -> name
     )
   }
@@ -81,6 +107,35 @@ trait SearchITSpec
   }
 
   /**
+   * Create an index from the schema of a document that extends [[ITDocument]]
+   * @param indexName index name
+   * @tparam T type of document (must extend [[AbstractITDocument]] and be a case class)
+   */
+
+  protected final def createIndexFromSchemaOf[T <: ITDocument with Product: TypeTag](indexName: String): Unit = {
+
+    // Define Search fields
+    val searchFields = Encoders.product[T].schema.map {
+      spf =>
+        val sef = SchemaUtils.toSearchField(spf, Map.empty, None)
+        if (sef.getName.equals("id")) {
+          sef.setKey(true)
+        } else sef
+    }
+
+    // Create index
+    searchIndexClient.createIndex(
+      new SearchIndex(
+        indexName,
+        JavaScalaConverters.seqToList(searchFields)
+      )
+    )
+
+    // Wait for some seconds in order to ensure test consistency
+    Thread.sleep(5000)
+  }
+
+  /**
    * Get the names of existing Search indexes
    * @return collection of existing indexes
    */
@@ -99,20 +154,6 @@ trait SearchITSpec
    */
 
   protected final def indexExists(name: String): Boolean = SearchUtils.indexExists(searchIndexClient, name)
-
-  /**
-   * Count the documents within an index (approximately)
-   * @param name index name
-   * @return approximate number of documents within an index
-   */
-
-  protected final def countDocumentsForIndex(name: String): Long = {
-
-    SearchUtils.getSearchPagedIterable(
-      getSearchClient(name),
-      new SearchOptions().setIncludeTotalCount(true)
-    ).getTotalCount
-  }
 
   /**
    * Drop an index, if it exists

@@ -1,8 +1,19 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import java.util.Properties
+import java.lang.{Boolean => JBoolean}
+import scala.io.Source
+import scala.util.Try
+
+/**
+ * Collection of instances of [[IntegrationPropertiesSupplier]]
+ */
 
 object IntegrationPropertiesSuppliers {
+
+  /**
+   * Supplier that retrieves integration properties by reading env variables
+   */
 
   private object EnvSupplier
     extends IntegrationPropertiesSupplier {
@@ -16,15 +27,61 @@ object IntegrationPropertiesSuppliers {
         case Some(value) => value
         case None => throw new IllegalStateException(
           s"A ${this.getClass.getSimpleName} has been configured, " +
-            s"but env property $key does not exist. Please define such and property and then repeat the test")
+            s"but env property $key does not exist. Please define such property and then repeat the test")
       }
     }
   }
+
+  /**
+   * Supplier that retrieves integration properties by reading a local .secret file
+   * @param properties properties from the secret file
+   */
 
   private case class FileSupplier(private val properties: Properties)
     extends IntegrationPropertiesSupplier {
 
     override def endPoint(): String = properties.getProperty("azure.search.endpoint")
     override def apiKey(): String = properties.getProperty("azure.search.apiKey")
+  }
+
+  /**
+   * Resolve which instance of [[IntegrationPropertiesSupplier]] should be used, by reading the value of an env variable
+   * @return an instance of [[IntegrationPropertiesSupplier]]
+   */
+
+  final def resolve(): IntegrationPropertiesSupplier = {
+
+    // Detect if we're on CI/CD by reading an env variable
+    val isCICDEnv = sys.env.get("IS_CI_CD_ENV").exists(JBoolean.parseBoolean)
+    if (isCICDEnv) {
+      EnvSupplier
+    } else {
+      createSecretSupplier(".integration.secrets")
+    }
+  }
+
+  /**
+   * Create an instance of [[IntegrationPropertiesSupplier]] by reading a local .secret file
+   * <br>
+   * Used for executing single integration tests in a local environment
+   * @param fileName secret file name
+   * @return an instance of [[IntegrationPropertiesSupplier]] that will retrieve properties from a local secret file
+   */
+
+  //noinspection SameParameterValue
+  private def createSecretSupplier(fileName: String): IntegrationPropertiesSupplier = {
+
+    Try {
+      val properties = new Properties()
+      properties.load(Source.fromFile(fileName).reader())
+      properties
+    }.toEither.right.map(FileSupplier) match {
+      case Left(value) => throw new IllegalStateException(
+        s"Could not load local secrets file $fileName. " +
+          s"Cause: ${value.getMessage}",
+        value
+      )
+      case Right(value) => value
+    }
   }
 }

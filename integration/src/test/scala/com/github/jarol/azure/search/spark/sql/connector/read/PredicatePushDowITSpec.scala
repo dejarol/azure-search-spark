@@ -1,9 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 class PredicatePushDowITSpec
-  extends SearchSparkITSpec {
+  extends BasicSpec {
 
   it("a") {
 

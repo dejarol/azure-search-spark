@@ -4,7 +4,7 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
-import com.github.jarol.azure.search.spark.sql.connector.{SearchSparkITSpec, SearchTestUtils}
+import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTestUtils}
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.util.{List => JList}
 
 class ODataExpressionsSpec
-  extends SearchSparkITSpec {
+  extends SearchITSpec {
 
   private lazy val now = LocalDate.now()
   private lazy val indexName = "odata-expressions-spec"

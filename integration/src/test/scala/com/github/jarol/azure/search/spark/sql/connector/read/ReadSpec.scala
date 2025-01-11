@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.SearchSparkITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
+import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{DataTypes, StructType}
@@ -13,7 +13,8 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
-  extends SearchSparkITSpec {
+  extends SearchITSpec
+    with SparkSpec {
 
   private lazy val simpleBeansIndex = "read-simple-beans"
   private lazy val atomicBeansIndex = "read-atomic-beans"

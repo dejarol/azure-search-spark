@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.SearchDocument
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer, SearchSparkITSpec, SearchTestUtils}
+import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer, SearchITSpec, SearchTestUtils}
 import com.github.jarol.azure.search.spark.sql.connector.models._
 
 /**
@@ -10,9 +10,7 @@ import com.github.jarol.azure.search.spark.sql.connector.models._
  */
 
 trait SearchPartitionITSPec
-  extends SearchSparkITSpec {
-
-  protected final val defaultIdGetter: DocumentIDGetter[SearchDocument] = (document: SearchDocument) => document.getProperty[String]("id")
+  extends SearchITSpec {
 
   /**
    * Assert that a [[SearchPartition]] retrieves the proper set of documents
@@ -23,12 +21,12 @@ trait SearchPartitionITSPec
    * @tparam T document type (should have both a [[DocumentSerializer]] and [[DocumentIDGetter]] in scope)
    */
 
-  protected final def assertCountPerPartition[T <: AbstractITDocument](
-                                                                        documents: Seq[T],
-                                                                        index: String,
-                                                                        partition: SearchPartition,
-                                                                        expectedPredicate: T => Boolean
-                                                                      ): Unit = {
+  protected final def assertCountPerPartition[T <: ITDocument](
+                                                                documents: Seq[T],
+                                                                index: String,
+                                                                partition: SearchPartition,
+                                                                expectedPredicate: T => Boolean
+                                                              ): Unit = {
 
     // Write documents
     val expected: Seq[T] = documents.filter(expectedPredicate)
@@ -43,21 +41,6 @@ trait SearchPartitionITSPec
 
     // Assertions: same size, same set of document ids
     actual should have size expected.size
-    actual.map(defaultIdGetter.getId) should contain theSameElementsAs expected.map(_.id)
-  }
-
-  /**
-   * Truncate an index, if it exists
-   * @param index index name
-   */
-
-  protected final def truncateIndex(index: String): Unit = {
-
-    if (indexExists(index)) {
-      SearchTestUtils.truncateIndex(
-        getSearchClient(index),
-        defaultIdGetter
-      )
-    }
+    actual.map(_.get("id").asInstanceOf[String]) should contain theSameElementsAs expected.map(_.id)
   }
 }

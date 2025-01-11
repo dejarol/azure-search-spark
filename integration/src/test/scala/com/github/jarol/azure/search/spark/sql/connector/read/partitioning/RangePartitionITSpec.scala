@@ -1,38 +1,29 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentIDGetter, DocumentSerializer}
 import com.github.jarol.azure.search.spark.sql.connector.models._
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 class RangePartitionITSpec
   extends SearchPartitionITSPec {
 
-  private lazy val (indexName, partitionField) = ("range-partition-it-spec", "value")
   private lazy val (lowerBound, upperBound) = (2, 5)
-
-  private implicit lazy val serializer: DocumentSerializer[PairBean[Int]] = PairBean.serializerFor[Int]
-  private implicit lazy val idGetter: DocumentIDGetter[PairBean[Int]] = idGetterFor()
+  private lazy val (indexName, partitionField) = ("range-partition-it-spec", "intValue")
+  private lazy val documents: Seq[PushdownBean] = Seq(
+    PushdownBean(Some("john"), None, None),
+    PushdownBean(None, Some(lowerBound - 1), None),
+    PushdownBean(Some("john"), Some(lowerBound), None),
+    PushdownBean(None, Some(lowerBound + 1), None),
+    PushdownBean(Some("john"), Some(upperBound - 1), None),
+    PushdownBean(None, Some(upperBound), None),
+    PushdownBean(None, Some(upperBound + 1), None)
+  )
 
   override def beforeAll(): Unit = {
 
     // Clean up and create index
     super.beforeAll()
-    createIndexFromSchemaOf[PairBean[Int]](indexName)
-  }
-
-  /**
-   * Create a collection of documents
-   * @param values document values
-   * @return a collection of documents
-   */
-
-  private def createDocuments(values: Option[Int]*): Seq[PairBean[Int]] = {
-
-    values.zipWithIndex.map {
-      case (value, index) => PairBean(
-        String.valueOf(index),
-        value
-      )
-    }
+    createIndexFromSchemaOf[PushdownBean](indexName)
+    writeDocuments(indexName, documents)
   }
 
   /**
@@ -46,15 +37,15 @@ class RangePartitionITSpec
   private def createPartition(
                                inputFilter: Option[String],
                                lower: Option[Int],
-                               upper: Option[Int]
+                               upper: Option[Int],
+                               pushedPredicates: Seq[ODataExpression]
                              ): SearchPartition = {
 
-    // TODO: fix method for adding predicates
     RangePartition(
       0,
       inputFilter,
       None,
-      Seq.empty,
+      pushedPredicates,
       partitionField,
       lower.map(String.valueOf),
       upper.map(String.valueOf)
@@ -66,72 +57,39 @@ class RangePartitionITSpec
       describe("retrieve documents whose field value") {
         it("is less than given upper bound or null") {
 
-          val documents: Seq[PairBean[Int]] = createDocuments(
-            None,
-            Some(upperBound - 1),
-            Some(upperBound),
-            Some(upperBound + 1)
-          )
-
           // Assertion
-          val lessThanUpperBoundOrNull: PairBean[Int] => Boolean = _.value match {
-            case Some(value) => value < upperBound
-            case None => true
-          }
-
+          val lessThanUpperBoundOrNull: PushdownBean => Boolean = _.intValue.forall(_ < upperBound)
           assertCountPerPartition(
             documents,
             indexName,
-            createPartition(None, None, Some(upperBound)),
+            createPartition(None, None, Some(upperBound), Seq.empty),
             lessThanUpperBoundOrNull
           )
         }
 
         it("is greater or equal than given lower bound") {
 
-          truncateIndex(indexName)
-          val documents: Seq[PairBean[Int]] = createDocuments(
-            None,
-            Some(lowerBound - 1),
-            Some(lowerBound),
-            Some(lowerBound + 1)
-          )
-
           // Assertion
-          val greaterOrEqualLowerBound: PairBean[Int] => Boolean = _.value.exists {
-            _ >= lowerBound
-          }
-
+          val greaterOrEqualLowerBound: PushdownBean => Boolean = _.intValue.exists(_ >= lowerBound)
           assertCountPerPartition(
             documents,
             indexName,
-            createPartition(None, Some(lowerBound), None),
+            createPartition(None, Some(lowerBound), None, Seq.empty),
             greaterOrEqualLowerBound
           )
         }
 
         it("falls within given range") {
 
-          truncateIndex(indexName)
-          val documents: Seq[PairBean[Int]] = createDocuments(
-            None,
-            Some(lowerBound - 1),
-            Some(lowerBound),
-            Some(lowerBound + 1),
-            Some(upperBound - 1),
-            Some(upperBound),
-            Some(upperBound + 1)
-          )
-
           // Assertion
-          val inRange: PairBean[Int] => Boolean = _.value.exists {
+          val inRange: PushdownBean => Boolean = _.intValue.exists {
             v => v >= lowerBound && v < upperBound
           }
 
           assertCountPerPartition(
             documents,
             indexName,
-            createPartition(None, Some(lowerBound), Some(upperBound)),
+            createPartition(None, Some(lowerBound), Some(upperBound), Seq.empty),
             inRange
           )
         }
