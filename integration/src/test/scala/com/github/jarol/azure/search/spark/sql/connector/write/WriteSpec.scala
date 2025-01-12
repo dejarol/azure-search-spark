@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
+// TODO: rework
 class WriteSpec
   extends SearchITSpec
     with SparkSpec {
@@ -29,13 +30,13 @@ class WriteSpec
    * @param mode write [[SaveMode]]
    */
 
-  private def writeUsingDataSource[T <: AbstractITDocument with Product: TypeTag](
-                                                                                   index: String,
-                                                                                   documents: Seq[T],
-                                                                                   columnNames: Option[Seq[String]],
-                                                                                   extraOptions: Option[Map[String, String]],
-                                                                                   mode: SaveMode = SaveMode.Append
-                                                                                 ): Unit = {
+  private def writeUsingDataSource[T <: ITDocument with Product: TypeTag](
+                                                                           index: String,
+                                                                           documents: Seq[T],
+                                                                           columnNames: Option[Seq[String]],
+                                                                           extraOptions: Option[Map[String, String]],
+                                                                           mode: SaveMode = SaveMode.Append
+                                                                         ): Unit = {
 
     // Create dataFrame
     val dataFrame = columnNames.map {

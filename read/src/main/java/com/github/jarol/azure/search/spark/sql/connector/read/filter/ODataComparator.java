@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.filter;
 
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * OData comparison operators
@@ -16,20 +17,20 @@ public enum ODataComparator {
     LEQ("<=", "le");
 
     private final String predicateName;
-    private final String odataValue;
+    private final String oDataValue;
 
     /**
      * Create an instance
-     * @param odataValue inner value
+     * @param oDataValue inner value
      */
 
     @Contract(pure = true)
     ODataComparator(
-            String predicateName,
-            String odataValue
+            @NotNull String predicateName,
+            @NotNull String oDataValue
     ) {
         this.predicateName = predicateName;
-        this.odataValue = odataValue;
+        this.oDataValue = oDataValue;
     }
 
     /**
@@ -49,6 +50,6 @@ public enum ODataComparator {
 
     @Contract(pure = true)
     public String oDataValue() {
-        return odataValue;
+        return oDataValue;
     }
 }

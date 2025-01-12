@@ -12,6 +12,7 @@ import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, OffsetDateTime}
 
+// TODO: rework
 class ReadSpec
   extends SearchITSpec
     with SparkSpec {
@@ -93,13 +94,14 @@ class ReadSpec
     output.getAsOpt[TOutput](colName) shouldBe encodingFunction(input)
   }
 
-  private def assertEffectOfPredicatePushdown[TDocument <: AbstractITDocument](
-                                                                               predicate: Column,
-                                                                               expectedPredicateNames: Seq[String],
-                                                                               inputDocuments: Seq[TDocument],
-                                                                               expectedPredicate: TDocument => Boolean
-                                                                             ): Unit = {
+  private def assertEffectOfPredicatePushdown[TDocument <: ITDocument](
+                                                                        predicate: Column,
+                                                                        expectedPredicateNames: Seq[String],
+                                                                        inputDocuments: Seq[TDocument],
+                                                                        expectedPredicate: TDocument => Boolean
+                                                                      ): Unit = {
 
+    // Read data using dataSource
     val df = spark.read.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(pushdownPredicateIndex))
       .load().filter(predicate)
@@ -451,6 +453,20 @@ class ReadSpec
             // Less
             pushDownAssertion(col("intValue") < 2, Seq("<"), _.intValue.exists(_ < 2))
             pushDownAssertion(col("intValue") <= 2, Seq("<="), _.intValue.exists(_ <= 2))
+          }
+
+          it("SQL-like IN expressions") {
+
+            // TODO: test
+          }
+
+          it("logical combination of other predicates") {
+
+            // And
+            // TODO: test
+
+            // Or
+            // TODO: test
           }
         }
       }
