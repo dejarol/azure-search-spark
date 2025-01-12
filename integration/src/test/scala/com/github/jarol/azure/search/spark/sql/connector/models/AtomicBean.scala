@@ -1,7 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
-
 import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.util.{Map => JMap}

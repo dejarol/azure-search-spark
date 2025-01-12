@@ -19,19 +19,16 @@ class SearchScan(
                 )
   extends Scan {
 
+  // Convert pushed predicates to OData expressions
+  val pushedExpressions: Seq[ODataExpression] = pushedPredicates.map {
+    ODataExpressionBuilder.build
+  }.collect {
+    case Some(value) => value
+  }
+
   override def readSchema(): StructType = schema
 
-  override def toBatch: Batch = {
-
-    // Convert pushed predicates to OData expression adapters
-    val pushedExpressions: Array[ODataExpression] = pushedPredicates.map {
-      ODataExpressionBuilder.build
-    }.collect {
-      case Some(value) => value
-    }
-
-    new SearchBatch(readConfig, schema, pushedExpressions)
-  }
+  override def toBatch: Batch = new SearchBatch(readConfig, schema, pushedExpressions)
 
   /**
    * Get the scan description

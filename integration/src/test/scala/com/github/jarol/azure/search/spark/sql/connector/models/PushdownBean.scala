@@ -1,11 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.ITDocumentSerializer
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 
 import java.sql.Timestamp
 import java.time.{LocalDate, LocalTime}
 import java.util.{UUID, Map => JMap}
+
+/**
+ * Model to use for integration tests that deal with predicate pushdown
+ * @param id document id
+ * @param stringValue optional string value
+ * @param intValue optional int value
+ * @param dateValue optional date value
+ */
 
 case class PushdownBean(
                          override val id: String,
@@ -15,7 +22,12 @@ case class PushdownBean(
                        )
   extends AbstractITDocument(id) {
 
-  def dateValueAsLocalDate: Option[LocalDate] = dateValue.map(_.toLocalDateTime.toLocalDate)
+  /**
+   * Get the date value as a [[LocalDate]]
+   * @return date value as a local date
+   */
+
+  def dateAsLocalDate: Option[LocalDate] = dateValue.map(_.toLocalDateTime.toLocalDate)
 }
 
 object PushdownBean {
@@ -33,6 +45,14 @@ object PushdownBean {
         .maybeAddProperty("dateValue", document.dateValue)
     }
   }
+
+  /**
+   * Create an instance
+   * @param stringValue optional string value
+   * @param intValue optional int value
+   * @param dateValue optional date value
+   * @return a [[PushdownBean]] instance
+   */
 
   def apply(
              stringValue: Option[String],

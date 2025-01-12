@@ -9,6 +9,7 @@ import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
 import com.azure.search.documents.models.SearchOptions;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
+import com.github.jarol.azure.search.spark.sql.connector.models.DocumentSerializer;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,45 +97,6 @@ public final class SearchTestUtils {
         // Create the batch and index documents
         IndexDocumentsBatch<SearchDocument> batch = new IndexDocumentsBatch<SearchDocument>().addActions(actions);
         searchClient.indexDocuments(batch);
-    }
-
-    /**
-     * Delete documents from an index
-     * @param searchClient Search client
-     * @param documents documents
-     * @param idGetter id getter for given documents
-     * @param <TDocument> document type
-     */
-
-    public static <TDocument> void deleteDocuments(
-            @NotNull SearchClient searchClient,
-            @NotNull List<TDocument> documents,
-            @NotNull DocumentIDGetter<TDocument> idGetter
-    ) {
-
-        List<String> keyValues = documents.stream()
-                .map(idGetter::getId).
-                collect(Collectors.toList());
-
-        searchClient.indexDocuments(
-                new IndexDocumentsBatch<SearchDocument>()
-                .addDeleteActions("id", keyValues)
-        );
-    }
-
-    /**
-     * Truncate an index by deleting all documents
-     * @param client client
-     * @param idGetter id getter for {@link SearchDocument}
-     */
-
-    public static void truncateIndex(
-            @NotNull SearchClient client,
-            @NotNull DocumentIDGetter<SearchDocument> idGetter
-    ) {
-
-        List<SearchDocument> allDocuments = readAllDocuments(client);
-        deleteDocuments(client, allDocuments, idGetter);
     }
 
     /**

@@ -134,90 +134,100 @@ class ODataExpressionsSpec
           )
         }
 
-        it("comparisons") {
+        describe("comparisons for") {
 
-          // [a] EQUAL
-          // [a.1] equal: string
-          assertExpressionBehavior(
-            ODataExpressions.comparison(stringValue, createStringLiteral("one"), ODataComparator.EQ),
-            _.stringValue.exists(_.equals("one"))
-          )
+          it("strings") {
 
-          // [a.2] equal: int
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(4), ODataComparator.EQ),
-            _.intValue.exists(_.equals(4))
-          )
+            // EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(stringValue, createStringLiteral("one"), ODataComparator.EQ),
+              _.stringValue.exists(_.equals("one"))
+            )
+          }
 
-          // [a.3] equal: date
-          assertExpressionBehavior(
-            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.EQ),
-            _.dateValueAsLocalDate.exists(_.equals(now))
-          )
+          it("numbers") {
 
-          // [b] NOT_EQUAL
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(1), ODataComparator.NE),
-            _.intValue.forall {
-              v => !v.equals(1)
-            }
-          )
+            // EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(4), ODataComparator.EQ),
+              _.intValue.exists(_.equals(4))
+            )
 
-          // [c] GREATER
-          // [c.1] greater: int
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.GT),
-            _.intValue.exists(_ > 2)
-          )
+            // NOT_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(1), ODataComparator.NE),
+              _.intValue.forall {
+                v => !v.equals(1)
+              }
+            )
 
-          // [c.2] greater: date
-          assertExpressionBehavior(
-            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GT),
-            _.dateValueAsLocalDate.exists(_.isAfter(now))
-          )
+            // GREATER
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.GT),
+              _.intValue.exists(_ > 2)
+            )
 
-          // [d] GREATER_EQUAL
-          // [d.1] geq: int
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.GEQ),
-            _.intValue.exists(_ >= 2)
-          )
+            // GREATER_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.GEQ),
+              _.intValue.exists(_ >= 2)
+            )
 
-          // [d.2] geq: date
-          assertExpressionBehavior(
-            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GEQ),
-            _.dateValueAsLocalDate.exists {
-              d => d.equals(now) || d.isAfter(now)
-            }
-          )
+            // LESS
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.LT),
+              _.intValue.exists(_ < 2)
+            )
 
-          // [e] LESS
-          // [e.1] lt: int
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.LT),
-            _.intValue.exists(_ < 2)
-          )
+            // LESS_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.LEQ),
+              _.intValue.exists(_ <= 2)
+            )
+          }
 
-          // [e.2] lt: date
-          assertExpressionBehavior(
-            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LT),
-            _.dateValueAsLocalDate.exists(_.isBefore(now))
-          )
+          it("dates") {
 
-          // [f] LESS_EQUAL
-          // [f.1] leq: int
-          assertExpressionBehavior(
-            ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.LEQ),
-            _.intValue.exists(_ <= 2)
-          )
+            // EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.EQ),
+              _.dateAsLocalDate.exists(_.equals(now))
+            )
 
-          // [f.2] leq: date
-          assertExpressionBehavior(
-            ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LEQ),
-            _.dateValueAsLocalDate.exists {
-              d => d.equals(now) || d.isBefore(now)
-            }
-          )
+            // NOT_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.NE),
+              _.dateAsLocalDate.forall(v => !v.equals(now))
+            )
+
+            // GREATER
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GT),
+              _.dateAsLocalDate.exists(_.isAfter(now))
+            )
+
+            // GREATER_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.GEQ),
+              _.dateAsLocalDate.exists {
+                d => d.equals(now) || d.isAfter(now)
+              }
+            )
+
+            // LESS
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LT),
+              _.dateAsLocalDate.exists(_.isBefore(now))
+            )
+
+            // LESS_EQUAL
+            assertExpressionBehavior(
+              ODataExpressions.comparison(dateValue, createDateLiteral(now), ODataComparator.LEQ),
+              _.dateAsLocalDate.exists {
+                d => d.equals(now) || d.isBefore(now)
+              }
+            )
+          }
         }
 
         it("negating an expression") {

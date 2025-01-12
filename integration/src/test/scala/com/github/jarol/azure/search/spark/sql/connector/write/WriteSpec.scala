@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.{PropertyDeserializer, SearchITSpec, SparkSpec}
+import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.SaveMode
 
 import java.lang.{Double => JDouble, Long => JLong}

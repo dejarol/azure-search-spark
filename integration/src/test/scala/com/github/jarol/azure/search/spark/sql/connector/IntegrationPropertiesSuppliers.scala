@@ -11,6 +11,8 @@ import scala.util.Try
 
 object IntegrationPropertiesSuppliers {
 
+  final val CI_CD_ENV_VAR = "IS_CI_CD_ENV"
+
   /**
    * Supplier that retrieves integration properties by reading env variables
    */
@@ -52,7 +54,7 @@ object IntegrationPropertiesSuppliers {
   final def resolve(): IntegrationPropertiesSupplier = {
 
     // Detect if we're on CI/CD by reading an env variable
-    val isCICDEnv = sys.env.get("IS_CI_CD_ENV").exists(JBoolean.parseBoolean)
+    val isCICDEnv = sys.env.get(CI_CD_ENV_VAR).exists(JBoolean.parseBoolean)
     if (isCICDEnv) {
       EnvSupplier
     } else {
@@ -76,7 +78,10 @@ object IntegrationPropertiesSuppliers {
       properties.load(Source.fromFile(fileName).reader())
       properties
     }.toEither.right.map(FileSupplier) match {
-      case Left(value) => throw new IllegalStateException(s"Could not load local secrets file $fileName", value)
+      case Left(value) => throw new IllegalStateException(
+        s"Could not load local secrets file $fileName. " +
+          s"You should either create a file named $fileName at project root " +
+          s"or set env variable $CI_CD_ENV_VAR to 'true' to retrieve properties from env variables", value)
       case Right(value) => value
     }
   }

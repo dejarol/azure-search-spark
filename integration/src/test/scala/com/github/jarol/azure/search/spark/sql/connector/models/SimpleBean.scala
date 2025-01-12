@@ -1,7 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, ITDocumentSerializer}
-
 import java.sql.{Date, Timestamp}
 import java.time.{LocalDate, LocalTime}
 import java.util.{Map => JMap}

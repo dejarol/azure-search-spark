@@ -8,7 +8,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.models.ITDocument
+import com.github.jarol.azure.search.spark.sql.connector.models.{DocumentDeserializer, DocumentSerializer, ITDocument}
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType

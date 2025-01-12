@@ -1,6 +1,5 @@
-package com.github.jarol.azure.search.spark.sql.connector;
+package com.github.jarol.azure.search.spark.sql.connector.models;
 
-import com.github.jarol.azure.search.spark.sql.connector.models.ITDocument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;

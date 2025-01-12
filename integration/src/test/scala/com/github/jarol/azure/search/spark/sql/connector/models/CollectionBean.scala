@@ -1,7 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, ITDocumentSerializer, PropertyDeserializer, PropertySerializer}
-
 import java.util.{Map => JMap}
 
 /**

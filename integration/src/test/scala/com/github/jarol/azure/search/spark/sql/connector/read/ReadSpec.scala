@@ -105,6 +105,7 @@ class ReadSpec
       .load().filter(predicate)
 
     // Retrieve pushed predicates
+    // TODO: rework tests for using OData expressions rather than Spark predicates
     val maybePushedPredicates = df.queryExecution.executedPlan.collect {
       case scan: BatchScanExec =>
         scan.scan
@@ -128,6 +129,8 @@ class ReadSpec
   describe("Search dataSource") {
     describe(SHOULD) {
       describe("read documents") {
+
+        // TODO: remove ignore
         ignore("that match a filter") {
 
           val id = "hello"

@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.models
 
 import com.azure.search.documents.models.IndexActionType
-import com.github.jarol.azure.search.spark.sql.connector.{DocumentDeserializer, ITDocumentSerializer}
 
 import java.util.{Map => JMap}
 

@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.time.LocalDate
 
@@ -36,7 +36,7 @@ class FacetNullValuePartitionITSpec
   /**
    * Create a partition instance
    * @param inputFilter input filter
-   * @param facets facets
+   * @param facets      facets
    * @return a partition instance
    */
 
@@ -44,7 +44,7 @@ class FacetNullValuePartitionITSpec
                                inputFilter: Option[String],
                                facets: Seq[String],
                                pushedExpressions: Seq[ODataExpression]
-                             ): SearchPartition = {
+                             ): FacetNullValuePartition = {
 
     FacetNullValuePartition(
       inputFilter,
@@ -57,6 +57,32 @@ class FacetNullValuePartitionITSpec
 
   describe(anInstanceOf[FacetNullValuePartition]) {
     describe(SHOULD) {
+      it("have partitionId equal to the size of facet values") {
+
+        val values = Seq(1, 2)
+        createPartition(
+          None,
+          values.map(String.valueOf),
+          Seq.empty
+        ).getPartitionId shouldBe values.size
+      }
+
+      it("create a facet filter that includes null or different values") {
+
+        val (facetFieldName, facetValues) = ("type", Seq(1, 2, 3).map(String.valueOf))
+        val partition = createPartition(None, facetValues, Seq.empty)
+        val actual = partition.facetFilter
+        val eqNull = s"$facetFieldName eq null"
+        val equalToOtherValues = facetValues.map {
+          value => s"$facetFieldName eq $value"
+        }.mkString(" or ")
+
+        val expected  = s"$eqNull or not ($equalToOtherValues)"
+        actual.contains(eqNull) shouldBe true
+        actual.contains(equalToOtherValues) shouldBe true
+        actual shouldBe expected
+      }
+
       describe("retrieve documents") {
 
         it(s"whose $FACET_FIELD_IS_NULL or $NOT_MATCHING_OTHER_VALUES") {
@@ -83,19 +109,18 @@ class FacetNullValuePartitionITSpec
 
           it("both input filter and pushed predicate") {
 
+            val dateNotNull: ODataExpression = new ODataExpression {
+              override def toUriLiteral: String = "dateValue ne null"
+            }
+
             val expectedPredicate: PushdownBean => Boolean = p => stringValueIsNullOrNotEqualToJohn(p) && intValueNotNull(p) && p.dateValue.isDefined
             assertCountPerPartition[PushdownBean](
               documents,
               indexName,
               createPartition(
-                Some(s"intValue ne null"),
+                Some("intValue ne null"),
                 Seq(john),
-                Seq(
-                  ODataExpressions.isNull(
-                    ODataExpressions.fieldReference(Seq("dateValue")),
-                    negate = true
-                  )
-                ),
+                Seq(dateNotNull)
               ),
               expectedPredicate
             )
