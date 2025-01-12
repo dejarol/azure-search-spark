@@ -126,15 +126,15 @@ object ODataExpressionBuilder {
                           ): Option[ODataExpression] = {
 
     val allDefined = inExpressions.forall(_.isDefined)
-    val allStringLiterals: Boolean = inExpressions.forall {
+    val allStringLiterals: Boolean = inExpressions.collect {
       case Some(value) => value match {
         case ODataExpressions.Literal(dataType, _) => dataType.equals(DataTypes.StringType)
         case _ => false
       }
-    }
+    }.forall(identity)
 
     if (allDefined && allStringLiterals) {
-      createInExpressionForStringField(
+      createInExpression(
         leftSide,
         inExpressions.collect {
           case Some(value) => value
@@ -145,10 +145,17 @@ object ODataExpressionBuilder {
     }
   }
 
-  private def createInExpressionForStringField(
-                                                leftSide: Option[ODataExpression],
-                                                expressions: Seq[ODataExpression]
-                                              ): Option[ODataExpression] = {
+  /**
+   * Create an <code>in</code> expression
+   * @param leftSide left side
+   * @param expressions collection of expressions for the <code>in</code> clause
+   * @return an <code>in</code> expression
+   */
+
+  private def createInExpression(
+                                  leftSide: Option[ODataExpression],
+                                  expressions: Seq[ODataExpression]
+                                ): Option[ODataExpression] = {
 
     val expressionsAsStrings: Seq[String] = expressions.map(_.toUriLiteral)
     val maybeSeparator: Option[String] = maybeSetSeparator(expressionsAsStrings, ",")
@@ -161,9 +168,16 @@ object ODataExpressionBuilder {
     } yield ODataExpressions.in(leftS, expressions, separator)
   }
 
-  private def maybeSetSeparator(a: Seq[String], sep: String): Option[String] = {
+  /**
+   * Return an optional separator (defined if and only if none of the values contains the separator itself)
+   * @param values values
+   * @param sep separator
+   * @return an optional separator, to use for joining <code>in</code> clause into a single string
+   */
 
-    if (a.exists(_.contains(sep))) {
+  private def maybeSetSeparator(values: Seq[String], sep: String): Option[String] = {
+
+    if (values.exists(_.contains(sep))) {
       None
     } else Some(sep)
   }

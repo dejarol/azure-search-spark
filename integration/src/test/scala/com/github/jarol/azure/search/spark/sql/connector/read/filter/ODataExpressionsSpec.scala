@@ -238,12 +238,6 @@ class ODataExpressionsSpec
         it("SQL-style IN conditions for strings") {
 
           val stringValues = Seq("one", "two")
-          println(ODataExpressions.in(
-            stringValue,
-            stringValues.map(createStringLiteral),
-            ","
-          ).toUriLiteral)
-
           assertExpressionBehavior(
             ODataExpressions.in(
               stringValue,
