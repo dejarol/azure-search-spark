@@ -2,7 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.models
 
 import java.sql.Timestamp
 import java.time.OffsetDateTime
-import java.util.{Map => JMap}
+import java.util.{UUID, Map => JMap}
 
 /**
  * Bean for read/write integrations tests
@@ -43,7 +43,6 @@ object AtomicBean {
 
   /**
    * Create an instance
-   * @param id id
    * @param stringValue string
    * @param intValue int
    * @param longValue long
@@ -53,18 +52,17 @@ object AtomicBean {
    * @return an instance
    */
 
-  def from(
-            id: String,
-            stringValue: Option[String],
-            intValue: Option[Int],
-            longValue: Option[Long],
-            doubleValue: Option[Double],
-            booleanValue: Option[Boolean],
-            timestampValue: Option[OffsetDateTime]
-          ): AtomicBean = {
+  def apply(
+             stringValue: Option[String],
+             intValue: Option[Int],
+             longValue: Option[Long],
+             doubleValue: Option[Double],
+             booleanValue: Option[Boolean],
+             timestampValue: Option[OffsetDateTime]
+           ): AtomicBean = {
 
     AtomicBean(
-      id,
+      UUID.randomUUID().toString,
       stringValue,
       intValue,
       longValue,

@@ -5,30 +5,6 @@ import com.azure.search.documents.models.IndexActionType
 import java.util.{Map => JMap}
 
 /**
- * Bean for read/write integration tests
- * @param id document id
- * @param value value
- */
-
-class BaseActionTypeBean(
-                          override val id: String,
-                          val value: Option[Int]
-                        )
-  extends AbstractITDocument(id)
-
-object BaseActionTypeBean {
-
-  implicit object Deserializer extends DocumentDeserializer[BaseActionTypeBean] {
-    override def deserialize(document: JMap[String, AnyRef]): BaseActionTypeBean = {
-      new BaseActionTypeBean(
-        document.getProperty[String]("id"),
-        document.maybeGetProperty[Int]("value")
-      )
-    }
-  }
-}
-
-/**
  * Bean for read/write integration tests, including a further field hosting a [[IndexActionType]]
  * @param id document id
  * @param value value
@@ -37,10 +13,10 @@ object BaseActionTypeBean {
 
 case class ActionTypeBean(
                            override val id: String,
-                           override val value: Option[Int],
+                           value: Option[Int],
                            action: String
                          )
-  extends BaseActionTypeBean(id, value) {
+  extends AbstractITDocument(id) {
 }
 
 object ActionTypeBean {

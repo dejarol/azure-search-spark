@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
-// TODO: rework
 class WriteSpec
   extends SearchITSpec
     with SparkSpec {
