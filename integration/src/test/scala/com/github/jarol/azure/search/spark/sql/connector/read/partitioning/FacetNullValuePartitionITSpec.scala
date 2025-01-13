@@ -51,7 +51,7 @@ class FacetNullValuePartitionITSpec
       None,
       pushedExpressions,
       facetField,
-      facets.map(StringUtils.singleQuoted)
+      facets
     )
   }
 
@@ -69,15 +69,15 @@ class FacetNullValuePartitionITSpec
 
       it("create a facet filter that includes null or different values") {
 
-        val (facetFieldName, facetValues) = ("type", Seq(1, 2, 3).map(String.valueOf))
+        val facetValues = Seq("v1", "v2")
         val partition = createPartition(None, facetValues, Seq.empty)
-        val actual = partition.facetFilter
-        val eqNull = s"$facetFieldName eq null"
+        val eqNull = s"$facetField eq null"
         val equalToOtherValues = facetValues.map {
-          value => s"$facetFieldName eq $value"
+          value => s"$facetField eq $value"
         }.mkString(" or ")
 
         val expected  = s"$eqNull or not ($equalToOtherValues)"
+        val actual = partition.facetFilter
         actual.contains(eqNull) shouldBe true
         actual.contains(equalToOtherValues) shouldBe true
         actual shouldBe expected
@@ -90,7 +90,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, Seq(john), Seq.empty),
+            createPartition(None, Seq(john).map(StringUtils.singleQuoted), Seq.empty),
             stringValueIsNullOrNotEqualToJohn
           )
         }
@@ -102,7 +102,7 @@ class FacetNullValuePartitionITSpec
             assertCountPerPartition[PushdownBean](
               documents,
               indexName,
-              createPartition(Some("intValue ne null"), Seq(john), Seq.empty),
+              createPartition(Some("intValue ne null"), Seq(john).map(StringUtils.singleQuoted), Seq.empty),
               expectedPredicate
             )
           }
@@ -119,7 +119,7 @@ class FacetNullValuePartitionITSpec
               indexName,
               createPartition(
                 Some("intValue ne null"),
-                Seq(john),
+                Seq(john).map(StringUtils.singleQuoted),
                 Seq(dateNotNull)
               ),
               expectedPredicate

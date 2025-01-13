@@ -49,7 +49,7 @@ class FacetValuePartitionITSpec
       None,
       pushedPredicates,
       facetField,
-      StringUtils.singleQuoted(facet)
+      facet
     )
   }
 
@@ -67,7 +67,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, facetField, john, Seq.empty),
+            createPartition(None, facetField, StringUtils.singleQuoted(john), Seq.empty),
             stringValueEqJohn
           )
         }
@@ -81,7 +81,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("intValue eq 1"), facetField, john, Seq.empty),
+            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john), Seq.empty),
             expectedPredicate
           )
         }
@@ -100,7 +100,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("intValue eq 1"), facetField, john, Seq(dateValueNotNull)),
+            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john), Seq(dateValueNotNull)),
             expectedPredicate
           )
         }
