@@ -55,11 +55,11 @@ object AbstractSearchPartitionSpec {
    * @param cumulatedFilters cumulated filters
    */
 
+  // TODO: fix
   case class SimpleOptionsBuilder(private val cumulatedFilters: Seq[String])
     extends SearchOptionsBuilder {
     private lazy val filter: String = if (cumulatedFilters.isEmpty) null else cumulatedFilters.mkString(",")
     override def buildOptions(): SearchOptions = new SearchOptions().setFilter(filter)
     override def withFilter(other: String): SearchOptionsBuilder = this.copy(cumulatedFilters = cumulatedFilters :+ other)
-    override def withFacet(facet: String): SearchOptionsBuilder =
   }
 }

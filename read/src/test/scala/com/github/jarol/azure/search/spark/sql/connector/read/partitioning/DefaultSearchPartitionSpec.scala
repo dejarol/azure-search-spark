@@ -22,6 +22,7 @@ class DefaultSearchPartitionSpec
     describe(SHOULD_NOT) {
       it("define any partition filter") {
 
+        // TODO: fix
         val emptySupplier = new SearchOptionsBuilder {
           override def buildOptions(): SearchOptions = new SearchOptions
           override def withFilter(other: String): SearchOptionsBuilder = this

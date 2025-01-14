@@ -13,6 +13,7 @@ class AbstractFacetPartitionSpec
   private lazy val emptySupplier = new SearchOptionsBuilder {
     override def buildOptions(): SearchOptions = new SearchOptions
     override def withFilter(other: String): SearchOptionsBuilder = this
+    override def withFacet(facet: String): SearchOptionsBuilder = this
   }
 
   /**
