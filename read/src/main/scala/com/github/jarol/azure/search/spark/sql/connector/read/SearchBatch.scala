@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.{Constants, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartition, SearchPartitioner}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
@@ -17,8 +16,7 @@ import scala.util.Try
 
 class SearchBatch(
                    private val readConfig: ReadConfig,
-                   private val schema: StructType,
-                   private val pushedExpressions: Seq[ODataExpression]
+                   private val schema: StructType
                  )
   extends Batch
     with Logging {
@@ -27,7 +25,7 @@ class SearchBatch(
   override def planInputPartitions(): Array[InputPartition] = {
 
     // Retrieve the partitioner instance and create the input partitions
-    SearchBatch.createPartitioner(readConfig, pushedExpressions) match {
+    SearchBatch.createPartitioner(readConfig) match {
       case Left(value) => throw value
       case Right(value) => createPartitions(value)
     }
@@ -87,23 +85,17 @@ object SearchBatch {
   /**
    * Try to create an instance of [[SearchPartitioner]]
    * @param readConfig read configuration
-   * @param pushedExpressions predicates that can be pushed down to partitions
    * @return either a [[SearchBatchException]] or the created partitioner
    */
 
-  private[read] def createPartitioner(
-                                       readConfig: ReadConfig,
-                                       pushedExpressions: Seq[ODataExpression]
-                                     ): Either[SearchBatchException, SearchPartitioner] = {
+  private[read] def createPartitioner(readConfig: ReadConfig): Either[SearchBatchException, SearchPartitioner] = {
 
+    // Try to detect a one-arg constructor requiring a ReadConfig
+    // and create a partitioner instance
     Try {
       readConfig.partitionerClass.getDeclaredConstructor(
-        classOf[ReadConfig],
-        classOf[Seq[ODataExpression]]
-      ).newInstance(
-        readConfig,
-        pushedExpressions
-      )
+        classOf[ReadConfig]
+      ).newInstance(readConfig)
     }.toEither.left.map {
       SearchBatchException.forFailedPartitionerCreation(
         readConfig.partitionerClass,

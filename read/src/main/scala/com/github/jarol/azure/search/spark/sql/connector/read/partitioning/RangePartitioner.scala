@@ -5,7 +5,6 @@ import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverter
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.util.{List => JList}
 
@@ -23,11 +22,8 @@ import java.util.{List => JList}
  * @param readConfig read configuration
  */
 
-case class RangePartitioner(
-                             override protected val readConfig: ReadConfig,
-                             override protected val pushedPredicates: Seq[ODataExpression]
-                           )
-  extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
+case class RangePartitioner(override protected val readConfig: ReadConfig)
+  extends AbstractSearchPartitioner(readConfig) {
 
   @throws[ConfigException]
   override def createPartitions(): JList[SearchPartition] = {
@@ -45,9 +41,7 @@ case class RangePartitioner(
       case Left(configException) => throw configException
       case Right(values) => JavaScalaConverters.seqToList(
         RangePartition.createCollection(
-          readConfig.filter,
-          readConfig.select,
-          pushedPredicates,
+          readConfig.searchOptionsConfig,
           partitionFieldName,
           values
         )

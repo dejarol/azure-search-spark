@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 class AbstractSearchPartitionSpec
   extends BasicSpec {
@@ -10,50 +9,36 @@ class AbstractSearchPartitionSpec
    * Create a partition instance
    * @param inputFilter input (user-specified) filter
    * @param partFilter partition filter
-   * @param predicates predicates to push down
    * @return a partition instance
    */
 
   private def createPartitionAndGetFilter(
                                            inputFilter: Option[String],
-                                           partFilter: Option[String],
-                                           predicates: Seq[ODataExpression]
+                                           partFilter: Option[String]
                                          ): String = {
 
+    // TODO: fix
     new AbstractSearchPartition(
-      0, inputFilter, None, predicates
+      0, null
     ) {
       override protected[partitioning] def partitionFilter: Option[String] = partFilter
-    }.getODataFilter
+    }.getSearchOptions.getFilter
   }
 
   describe(anInstanceOf[AbstractSearchPartition]) {
     describe(SHOULD) {
       describe("create a filter that") {
-        it("combines input filter, partition filter and predicate filter") {
+        it("combines partition filter with the supplier filter") {
 
-          val (first, second, thirdField, fourthField) = ("a eq 1", "b eq 2", "c", "d")
-          val thirdIsNotNullPredicate = new ODataExpression {
-            override def toUriLiteral: String = s"$thirdField ne null"
-          }
-          val fourthIsNotNullPredicate = new ODataExpression {
-            override def toUriLiteral: String = s"$fourthField ne null"
-          }
+          val (first, second) = ("a eq 1", "b eq 2")
 
-          // Assert behavior without predicates
-          createPartitionAndGetFilter(None, None, Seq.empty) shouldBe null
-          createPartitionAndGetFilter(Some(first), None, Seq.empty) shouldBe first
-          createPartitionAndGetFilter(None, Some(first), Seq.empty) shouldBe first
-
-          // Assert behavior with only predicates
-          createPartitionAndGetFilter(None, None, Seq(thirdIsNotNullPredicate)) shouldBe thirdIsNotNullPredicate.toUriLiteral
-          createPartitionAndGetFilter(None, None, Seq(thirdIsNotNullPredicate, fourthIsNotNullPredicate)) shouldBe
-            s"(${thirdIsNotNullPredicate.toUriLiteral}) and (${fourthIsNotNullPredicate.toUriLiteral})"
+          // Assert behavior
+          createPartitionAndGetFilter(None, None) shouldBe null
+          createPartitionAndGetFilter(Some(first), None) shouldBe first
+          createPartitionAndGetFilter(None, Some(first)) shouldBe first
 
           // Assert behavior when combining
-          createPartitionAndGetFilter(Some(first), Some(second), Seq.empty) shouldBe s"($first) and ($second)"
-          createPartitionAndGetFilter(Some(first), Some(second), Seq(thirdIsNotNullPredicate)) shouldBe
-            s"($first) and ($second) and (${thirdIsNotNullPredicate.toUriLiteral})"
+          createPartitionAndGetFilter(Some(first), Some(second)) shouldBe s"($first) and ($second)"
         }
       }
     }

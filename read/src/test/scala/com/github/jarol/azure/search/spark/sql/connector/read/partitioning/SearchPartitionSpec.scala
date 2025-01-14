@@ -1,16 +1,15 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JavaScalaConverters}
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
+import com.azure.search.documents.models.SearchOptions
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 import java.util.function.Supplier
-import java.util.{Collections => JCollections, List => JList}
 
 class SearchPartitionSpec
   extends BasicSpec {
 
   private lazy val nullFilter: Supplier[String] = () => null
-  private lazy val emptySelect: Supplier[JList[String]] = () => JCollections.emptyList()
+  private lazy val emptySelect: Supplier[Seq[String]] = () => Seq.empty
 
   /**
    * Create an abstract instance of [[SearchPartition]]
@@ -21,14 +20,16 @@ class SearchPartitionSpec
 
   private def createAbstractPartition(
                                        filterSupplier: Supplier[String],
-                                       selectSupplier: Supplier[JList[String]]
+                                       selectSupplier: Supplier[Seq[String]]
                                      ): SearchPartition = {
 
     new SearchPartition {
       override def getPartitionId: Int = 0
-      override def getODataFilter: String = filterSupplier.get()
-      override def getSelectedFields: JList[String] = selectSupplier.get()
-      override def getPushedPredicates: Array[ODataExpression] = Array.empty
+      override def getSearchOptions: SearchOptions = {
+        new SearchOptions()
+          .setFilter(filterSupplier.get())
+          .setSelect(selectSupplier.get(): _*)
+      }
     }
   }
 
@@ -57,7 +58,7 @@ class SearchPartitionSpec
           val select = Seq("first", "second")
           createAbstractPartition(
             nullFilter,
-            () => JavaScalaConverters.seqToList(select)
+            () => select
           ).getSearchOptions.getSelect should contain theSameElementsAs select
         }
 

@@ -1,50 +1,35 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
-
-import java.util.{Collections => JColl, List => JList}
+import com.azure.search.documents.models.SearchOptions
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
 
 /**
  * Parent class for Scala-based [[SearchPartition]](s)
  * @param partitionId partition id
- * @param inputFilter optional filter to apply during data retrieval
- * @param maybeSelect optional list of index fields to select
- * @param pushedPredicates predicates that support pushdown
+ * @param optionsSupplier delegate object for getting the search options for this partition
  */
 
 abstract class AbstractSearchPartition(
                                         protected val partitionId: Int,
-                                        protected val inputFilter: Option[String],
-                                        protected val maybeSelect: Option[Seq[String]],
-                                        protected val pushedPredicates: Seq[ODataExpression]
+                                        protected val optionsSupplier: SearchOptionsSupplier
                                       )
   extends SearchPartition {
 
   override final def getPartitionId: Int = partitionId
 
-  override final def getODataFilter: String = {
+  override final def getSearchOptions: SearchOptions = {
 
-    // Create the filter related to pushed predicates
-    val predicatesFilter: Option[String] = AbstractSearchPartition.createODataFilter(pushedPredicates.map(_.toUriLiteral))
+    // TODO: improve filter combination
+    val originalOptions = optionsSupplier.createSearchOptions()
+    val overAllFilter: Option[String] = AbstractSearchPartition.createODataFilter(
+      Seq(partitionFilter, originalOptions.maybeFilter)
+        .collect {
+          case Some(value) => value
+        }
+    )
 
-    // Combine input filter, partition filter and predicates filter
-    AbstractSearchPartition.createODataFilter(
-      Seq(inputFilter, partitionFilter, predicatesFilter).collect {
-        case Some(value) => value
-      }
-    ).orNull
-  }
-
-  override final def getPushedPredicates: Array[ODataExpression] = pushedPredicates.toArray
-
-  override final def getSelectedFields: JList[String] = {
-
-    maybeSelect.map {
-      JavaScalaConverters.seqToList
-    }.getOrElse {
-      JColl.emptyList[String]()
-    }
+    originalOptions.setFilter(overAllFilter)
   }
 
   /**

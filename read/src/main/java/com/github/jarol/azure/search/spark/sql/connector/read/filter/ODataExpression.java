@@ -8,8 +8,14 @@ package com.github.jarol.azure.search.spark.sql.connector.read.filter;
  * an OData-syntax compliant expression
  */
 
-@FunctionalInterface
 public interface ODataExpression {
+
+    /**
+     * Get the expression name
+     * @return name of this expression
+     */
+
+    String name();
 
     /**
      * Get the corresponding OData expression

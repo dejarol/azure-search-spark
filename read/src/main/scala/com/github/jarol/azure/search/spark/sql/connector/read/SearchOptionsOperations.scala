@@ -1,31 +1,40 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.models.SearchOptions
+import com.azure.search.documents.models.{QueryType, SearchOptions}
 
 import scala.language.implicitConversions
 
 /**
- * Wrapper class for interacting with [[SearchOptions]] using some standard Scala types
+ * Utility class for interacting with [[SearchOptions]] using some standard Scala types
  * @param original original options
  */
 
 case class SearchOptionsOperations(private val original: SearchOptions) {
 
+  private def maybeGet[T](getter: SearchOptions => T): Option[T] = Option(getter(original))
+
   /**
-   * Update this instance's options using an update function if given configuration is defined
-   * @param config configuration value
-   * @param update update function
+   * Update this instance's options using a setter function if given value is defined
+   * @param maybeValue configuration value
+   * @param setter function that should combine the defined value and this instance in order to create a new, updated instance
    * @tparam T input value type
    * @return the original options if the config is empty, an updated version otherwise
    */
 
-  private def maybeUpdate[T](config: Option[T], update: (SearchOptions, T) => SearchOptions): SearchOptions = {
+  private def maybeUpdate[T](maybeValue: Option[T], setter: (SearchOptions, T) => SearchOptions): SearchOptions = {
 
-    config match {
-      case Some(value) => update(original, value)
+    maybeValue match {
+      case Some(value) => setter(original, value)
       case None => original
     }
   }
+
+  /**
+   * Return the filter
+   * @return a non-empty Option if a filter was defined
+   */
+
+  def maybeFilter: Option[String] = maybeGet(_.getFilter)
 
   /**
    * Set the filter, if defined
@@ -46,6 +55,34 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
     maybeUpdate[Seq[String]](
       select,
       (o, s) => o.setSelect(s: _*)
+    )
+  }
+
+  /**
+   * Set the query type, if defined
+   * @param queryType query type
+   * @return this instance updated with a query type (if defined)
+   */
+
+  def setQueryType(queryType: Option[QueryType]): SearchOptions = {
+
+    maybeUpdate[QueryType](
+      queryType,
+      (o, q) => o.setQueryType(q)
+    )
+  }
+
+  /**
+   * Set the facets, if defined
+   * @param facets facets
+   * @return this instance updated with some facets (if defined)
+   */
+
+  def setFacets(facets: Option[Seq[String]]): SearchOptions = {
+
+    maybeUpdate[Seq[String]](
+      facets,
+      (o, f) => o.setFacets(f: _*)
     )
   }
 }

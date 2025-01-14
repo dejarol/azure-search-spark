@@ -16,9 +16,11 @@ import java.util.{Iterator => JIterator}
  * @param searchPartition a search partition
  */
 
-class SearchPartitionReader(private val readConfig: ReadConfig,
-                            private val documentEncoder: SearchDocumentEncoder,
-                            private val searchPartition: SearchPartition)
+class SearchPartitionReader(
+                             private val readConfig: ReadConfig,
+                             private val documentEncoder: SearchDocumentEncoder,
+                             private val searchPartition: SearchPartition
+                           )
   extends PartitionReader[InternalRow]
     with Logging {
 

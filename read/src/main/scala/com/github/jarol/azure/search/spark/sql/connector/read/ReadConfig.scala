@@ -4,16 +4,35 @@ import com.azure.search.documents.models.SearchOptions
 import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, SinglePartitionPartitioner}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, DefaultPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Read configuration
  * @param options read options passed to the datasource
+ * @param pushedPredicates predicates to be pushed down
  */
 
-case class ReadConfig(override protected val options: CaseInsensitiveMap[String])
+case class ReadConfig(
+                       override protected val options: CaseInsensitiveMap[String],
+                       protected[read] val pushedPredicates: Seq[ODataExpression] = Seq.empty
+                     )
   extends SearchIOConfig(options) {
+
+  def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = this.copy(pushedPredicates = predicates)
+
+  /**
+   * Collect options related to documents search
+   * @return a [[SearchOptionsConfig]] instance
+   */
+
+  def searchOptionsConfig: SearchOptionsConfig = {
+
+    SearchOptionsConfig(
+      getAllWithPrefix(ReadConfig.SEARCH_OPTIONS_PREFIX)
+    )
+  }
 
   /**
    * Execute a Search on target index
@@ -21,7 +40,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * @return an iterable of Search results
    */
 
-  final def search(searchOptions: SearchOptions): SearchPagedIterable = {
+  def search(searchOptions: SearchOptions): SearchPagedIterable = {
 
     withSearchClientDo {
       sc => SearchUtils.getSearchPagedIterable(sc, searchOptions)
@@ -29,16 +48,9 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Get the filter to apply on index documents. The filter must follow OData syntax
-   * ([[https://learn.microsoft.com/en-us/azure/search/search-query-odata-filter]])
-   * @return the filter to apply on search index documents
-   */
-
-  def filter: Option[String] = get(ReadConfig.FILTER_CONFIG)
-
-  /**
    * Get the [[SearchPartitioner]] to use for generating the search partitions.
-   * If not provided, a [[SinglePartitionPartitioner]] will be used
+   * If not provided, a [[DefaultPartitioner]] will be used
+ *
    * @return a search partitioner instance
    */
 
@@ -46,7 +58,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
     getOrDefaultAs[Class[SearchPartitioner]](
       ReadConfig.PARTITIONER_CLASS_CONFIG,
-      classOf[SinglePartitionPartitioner].asInstanceOf[Class[SearchPartitioner]],
+      classOf[DefaultPartitioner].asInstanceOf[Class[SearchPartitioner]],
       s => Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
     )
   }
@@ -59,13 +71,6 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   def partitionerOptions: SearchConfig = getAllWithPrefix(ReadConfig.PARTITIONER_OPTIONS_PREFIX)
 
   /**
-   * Return the set of index fields to select. If not provided, all retrievable fields will be selected
-   * @return index fields to select
-   */
-
-  def select: Option[Seq[String]] = getAsList(ReadConfig.SELECT_CONFIG)
-
-  /**
    * Return the flag that indicates if predicate pushdown should be enabled when querying data
    * @return true for enabling predicate pushdown
    */
@@ -75,10 +80,9 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
 object ReadConfig {
 
-  final val FILTER_CONFIG = "filter"
   final val PARTITIONER_CLASS_CONFIG = "partitioner"
-  final val SELECT_CONFIG = "select"
   final val PUSHDOWN_PREDICATE_CONFIG = "pushDownPredicate"
+  final val SEARCH_OPTIONS_PREFIX = "searchOptions."
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
   final val FACET_FIELD_CONFIG = "facetField"
   final val NUM_PARTITIONS_CONFIG = "numPartitions"
@@ -95,7 +99,8 @@ object ReadConfig {
   def apply(dsOptions: Map[String, String]): ReadConfig = {
 
     ReadConfig(
-      CaseInsensitiveMap(dsOptions)
+      CaseInsensitiveMap(dsOptions),
+      Seq.empty
     )
   }
 }

@@ -1,13 +1,11 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
-import com.azure.search.documents.models.{FacetResult, SearchOptions}
+import com.azure.search.documents.models.FacetResult
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsOperations._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.util.{List => JList}
 
@@ -24,14 +22,10 @@ import java.util.{List => JList}
  * Suitable for cases where there exists a filterable and facetable field with few distinct values
  *
  * @param readConfig read configuration
- * @param pushedPredicates predicates that support predicate pushdown
  */
 
-case class FacetedPartitioner(
-                               override protected val readConfig: ReadConfig,
-                               override protected val pushedPredicates: Seq[ODataExpression]
-                             )
-  extends AbstractSearchPartitioner(readConfig, pushedPredicates) {
+case class FacetedPartitioner(override protected val readConfig: ReadConfig)
+  extends AbstractSearchPartitioner(readConfig) {
 
   /**
    * Generate a number of partitions equal to
@@ -70,29 +64,6 @@ case class FacetedPartitioner(
   }
 
   /**
-   * Get the partition list
-   * @param field facetable Search field
-   * @param facets field facets
-   * @return a list of [[SearchPartition]]
-   */
-
-  private def getPartitionList(
-                                field: SearchField,
-                                facets: Seq[FacetResult]
-                              ): JList[SearchPartition] = {
-
-    val partitions = AbstractFacetPartition.createCollection(
-      readConfig.filter,
-      readConfig.select,
-      pushedPredicates,
-      field,
-      facets.map(_.getAdditionalProperties.get("value"))
-    )
-
-    JavaScalaConverters.seqToList(partitions)
-  }
-
-  /**
    * Retrieve a number of [[FacetResult]](s) for a search field. A facet result contains value cardinality
    * (i.e. number of documents with such field value) for the n most frequent values of a search field
    * @param facetField name of facetable field
@@ -106,20 +77,40 @@ case class FacetedPartitioner(
                              ): Seq[FacetResult] = {
 
     // Compose the facet
-    // [a] if query param is defined, facet = join facetField and query param using comma
+    // [a] if query param is defined, facet is the combination of facetField and query param using comma
     // [b] if query params is empty facet = facetField
     val facet: String = partitions.map {
       value => s"$facetField,count:${value - 1}"
     }.getOrElse(facetField)
 
     val facets = readConfig.search(
-        new SearchOptions()
-          .setFilter(readConfig.filter)
-          .setSelect(readConfig.select)
-          .setFacets(facet)
-      ).getFacets.get(facetField)
+      readConfig.searchOptionsConfig
+        .withFacets(facet)
+        .createSearchOptions()
+    ).getFacets.get(facetField)
 
     JavaScalaConverters.listToSeq(facets)
+  }
+
+  /**
+   * Get the partition list
+   * @param field facetable Search field
+   * @param facets field facets
+   * @return a list of [[SearchPartition]]
+   */
+
+  private def getPartitionList(
+                                field: SearchField,
+                                facets: Seq[FacetResult]
+                              ): JList[SearchPartition] = {
+
+    val partitions = AbstractFacetPartition.createCollection(
+      readConfig.searchOptionsConfig,
+      field,
+      facets.map(_.getAdditionalProperties.get("value"))
+    )
+
+    JavaScalaConverters.seqToList(partitions)
   }
 }
 

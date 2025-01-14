@@ -28,6 +28,16 @@ class SearchOptionsOperationsSpec
           original.setSelect(None).getSelect shouldBe null
           original.setSelect(Some(select)).getSelect should contain theSameElementsAs select
         }
+
+        it("query type") {
+
+          // TODO: test
+        }
+
+        it("facets") {
+
+          // TODO: test
+        }
       }
     }
   }

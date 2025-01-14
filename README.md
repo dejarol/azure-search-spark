@@ -58,7 +58,7 @@ You can specify a custom implementation that must implement the <code>com.github
 Have a look at the <b>Partitioners</b> section for more information about partitioners.
 </td>
         <td></td>
-        <td>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner</td>
+        <td>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner</td>
     </tr>
     <tr>
         <td>partitioner.options.*</td>

@@ -89,6 +89,7 @@ class FacetValuePartitionITSpec
         it("both filter and facet value and pushed predicate") {
 
           val dateValueNotNull: ODataExpression = new ODataExpression {
+            override def name(): String = "NOT_NULL"
             override def toUriLiteral: String = "dateValue ne null"
           }
 

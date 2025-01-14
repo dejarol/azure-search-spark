@@ -1,13 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
 
 class AbstractFacetPartitionSpec
   extends BasicSpec
     with FieldFactory {
 
   private lazy val defaultFacetFilter = "field eq value"
+  private lazy val emptySupplier = new SearchOptionsSupplier {
+    override def createSearchOptions(): SearchOptions = new SearchOptions
+  }
 
   /**
    * Create a partition instance
@@ -18,13 +23,11 @@ class AbstractFacetPartitionSpec
 
     new AbstractFacetPartition(
       0,
-      None,
-      None,
-      Seq.empty,
+      emptySupplier,
       "facetFieldName"
     ) {
 
-      override def facetFilter: String = defaultFacetFilter
+      override protected[partitioning] def facetFilter: String = defaultFacetFilter
     }
   }
 
@@ -48,9 +51,7 @@ class AbstractFacetPartitionSpec
         val facetFieldName = "field"
         val facetValues = Seq("v1", "v2", "v3")
         val actual = AbstractFacetPartition.createCollection(
-          None,
-          None,
-          Seq.empty,
+          emptySupplier,
           createSearchField(facetFieldName, SearchFieldDataType.STRING),
           facetValues
         )

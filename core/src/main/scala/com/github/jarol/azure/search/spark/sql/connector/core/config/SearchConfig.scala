@@ -178,9 +178,12 @@ class SearchConfig(protected val options: CaseInsensitiveMap[String])
    * @return a non-empty collection of strings if the original value is not blank
    */
 
-  final def getAsList(key: String): Option[Seq[String]] = {
+  final def getAsList(
+                       key: String,
+                       separator: Char = ','
+                     ): Option[Seq[String]] = {
 
-    getAsListOf[String](key, _.split(",").map(_.trim))
+    getAsListOf[String](key, _.split(separator).map(_.trim))
   }
 }
 

@@ -1,7 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpressionBuilder
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressionBuilder}
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}
 import org.apache.spark.sql.types.StructType
@@ -33,7 +33,16 @@ class SearchScanBuilder(
     if (!readConfig.indexExists) {
       throw new IndexDoesNotExistException(readConfig.getIndex)
     } else {
-      new SearchScan(readConfig, schema, supportedPredicates)
+      val supportedODataExpressions: Seq[ODataExpression] = supportedPredicates
+        .map(ODataExpressionBuilder.build)
+        .collect {
+          case Some(value) => value
+        }
+
+      new SearchScan(
+        readConfig.withPushedPredicates(supportedODataExpressions),
+        schema
+      )
     }
   }
 

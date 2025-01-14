@@ -54,8 +54,8 @@ class ReadSpec
 
     // Set extra options
     val extraOptions = Map(
-      ReadConfig.FILTER_CONFIG -> filter,
-      ReadConfig.SELECT_CONFIG -> select.map(_.mkString(","))
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsConfig.FILTER_CONFIG -> filter,
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsConfig.SELECT_CONFIG -> select.map(_.mkString(","))
     ).collect {
       case (k, Some(v)) => (k, v)
     }

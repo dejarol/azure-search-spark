@@ -1,8 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
-import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{EmptyPartitioner, SinglePartitionPartitioner}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{EmptyPartitioner, DefaultPartitioner}
 
 class ReadConfigSpec
   extends BasicSpec {
@@ -17,54 +17,67 @@ class ReadConfigSpec
 
   private lazy val emptyConfig = createConfig(Map.empty)
 
+  /**
+   * Assert that an inner [[SearchConfig]] instance, obtained by a [[ReadConfig]] (like the one for search or partitioner options)
+   * contains the proper set of elements (which should be all key-value pairs whose keys start with a given prefix)
+   * @param input configuration map to use for creating the [[ReadConfig]]
+   * @param prefix prefix to be matched by the key-value pairs of the inner [[SearchConfig]]
+   * @param getter function for getting the [[SearchConfig]] from the [[ReadConfig]]
+   */
+
+  private def assertSubConfigurationContains(
+                                              input: Map[String, String],
+                                              prefix: String,
+                                              getter: ReadConfig => SearchConfig
+                                            ): Unit = {
+
+    // Empty map should give an empty map
+    getter(emptyConfig).toMap shouldBe empty
+    val createdConfig: ReadConfig = createConfig(input)
+
+    // Given a non-empty map, we expect to find all of its pairs
+    val expected = input.filter {
+      case (k, _) => k.startsWith(prefix)
+    }
+
+    getter(createdConfig).toMap should contain theSameElementsAs expected
+  }
+
   describe(anInstanceOf[ReadConfig]) {
     describe(SHOULD) {
       describe("retrieve") {
-        it("the filter to apply on index documents") {
+        describe("options related to") {
+          it("documents search") {
 
-          val expected = "filterValue"
-          emptyConfig.filter shouldBe empty
-          createConfig(
-            Map(
-              ReadConfig.FILTER_CONFIG -> expected
+            assertSubConfigurationContains(
+              Map(
+                ReadConfig.SEARCH_OPTIONS_PREFIX + "k1" -> "v1",
+                ReadConfig.SEARCH_OPTIONS_PREFIX + "k2" -> "v2",
+                "k3" -> "v3"
+              ),
+              ReadConfig.SEARCH_OPTIONS_PREFIX,
+              _.searchOptionsConfig
             )
-          ).filter shouldBe Some(expected)
-        }
+          }
 
-        it("the search fields to select") {
+          it("partitioners") {
 
-          val expected = Seq("f1", "f2")
-          emptyConfig.select shouldBe empty
-          val actual: Option[Seq[String]] = createConfig(
-            Map(
-              ReadConfig.SELECT_CONFIG -> expected.mkString(",")
+            assertSubConfigurationContains(
+              Map(
+                "k1" -> "v1",
+                ReadConfig.PARTITIONER_OPTIONS_PREFIX + "k2" -> "v2",
+                ReadConfig.PARTITIONER_OPTIONS_PREFIX + "k3" -> "v3"
+              ),
+              ReadConfig.PARTITIONER_OPTIONS_PREFIX,
+              _.partitionerOptions
             )
-          ).select
-
-          actual shouldBe defined
-          actual.get should contain theSameElementsAs expected
-        }
-
-        it("the partitioner options") {
-
-          val (facet, partitions) = ("facet", 10)
-          val partitionerOptions = createConfig(
-            Map(
-              ReadConfig.FILTER_CONFIG -> "filter",
-              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.FACET_FIELD_CONFIG -> facet,
-              ReadConfig.PARTITIONER_OPTIONS_PREFIX + ReadConfig.NUM_PARTITIONS_CONFIG -> s"$partitions"
-            )
-          ).partitionerOptions
-
-          partitionerOptions.get(ReadConfig.FILTER_CONFIG) shouldBe empty
-          partitionerOptions.get(ReadConfig.FACET_FIELD_CONFIG) shouldBe defined
-          partitionerOptions.get(ReadConfig.NUM_PARTITIONS_CONFIG) shouldBe defined
+          }
         }
 
         describe("a partitioner instance using either") {
           it("a default") {
 
-            emptyConfig.partitionerClass shouldBe classOf[SinglePartitionPartitioner]
+            emptyConfig.partitionerClass shouldBe classOf[DefaultPartitioner]
           }
 
           it("a user provided partitioner") {

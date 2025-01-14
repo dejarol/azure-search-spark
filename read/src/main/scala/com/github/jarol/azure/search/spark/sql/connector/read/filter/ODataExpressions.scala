@@ -21,7 +21,7 @@ object ODataExpressions {
 
   private[filter] case class FieldReference(private val names: Seq[String])
     extends ODataExpression {
-
+    override def name(): String = "FIELD_REFERENCE"
     override def toUriLiteral: String = names.mkString("/")
   }
 
@@ -36,6 +36,8 @@ object ODataExpressions {
                                       private val value: Any
                                     )
     extends ODataExpression {
+
+    override def name(): String = "LITERAL"
 
     override def toUriLiteral: String = {
 
@@ -71,6 +73,8 @@ object ODataExpressions {
                                    )
     extends ODataExpression {
 
+    override def name(): String = if (negate) "IS_NOT_NULL" else "IS_NULL"
+
     override def toUriLiteral: String = {
 
       val operator = if (negate) "ne" else "eq"
@@ -92,6 +96,8 @@ object ODataExpressions {
                                        )
     extends ODataExpression {
 
+    override def name(): String = "COMPARISON"
+
     override def toUriLiteral: String = s"${left.toUriLiteral} ${comparator.oDataValue()} ${right.toUriLiteral}"
   }
 
@@ -102,6 +108,7 @@ object ODataExpressions {
 
   private[filter] case class Not(private val child: ODataExpression)
     extends ODataExpression {
+    override def name(): String = "NOT"
     override def toUriLiteral: String = s"not (${child.toUriLiteral})"
   }
 
@@ -117,6 +124,8 @@ object ODataExpressions {
                                  private val separator: String
                                )
     extends ODataExpression {
+
+    override def name(): String = "IN"
 
     override def toUriLiteral: String = {
 
@@ -147,6 +156,8 @@ object ODataExpressions {
                                       private val isAnd: Boolean
                                     )
     extends ODataExpression {
+
+    override def name(): String = if (isAnd) "AND" else "OR"
 
     override def toUriLiteral: String = {
 

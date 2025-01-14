@@ -54,7 +54,8 @@ public class SearchBatchException
         String partitionDescription = searchPartitions.stream().map(
                 partition -> String.format("id %s, filter '%s'",
                         partition.getPartitionId(),
-                        partition.getODataFilter())
+                        partition
+                )
         ).collect(Collectors.joining(", "));
 
         String message = String.format(

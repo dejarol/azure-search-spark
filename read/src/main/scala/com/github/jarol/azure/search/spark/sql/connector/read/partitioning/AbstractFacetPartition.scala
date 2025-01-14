@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -20,20 +20,16 @@ import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpres
  * }}}
  *
  * @param partitionId partition id
- * @param inputFilter optional filter to apply during data retrieval
- * @param maybeSelect optional list of index fields to select
- * @param pushedPredicates predicate that support pushdown
+ * @param optionsSupplier delegate object for getting the search options for this partition
  * @param facetFieldName name of the field used for faceting values
  */
 
 abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
-                                       override protected val inputFilter: Option[String],
-                                       override protected val maybeSelect: Option[Seq[String]],
-                                       override protected val pushedPredicates: Seq[ODataExpression],
+                                       override protected val optionsSupplier: SearchOptionsSupplier,
                                        protected val facetFieldName: String
                                      )
-  extends AbstractSearchPartition(partitionId, inputFilter, maybeSelect, pushedPredicates) {
+  extends AbstractSearchPartition(partitionId, optionsSupplier) {
 
   override final protected[partitioning] def partitionFilter: Option[String] = Some(facetFilter)
 
@@ -42,7 +38,7 @@ abstract class AbstractFacetPartition(
    * @return facet filter
    */
 
-  def facetFilter: String
+  protected[partitioning] def facetFilter: String
 }
 
 object AbstractFacetPartition {
@@ -57,18 +53,14 @@ object AbstractFacetPartition {
 
   /**
    * Generate a set of partitions from values retrieved from a facetable field
-   * @param maybeFilter optional overall filter
-   * @param maybeSelect optional list of selection fields
-   * @param pushedPredicates predicates that support pushdown
+   * @param optionsSupplier delegate object for getting the search options for this partition
    * @param facetField facet field
    * @param facets facet field values
    * @return a collection of Search partitions
    */
 
   def createCollection(
-                        maybeFilter: Option[String],
-                        maybeSelect: Option[Seq[String]],
-                        pushedPredicates: Seq[ODataExpression],
+                        optionsSupplier: SearchOptionsSupplier,
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {
@@ -83,9 +75,7 @@ object AbstractFacetPartition {
         case (value, partitionId) =>
           FacetValuePartition(
             partitionId,
-            maybeFilter,
-            maybeSelect,
-            pushedPredicates,
+            optionsSupplier,
             facetFieldName,
             value
           )
@@ -93,9 +83,7 @@ object AbstractFacetPartition {
 
     // Add another partition for either null values or other facet values
     val partitionForEitherNullOrOtherFacetValues = FacetNullValuePartition(
-      maybeFilter,
-      maybeSelect,
-      pushedPredicates,
+      optionsSupplier,
       facetFieldName,
       facetStringValues
     )
