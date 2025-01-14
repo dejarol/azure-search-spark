@@ -56,7 +56,7 @@ class ReadConfigSpec
                 "k3" -> "v3"
               ),
               ReadConfig.SEARCH_OPTIONS_PREFIX,
-              _.searchOptionsConfig
+              _.searchOptionsBuilderConfig
             )
           }
 

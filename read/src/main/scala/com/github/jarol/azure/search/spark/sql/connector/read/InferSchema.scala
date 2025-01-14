@@ -68,7 +68,7 @@ object InferSchema {
 
         if (selectedFields.isEmpty) {
           throw ConfigException.forIllegalOptionValue(
-            ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsConfig.SELECT_CONFIG,
+            ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderConfig.SELECT_CONFIG,
             value.mkString(","),
             s"None of the selected fields (${value.mkString(",")} exist"
           )

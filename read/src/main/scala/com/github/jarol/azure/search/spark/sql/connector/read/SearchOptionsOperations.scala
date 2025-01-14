@@ -11,8 +11,6 @@ import scala.language.implicitConversions
 
 case class SearchOptionsOperations(private val original: SearchOptions) {
 
-  private def maybeGet[T](getter: SearchOptions => T): Option[T] = Option(getter(original))
-
   /**
    * Update this instance's options using a setter function if given value is defined
    * @param maybeValue configuration value
@@ -28,13 +26,6 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
       case None => original
     }
   }
-
-  /**
-   * Return the filter
-   * @return a non-empty Option if a filter was defined
-   */
-
-  def maybeFilter: Option[String] = maybeGet(_.getFilter)
 
   /**
    * Set the filter, if defined

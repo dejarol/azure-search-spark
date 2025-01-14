@@ -2,7 +2,6 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.time.LocalDate
 
@@ -42,14 +41,13 @@ class FacetNullValuePartitionITSpec
 
   private def createPartition(
                                inputFilter: Option[String],
-                               facets: Seq[String],
-                               pushedExpressions: Seq[ODataExpression]
+                               facets: Seq[String]
                              ): FacetNullValuePartition = {
 
+    // TODO: fix
     FacetNullValuePartition(
       inputFilter,
       None,
-      pushedExpressions,
       facetField,
       facets
     )
@@ -63,14 +61,13 @@ class FacetNullValuePartitionITSpec
         createPartition(
           None,
           values.map(String.valueOf),
-          Seq.empty
         ).getPartitionId shouldBe values.size
       }
 
       it("create a facet filter that includes null or different values") {
 
         val facetValues = Seq("v1", "v2")
-        val partition = createPartition(None, facetValues, Seq.empty)
+        val partition = createPartition(None, facetValues)
         val eqNull = s"$facetField eq null"
         val equalToOtherValues = facetValues.map {
           value => s"$facetField eq $value"
@@ -90,7 +87,7 @@ class FacetNullValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, Seq(john).map(StringUtils.singleQuoted), Seq.empty),
+            createPartition(None, Seq(john).map(StringUtils.singleQuoted)),
             stringValueIsNullOrNotEqualToJohn
           )
         }
@@ -102,17 +99,12 @@ class FacetNullValuePartitionITSpec
             assertCountPerPartition[PushdownBean](
               documents,
               indexName,
-              createPartition(Some("intValue ne null"), Seq(john).map(StringUtils.singleQuoted), Seq.empty),
+              createPartition(Some("intValue ne null"), Seq(john).map(StringUtils.singleQuoted)),
               expectedPredicate
             )
           }
 
           it("both input filter and pushed predicate") {
-
-            val dateNotNull: ODataExpression = new ODataExpression {
-              override def name(): String = "NOT_NULL"
-              override def toUriLiteral: String = "dateValue ne null"
-            }
 
             val expectedPredicate: PushdownBean => Boolean = p => stringValueIsNullOrNotEqualToJohn(p) && intValueNotNull(p) && p.dateValue.isDefined
             assertCountPerPartition[PushdownBean](
@@ -120,8 +112,7 @@ class FacetNullValuePartitionITSpec
               indexName,
               createPartition(
                 Some("intValue ne null"),
-                Seq(john).map(StringUtils.singleQuoted),
-                Seq(dateNotNull)
+                Seq(john).map(StringUtils.singleQuoted)
               ),
               expectedPredicate
             )

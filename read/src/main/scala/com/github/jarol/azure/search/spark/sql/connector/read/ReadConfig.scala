@@ -24,12 +24,13 @@ case class ReadConfig(
 
   /**
    * Collect options related to documents search
-   * @return a [[SearchOptionsConfig]] instance
+ *
+   * @return a [[SearchOptionsBuilderConfig]] instance
    */
 
-  def searchOptionsConfig: SearchOptionsConfig = {
+  def searchOptionsBuilderConfig: SearchOptionsBuilderConfig = {
 
-    SearchOptionsConfig(
+    SearchOptionsBuilderConfig(
       getAllWithPrefix(ReadConfig.SEARCH_OPTIONS_PREFIX)
     )
   }
@@ -50,7 +51,7 @@ case class ReadConfig(
   /**
    * Get the [[SearchPartitioner]] to use for generating the search partitions.
    * If not provided, a [[DefaultPartitioner]] will be used
- *
+   *
    * @return a search partitioner instance
    */
 

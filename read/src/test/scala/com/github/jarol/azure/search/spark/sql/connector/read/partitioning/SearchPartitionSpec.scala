@@ -5,6 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 import java.util.function.Supplier
 
+// TODO: convert to integration spec. test only getPartitionResults() and getCountPerPartition
 class SearchPartitionSpec
   extends BasicSpec {
 

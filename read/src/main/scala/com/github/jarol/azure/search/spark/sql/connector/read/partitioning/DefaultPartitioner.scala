@@ -15,7 +15,7 @@ case class DefaultPartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): JList[SearchPartition] = {
 
     JCollections.singletonList(
-      DefaultSearchPartition(0, readConfig.searchOptionsConfig)
+      DefaultSearchPartition(0, readConfig.searchOptionsBuilderConfig)
     )
   }
 }

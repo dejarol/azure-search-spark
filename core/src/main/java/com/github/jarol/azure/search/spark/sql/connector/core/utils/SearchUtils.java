@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public final class SearchUtils {
 
     /**
-     * Return a {@link SearchPagedIterable}, eventually including the total count of retrieved documents
+     * Return a {@link SearchPagedIterable} by querying a Search client using some query options
      * @param client Search client
      * @param searchOptions Search options
      * @return a {@link SearchPagedIterable}

@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 
 /**
  * Partition related to facet field value
@@ -11,18 +11,18 @@ import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSuppl
  * }}}
  * to be then used together with the input filter (if defined)
  *
- * @param optionsSupplier delegate object for getting the search options for this partition
+ * @param optionsBuilder delegate object for building the search options for this partition
  * @param facetFieldName name of the field used for faceting values
  * @param facetValue facet value for this partition
  */
 
 case class FacetValuePartition(
                                 override protected val partitionId: Int,
-                                override protected val optionsSupplier: SearchOptionsSupplier,
+                                override protected val optionsBuilder: SearchOptionsBuilder,
                                 override protected val facetFieldName: String,
                                 protected val facetValue: String
                               )
-  extends AbstractFacetPartition(partitionId, optionsSupplier, facetFieldName) {
+  extends AbstractFacetPartition(partitionId, optionsBuilder, facetFieldName) {
 
   override protected[partitioning] def facetFilter: String = s"$facetFieldName eq $facetValue"
 }

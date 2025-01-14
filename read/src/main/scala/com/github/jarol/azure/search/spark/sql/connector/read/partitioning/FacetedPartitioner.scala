@@ -84,9 +84,9 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     }.getOrElse(facetField)
 
     val facets = readConfig.search(
-      readConfig.searchOptionsConfig
-        .withFacets(facet)
-        .createSearchOptions()
+      readConfig.searchOptionsBuilderConfig
+        .withFacet(facet)
+        .buildOptions()
     ).getFacets.get(facetField)
 
     JavaScalaConverters.listToSeq(facets)
@@ -105,7 +105,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
                               ): JList[SearchPartition] = {
 
     val partitions = AbstractFacetPartition.createCollection(
-      readConfig.searchOptionsConfig,
+      readConfig.searchOptionsBuilderConfig,
       field,
       facets.map(_.getAdditionalProperties.get("value"))
     )

@@ -5,7 +5,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
-class SearchOptionsConfigSpec
+class SearchOptionsBuilderConfigSpec
   extends BasicSpec {
 
   /**
@@ -14,18 +14,28 @@ class SearchOptionsConfigSpec
    * @return a configuration instance
    */
 
-  private def createConfig(map: Map[String, String]): SearchOptionsConfig = {
+  private def createConfig(map: Map[String, String]): SearchOptionsBuilderConfig = {
 
-    SearchOptionsConfig(
+    SearchOptionsBuilderConfig(
       CaseInsensitiveMap(map)
     )
   }
 
   private lazy val emptyConfig = createConfig(Map.empty)
 
-  describe(anInstanceOf[SearchOptionsConfig]) {
+  describe(anInstanceOf[SearchOptionsBuilderConfig]) {
     describe(SHOULD) {
       describe("retrieve") {
+        it("the search text") {
+
+          emptyConfig.searchText shouldBe empty
+          val expected = "hello"
+          createConfig(
+            Map(
+              SearchOptionsBuilderConfig.SEARCH -> expected
+            )
+          ).searchText shouldBe Some(expected)
+        }
 
         it("the filter to apply on index documents") {
 
@@ -33,7 +43,7 @@ class SearchOptionsConfigSpec
           emptyConfig.filter shouldBe empty
           createConfig(
             Map(
-              SearchOptionsConfig.FILTER_CONFIG -> expected
+              SearchOptionsBuilderConfig.FILTER -> expected
             )
           ).filter shouldBe Some(expected)
         }
@@ -44,7 +54,7 @@ class SearchOptionsConfigSpec
           emptyConfig.select shouldBe empty
           val actual: Option[Seq[String]] = createConfig(
             Map(
-              SearchOptionsConfig.SELECT_CONFIG -> expected.mkString(",")
+              SearchOptionsBuilderConfig.SELECT_CONFIG -> expected.mkString(",")
             )
           ).select
 
@@ -59,7 +69,7 @@ class SearchOptionsConfigSpec
           val expected = QueryType.SEMANTIC
           createConfig(
             Map(
-              SearchOptionsConfig.QUERY_TYPE -> expected.name()
+              SearchOptionsBuilderConfig.QUERY_TYPE -> expected.name()
             )
           ).queryType shouldBe Some(expected)
 
@@ -67,7 +77,7 @@ class SearchOptionsConfigSpec
 
             createConfig(
               Map(
-                SearchOptionsConfig.QUERY_TYPE -> "hello"
+                SearchOptionsBuilderConfig.QUERY_TYPE -> "hello"
               )
             ).queryType
           }
@@ -79,12 +89,24 @@ class SearchOptionsConfigSpec
           val expected = Seq("hello", "world")
           val actual = createConfig(
             Map(
-              SearchOptionsConfig.FACETS -> expected.mkString("|")
+              SearchOptionsBuilderConfig.FACETS -> expected.mkString("|")
             )
           ).facets
 
           actual shouldBe defined
           actual.get should contain theSameElementsAs expected
+        }
+      }
+
+      describe("let a user add") {
+        it("a filter") {
+
+          // TODO: test
+        }
+
+        it("a facet") {
+
+          // TODO: test
         }
       }
     }

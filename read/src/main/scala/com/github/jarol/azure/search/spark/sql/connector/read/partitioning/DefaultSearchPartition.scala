@@ -1,18 +1,18 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 
 /**
  * Default implementation
  * @param partitionId partition id
- * @param optionsSupplier delegate object for getting the search options for this partition
+ * @param optionsBuilder delegate object for building the search options for this partition
  */
 
 case class DefaultSearchPartition(
                                   override protected val partitionId: Int,
-                                  override protected val optionsSupplier: SearchOptionsSupplier
+                                  override protected val optionsBuilder: SearchOptionsBuilder
                                 )
-  extends AbstractSearchPartition(partitionId, optionsSupplier) {
+  extends AbstractSearchPartition(partitionId, optionsBuilder) {
 
   override protected[partitioning] def partitionFilter: Option[String] = None
 }

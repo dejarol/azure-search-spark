@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
@@ -20,16 +20,16 @@ import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSuppl
  * }}}
  *
  * @param partitionId partition id
- * @param optionsSupplier delegate object for getting the search options for this partition
+ * @param optionsBuilder delegate object for building the search options for this partition
  * @param facetFieldName name of the field used for faceting values
  */
 
 abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
-                                       override protected val optionsSupplier: SearchOptionsSupplier,
+                                       override protected val optionsBuilder: SearchOptionsBuilder,
                                        protected val facetFieldName: String
                                      )
-  extends AbstractSearchPartition(partitionId, optionsSupplier) {
+  extends AbstractSearchPartition(partitionId, optionsBuilder) {
 
   override final protected[partitioning] def partitionFilter: Option[String] = Some(facetFilter)
 
@@ -53,14 +53,14 @@ object AbstractFacetPartition {
 
   /**
    * Generate a set of partitions from values retrieved from a facetable field
-   * @param optionsSupplier delegate object for getting the search options for this partition
+   * @param optionsBuilder delegate object for building the search options for this partition
    * @param facetField facet field
    * @param facets facet field values
    * @return a collection of Search partitions
    */
 
   def createCollection(
-                        optionsSupplier: SearchOptionsSupplier,
+                        optionsBuilder: SearchOptionsBuilder,
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {
@@ -75,7 +75,7 @@ object AbstractFacetPartition {
         case (value, partitionId) =>
           FacetValuePartition(
             partitionId,
-            optionsSupplier,
+            optionsBuilder,
             facetFieldName,
             value
           )
@@ -83,7 +83,7 @@ object AbstractFacetPartition {
 
     // Add another partition for either null values or other facet values
     val partitionForEitherNullOrOtherFacetValues = FacetNullValuePartition(
-      optionsSupplier,
+      optionsBuilder,
       facetFieldName,
       facetStringValues
     )

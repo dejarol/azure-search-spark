@@ -41,7 +41,7 @@ case class RangePartitioner(override protected val readConfig: ReadConfig)
       case Left(configException) => throw configException
       case Right(values) => JavaScalaConverters.seqToList(
         RangePartition.createCollection(
-          readConfig.searchOptionsConfig,
+          readConfig.searchOptionsBuilderConfig,
           partitionFieldName,
           values
         )

@@ -3,15 +3,16 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsSupplier
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 
 class AbstractFacetPartitionSpec
   extends BasicSpec
     with FieldFactory {
 
   private lazy val defaultFacetFilter = "field eq value"
-  private lazy val emptySupplier = new SearchOptionsSupplier {
-    override def createSearchOptions(): SearchOptions = new SearchOptions
+  private lazy val emptySupplier = new SearchOptionsBuilder {
+    override def buildOptions(): SearchOptions = new SearchOptions
+    override def withFilter(other: String): SearchOptionsBuilder = this
   }
 
   /**
