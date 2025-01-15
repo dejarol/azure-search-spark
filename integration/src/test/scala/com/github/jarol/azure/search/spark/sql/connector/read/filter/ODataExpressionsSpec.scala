@@ -52,7 +52,8 @@ class ODataExpressionsSpec
       getSearchClient(indexName),
       new SearchOptions().setFilter(
         expression.toUriLiteral
-      )
+      ),
+      null
     )
 
     val expectedDocuments: Seq[PushdownBean] = documents.filter(predicate)
