@@ -36,7 +36,8 @@ class SearchPartitionSpec
 
         val actualDocuments = SearchTestUtils.getPartitionDocuments(
           partition,
-          getSearchClient(indexName)
+          getSearchClient(indexName),
+          null
         )
 
         val expectedDocs = documents.filter(valueNeNull)
@@ -51,7 +52,8 @@ class SearchPartitionSpec
       it("get the number of retrieved documents") {
 
         partition.getCountPerPartition(
-          getSearchClient(indexName)
+          getSearchClient(indexName),
+          null
         ) shouldBe documents.count(valueNeNull)
       }
     }

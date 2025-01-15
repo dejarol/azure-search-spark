@@ -54,7 +54,6 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   /**
    * Collect options related to documents search
-   *
    * @return a [[SearchOptionsBuilderImpl]] instance
    */
 
@@ -67,14 +66,20 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   /**
    * Execute a Search on target index
+   * @param searchText search text
    * @param searchOptions search options
    * @return an iterable of Search results
    */
 
-  def search(searchOptions: SearchOptions): SearchPagedIterable = {
+  def search(
+              searchText: Option[String],
+              searchOptions: SearchOptions
+            ): SearchPagedIterable = {
 
     withSearchClientDo {
-      sc => SearchUtils.getSearchPagedIterable(sc, searchOptions)
+      sc => SearchUtils.getSearchPagedIterable(
+        sc, searchText.orNull, searchOptions
+      )
     }
   }
 

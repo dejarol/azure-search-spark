@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.config
 
-import com.azure.search.documents.models.QueryType
+import com.azure.search.documents.models.{QueryType, SearchMode}
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
@@ -102,6 +102,7 @@ class SearchOptionsBuilderImplSpec
 
           emptyConfig.queryType shouldBe empty
 
+          // Valid case
           val expected = QueryType.SEMANTIC
           createConfig(
             Map(
@@ -109,13 +110,35 @@ class SearchOptionsBuilderImplSpec
             )
           ).queryType shouldBe Some(expected)
 
+          // Invalid case
           a [ConfigException] shouldBe thrownBy {
-
             createConfig(
               Map(
                 SearchOptionsBuilderImpl.QUERY_TYPE -> "hello"
               )
             ).queryType
+          }
+        }
+
+        it("the search mode") {
+
+          emptyConfig.searchMode shouldBe empty
+
+          // Valid case
+          val expected = SearchMode.ANY
+          createConfig(
+            Map(
+              SearchOptionsBuilderImpl.SEARCH_MODE -> expected.name()
+            )
+          ).searchMode shouldBe Some(expected)
+
+          // Invalid case
+          a [ConfigException] shouldBe thrownBy {
+            createConfig(
+              Map(
+                SearchOptionsBuilderImpl.SEARCH_MODE -> "hello"
+              )
+            ).searchMode
           }
         }
 

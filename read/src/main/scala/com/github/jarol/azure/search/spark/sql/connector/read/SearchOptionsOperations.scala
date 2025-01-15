@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.models.{QueryType, SearchOptions}
+import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
 
 import scala.language.implicitConversions
 
@@ -16,7 +16,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
    * @param maybeValue configuration value
    * @param setter function that should combine the defined value and this instance in order to create a new, updated instance
    * @tparam T input value type
-   * @return the original options if the config is empty, an updated version otherwise
+   * @return this options if the config is empty, an updated version otherwise
    */
 
   private def maybeUpdate[T](maybeValue: Option[T], setter: (SearchOptions, T) => SearchOptions): SearchOptions = {
@@ -30,7 +30,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
   /**
    * Set the filter, if defined
    * @param filter filter
-   * @return this instance's options updated with a filter (if defined)
+   * @return this options updated with a filter (if defined)
    */
 
   def setFilter(filter: Option[String]): SearchOptions = maybeUpdate[String](filter, (o, f) => o.setFilter(f))
@@ -38,7 +38,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
   /**
    * Set the index fields to select, if defined
    * @param select filter
-   * @return this instance's options updated with index fields to select (if defined)
+   * @return this options updated with index fields to select (if defined)
    */
 
   def setSelect(select: Option[Seq[String]]): SearchOptions = {
@@ -52,7 +52,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
   /**
    * Set the query type, if defined
    * @param queryType query type
-   * @return this instance updated with a query type (if defined)
+   * @return this options updated with a query type (if defined)
    */
 
   def setQueryType(queryType: Option[QueryType]): SearchOptions = {
@@ -66,7 +66,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
   /**
    * Set the facets, if defined
    * @param facets facets
-   * @return this instance updated with some facets (if defined)
+   * @return this options updated with some facets (if defined)
    */
 
   def setFacets(facets: Option[Seq[String]]): SearchOptions = {
@@ -74,6 +74,20 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
     maybeUpdate[Seq[String]](
       facets,
       (o, f) => o.setFacets(f: _*)
+    )
+  }
+
+  /**
+   * Set the search mode, if defined
+   * @param mode search mode
+   * @return this options with
+   */
+
+  def setSearchMode(mode: Option[SearchMode]): SearchOptions = {
+
+    maybeUpdate[SearchMode](
+      mode,
+      (o, s) => o.setSearchMode(s)
     )
   }
 }

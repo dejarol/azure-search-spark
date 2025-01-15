@@ -75,7 +75,10 @@ class SearchBatch(
     partitions.filter {
       partition =>
         readConfig.withSearchClientDo {
-          partition.getCountPerPartition
+          client => partition.getCountPerPartition(
+            client,
+            readConfig.searchOptionsBuilderConfig.searchText.orNull
+          )
         } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
     }
   }

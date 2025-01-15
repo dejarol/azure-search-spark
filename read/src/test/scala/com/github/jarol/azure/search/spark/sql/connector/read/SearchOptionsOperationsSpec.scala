@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.azure.search.documents.models.{QueryType, SearchOptions}
+import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 class SearchOptionsOperationsSpec
@@ -43,6 +43,14 @@ class SearchOptionsOperationsSpec
           original.getFacets shouldBe null
           original.setFacets(None).getFacets shouldBe null
           original.setFacets(Some(facets)).getFacets should contain theSameElementsAs facets
+        }
+
+        it("search mode") {
+
+          val searchMode = SearchMode.ALL
+          original.getSearchMode shouldBe null
+          original.setSearchMode(None).getSearchMode shouldBe null
+          original.setSearchMode(Some(searchMode)).getSearchMode shouldBe searchMode
         }
       }
     }

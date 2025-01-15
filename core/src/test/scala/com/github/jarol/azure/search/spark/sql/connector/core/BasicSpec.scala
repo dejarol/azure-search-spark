@@ -30,7 +30,7 @@ trait BasicSpec
    * @return a string to use as suite title or subtitle
    */
 
-  protected final def anInstanceOf[T: TypeTag]: String = s"An instance of class ${nameOf[T]}"
+  protected final def anInstanceOf[T: TypeTag]: String = s"An instance of ${nameOf[T]}"
 
   /**
    * Given an object

@@ -1,20 +1,17 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
+import org.scalamock.scalatest.MockFactory
 
 class AbstractFacetPartitionSpec
   extends BasicSpec
-    with FieldFactory {
+    with FieldFactory
+      with MockFactory {
 
   private lazy val defaultFacetFilter = "field eq value"
-  private lazy val emptySupplier = new SearchOptionsBuilder {
-    override def buildOptions(): SearchOptions = new SearchOptions
-    override def withFilter(other: String): SearchOptionsBuilder = this
-    override def withFacet(facet: String): SearchOptionsBuilder = this
-  }
+  private lazy val mockBuilder = mock[SearchOptionsBuilder]
 
   /**
    * Create a partition instance
@@ -25,7 +22,7 @@ class AbstractFacetPartitionSpec
 
     new AbstractFacetPartition(
       0,
-      emptySupplier,
+      mockBuilder,
       "facetFieldName"
     ) {
 
@@ -53,7 +50,7 @@ class AbstractFacetPartitionSpec
         val facetFieldName = "field"
         val facetValues = Seq("v1", "v2", "v3")
         val actual = AbstractFacetPartition.createCollection(
-          emptySupplier,
+          mockBuilder,
           createSearchField(facetFieldName, SearchFieldDataType.STRING),
           facetValues
         )

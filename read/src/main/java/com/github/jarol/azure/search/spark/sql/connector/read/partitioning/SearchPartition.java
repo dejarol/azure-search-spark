@@ -7,6 +7,7 @@ import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
@@ -34,17 +35,20 @@ public interface SearchPartition
     /**
      * Return a {@link SearchPagedIterable}, eventually including the total count of retrieved documents
      * @param client Search client
+     * @param searchText text to Search
      * @param includeTotalCount true for including the total document count
      * @return a {@link SearchPagedIterable}
      */
 
     default SearchPagedIterable getSearchPagedIterable(
             @NotNull SearchClient client,
+            @Nullable String searchText,
             boolean includeTotalCount
     ) {
 
         return SearchUtils.getSearchPagedIterable(
                 client,
+                searchText,
                 getSearchOptions().setIncludeTotalCount(includeTotalCount)
         );
     }
@@ -52,15 +56,18 @@ public interface SearchPartition
     /**
      * Return an iterator with retrieved {@link SearchResult}(s)
      * @param searchClient Search client
+     * @param searchText text to Search
      * @return iterator fo {@link SearchResult}(s)
      */
 
     default Iterator<SearchResult> getPartitionResults(
-            @NotNull SearchClient searchClient
+            @NotNull SearchClient searchClient,
+            @Nullable String searchText
     ) {
 
         return getSearchPagedIterable(
                 searchClient,
+                searchText,
                 false
         ).iterator();
     }
@@ -68,15 +75,18 @@ public interface SearchPartition
     /**
      * Get the number of results retrieved by this partition
      * @param searchClient Search client
+     * @param searchText text to Search
      * @return the number of results retrieved by this partition
      */
 
     default Long getCountPerPartition(
-            @NotNull SearchClient searchClient
+            @NotNull SearchClient searchClient,
+            @Nullable String searchText
     ) {
 
         return getSearchPagedIterable(
                 searchClient,
+                searchText,
                 true
         ).getTotalCount();
     }

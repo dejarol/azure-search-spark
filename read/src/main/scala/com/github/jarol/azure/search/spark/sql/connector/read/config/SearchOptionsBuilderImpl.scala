@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.config
 
-import com.azure.search.documents.models.{QueryType, SearchOptions}
+import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Enums
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
@@ -100,7 +100,18 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
       SearchOptionsBuilderImpl.QUERY_TYPE,
       name => Enums.unsafeValueOf[QueryType](
         name,
-        (queryType, value) => queryType.name().equalsIgnoreCase(value)
+        (q, v) => q.name().equalsIgnoreCase(v)
+      )
+    )
+  }
+
+  private[read] def searchMode: Option[SearchMode] = {
+
+    getAs(
+      SearchOptionsBuilderImpl.SEARCH_MODE,
+      name => Enums.unsafeValueOf[SearchMode](
+        name,
+        (s, v) => s.name().equalsIgnoreCase(v)
       )
     )
   }
@@ -140,6 +151,7 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
       .setSelect(select)
       .setFacets(facets)
       .setQueryType(queryType)
+      .setSearchMode(searchMode).setSearchFields()
   }
 }
 
@@ -150,11 +162,12 @@ object SearchOptionsBuilderImpl {
   final val PUSHED_PREDICATE = "pushedPredicate"
   final val SELECT_CONFIG = "select"
   final val QUERY_TYPE = "queryType"
+  final val SEARCH_MODE = "searchMode"
   final val FACETS = "facets"
 
   /**
    * Create an instance from a [[SearchConfig]]
- *
+   *
    * @param config config instance
    * @return an instance of [[SearchOptionsBuilderImpl]]
    */

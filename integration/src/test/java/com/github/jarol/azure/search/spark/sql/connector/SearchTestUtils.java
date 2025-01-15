@@ -51,11 +51,12 @@ public final class SearchTestUtils {
 
     public static List<SearchDocument> readDocuments(
             @NotNull SearchClient client,
-            @Nullable SearchOptions searchOptions
+            @Nullable SearchOptions searchOptions,
+            @Nullable String searchText
     ) {
 
         SearchOptions inputOptions = Objects.isNull(searchOptions) ? new SearchOptions() : searchOptions;
-        return SearchUtils.getSearchPagedIterable(client, inputOptions)
+        return SearchUtils.getSearchPagedIterable(client, searchText, inputOptions)
                 .stream().map(result -> result.getDocument(SearchDocument.class))
                 .collect(Collectors.toList());
     }
@@ -70,7 +71,7 @@ public final class SearchTestUtils {
             @NotNull SearchClient client
     ) {
 
-        return readDocuments(client, null);
+        return readDocuments(client, null, null);
     }
 
     /**
@@ -103,17 +104,19 @@ public final class SearchTestUtils {
      * Get the set of documents retrieved by a {@link SearchPartition}
      * @param partition partition
      * @param client Search client
+     * @param searchText search text
      * @return the documents for this given partition
      */
 
     public static List<SearchDocument> getPartitionDocuments(
             @NotNull SearchPartition partition,
-            @NotNull SearchClient client
+            @NotNull SearchClient client,
+            @Nullable String searchText
     ) {
 
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(
-                        partition.getPartitionResults(client),
+                        partition.getPartitionResults(client, searchText),
                         Spliterator.ORDERED
                 ), false
         ).map(searchResult -> searchResult.getDocument(SearchDocument.class))
