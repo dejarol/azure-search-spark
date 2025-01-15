@@ -1,36 +1,56 @@
-package com.github.jarol.azure.search.spark.sql.connector.read
+package com.github.jarol.azure.search.spark.sql.connector.read.config
 
 import com.azure.search.documents.models.SearchOptions
 import com.azure.search.documents.util.SearchPagedIterable
-import com.github.jarol.azure.search.spark.sql.connector.core.config.{SearchConfig, SearchIOConfig}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{SearchPartitioner, DefaultPartitioner}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
  * Read configuration
  * @param options read options passed to the datasource
- * @param pushedPredicates predicates to be pushed down
  */
 
-case class ReadConfig(
-                       override protected val options: CaseInsensitiveMap[String],
-                       protected[read] val pushedPredicates: Seq[ODataExpression] = Seq.empty
-                     )
-  extends SearchIOConfig(options) {
+case class ReadConfig(override protected val options: CaseInsensitiveMap[String])
+  extends SearchIOConfig(options)
+    with ExtendableConfig[ReadConfig] {
 
-  def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = this.copy(pushedPredicates = predicates)
+  override def withOption(key: String, value: String): ReadConfig = {
+
+    this.copy(
+      options = options + (key, value)
+    )
+  }
+
+  /**
+   * Extend this configuration by injecting an OData expression obtained by logically combining the predicates
+   * that can be pushed down to the datasource
+   * @param predicates predicates that can be pushed down
+   * @return a new configuration instance
+   */
+
+  def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = {
+
+    withOption(
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.PUSHED_PREDICATE,
+      ODataExpressions.logical(
+        predicates,
+        isAnd = true
+      ).toUriLiteral
+    )
+  }
 
   /**
    * Collect options related to documents search
  *
-   * @return a [[SearchOptionsBuilderConfig]] instance
+   * @return a [[SearchOptionsBuilderImpl]] instance
    */
 
-  def searchOptionsBuilderConfig: SearchOptionsBuilderConfig = {
+  def searchOptionsBuilderConfig: SearchOptionsBuilderImpl = {
 
-    SearchOptionsBuilderConfig(
+    SearchOptionsBuilderImpl(
       getAllWithPrefix(ReadConfig.SEARCH_OPTIONS_PREFIX)
     )
   }
@@ -100,8 +120,7 @@ object ReadConfig {
   def apply(dsOptions: Map[String, String]): ReadConfig = {
 
     ReadConfig(
-      CaseInsensitiveMap(dsOptions),
-      Seq.empty
+      CaseInsensitiveMap(dsOptions)
     )
   }
 }

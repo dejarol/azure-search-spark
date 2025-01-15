@@ -1,8 +1,8 @@
-package com.github.jarol.azure.search.spark.sql.connector.read
+package com.github.jarol.azure.search.spark.sql.connector.read.config
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{EmptyPartitioner, DefaultPartitioner}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, EmptyPartitioner}
 
 class ReadConfigSpec
   extends BasicSpec {

@@ -1,11 +1,11 @@
-package com.github.jarol.azure.search.spark.sql.connector.read
+package com.github.jarol.azure.search.spark.sql.connector.read.config
 
 import com.azure.search.documents.models.QueryType
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
-class SearchOptionsBuilderConfigSpec
+class SearchOptionsBuilderImplSpec
   extends BasicSpec {
 
   /**
@@ -14,9 +14,9 @@ class SearchOptionsBuilderConfigSpec
    * @return a configuration instance
    */
 
-  private def createConfig(map: Map[String, String]): SearchOptionsBuilderConfig = {
+  private def createConfig(map: Map[String, String]): SearchOptionsBuilderImpl = {
 
-    SearchOptionsBuilderConfig(
+    SearchOptionsBuilderImpl(
       CaseInsensitiveMap(map)
     )
   }
@@ -24,7 +24,7 @@ class SearchOptionsBuilderConfigSpec
   private lazy val emptyConfig = createConfig(Map.empty)
   private lazy val (first, second) = ("first", "second")
 
-  describe(anInstanceOf[SearchOptionsBuilderConfig]) {
+  describe(anInstanceOf[SearchOptionsBuilderImpl]) {
     describe(SHOULD) {
       describe("retrieve") {
         it("the search text") {
@@ -33,7 +33,7 @@ class SearchOptionsBuilderConfigSpec
           val expected = "hello"
           createConfig(
             Map(
-              SearchOptionsBuilderConfig.SEARCH -> expected
+              SearchOptionsBuilderImpl.SEARCH -> expected
             )
           ).searchText shouldBe Some(expected)
         }
@@ -44,9 +44,44 @@ class SearchOptionsBuilderConfigSpec
           emptyConfig.filter shouldBe empty
           createConfig(
             Map(
-              SearchOptionsBuilderConfig.FILTER -> expected
+              SearchOptionsBuilderImpl.FILTER -> expected
             )
           ).filter shouldBe Some(expected)
+        }
+
+        it("the pushed predicate") {
+
+          val expected = "hello"
+          emptyConfig.pushedPredicate shouldBe empty
+          createConfig(
+            Map(
+              SearchOptionsBuilderImpl.PUSHED_PREDICATE -> expected
+            )
+          ).pushedPredicate shouldBe Some(expected)
+        }
+
+        it("the combined filter") {
+
+          emptyConfig.combinedFilter shouldBe empty
+          val (first, second) = ("hello", "world")
+          createConfig(
+            Map(
+              SearchOptionsBuilderImpl.FILTER -> first
+            )
+          ).combinedFilter shouldBe Some(first)
+
+          createConfig(
+            Map(
+              SearchOptionsBuilderImpl.PUSHED_PREDICATE -> second
+            )
+          ).combinedFilter shouldBe Some(second)
+
+          createConfig(
+            Map(
+              SearchOptionsBuilderImpl.FILTER -> first,
+              SearchOptionsBuilderImpl.PUSHED_PREDICATE -> second
+            )
+          ).combinedFilter shouldBe Some(s"($first) and ($second)")
         }
 
         it("the search fields to select") {
@@ -55,7 +90,7 @@ class SearchOptionsBuilderConfigSpec
           emptyConfig.select shouldBe empty
           val actual: Option[Seq[String]] = createConfig(
             Map(
-              SearchOptionsBuilderConfig.SELECT_CONFIG -> expected.mkString(",")
+              SearchOptionsBuilderImpl.SELECT_CONFIG -> expected.mkString(",")
             )
           ).select
 
@@ -70,7 +105,7 @@ class SearchOptionsBuilderConfigSpec
           val expected = QueryType.SEMANTIC
           createConfig(
             Map(
-              SearchOptionsBuilderConfig.QUERY_TYPE -> expected.name()
+              SearchOptionsBuilderImpl.QUERY_TYPE -> expected.name()
             )
           ).queryType shouldBe Some(expected)
 
@@ -78,7 +113,7 @@ class SearchOptionsBuilderConfigSpec
 
             createConfig(
               Map(
-                SearchOptionsBuilderConfig.QUERY_TYPE -> "hello"
+                SearchOptionsBuilderImpl.QUERY_TYPE -> "hello"
               )
             ).queryType
           }
@@ -90,7 +125,7 @@ class SearchOptionsBuilderConfigSpec
           val expected = Seq("hello", "world")
           val actual = createConfig(
             Map(
-              SearchOptionsBuilderConfig.FACETS -> expected.mkString("|")
+              SearchOptionsBuilderImpl.FACETS -> expected.mkString("|")
             )
           ).facets
 
@@ -105,7 +140,7 @@ class SearchOptionsBuilderConfigSpec
           emptyConfig.withFilter(first).filter shouldBe Some(first)
           createConfig(
             Map(
-              SearchOptionsBuilderConfig.FILTER -> first
+              SearchOptionsBuilderImpl.FILTER -> first
             )
           ).withFilter(second).filter shouldBe Some(s"($first) and ($second)")
         }
@@ -118,7 +153,7 @@ class SearchOptionsBuilderConfigSpec
 
           val secondResult = createConfig(
             Map(
-              SearchOptionsBuilderConfig.FACETS -> first
+              SearchOptionsBuilderImpl.FACETS -> first
             )
           ).withFacet(second).facets
 

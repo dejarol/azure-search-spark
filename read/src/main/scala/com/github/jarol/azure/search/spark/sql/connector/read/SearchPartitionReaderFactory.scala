@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.conversion.SchemaViolationException
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.{InputPartition, PartitionReader, PartitionReaderFactory}

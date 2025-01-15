@@ -1,6 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 import org.scalamock.scalatest.MockFactory

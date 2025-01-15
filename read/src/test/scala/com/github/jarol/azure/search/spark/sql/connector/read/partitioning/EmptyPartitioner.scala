@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 
 import java.util.{Collections => JColl, List => JList}
 

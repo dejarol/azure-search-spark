@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.{StringUtils, Time}
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit

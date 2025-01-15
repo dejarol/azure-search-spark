@@ -2,6 +2,8 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.models._
+import com.github.jarol.azure.search.spark.sql.connector.read.config.{ReadConfig, SearchOptionsBuilderImpl}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataComparator, ODataExpression, ODataExpressionFactory, ODataExpressions}
 import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
 import org.apache.spark.sql.functions.col
@@ -14,7 +16,8 @@ import java.time.{LocalDate, OffsetDateTime}
 
 class ReadSpec
   extends SearchITSpec
-    with SparkSpec {
+    with SparkSpec
+      with ODataExpressionFactory {
 
   private lazy val atomicBeansIndex = "read-atomic-beans"
   private lazy val collectionBeansIndex = "read-collection-beans"
@@ -36,6 +39,9 @@ class ReadSpec
     PushdownBean(Some("jane"), None, None)
   )
 
+  private lazy val stringValueRef: ODataExpression = topLevelFieldReference("stringValue")
+  private lazy val intValueRef: ODataExpression = topLevelFieldReference("intValue")
+
   /**
    * Read data from a target index
    * @param name index name
@@ -54,8 +60,8 @@ class ReadSpec
 
     // Set extra options
     val extraOptions = Map(
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderConfig.FILTER -> filter,
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderConfig.SELECT_CONFIG -> select.map(_.mkString(","))
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.FILTER -> filter,
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT_CONFIG -> select.map(_.mkString(","))
     ).collect {
       case (k, Some(v)) => (k, v)
     }
@@ -110,35 +116,34 @@ class ReadSpec
 
   /**
    * Assert that Search datasource has pushed down a Spark predicate
-   * @param predicate Spark predicate
-   * @param expectedPredicateNames names of the expected pushed Spark predicates
+   * @param columnPredicate Spark predicate
+   * @param expectedPredicate expected pushed predicate
    * @param modelPredicate Scala-equivalent predicate of given Spark predicate
    */
 
   private def assertEffectOfPredicatePushdown(
-                                               predicate: Column,
-                                               expectedPredicateNames: Seq[String],
+                                               columnPredicate: Column,
+                                               expectedPredicate: ODataExpression,
                                                modelPredicate: PushdownBean => Boolean
                                              ): Unit = {
 
     // Read data using dataSource
     val df = spark.read.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(pushdownPredicateIndex))
-      .load().filter(predicate)
+      .load().filter(columnPredicate)
 
     // Retrieve pushed predicates
-    val maybePushedPredicates = df.queryExecution.executedPlan.collect {
+    val maybePushedPredicates: Option[String] = df.queryExecution.executedPlan.collect {
       case scan: BatchScanExec =>
         scan.scan
-    }.headOption.collect {
-      case scan: SearchScan => scan.pushedPredicates
+    }.headOption.flatMap {
+      case scan: SearchScan => scan.pushedPredicate
     }
 
     // Assert that some predicates have been pushed down
     maybePushedPredicates shouldBe defined
-    val predicates = maybePushedPredicates.get
-    predicates should not be empty
-    predicates.map(_.name()) should contain allElementsOf expectedPredicateNames
+    val pushedPredicate: String = maybePushedPredicates.get
+    pushedPredicate should contain (expectedPredicate.toUriLiteral)
 
     // Assert that retrieved documents match
     val expectedDocuments: Seq[PushdownBean] = pushdownBeans.filter(modelPredicate)
@@ -399,30 +404,70 @@ class ReadSpec
             writeDocuments[PushdownBean](pushdownPredicateIndex, pushdownBeans)
 
             // Evaluate pushdown for IS_NULL and IS_NOT_NULL
-            assertEffectOfPredicatePushdown(col("stringValue").isNull, Seq("IS_NULL"), _.stringValue.isEmpty)
-            assertEffectOfPredicatePushdown(col("stringValue").isNotNull, Seq("IS_NOT_NULL"), _.stringValue.isDefined)
+            assertEffectOfPredicatePushdown(
+              col("stringValue").isNull,
+              ODataExpressions.isNull(stringValueRef, negate = false),
+              _.stringValue.isEmpty
+            )
+
+            assertEffectOfPredicatePushdown(
+              col("stringValue").isNotNull,
+              ODataExpressions.isNull(stringValueRef, negate = true),
+              _.stringValue.isDefined
+            )
           }
 
           it("comparisons") {
 
             // Equality
             val equalToOne: Int => Boolean = _.equals(1)
-            assertEffectOfPredicatePushdown(col("intValue") === 1, Seq("="), _.intValue.exists(equalToOne))
-            assertEffectOfPredicatePushdown(col("intValue") =!= 1, Seq("NOT"), _.intValue.exists(i => !equalToOne(i)))
+            assertEffectOfPredicatePushdown(
+              col("intValue") === 1,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(1), ODataComparator.EQ),
+              _.intValue.exists(equalToOne)
+            )
+
+            assertEffectOfPredicatePushdown(
+              col("intValue") =!= 1,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(1), ODataComparator.NE),
+              _.intValue.exists(i => !equalToOne(i))
+            )
 
             // Greater
-            assertEffectOfPredicatePushdown(col("intValue") > 2, Seq(">"), _.intValue.exists(_ > 2))
-            assertEffectOfPredicatePushdown(col("intValue") >= 2, Seq(">="), _.intValue.exists(_ >= 2))
+            assertEffectOfPredicatePushdown(
+              col("intValue") > 2,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(2), ODataComparator.GT),
+              _.intValue.exists(_ > 2)
+            )
+
+            assertEffectOfPredicatePushdown(
+              col("intValue") >= 2,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(2), ODataComparator.GEQ),
+              _.intValue.exists(_ >= 2)
+            )
 
             // Less
-            assertEffectOfPredicatePushdown(col("intValue") < 2, Seq("<"), _.intValue.exists(_ < 2))
-            assertEffectOfPredicatePushdown(col("intValue") <= 2, Seq("<="), _.intValue.exists(_ <= 2))
+            assertEffectOfPredicatePushdown(
+              col("intValue") < 2,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(2), ODataComparator.LT),
+              _.intValue.exists(_ < 2)
+            )
+
+            assertEffectOfPredicatePushdown(
+              col("intValue") <= 2,
+              ODataExpressions.comparison(intValueRef, createIntLiteral(2), ODataComparator.LEQ),
+              _.intValue.exists(_ <= 2)
+            )
           }
 
           it("SQL-like IN expressions") {
 
             val inValues: Seq[String] = Seq("hello", "world")
-            assertEffectOfPredicatePushdown(col("stringValue").isin(inValues: _*), Seq("IN"), _.stringValue.exists(inValues.contains))
+            assertEffectOfPredicatePushdown(
+              col("stringValue").isin(inValues: _*),
+              ODataExpressions.in(stringValueRef, inValues.map(createStringLiteral), ","),
+              _.stringValue.exists(inValues.contains)
+            )
           }
 
           it("logical combination of other predicates") {
@@ -430,10 +475,23 @@ class ReadSpec
             // And
             val stringValueNotNull: Column = col("stringValue").isNotNull
             val intValueNotNull: Column = col("intValue").isNotNull
-            assertEffectOfPredicatePushdown(stringValueNotNull && intValueNotNull, Seq("IS_NOT_NULL"), p => p.stringValue.isDefined && p.intValue.isDefined)
+            val logicalPredicates = Seq(
+              ODataExpressions.isNull(stringValueRef, negate = true),
+              ODataExpressions.isNull(intValueRef, negate = true)
+            )
+
+            assertEffectOfPredicatePushdown(
+              stringValueNotNull && intValueNotNull,
+              ODataExpressions.logical(logicalPredicates, isAnd = true),
+              p => p.stringValue.isDefined && p.intValue.isDefined
+            )
 
             // Or
-            assertEffectOfPredicatePushdown(stringValueNotNull || intValueNotNull, Seq("OR"), p => p.stringValue.isDefined || p.intValue.isDefined)
+            assertEffectOfPredicatePushdown(
+              stringValueNotNull || intValueNotNull,
+              ODataExpressions.logical(logicalPredicates, isAnd = false),
+              p => p.stringValue.isDefined || p.intValue.isDefined
+            )
           }
         }
       }

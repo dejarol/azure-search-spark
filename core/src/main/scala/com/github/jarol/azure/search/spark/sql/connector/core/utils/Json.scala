@@ -23,7 +23,7 @@ object Json {
 
   /**
  * Deserializes a JSON string into a collection of objects using Jackson.
- * @param json JSON string to be deserialized. It should represent a collection of objects.
+ * @param json json string
  * @tparam T type of objects in the resulting collection. Must have a ClassTag.
  * @return a collection containing the deserialized objects.
  */

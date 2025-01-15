@@ -5,14 +5,13 @@ import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
 import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTestUtils}
-import org.apache.spark.sql.types.DataTypes
-import org.apache.spark.unsafe.types.UTF8String
 
 import java.time.LocalDate
 import java.util.{List => JList}
 
 class ODataExpressionsSpec
-  extends SearchITSpec {
+  extends SearchITSpec
+    with ODataExpressionFactory {
 
   private lazy val now = LocalDate.now()
   private lazy val indexName = "odata-expressions-spec"
@@ -27,65 +26,15 @@ class ODataExpressionsSpec
     PushdownBean(Some("three"), Some(5), None)
   )
 
-  private lazy val stringValue = topLevelField("stringValue")
-  private lazy val intValue = topLevelField("intValue")
-  private lazy val dateValue  = topLevelField("dateValue")
+  private lazy val stringValue = topLevelFieldReference("stringValue")
+  private lazy val intValue = topLevelFieldReference("intValue")
+  private lazy val dateValue  = topLevelFieldReference("dateValue")
 
   override def beforeAll(): Unit = {
 
     super.beforeAll()
     createIndexFromSchemaOf[PushdownBean](indexName)
     writeDocuments[PushdownBean](indexName, documents)
-  }
-
-  /**
-   * Create an expression for a top-level field
-   * @param name field name
-   * @return an expression for a top-level field
-   */
-
-  private def topLevelField(name: String): ODataExpression = ODataExpressions.fieldReference(Seq(name))
-
-  /**
-   * Create a string literal
-   * @param value literal value
-   * @return an [[ODataExpression]] representing a string literal
-   */
-
-  private def createStringLiteral(value: String): ODataExpression = {
-
-    ODataExpressions.literal(
-      DataTypes.StringType,
-      UTF8String.fromString(value)
-    )
-  }
-
-  /**
-   * Create an integer literal
-   * @param value literal value
-   * @return an [[ODataExpression]] representing a numeric literal
-   */
-
-  private def createIntLiteral(value: Int): ODataExpression = {
-
-    ODataExpressions.literal(
-      DataTypes.IntegerType,
-      value
-    )
-  }
-
-  /**
-   * Create a datetime literal
-   * @param value literal value
-   * @return an [[ODataExpression]] representing a datetime literal
-   */
-
-  private def createDateLiteral(value: LocalDate): ODataExpression = {
-
-    ODataExpressions.literal(
-      DataTypes.DateType,
-      value.toEpochDay.toInt
-    )
   }
 
   /**
@@ -261,6 +210,7 @@ class ODataExpressionsSpec
         it("logically combine other expressions") {
 
           // AND
+          // TODO: test with only one expression
           val stringValueNotNull = ODataExpressions.isNull(stringValue, negate = true)
           val intValueEqTwo = ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.EQ)
 
@@ -273,6 +223,7 @@ class ODataExpressionsSpec
           )
 
           // OR
+          // TODO: test with only one expression
           assertExpressionBehavior(
             ODataExpressions.logical(
               Seq(stringValueNotNull, intValueEqTwo),

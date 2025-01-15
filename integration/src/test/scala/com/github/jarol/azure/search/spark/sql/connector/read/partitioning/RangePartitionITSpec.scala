@@ -1,7 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 class RangePartitionITSpec
   extends AbstractSearchPartitionITSpec {
@@ -49,13 +48,13 @@ class RangePartitionITSpec
 
     RangePartition(
       0,
-      inputFilter,
-      None,
-      Seq.empty,
+      inputFilter
+      .map(SimpleOptionsBuilder.withFilter)
+      .getOrElse(SimpleOptionsBuilder.empty()),
       fieldName,
       lowerBound,
       upperBound
-    ).getODataFilter
+    ).getSearchOptions.getFilter
   }
 
   /**
@@ -69,15 +68,14 @@ class RangePartitionITSpec
   private def createPartition(
                                inputFilter: Option[String],
                                lower: Option[Int],
-                               upper: Option[Int],
-                               pushedPredicates: Seq[ODataExpression]
+                               upper: Option[Int]
                              ): SearchPartition = {
 
     RangePartition(
       0,
-      inputFilter,
-      None,
-      pushedPredicates,
+      inputFilter
+        .map(SimpleOptionsBuilder.withFilter)
+        .getOrElse(SimpleOptionsBuilder.empty()),
       partitionField,
       lower.map(String.valueOf),
       upper.map(String.valueOf)
@@ -89,12 +87,12 @@ class RangePartitionITSpec
       it("create a collection of partitions") {
 
         val (fieldName, values) = ("type", Seq("1", "2", "3"))
-        val partitions = RangePartition.createCollection(None, None, Seq.empty, fieldName, values)
+        val partitions = RangePartition.createCollection(SimpleOptionsBuilder.empty(), fieldName, values)
         partitions should have size(values.size + 1)
-        val headFilter = partitions.head.getODataFilter
+        val headFilter = partitions.head.getSearchOptions
         headFilter should include (s"$fieldName lt ${values.head}")
         headFilter should include (s"$fieldName eq null")
-        partitions.last.getODataFilter shouldBe s"$fieldName ge ${values.last}"
+        partitions.last.getSearchOptions.getFilter shouldBe s"$fieldName ge ${values.last}"
       }
     }
   }
@@ -126,7 +124,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, None, Some(upperBound), Seq.empty),
+            createPartition(None, None, Some(upperBound)),
             lessThanUpperBoundOrNull
           )
         }
@@ -136,7 +134,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, Some(lowerBound), None, Seq.empty),
+            createPartition(None, Some(lowerBound), None),
             greaterOrEqualLowerBound
           )
         }
@@ -146,7 +144,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, Some(lowerBound), Some(upperBound), Seq.empty),
+            createPartition(None, Some(lowerBound), Some(upperBound)),
             inRange
           )
         }
@@ -158,7 +156,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("stringValue ne null"), None, Some(upperBound), Seq.empty),
+            createPartition(Some("stringValue ne null"), None, Some(upperBound)),
             p => p.stringValue.isDefined && lessThanUpperBoundOrNull(p)
           )
         }
@@ -168,7 +166,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("stringValue ne null"), Some(lowerBound), None, Seq.empty),
+            createPartition(Some("stringValue ne null"), Some(lowerBound), None),
             p => p.stringValue.isDefined && greaterOrEqualLowerBound(p)
           )
         }
@@ -178,7 +176,7 @@ class RangePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("stringValue ne null"), Some(lowerBound), Some(upperBound), Seq.empty),
+            createPartition(Some("stringValue ne null"), Some(lowerBound), Some(upperBound)),
             p => p.stringValue.isDefined && inRange(p)
           )
         }

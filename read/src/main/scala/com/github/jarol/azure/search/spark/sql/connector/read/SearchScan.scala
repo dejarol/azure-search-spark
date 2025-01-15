@@ -1,6 +1,6 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import org.apache.spark.sql.connector.read.{Batch, Scan}
 import org.apache.spark.sql.types.StructType
 
@@ -20,7 +20,7 @@ class SearchScan(
 
   override def toBatch: Batch = new SearchBatch(readConfig, schema)
 
-  protected[read] val pushedPredicates: Seq[ODataExpression] = readConfig.pushedPredicates
+  protected[read] val pushedPredicate: Option[String] = readConfig.searchOptionsBuilderConfig.pushedPredicate
 
   /**
    * Get the scan description
@@ -31,7 +31,7 @@ class SearchScan(
 
     s"${this.getClass.getSimpleName}(" +
       s"${readConfig.getIndex}, " +
-      s"pushedPredicates: ${pushedPredicates.mkString("(", ",", ")")}" +
+      s"pushedPredicates: $pushedPredicate" +
       s")"
   }
 }

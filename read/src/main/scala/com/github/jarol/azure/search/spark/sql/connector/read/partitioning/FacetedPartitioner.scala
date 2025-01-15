@@ -5,7 +5,7 @@ import com.azure.search.documents.models.FacetResult
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
-import com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 
 import java.util.{List => JList}
 

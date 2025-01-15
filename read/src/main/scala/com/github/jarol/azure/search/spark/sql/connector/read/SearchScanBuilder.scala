@@ -1,6 +1,7 @@
 package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressionBuilder}
 import org.apache.spark.sql.connector.expressions.filter.Predicate
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownV2Filters}

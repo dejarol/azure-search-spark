@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchResult
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow

@@ -161,10 +161,14 @@ object ODataExpressions {
 
     override def toUriLiteral: String = {
 
-      val operator = if (isAnd) "and" else "or"
-      expressions.map {
-        exp => s"(${exp.toUriLiteral})"
-      }.mkString(s" $operator ")
+      if (expressions.size.equals(1)) {
+        expressions.head.toUriLiteral
+      } else {
+        val operator = if (isAnd) "and" else "or"
+        expressions.map {
+          exp => s"(${exp.toUriLiteral})"
+        }.mkString(s" $operator ")
+      }
     }
   }
 

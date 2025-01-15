@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.Reflection
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{EmptyPartitioner, SearchPartitioner}
 
 import scala.reflect.ClassTag
