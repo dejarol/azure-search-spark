@@ -36,8 +36,9 @@ class ReadConfigSpec
     val createdConfig: ReadConfig = createConfig(input)
 
     // Given a non-empty map, we expect to find all of its pairs
-    val expected = input.filter {
-      case (k, _) => k.startsWith(prefix)
+    val expected = input.collect {
+      case (k, v)  if k.startsWith(prefix) =>
+        (k.stripPrefix(prefix), v)
     }
 
     getter(createdConfig).toMap should contain theSameElementsAs expected

@@ -35,7 +35,7 @@ class AbstractSearchPartitionSpec
 
           val (first, second) = ("a eq 1", "b eq 2")
           createPartitionAndGetFilter(first, None) shouldBe first
-          createPartitionAndGetFilter(first, Some(second)) shouldBe s"$first,$second"
+          createPartitionAndGetFilter(first, Some(second)) shouldBe s"($first) and ($second)"
         }
       }
     }
