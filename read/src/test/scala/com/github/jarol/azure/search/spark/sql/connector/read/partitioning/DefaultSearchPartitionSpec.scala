@@ -3,9 +3,13 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
+import org.scalamock.scalatest.MockFactory
 
 class DefaultSearchPartitionSpec
-  extends BasicSpec {
+  extends BasicSpec
+    with MockFactory {
+
+  private lazy val mockOptionsBuilder = mock[SearchOptionsBuilder]
 
   /**
    * Create a partition instance
@@ -22,13 +26,7 @@ class DefaultSearchPartitionSpec
     describe(SHOULD_NOT) {
       it("define any partition filter") {
 
-        // TODO: fix
-        val emptySupplier = new SearchOptionsBuilder {
-          override def buildOptions(): SearchOptions = new SearchOptions
-          override def withFilter(other: String): SearchOptionsBuilder = this
-        }
-
-        createPartition(emptySupplier).partitionFilter shouldBe empty
+        createPartition(mockOptionsBuilder).partitionFilter shouldBe empty
       }
     }
   }

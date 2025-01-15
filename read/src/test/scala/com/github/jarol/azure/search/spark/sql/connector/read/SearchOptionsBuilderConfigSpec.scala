@@ -22,6 +22,7 @@ class SearchOptionsBuilderConfigSpec
   }
 
   private lazy val emptyConfig = createConfig(Map.empty)
+  private lazy val (first, second) = ("first", "second")
 
   describe(anInstanceOf[SearchOptionsBuilderConfig]) {
     describe(SHOULD) {
@@ -101,12 +102,28 @@ class SearchOptionsBuilderConfigSpec
       describe("let a user add") {
         it("a filter") {
 
-          // TODO: test
+          emptyConfig.withFilter(first).filter shouldBe Some(first)
+          createConfig(
+            Map(
+              SearchOptionsBuilderConfig.FILTER -> first
+            )
+          ).withFilter(second).filter shouldBe Some(s"($first) and ($second)")
         }
 
         it("a facet") {
 
-          // TODO: test
+          val firstResult = emptyConfig.withFacet(first).facets
+          firstResult shouldBe defined
+          firstResult.get should contain theSameElementsAs Seq(first)
+
+          val secondResult = createConfig(
+            Map(
+              SearchOptionsBuilderConfig.FACETS -> first
+            )
+          ).withFacet(second).facets
+
+          secondResult shouldBe defined
+          secondResult.get should contain theSameElementsAs Seq(first, second)
         }
       }
     }

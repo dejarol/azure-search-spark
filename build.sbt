@@ -34,6 +34,7 @@ lazy val sparkVersion = "3.3.0"
 lazy val azureSearchVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
 lazy val scalaTestVersion = "3.2.16"
+lazy val scalaMockVersion = "5.1.0"
 
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion % Provided
@@ -44,6 +45,7 @@ lazy val azureCoreOkHttp = "com.azure" % "azure-core-http-okhttp" % azureCoreOkH
 // Test dependencies
 lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
 lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
+lazy val scalaMock = "org.scalamock" %% "scalamock" % scalaMockVersion % Test
 
 // Core project
 lazy val core = (project in file("core"))
@@ -57,7 +59,8 @@ lazy val core = (project in file("core"))
       azureSearchClient,
       azureCoreOkHttp,
       scalactic,
-      scalaTest
+      scalaTest,
+      scalaMock
     )
   )
 

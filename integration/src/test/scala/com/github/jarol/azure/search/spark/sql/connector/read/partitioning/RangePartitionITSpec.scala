@@ -4,7 +4,7 @@ import com.github.jarol.azure.search.spark.sql.connector.models._
 import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 class RangePartitionITSpec
-  extends SearchPartitionITSPec {
+  extends AbstractSearchPartitionITSpec {
 
   private lazy val (lowerBound, upperBound) = (2, 5)
   private lazy val (indexName, partitionField) = ("range-partition-it-spec", "intValue")

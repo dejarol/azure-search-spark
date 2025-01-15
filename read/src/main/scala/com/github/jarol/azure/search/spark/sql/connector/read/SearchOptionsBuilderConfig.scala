@@ -61,16 +61,13 @@ case class SearchOptionsBuilderConfig(override protected val options: CaseInsens
 
   /**
    * Create a new config instance by upserting the underlying options (i.e., by either adding a new
-   * key-value pair if such key does not exist or by replacing the value related to such key)
+   * key-value pair if such key does not exist or by replacing its value otherwise)
    * @param key key
    * @param value value
    * @return a new config instance
    */
 
-  private[read] def withOption(
-                                key: String,
-                                value: String
-                              ): SearchOptionsBuilderConfig = {
+  private[read] def withOption(key: String, value: String): SearchOptionsBuilderConfig = {
 
     this.copy(options = options + (key, value))
   }

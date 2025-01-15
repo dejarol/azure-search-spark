@@ -9,7 +9,7 @@ import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTe
  * Trait for integration tests related to [[SearchPartition]](s)
  */
 
-trait SearchPartitionITSPec
+trait AbstractSearchPartitionITSpec
   extends SearchITSpec {
 
   /**

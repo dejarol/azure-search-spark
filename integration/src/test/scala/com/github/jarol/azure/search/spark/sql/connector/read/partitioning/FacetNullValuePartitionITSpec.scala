@@ -6,7 +6,7 @@ import com.github.jarol.azure.search.spark.sql.connector.models._
 import java.time.LocalDate
 
 class FacetNullValuePartitionITSpec
-  extends SearchPartitionITSPec {
+  extends AbstractSearchPartitionITSpec {
 
   private lazy val FACET_FIELD_IS_NULL = "facet field is null"
   private lazy val NOT_MATCHING_OTHER_VALUES = "does not match other facet values"
@@ -44,10 +44,9 @@ class FacetNullValuePartitionITSpec
                                facets: Seq[String]
                              ): FacetNullValuePartition = {
 
-    // TODO: fix
     FacetNullValuePartition(
-      inputFilter,
-      None,
+      inputFilter.map(SimpleOptionsBuilder.withFilter)
+        .getOrElse(SimpleOptionsBuilder.empty()),
       facetField,
       facets
     )

@@ -2,12 +2,11 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.read.filter.ODataExpression
 
 import java.time.LocalDate
 
 class FacetValuePartitionITSpec
-  extends SearchPartitionITSPec {
+  extends AbstractSearchPartitionITSpec {
 
   private lazy val (john, jane) = ("john", "jane")
   private lazy val (indexName, facetField) = ("facet-value-partition-index", "stringValue")
@@ -39,16 +38,14 @@ class FacetValuePartitionITSpec
   private def createPartition(
                                inputFilter: Option[String],
                                facetField: String,
-                               facet: String,
-                               pushedPredicates: Seq[ODataExpression]
+                               facet: String
                              ): FacetValuePartition = {
 
-    // TODO: fix
     FacetValuePartition(
       0,
-      inputFilter,
-      None,
-      pushedPredicates,
+      inputFilter
+        .map(SimpleOptionsBuilder.withFilter)
+        .getOrElse(SimpleOptionsBuilder.empty()),
       facetField,
       facet
     )
@@ -59,7 +56,7 @@ class FacetValuePartitionITSpec
       it("create a facet filter related to given value") {
 
         val (fieldName, fieldValue) = ("type", StringUtils.singleQuoted("LOAN"))
-        createPartition(None, fieldName, fieldValue, Seq.empty).facetFilter shouldBe s"$fieldName eq $fieldValue"
+        createPartition(None, fieldName, fieldValue).facetFilter shouldBe s"$fieldName eq $fieldValue"
       }
 
       describe("retrieve documents matching") {
@@ -68,7 +65,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, facetField, StringUtils.singleQuoted(john), Seq.empty),
+            createPartition(None, facetField, StringUtils.singleQuoted(john)),
             stringValueEqJohn
           )
         }
@@ -82,17 +79,12 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john), Seq.empty),
+            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john)),
             expectedPredicate
           )
         }
 
         it("both filter and facet value and pushed predicate") {
-
-          val dateValueNotNull: ODataExpression = new ODataExpression {
-            override def name(): String = "NOT_NULL"
-            override def toUriLiteral: String = "dateValue ne null"
-          }
 
           val expectedPredicate: PushdownBean => Boolean = p =>
             stringValueEqJohn(p) &&
@@ -102,7 +94,7 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john), Seq(dateValueNotNull)),
+            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john)),
             expectedPredicate
           )
         }
