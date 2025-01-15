@@ -48,9 +48,7 @@ class RangePartitionITSpec
 
     RangePartition(
       0,
-      inputFilter
-      .map(SimpleOptionsBuilder.withFilter)
-      .getOrElse(SimpleOptionsBuilder.empty()),
+      SimpleOptionsBuilder.maybeWithFilter(inputFilter),
       fieldName,
       lowerBound,
       upperBound
@@ -73,9 +71,7 @@ class RangePartitionITSpec
 
     RangePartition(
       0,
-      inputFilter
-        .map(SimpleOptionsBuilder.withFilter)
-        .getOrElse(SimpleOptionsBuilder.empty()),
+      SimpleOptionsBuilder.maybeWithFilter(inputFilter),
       partitionField,
       lower.map(String.valueOf),
       upper.map(String.valueOf)

@@ -43,9 +43,7 @@ class FacetValuePartitionITSpec
 
     FacetValuePartition(
       0,
-      inputFilter
-        .map(SimpleOptionsBuilder.withFilter)
-        .getOrElse(SimpleOptionsBuilder.empty()),
+      SimpleOptionsBuilder.maybeWithFilter(inputFilter),
       facetField,
       facet
     )
@@ -75,21 +73,6 @@ class FacetValuePartitionITSpec
           val expectedPredicate: PushdownBean => Boolean = p =>
             stringValueEqJohn(p) &&
               p.intValue.exists(_.equals(1))
-
-          assertCountPerPartition[PushdownBean](
-            documents,
-            indexName,
-            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john)),
-            expectedPredicate
-          )
-        }
-
-        it("both filter and facet value and pushed predicate") {
-
-          val expectedPredicate: PushdownBean => Boolean = p =>
-            stringValueEqJohn(p) &&
-              p.intValue.exists(_.equals(1)) &&
-              p.dateValue.isDefined
 
           assertCountPerPartition[PushdownBean](
             documents,

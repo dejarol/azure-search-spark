@@ -143,7 +143,7 @@ class ReadSpec
     // Assert that some predicates have been pushed down
     maybePushedPredicates shouldBe defined
     val pushedPredicate: String = maybePushedPredicates.get
-    pushedPredicate should contain (expectedPredicate.toUriLiteral)
+    pushedPredicate should include (expectedPredicate.toUriLiteral)
 
     // Assert that retrieved documents match
     val expectedDocuments: Seq[PushdownBean] = pushdownBeans.filter(modelPredicate)
@@ -429,7 +429,9 @@ class ReadSpec
 
             assertEffectOfPredicatePushdown(
               col("intValue") =!= 1,
-              ODataExpressions.comparison(intValueRef, createIntLiteral(1), ODataComparator.NE),
+              ODataExpressions.not(
+                ODataExpressions.comparison(intValueRef, createIntLiteral(1), ODataComparator.EQ)
+              ),
               _.intValue.exists(i => !equalToOne(i))
             )
 

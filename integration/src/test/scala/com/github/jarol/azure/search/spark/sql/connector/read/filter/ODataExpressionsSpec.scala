@@ -210,7 +210,6 @@ class ODataExpressionsSpec
         it("logically combine other expressions") {
 
           // AND
-          // TODO: test with only one expression
           val stringValueNotNull = ODataExpressions.isNull(stringValue, negate = true)
           val intValueEqTwo = ODataExpressions.comparison(intValue, createIntLiteral(2), ODataComparator.EQ)
 
@@ -223,7 +222,6 @@ class ODataExpressionsSpec
           )
 
           // OR
-          // TODO: test with only one expression
           assertExpressionBehavior(
             ODataExpressions.logical(
               Seq(stringValueNotNull, intValueEqTwo),

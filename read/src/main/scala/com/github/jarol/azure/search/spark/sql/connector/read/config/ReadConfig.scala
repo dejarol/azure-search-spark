@@ -33,18 +33,28 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = {
 
-    withOption(
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.PUSHED_PREDICATE,
-      ODataExpressions.logical(
-        predicates,
-        isAnd = true
-      ).toUriLiteral
-    )
+    // If there are no predicates, do not set the option
+    if (predicates.isEmpty) {
+      this
+    } else {
+
+      // The pushed predicate is either the first predicate or the logical AND combination of all predicates
+      val pushedPredicate = if (predicates.size.equals(1)) {
+        predicates.head.toUriLiteral
+      } else {
+        ODataExpressions.logical(predicates, isAnd = true).toUriLiteral
+      }
+
+      withOption(
+        ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.PUSHED_PREDICATE,
+        pushedPredicate
+      )
+    }
   }
 
   /**
    * Collect options related to documents search
- *
+   *
    * @return a [[SearchOptionsBuilderImpl]] instance
    */
 

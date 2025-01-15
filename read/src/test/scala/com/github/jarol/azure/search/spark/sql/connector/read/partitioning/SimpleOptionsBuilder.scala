@@ -42,6 +42,8 @@ case class SimpleOptionsBuilder(
 
 object SimpleOptionsBuilder {
 
+
+
   /**
    * Create an empty instance (i.e. no filter or facet has been cumulated)
    * @return an empty instance
@@ -67,5 +69,18 @@ object SimpleOptionsBuilder {
       Seq(filter),
       Seq.empty
     )
+  }
+
+  /**
+   * Create an instance, cumulating the filer if defined
+   * @param filter optional filter
+   * @return a builder instance
+   */
+
+  def maybeWithFilter(filter: Option[String]): SimpleOptionsBuilder = {
+
+    filter
+      .map(withFilter)
+      .getOrElse(empty())
   }
 }

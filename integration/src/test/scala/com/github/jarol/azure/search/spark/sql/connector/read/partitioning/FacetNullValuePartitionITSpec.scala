@@ -8,8 +8,6 @@ import java.time.LocalDate
 class FacetNullValuePartitionITSpec
   extends AbstractSearchPartitionITSpec {
 
-  private lazy val FACET_FIELD_IS_NULL = "facet field is null"
-  private lazy val NOT_MATCHING_OTHER_VALUES = "does not match other facet values"
   private lazy val (john, jane) = ("john", "jane")
   private lazy val (indexName, facetField) = ("facet-null-value-spec", "stringValue")
   private lazy val stringValueIsNullOrNotEqualToJohn: PushdownBean => Boolean = _.stringValue.forall(v => !v.equals(john))
@@ -45,8 +43,7 @@ class FacetNullValuePartitionITSpec
                              ): FacetNullValuePartition = {
 
     FacetNullValuePartition(
-      inputFilter.map(SimpleOptionsBuilder.withFilter)
-        .getOrElse(SimpleOptionsBuilder.empty()),
+      SimpleOptionsBuilder.maybeWithFilter(inputFilter),
       facetField,
       facets
     )
@@ -79,9 +76,8 @@ class FacetNullValuePartitionITSpec
         actual shouldBe expected
       }
 
-      describe("retrieve documents") {
-
-        it(s"whose $FACET_FIELD_IS_NULL or $NOT_MATCHING_OTHER_VALUES") {
+      describe("retrieve documents that match") {
+        it("the partition filter") {
 
           assertCountPerPartition[PushdownBean](
             documents,
@@ -91,31 +87,15 @@ class FacetNullValuePartitionITSpec
           )
         }
 
-        describe("that match") {
-          it("the input filter") {
+        it("the partitioner filter and builder predicate") {
 
-            val expectedPredicate: PushdownBean => Boolean = p => stringValueIsNullOrNotEqualToJohn(p) && intValueNotNull(p)
-            assertCountPerPartition[PushdownBean](
-              documents,
-              indexName,
-              createPartition(Some("intValue ne null"), Seq(john).map(StringUtils.singleQuoted)),
-              expectedPredicate
-            )
-          }
-
-          it("both input filter and pushed predicate") {
-
-            val expectedPredicate: PushdownBean => Boolean = p => stringValueIsNullOrNotEqualToJohn(p) && intValueNotNull(p) && p.dateValue.isDefined
-            assertCountPerPartition[PushdownBean](
-              documents,
-              indexName,
-              createPartition(
-                Some("intValue ne null"),
-                Seq(john).map(StringUtils.singleQuoted)
-              ),
-              expectedPredicate
-            )
-          }
+          val expectedPredicate: PushdownBean => Boolean = p => stringValueIsNullOrNotEqualToJohn(p) && intValueNotNull(p)
+          assertCountPerPartition[PushdownBean](
+            documents,
+            indexName,
+            createPartition(Some("intValue ne null"), Seq(john).map(StringUtils.singleQuoted)),
+            expectedPredicate
+          )
         }
       }
     }

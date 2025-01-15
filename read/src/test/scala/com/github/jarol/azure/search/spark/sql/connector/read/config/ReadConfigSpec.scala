@@ -2,10 +2,12 @@ package com.github.jarol.azure.search.spark.sql.connector.read.config
 
 import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressionFactory, ODataExpressions}
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, EmptyPartitioner}
 
 class ReadConfigSpec
-  extends BasicSpec {
+  extends BasicSpec
+    with ODataExpressionFactory {
 
   /**
    * Create a configuration instance
@@ -121,6 +123,32 @@ class ReadConfigSpec
               )
             ).pushdownPredicate
           }
+        }
+
+        it("include pushed predicates") {
+
+          // If no predicates were provided, we expect the pushed predicate to be empty
+          val idIsNotNull = ODataExpressions.isNull(topLevelFieldReference("id"), negate = true)
+          val descriptionIsNotNull = ODataExpressions.isNull(topLevelFieldReference("description"), negate = true)
+
+          emptyConfig
+            .withPushedPredicates(Seq.empty)
+            .searchOptionsBuilderConfig.pushedPredicate shouldBe empty
+
+          // If only predicate was provided, that should be being pushed
+          emptyConfig
+            .withPushedPredicates(Seq(idIsNotNull))
+            .searchOptionsBuilderConfig.pushedPredicate shouldBe Some(idIsNotNull.toUriLiteral)
+
+          // If many predicates were provided, we expect the pushed predicate to be the AND combination of the original predicates
+          val expected = ODataExpressions.logical(
+            Seq(idIsNotNull, descriptionIsNotNull),
+            isAnd = true
+          )
+
+          emptyConfig.withPushedPredicates(
+            Seq(idIsNotNull, descriptionIsNotNull)
+          ).searchOptionsBuilderConfig.pushedPredicate shouldBe Some(expected.toUriLiteral)
         }
       }
     }
