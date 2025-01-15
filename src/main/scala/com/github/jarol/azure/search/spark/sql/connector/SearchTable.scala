@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector
 
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.read.{ReadConfig, SearchScanBuilder}
+import com.github.jarol.azure.search.spark.sql.connector.read.SearchScanBuilder
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import com.github.jarol.azure.search.spark.sql.connector.write.{SearchWriteBuilder, WriteConfig}
 import org.apache.spark.sql.connector.catalog.{SupportsRead, SupportsWrite, Table, TableCapability}
 import org.apache.spark.sql.connector.read.ScanBuilder

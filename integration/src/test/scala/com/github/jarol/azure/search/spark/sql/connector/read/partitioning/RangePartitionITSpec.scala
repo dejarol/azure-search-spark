@@ -89,7 +89,7 @@ class RangePartitionITSpec
         val (fieldName, values) = ("type", Seq("1", "2", "3"))
         val partitions = RangePartition.createCollection(SimpleOptionsBuilder.empty(), fieldName, values)
         partitions should have size(values.size + 1)
-        val headFilter = partitions.head.getSearchOptions
+        val headFilter = partitions.head.getSearchOptions.getFilter
         headFilter should include (s"$fieldName lt ${values.head}")
         headFilter should include (s"$fieldName eq null")
         partitions.last.getSearchOptions.getFilter shouldBe s"$fieldName ge ${values.last}"

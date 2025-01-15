@@ -2,6 +2,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 
 import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
 import com.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
+import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
 class SearchScanBuilderITSpec

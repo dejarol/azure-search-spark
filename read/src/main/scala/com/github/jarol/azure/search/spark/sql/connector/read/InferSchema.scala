@@ -3,6 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read
 import com.azure.search.documents.indexes.models.SearchField
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
+import com.github.jarol.azure.search.spark.sql.connector.read.config.{ReadConfig, SearchOptionsBuilderImpl}
 import org.apache.spark.sql.types.StructType
 
 /**
@@ -51,10 +52,10 @@ object InferSchema {
    */
 
   @throws[ConfigException]
-  protected[connector] def selectFields(
-                                         allFields: Seq[SearchField],
-                                         selection: Option[Seq[String]]
-                                       ): Seq[SearchField] = {
+  protected[read] def selectFields(
+                                    allFields: Seq[SearchField],
+                                    selection: Option[Seq[String]]
+                                  ): Seq[SearchField] = {
 
     selection match {
 
@@ -68,7 +69,7 @@ object InferSchema {
 
         if (selectedFields.isEmpty) {
           throw ConfigException.forIllegalOptionValue(
-            ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderConfig.SELECT_CONFIG,
+            ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT_CONFIG,
             value.mkString(","),
             s"None of the selected fields (${value.mkString(",")} exist"
           )

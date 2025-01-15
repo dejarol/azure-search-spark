@@ -44,7 +44,7 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
    * @return index fields to select
    */
 
-  private[read] def select: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.SELECT_CONFIG)
+  def select: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.SELECT_CONFIG)
 
   /**
    * Get the Odata filter to apply on index documents. The filter must follow OData syntax
