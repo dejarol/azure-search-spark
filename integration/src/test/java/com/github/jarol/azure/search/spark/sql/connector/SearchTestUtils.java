@@ -8,6 +8,7 @@ import com.azure.search.documents.indexes.models.SearchIndex;
 import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
 import com.azure.search.documents.models.SearchOptions;
+import com.azure.search.documents.util.SearchPagedIterable;
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
 import com.github.jarol.azure.search.spark.sql.connector.models.DocumentSerializer;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
@@ -16,10 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * Utility for Java-based integration test methods
@@ -104,22 +102,24 @@ public final class SearchTestUtils {
      * Get the set of documents retrieved by a {@link SearchPartition}
      * @param partition partition
      * @param client Search client
-     * @param searchText search text
      * @return the documents for this given partition
      */
 
     public static List<SearchDocument> getPartitionDocuments(
             @NotNull SearchPartition partition,
-            @NotNull SearchClient client,
-            @Nullable String searchText
+            @NotNull SearchClient client
     ) {
 
-        return StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(
-                        partition.getPartitionResults(client, searchText),
-                        Spliterator.ORDERED
-                ), false
-        ).map(searchResult -> searchResult.getDocument(SearchDocument.class))
+        SearchPagedIterable iterable = SearchUtils.getSearchPagedIterable(
+                client,
+                null,
+                new SearchOptions().setFilter(
+                        partition.getPartitionFilter()
+                )
+        );
+
+        return iterable.stream()
+                .map(searchResult -> searchResult.getDocument(SearchDocument.class))
                 .collect(Collectors.toList());
     }
 }

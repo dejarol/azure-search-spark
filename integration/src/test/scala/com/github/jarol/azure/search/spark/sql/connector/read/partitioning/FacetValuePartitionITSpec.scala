@@ -28,22 +28,18 @@ class FacetValuePartitionITSpec
 
   /**
    * Create a partition instance
-   *
-   * @param inputFilter filter
    * @param facetField  facet field
    * @param facet       facet value
    * @return a partition
    */
 
   private def createPartition(
-                               inputFilter: Option[String],
                                facetField: String,
                                facet: String
                              ): FacetValuePartition = {
 
     FacetValuePartition(
       0,
-      SimpleOptionsBuilder.maybeWithFilter(inputFilter),
       facetField,
       facet
     )
@@ -54,7 +50,7 @@ class FacetValuePartitionITSpec
       it("create a facet filter related to given value") {
 
         val (fieldName, fieldValue) = ("type", StringUtils.singleQuoted("LOAN"))
-        createPartition(None, fieldName, fieldValue).facetFilter shouldBe s"$fieldName eq $fieldValue"
+        createPartition(fieldName, fieldValue).getPartitionFilter shouldBe s"$fieldName eq $fieldValue"
       }
 
       describe("retrieve documents matching") {
@@ -63,22 +59,8 @@ class FacetValuePartitionITSpec
           assertCountPerPartition[PushdownBean](
             documents,
             indexName,
-            createPartition(None, facetField, StringUtils.singleQuoted(john)),
+            createPartition(facetField, StringUtils.singleQuoted(john)),
             stringValueEqJohn
-          )
-        }
-
-        it("both filter and facet value") {
-
-          val expectedPredicate: PushdownBean => Boolean = p =>
-            stringValueEqJohn(p) &&
-              p.intValue.exists(_.equals(1))
-
-          assertCountPerPartition[PushdownBean](
-            documents,
-            indexName,
-            createPartition(Some("intValue eq 1"), facetField, StringUtils.singleQuoted(john)),
-            expectedPredicate
           )
         }
       }

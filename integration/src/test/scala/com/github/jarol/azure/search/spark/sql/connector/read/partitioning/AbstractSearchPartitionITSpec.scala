@@ -35,8 +35,7 @@ trait AbstractSearchPartitionITSpec
     val actual: Seq[SearchDocument] = JavaScalaConverters.listToSeq(
       SearchTestUtils.getPartitionDocuments(
         partition,
-        getSearchClient(index),
-        null
+        getSearchClient(index)
       )
     )
 

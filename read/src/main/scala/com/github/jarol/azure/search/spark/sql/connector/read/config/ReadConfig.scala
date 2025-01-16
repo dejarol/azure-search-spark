@@ -168,6 +168,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
                  facetExpression: String
                ): Seq[FacetResult] = {
 
+    // Get the builder, add the facet
     val builder = searchOptionsBuilderConfig.addFacet(facetExpression)
     val listOfFacetResult = withSearchClientDo {
       client =>
@@ -178,6 +179,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
       )
     }.getFacets.get(facetField)
 
+    // Convert the java List to a Seq
     JavaScalaConverters.listToSeq(listOfFacetResult)
   }
 }
