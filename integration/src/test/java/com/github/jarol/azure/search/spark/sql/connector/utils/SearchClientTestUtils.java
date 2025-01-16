@@ -1,4 +1,4 @@
-package com.github.jarol.azure.search.spark.sql.connector;
+package com.github.jarol.azure.search.spark.sql.connector.utils;
 
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchDocument;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Utility for Java-based integration test methods
  */
 
-public final class SearchTestUtils {
+public final class SearchClientTestUtils {
 
     /**
      * List of existing indexes

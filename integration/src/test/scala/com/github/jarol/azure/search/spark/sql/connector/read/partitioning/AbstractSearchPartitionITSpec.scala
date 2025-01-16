@@ -3,7 +3,8 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.SearchDocument
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.models._
-import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTestUtils}
+import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
+import com.github.jarol.azure.search.spark.sql.connector.utils.SearchClientTestUtils
 
 /**
  * Trait for integration tests related to [[SearchPartition]](s)
@@ -33,7 +34,7 @@ trait AbstractSearchPartitionITSpec
 
     // Retrieve matching documents
     val actual: Seq[SearchDocument] = JavaScalaConverters.listToSeq(
-      SearchTestUtils.getPartitionDocuments(
+      SearchClientTestUtils.getPartitionDocuments(
         partition,
         getSearchClient(index)
       )

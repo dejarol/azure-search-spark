@@ -4,7 +4,8 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchOptions
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
-import com.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SearchTestUtils}
+import com.github.jarol.azure.search.spark.sql.connector.SearchITSpec
+import com.github.jarol.azure.search.spark.sql.connector.utils.SearchClientTestUtils
 
 import java.time.LocalDate
 import java.util.{List => JList}
@@ -48,7 +49,7 @@ class ODataExpressionsSpec
                                                 predicate: PushdownBean => Boolean
                                               ): Unit = {
 
-    val actualDocuments: JList[SearchDocument] = SearchTestUtils.readDocuments(
+    val actualDocuments: JList[SearchDocument] = SearchClientTestUtils.readDocuments(
       getSearchClient(indexName),
       new SearchOptions().setFilter(
         expression.toUriLiteral

@@ -9,6 +9,7 @@ import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.models.{DocumentDeserializer, DocumentSerializer, ITDocument}
+import com.github.jarol.azure.search.spark.sql.connector.utils.SearchClientTestUtils
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
@@ -143,7 +144,7 @@ trait SearchITSpec
   protected final def listIndexes(): Seq[String] = {
 
     JavaScalaConverters.listToSeq(
-      SearchTestUtils.listIndexes(searchIndexClient)
+      SearchClientTestUtils.listIndexes(searchIndexClient)
     )
   }
 
@@ -202,7 +203,7 @@ trait SearchITSpec
                                                              documents: Seq[T]
                                                            ): Unit = {
 
-    SearchTestUtils.writeDocuments[T](
+    SearchClientTestUtils.writeDocuments[T](
       getSearchClient(indexName),
       JavaScalaConverters.seqToList(documents),
       implicitly[DocumentSerializer[T]]
@@ -223,7 +224,7 @@ trait SearchITSpec
 
     val deserializer = implicitly[DocumentDeserializer[T]]
     JavaScalaConverters.listToSeq(
-      SearchTestUtils.readAllDocuments(getSearchClient(index))
+      SearchClientTestUtils.readAllDocuments(getSearchClient(index))
     ).map {
       deserializer.deserialize(_)
     }
