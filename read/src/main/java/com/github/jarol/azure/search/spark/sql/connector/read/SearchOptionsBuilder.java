@@ -14,7 +14,7 @@ public interface SearchOptionsBuilder {
      * @return this builder with a new filter to add on query options
      */
 
-    SearchOptionsBuilder withFilter(
+    SearchOptionsBuilder addFilter(
             String other
     );
 
@@ -24,7 +24,7 @@ public interface SearchOptionsBuilder {
      * @return this builder with a new filter to add on query options
      */
 
-    SearchOptionsBuilder withFacet(
+    SearchOptionsBuilder addFacet(
             String facet
     );
 

@@ -123,7 +123,7 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
 
   private[read] def facets: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.FACETS, '|')
 
-  override def withFilter(other: String): SearchOptionsBuilderImpl = {
+  override def addFilter(other: String): SearchOptionsBuilderImpl = {
 
     val newFilterValue: String = filter.map {
       old => s"($old) and ($other)"
@@ -132,7 +132,7 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
     withOption(SearchOptionsBuilderImpl.FILTER, newFilterValue)
   }
 
-  override def withFacet(facet: String): SearchOptionsBuilderImpl = {
+  override def addFacet(facet: String): SearchOptionsBuilderImpl = {
 
     val newFacetsValue: String = facets.map(_ :+ facet)
       .getOrElse(Seq(facet))

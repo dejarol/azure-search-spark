@@ -1,12 +1,14 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.config
 
-import com.azure.search.documents.models.SearchOptions
+import com.azure.search.documents.models.{SearchOptions, SearchResult}
 import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
-import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartitioner}
+import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartition, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
+
+import java.util.{Iterator => Jiterator}
 
 /**
  * Read configuration
@@ -112,6 +114,65 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    */
 
   def pushdownPredicate: Boolean = getOrDefaultAs[Boolean](ReadConfig.PUSHDOWN_PREDICATE_CONFIG, true, _.toBoolean)
+
+  /**
+   * Get the result obtained by querying documents combining inner Search options with the filter
+   * defined by a given [[SearchPartition]]
+   * @param partition a Search partition
+   * @param includeTotalCount whether to include the <code>totalCount</code> property in the result
+   * @return an object representing the Search result
+   */
+
+  private def getSearchPagedIterableForPartition(
+                                                  partition: SearchPartition,
+                                                  includeTotalCount: Boolean
+                                                ): SearchPagedIterable = {
+
+    // Enrich the original builder with the partition filter, if defined
+    val originalBuilder = searchOptionsBuilderConfig
+    val enrichedOptions = Option(partition.getPartitionFilter)
+      .map(originalBuilder.addFilter)
+      .getOrElse(originalBuilder)
+
+    // Retrieve the results
+    withSearchClientDo {
+      client =>
+        SearchUtils.getSearchPagedIterable(
+          client,
+          enrichedOptions.searchText.orNull,
+          enrichedOptions.buildOptions().setIncludeTotalCount(includeTotalCount)
+        )
+    }
+  }
+
+  /**
+   * Get the overall Search result by querying documents combining inner Search options with the
+   * filter defined by a partition, and get an iterator with retrieved results
+   * @param partition a Search partition
+   * @return an iterator of [[SearchResult]]
+   */
+
+  def getResultsForPartition(partition: SearchPartition): Jiterator[SearchResult] = {
+
+    getSearchPagedIterableForPartition(
+      partition,
+      includeTotalCount = false
+    ).iterator()
+  }
+
+  /**
+   * Get the (estimated) number of documents for a partition
+   * @param partition a Search partition
+   * @return the (estimated) count of documents retrieved by the given partition
+   */
+
+  def getCountForPartition(partition: SearchPartition): Long = {
+
+    getSearchPagedIterableForPartition(
+      partition,
+      includeTotalCount = true
+    ).getTotalCount
+  }
 }
 
 object ReadConfig {

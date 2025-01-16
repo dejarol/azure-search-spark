@@ -86,7 +86,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     val builderConfig = readConfig.searchOptionsBuilderConfig
     val facets = readConfig.search(
       builderConfig.searchText,
-      builderConfig.withFacet(facet).buildOptions()
+      builderConfig.addFacet(facet).buildOptions()
     ).getFacets.get(facetField)
 
     JavaScalaConverters.listToSeq(facets)

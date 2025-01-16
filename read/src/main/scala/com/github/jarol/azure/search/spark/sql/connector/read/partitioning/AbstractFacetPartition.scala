@@ -20,25 +20,14 @@ import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuild
  * }}}
  *
  * @param partitionId partition id
- * @param optionsBuilder delegate object for building the search options for this partition
  * @param facetFieldName name of the field used for faceting values
  */
 
 abstract class AbstractFacetPartition(
                                        override protected val partitionId: Int,
-                                       override protected val optionsBuilder: SearchOptionsBuilder,
                                        protected val facetFieldName: String
                                      )
-  extends AbstractSearchPartition(partitionId, optionsBuilder) {
-
-  override final protected[partitioning] def partitionFilter: Option[String] = Some(facetFilter)
-
-  /**
-   * Get the facet filter related to this instance
-   * @return facet filter
-   */
-
-  protected[partitioning] def facetFilter: String
+  extends AbstractSearchPartition(partitionId) {
 }
 
 object AbstractFacetPartition {

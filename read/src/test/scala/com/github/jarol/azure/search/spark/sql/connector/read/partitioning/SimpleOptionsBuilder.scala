@@ -36,8 +36,8 @@ case class SimpleOptionsBuilder(
       .setFacets(cumulatedFacets: _*)
   }
 
-  override def withFilter(other: String): SearchOptionsBuilder = this.copy(cumulatedFilters = cumulatedFilters :+ other)
-  override def withFacet(facet: String): SearchOptionsBuilder = this.copy(cumulatedFacets = cumulatedFacets :+ facet)
+  override def addFilter(other: String): SearchOptionsBuilder = this.copy(cumulatedFilters = cumulatedFilters :+ other)
+  override def addFacet(facet: String): SearchOptionsBuilder = this.copy(cumulatedFacets = cumulatedFacets :+ facet)
 }
 
 object SimpleOptionsBuilder {

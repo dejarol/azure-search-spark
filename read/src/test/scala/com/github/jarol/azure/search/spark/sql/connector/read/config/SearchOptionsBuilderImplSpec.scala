@@ -160,17 +160,17 @@ class SearchOptionsBuilderImplSpec
       describe("let a user add") {
         it("a filter") {
 
-          emptyConfig.withFilter(first).filter shouldBe Some(first)
+          emptyConfig.addFilter(first).filter shouldBe Some(first)
           createConfig(
             Map(
               SearchOptionsBuilderImpl.FILTER -> first
             )
-          ).withFilter(second).filter shouldBe Some(s"($first) and ($second)")
+          ).addFilter(second).filter shouldBe Some(s"($first) and ($second)")
         }
 
         it("a facet") {
 
-          val firstResult = emptyConfig.withFacet(first).facets
+          val firstResult = emptyConfig.addFacet(first).facets
           firstResult shouldBe defined
           firstResult.get should contain theSameElementsAs Seq(first)
 
@@ -178,7 +178,7 @@ class SearchOptionsBuilderImplSpec
             Map(
               SearchOptionsBuilderImpl.FACETS -> first
             )
-          ).withFacet(second).facets
+          ).addFacet(second).facets
 
           secondResult shouldBe defined
           secondResult.get should contain theSameElementsAs Seq(first, second)
