@@ -1,7 +1,8 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.config
 
-import com.azure.search.documents.models.{SearchOptions, SearchResult}
+import com.azure.search.documents.models.{FacetResult, SearchResult}
 import com.azure.search.documents.util.SearchPagedIterable
+import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
 import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
@@ -67,25 +68,6 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Execute a Search on target index
-   * @param searchText search text
-   * @param searchOptions search options
-   * @return an iterable of Search results
-   */
-
-  def search(
-              searchText: Option[String],
-              searchOptions: SearchOptions
-            ): SearchPagedIterable = {
-
-    withSearchClientDo {
-      sc => SearchUtils.getSearchPagedIterable(
-        sc, searchText.orNull, searchOptions
-      )
-    }
-  }
-
-  /**
    * Get the [[SearchPartitioner]] to use for generating the search partitions.
    * If not provided, a [[DefaultPartitioner]] will be used
    *
@@ -123,10 +105,10 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * @return an object representing the Search result
    */
 
-  private def getSearchPagedIterableForPartition(
-                                                  partition: SearchPartition,
-                                                  includeTotalCount: Boolean
-                                                ): SearchPagedIterable = {
+  private def getSearchPagedIterable(
+                                      partition: SearchPartition,
+                                      includeTotalCount: Boolean
+                                    ): SearchPagedIterable = {
 
     // Enrich the original builder with the partition filter, if defined
     val originalBuilder = searchOptionsBuilderConfig
@@ -154,7 +136,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   def getResultsForPartition(partition: SearchPartition): Jiterator[SearchResult] = {
 
-    getSearchPagedIterableForPartition(
+    getSearchPagedIterable(
       partition,
       includeTotalCount = false
     ).iterator()
@@ -168,10 +150,35 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   def getCountForPartition(partition: SearchPartition): Long = {
 
-    getSearchPagedIterableForPartition(
+    getSearchPagedIterable(
       partition,
       includeTotalCount = true
     ).getTotalCount
+  }
+
+  /**
+   * Get the [[FacetResult]](s) from a facetable field
+   * @param facetField name of the facetable field
+   * @param facetExpression facet expression
+   * @return a collection of [[FacetResult]]
+   */
+
+  def getFacets(
+                 facetField: String,
+                 facetExpression: String
+               ): Seq[FacetResult] = {
+
+    val builder = searchOptionsBuilderConfig.addFacet(facetExpression)
+    val listOfFacetResult = withSearchClientDo {
+      client =>
+        SearchUtils.getSearchPagedIterable(
+          client,
+          builder.searchText.orNull,
+          builder.buildOptions()
+      )
+    }.getFacets.get(facetField)
+
+    JavaScalaConverters.listToSeq(listOfFacetResult)
   }
 }
 

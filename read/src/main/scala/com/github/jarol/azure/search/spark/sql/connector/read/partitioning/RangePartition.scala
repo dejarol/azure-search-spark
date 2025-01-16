@@ -1,7 +1,5 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
-
 /**
  * Search partition returned by a [[RangePartitioner]]
  * <br>
@@ -22,7 +20,6 @@ import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuild
  * i.e. it represents the logical AND of the 3 sub filters
  *
  * @param partitionId partition id
- * @param optionsBuilder delegate object for building the search options for this partition
  * @param fieldName field name
  * @param lowerBound range lower bound (inclusive)
  * @param upperBound range upper bound (exclusive)
@@ -30,19 +27,19 @@ import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuild
 
 case class RangePartition(
                            override protected val partitionId: Int,
-                           override protected val optionsBuilder: SearchOptionsBuilder,
                            private val fieldName: String,
                            private val lowerBound: Option[String],
-                           private val upperBound: Option[String])
-  extends AbstractSearchPartition(partitionId, optionsBuilder) {
+                           private val upperBound: Option[String]
+                         )
+  extends AbstractSearchPartition(partitionId) {
 
-  override final protected[partitioning] def partitionFilter: Option[String] = {
+  override def getPartitionFilter: String = {
 
     (lowerBound, upperBound) match {
-      case (Some(l), Some(u)) => Some(s"${getGeFilter(l)} and ${getLtFilter(u)}")
-      case (Some(l), None) => Some(getGeFilter(l))
-      case (None, Some(u)) => Some(s"${getLtFilter(u)} or $fieldName eq null")
-      case (None, None) => None
+      case (Some(l), Some(u)) => s"${getGeFilter(l)} and ${getLtFilter(u)}"
+      case (Some(l), None) => getGeFilter(l)
+      case (None, Some(u)) => s"${getLtFilter(u)} or $fieldName eq null"
+      case (None, None) => null
     }
   }
 
@@ -55,14 +52,12 @@ object RangePartition {
 
   /**
    * Create a collection of partitions
-   * @param optionsBuilder delegate object for building the search options for this partition
    * @param fieldName partition field name
    * @param values partition values
    * @return a collection of partitions
    */
 
   def createCollection(
-                        optionsBuilder: SearchOptionsBuilder,
                         fieldName: String,
                         values: Seq[String]
                       ): Seq[RangePartition] = {
@@ -72,13 +67,8 @@ object RangePartition {
 
     // Zip lower values with upper values and create the partitions
     lowerValues.zip(upperValues).zipWithIndex.map {
-      case ((lb, ub), index) => RangePartition(
-        index,
-        optionsBuilder,
-        fieldName,
-        lb,
-        ub
-      )
+      case ((lb, ub), index) =>
+        RangePartition(index, fieldName, lb, ub)
     }
   }
 }

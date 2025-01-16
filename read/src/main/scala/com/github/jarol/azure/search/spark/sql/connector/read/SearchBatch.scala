@@ -74,12 +74,8 @@ class SearchBatch(
     // Filter partitions, preserving the ones whose document count exceeds service threshold
     partitions.filter {
       partition =>
-        readConfig.withSearchClientDo {
-          client => partition.getCountPerPartition(
-            client,
-            readConfig.searchOptionsBuilderConfig.searchText.orNull
-          )
-        } > Constants.DOCUMENTS_PER_PARTITION_LIMIT
+        readConfig.getCountForPartition(partition) >
+          Constants.DOCUMENTS_PER_PARTITION_LIMIT
     }
   }
 }

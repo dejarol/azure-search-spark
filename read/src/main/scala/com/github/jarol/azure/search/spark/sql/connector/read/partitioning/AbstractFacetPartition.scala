@@ -3,22 +3,10 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.toSearchTypeOperations
 import com.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
-import com.github.jarol.azure.search.spark.sql.connector.read.SearchOptionsBuilder
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values
- * from a Search field that is facetable and filterable.
- * <br>
- * Each instance will retrieve documents that match the <b>facet filter</b> and the input filter, when defined
- * <br>
- * I.e. the predicate for matching documents will be
- * {{{
- *   inputFilter match {
- *    case Some(x) => facet filter and x
- *    case None => facet filter
- *   }
- * }}}
- *
+ * from a Search field that is facetable and filterable
  * @param partitionId partition id
  * @param facetFieldName name of the field used for faceting values
  */
@@ -42,14 +30,12 @@ object AbstractFacetPartition {
 
   /**
    * Generate a set of partitions from values retrieved from a facetable field
-   * @param optionsBuilder delegate object for building the search options for this partition
    * @param facetField facet field
    * @param facets facet field values
    * @return a collection of Search partitions
    */
 
   def createCollection(
-                        optionsBuilder: SearchOptionsBuilder,
                         facetField: SearchField,
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {
@@ -62,17 +48,11 @@ object AbstractFacetPartition {
     val partitionsForFacetsValues: Seq[AbstractFacetPartition] = facetStringValues
       .zipWithIndex.map {
         case (value, partitionId) =>
-          FacetValuePartition(
-            partitionId,
-            optionsBuilder,
-            facetFieldName,
-            value
-          )
+          FacetValuePartition(partitionId, facetFieldName, value)
       }
 
     // Add another partition for either null values or other facet values
     val partitionForEitherNullOrOtherFacetValues = FacetNullValuePartition(
-      optionsBuilder,
       facetFieldName,
       facetStringValues
     )

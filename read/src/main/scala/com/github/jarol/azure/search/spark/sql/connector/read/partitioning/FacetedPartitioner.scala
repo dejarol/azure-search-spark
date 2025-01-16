@@ -79,17 +79,11 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
     // Compose the facet
     // [a] if query param is defined, facet is the combination of facetField and query param using comma
     // [b] if query params is empty facet = facetField
-    val facet: String = partitions.map {
+    val facetExpression: String = partitions.map {
       value => s"$facetField,count:${value - 1}"
     }.getOrElse(facetField)
 
-    val builderConfig = readConfig.searchOptionsBuilderConfig
-    val facets = readConfig.search(
-      builderConfig.searchText,
-      builderConfig.addFacet(facet).buildOptions()
-    ).getFacets.get(facetField)
-
-    JavaScalaConverters.listToSeq(facets)
+    readConfig.getFacets(facetField, facetExpression)
   }
 
   /**
@@ -105,7 +99,6 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
                               ): JList[SearchPartition] = {
 
     val partitions = AbstractFacetPartition.createCollection(
-      readConfig.searchOptionsBuilderConfig,
       field,
       facets.map(_.getAdditionalProperties.get("value"))
     )

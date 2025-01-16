@@ -26,12 +26,7 @@ class SearchPartitionReader(
     with Logging {
 
   // Retrieve documents for this partition
-  private lazy val searchResultIterator: JIterator[SearchResult] = readConfig.withSearchClientDo {
-    client => searchPartition.getPartitionResults(
-      client,
-      readConfig.searchOptionsBuilderConfig.searchText.orNull
-    )
-  }
+  private lazy val searchResultIterator: JIterator[SearchResult] = readConfig.getResultsForPartition(searchPartition)
 
   override def next(): Boolean = searchResultIterator.hasNext
 
