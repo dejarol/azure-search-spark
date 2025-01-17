@@ -105,6 +105,11 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
     )
   }
 
+  /**
+   * Get the search mode to use for querying documents
+   * @return search mode
+   */
+
   private[read] def searchMode: Option[SearchMode] = {
 
     getAs(
@@ -130,6 +135,14 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
 
   private[read] def searchFields: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.SEARCH_FIELDS)
 
+  /**
+   * Adds a new filter to the existing filter condition.
+   * If a filter already exists, the new filter is combined with the existing one using an 'AND' operation.
+   * If no filter exists, the new filter becomes the sole filter condition.
+   * @param other the new filter condition to be added.
+   * @return this instance with an updated filter condition.
+   */
+
   override def addFilter(other: String): SearchOptionsBuilderImpl = {
 
     val newFilterValue: String = filter.map {
@@ -138,6 +151,12 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
 
     withOption(SearchOptionsBuilderImpl.FILTER, newFilterValue)
   }
+
+  /**
+   * Add a facet to the search
+   * @param facet facet to add
+   * @return this instance with an added facet
+   */
 
   override def addFacet(facet: String): SearchOptionsBuilderImpl = {
 
@@ -150,6 +169,11 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
       newFacetsValue
     )
   }
+
+  /**
+   * Builds and returns query Search options based on the current configuration
+   * @return query options based on the current configuration
+   */
 
   override def buildOptions(): SearchOptions = {
 
@@ -176,7 +200,6 @@ object SearchOptionsBuilderImpl {
 
   /**
    * Create an instance from a [[SearchConfig]]
-   *
    * @param config config instance
    * @return an instance of [[SearchOptionsBuilderImpl]]
    */

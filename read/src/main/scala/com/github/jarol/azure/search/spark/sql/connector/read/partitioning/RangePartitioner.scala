@@ -29,7 +29,7 @@ case class RangePartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): JList[SearchPartition] = {
 
     val partitionerOptions = readConfig.partitionerOptions
-    val partitionFieldName = partitionerOptions.unsafelyGet(ReadConfig.PARTITION_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
+    val partitionFieldName = partitionerOptions.unsafelyGet(SearchPartitioner.PARTITION_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
 
     // Get either a ConfigException reporting illegal configurations, or the collection of range value
     val either: Either[ConfigException, Seq[String]] = for {
@@ -80,7 +80,7 @@ object RangePartitioner {
     // Map the left side to a ConfigException
     maybeConfigExceptionCauseOrFieldType.left.map {
       cause => ConfigException.forIllegalOptionValue(
-        ReadConfig.PARTITION_FIELD_CONFIG,
+        SearchPartitioner.PARTITION_FIELD_CONFIG,
         name,
         cause
       )
@@ -143,9 +143,9 @@ object RangePartitioner {
     }
 
     rangeFactory.createPartitionBounds(
-      options.unsafelyGet(ReadConfig.LOWER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
-      options.unsafelyGet(ReadConfig.UPPER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
-      options.unsafelyGetAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
+      options.unsafelyGet(SearchPartitioner.LOWER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
+      options.unsafelyGet(SearchPartitioner.UPPER_BOUND_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None),
+      options.unsafelyGetAs(SearchPartitioner.NUM_PARTITIONS_CONFIG, Integer.parseInt, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
     )
   }
 }

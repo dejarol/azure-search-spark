@@ -119,15 +119,109 @@ Here's a summary on available partitioners and how to define a custom partitione
 
 #### FacetedPartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner</code>
+Partitioner options
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Description</th>
+        <th>Required</th>
+        <th>Default</th>
+    </tr>
+    <tr>
+        <td>facetField</td>
+        <td>Name of a facetable index field</td>
+        <td>&#9989</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>numPartitions</td>
+        <td>Number of partitions to generate</td>
+        <td></td>
+        <td>Default number of facets configured by the Search service</td>
+    </tr>
+</table>
+Partitioner that generates partitions depending on facets. Given a facetable field named <code>f1</code> and <code>n</code> partitions,
+it will generate <code>n-1</code> partitions related to the <code>n-1</code> most frequent values of <code>f1</code> and one partition for 
+values of <code>f1</code> that are null or not equal to any of the <code>n-1</code> most frequent values
 <br>
-// TODO: add description
+As an example, given a facetable field named <code>category</code>, 4 partitions and values
+<code>A</code>, <code>B</code>, <code>C</code> being the 3 most frequent category values, it will generate 4 partitions
+where 
+<ul>
+    <li><code>p0</code> (the first partition) will hold documents where <code>category = A</code></li>
+    <li><code>p1</code> will hold documents where <code>category = B</code></li>
+    <li><code>p2</code> will hold documents where <code>category = C</code></li>
+    <li><code>p3</code> will hold documents where <code>category is null or category not in (A, B, C)</code></li>
+</ul>
+
+##### Usage
+
+In order to use such partitioner, provide the following options to the Spark reader
+```
+.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner')
+.option('partitioner.options.facetField', 'nameOfTheFacetField')
+.option('partitioner.options.numPartitions', 'numOfPartitions')
+```  
+
+According to the previous example
+```
+.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner')
+.option('partitioner.options.facetField', 'category')
+.option('partitioner.options.numPartitions', '4')
+```
 
 #### RangePartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner</code>
-<br>
-// TODO: add description
+Partitioner options
+
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Description</th>
+        <th>Required</th>
+        <th>Default</th>
+    </tr>
+    <tr>
+        <td>partitionField</td>
+        <td>Name of a filterable numeric or date index field </td>
+        <td>&#9989</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>lowerBound</td>
+        <td>Lower bound for partition generation</td>
+        <td>&#9989</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>upperBound</td>
+        <td>Upper bound for partition generation</td>
+        <td>&#9989</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>numPartitions</td>
+        <td>Number of partitions to generate</td>
+        <td>&#9989</td>
+        <td></td>
+    </tr>
+</table>
+
+Partitioner that exploits a mechanism similar to the one adopted by Spark JDBC datasource.
+Indeed, <code>partitionField</code>, <code>lowerBound</code>, <code>upperBound</code> and <code>numPartitions</code> represent
+the Search-related equivalent of, respectively, <code>partitionColumn</code>, <code>lowerBound</code>, <code>upperBound</code> 
+and <code>numPartitions</code> JDBC datasource options
+
+##### Usage
+
+In order to use such partitioner, provide the following options to the Spark reader
+```
+.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner')
+.option('partitioner.options.partitionField', 'numericOrDateFieldName')
+.option('partitioner.options.lowerBound', 'lb')
+.option('partitioner.options.upperBound', 'ub')
+.option('partitioner.options.numPartitions', 'numOfPartitions')
+```  
 
 #### SinglePartitionPartitioner
 

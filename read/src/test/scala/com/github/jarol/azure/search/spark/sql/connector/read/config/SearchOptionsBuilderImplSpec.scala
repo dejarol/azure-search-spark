@@ -155,20 +155,20 @@ class SearchOptionsBuilderImplSpec
           actual shouldBe defined
           actual.get should contain theSameElementsAs expected
         }
-      }
 
-      it("search fields") {
+        it("search fields") {
 
-        emptyConfig.searchFields shouldBe empty
-        val expected = Seq("hello", "world")
-        val actual = createConfig(
-          Map(
-            SearchOptionsBuilderImpl.SEARCH_FIELDS -> expected.mkString(",")
-          )
-        ).searchFields
+          emptyConfig.searchFields shouldBe empty
+          val expected = Seq("hello", "world")
+          val actual = createConfig(
+            Map(
+              SearchOptionsBuilderImpl.SEARCH_FIELDS -> expected.mkString(",")
+            )
+          ).searchFields
 
-        actual shouldBe defined
-        actual.get should contain theSameElementsAs expected
+          actual shouldBe defined
+          actual.get should contain theSameElementsAs expected
+        }
       }
 
       describe("let a user add") {
@@ -197,6 +197,36 @@ class SearchOptionsBuilderImplSpec
           secondResult shouldBe defined
           secondResult.get should contain theSameElementsAs Seq(first, second)
         }
+      }
+
+      it("search options") {
+
+        val filter = "world"
+        val pushedPredicate = "foo"
+        val select = Seq("f1", "f2")
+        val queryType = QueryType.FULL
+        val searchFields = Seq("sf1", "sf2")
+        val searchMode = SearchMode.ALL
+        val facets = Seq("facet1", "facet2")
+
+        val options = createConfig(
+          Map(
+            SearchOptionsBuilderImpl.FILTER -> filter,
+            SearchOptionsBuilderImpl.PUSHED_PREDICATE -> pushedPredicate,
+            SearchOptionsBuilderImpl.SELECT_CONFIG -> select.mkString(","),
+            SearchOptionsBuilderImpl.QUERY_TYPE -> queryType.name(),
+            SearchOptionsBuilderImpl.SEARCH_FIELDS -> searchFields.mkString(","),
+            SearchOptionsBuilderImpl.SEARCH_MODE -> searchMode.name(),
+            SearchOptionsBuilderImpl.FACETS -> facets.mkString("|")
+          )
+        ).buildOptions()
+
+        options.getFilter shouldBe s"($filter) and ($pushedPredicate)"
+        options.getSelect should contain theSameElementsAs select
+        options.getQueryType shouldBe queryType
+        options.getSearchFields should contain theSameElementsAs searchFields
+        options.getSearchMode shouldBe searchMode
+        options.getFacets should contain theSameElementsAs facets
       }
     }
   }

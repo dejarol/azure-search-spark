@@ -13,7 +13,7 @@ import java.util.{List => JList}
  * Faceted partitioner.
  * <br>
  * Given a field <b>f1</b> that is filterable and facetable, it will generate partitions according to the following behavior
- *  - if a value of <b>n</b> is given for [[ReadConfig.NUM_PARTITIONS_CONFIG]], it will generate <b>n</b> partitions
+ *  - if a value of <b>n</b> is given for [[SearchPartitioner.NUM_PARTITIONS_CONFIG]], it will generate <b>n</b> partitions
  *    where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
  *    most frequent value of field  <b>f1</b>,
  *    and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
@@ -29,7 +29,7 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   /**
    * Generate a number of partitions equal to
-   *  - the value related to key [[ReadConfig.NUM_PARTITIONS_CONFIG]]
+   *  - the value related to key [[SearchPartitioner.NUM_PARTITIONS_CONFIG]]
    *  - the number of default facets retrieved by the Azure Search API
    *
    * Each partition should contain o non-overlapping filter
@@ -42,8 +42,8 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   override def createPartitions(): JList[SearchPartition] = {
 
     val partitionerOptions: SearchConfig = readConfig.partitionerOptions
-    val facetFieldName: String = partitionerOptions.unsafelyGet(ReadConfig.FACET_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
-    val facetPartitions: Option[Int] = partitionerOptions.getAs(ReadConfig.NUM_PARTITIONS_CONFIG, Integer.parseInt)
+    val facetFieldName: String = partitionerOptions.unsafelyGet(SearchPartitioner.FACET_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
+    val facetPartitions: Option[Int] = partitionerOptions.getAs(SearchPartitioner.NUM_PARTITIONS_CONFIG, Integer.parseInt)
 
     // Either a ConfigException or facet results
     val either: Either[ConfigException, (SearchField, Seq[FacetResult])] = for {
@@ -137,7 +137,7 @@ object FacetedPartitioner {
     // Map left side to a ConfigException
     maybeExistingField.left.map {
       cause => ConfigException.forIllegalOptionValue(
-        ReadConfig.FACET_FIELD_CONFIG,
+        SearchPartitioner.FACET_FIELD_CONFIG,
         name,
         cause
       )
@@ -187,7 +187,7 @@ object FacetedPartitioner {
         } else {
           Left(
             ConfigException.forIllegalOptionValue(
-              ReadConfig.NUM_PARTITIONS_CONFIG,
+              SearchPartitioner.NUM_PARTITIONS_CONFIG,
               s"$value",
               "should be greater than 1"
             )

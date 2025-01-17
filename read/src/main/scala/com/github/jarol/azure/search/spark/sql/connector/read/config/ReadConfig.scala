@@ -20,6 +20,13 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   extends SearchIOConfig(options)
     with ExtendableConfig[ReadConfig] {
 
+  /**
+   * Updates this configuration by upserting the given key-value pair
+   * @param key key
+   * @param value value
+   * @return this configuration, with either a newly added key-value pair or an updated pair
+   */
+
   override def withOption(key: String, value: String): ReadConfig = {
 
     this.copy(
@@ -28,10 +35,10 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Extend this configuration by injecting an OData expression obtained by logically combining the predicates
+   * Extends this configuration by injecting an OData <code>$filter</code>expression obtained by logically combining the predicates
    * that can be pushed down to the datasource
    * @param predicates predicates that can be pushed down
-   * @return a new configuration instance
+   * @return this configuration with new key-value pair related to the pushed predicate
    */
 
   def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = {
@@ -70,7 +77,6 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   /**
    * Get the [[SearchPartitioner]] to use for generating the search partitions.
    * If not provided, a [[DefaultPartitioner]] will be used
-   *
    * @return a search partitioner instance
    */
 
@@ -190,11 +196,6 @@ object ReadConfig {
   final val PUSHDOWN_PREDICATE_CONFIG = "pushDownPredicate"
   final val SEARCH_OPTIONS_PREFIX = "searchOptions."
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
-  final val FACET_FIELD_CONFIG = "facetField"
-  final val NUM_PARTITIONS_CONFIG = "numPartitions"
-  final val PARTITION_FIELD_CONFIG = "partitionField"
-  final val LOWER_BOUND_CONFIG = "lowerBound"
-  final val UPPER_BOUND_CONFIG = "upperBound"
 
   /**
    * Create an instance from a simple map
