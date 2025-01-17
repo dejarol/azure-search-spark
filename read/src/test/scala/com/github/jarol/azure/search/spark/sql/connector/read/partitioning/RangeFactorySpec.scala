@@ -1,9 +1,9 @@
 package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
-import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, Constants}
+import com.github.jarol.azure.search.spark.sql.connector.core.BasicSpec
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
+import java.time.{LocalDate, OffsetDateTime}
 
 class RangeFactorySpec
   extends BasicSpec {
@@ -27,7 +27,7 @@ class RangeFactorySpec
 
         it("for dates") {
 
-          val(lower, upper, partitions) = (OffsetDateTime.now().minusWeeks(1), OffsetDateTime.now(), 10)
+          val (lower, upper, partitions) = (OffsetDateTime.now().minusWeeks(1), OffsetDateTime.now(), 10)
           val bounds = RangeFactory.Date.createRange(lower, upper, partitions)
           bounds.head shouldBe lower
           bounds.last should be <= upper
@@ -71,16 +71,6 @@ class RangeFactorySpec
             RangeFactory.Date.createPartitionBounds(
               upper.minusMonths(1).format(DateTimeFormatter.ISO_LOCAL_DATE),
               upper.format(DateTimeFormatter.ISO_LOCAL_DATE),
-              7
-            ) shouldBe 'right
-          }
-
-          it("two timestamps are given") {
-
-            val upper = LocalDateTime.now()
-            RangeFactory.Date.createPartitionBounds(
-              upper.minusMonths(1).format(Constants.TIMESTAMP_FORMATTER),
-              upper.format(Constants.TIMESTAMP_FORMATTER),
               7
             ) shouldBe 'right
           }

@@ -3,7 +3,7 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.FacetResult
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
+import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
 
@@ -41,7 +41,6 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
   @throws[ConfigException]
   override def createPartitions(): JList[SearchPartition] = {
 
-    val partitionerOptions: SearchConfig = readConfig.partitionerOptions
     val facetFieldName: String = partitionerOptions.unsafelyGet(SearchPartitioner.FACET_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
     val facetPartitions: Option[Int] = partitionerOptions.getAs(SearchPartitioner.NUM_PARTITIONS_CONFIG, Integer.parseInt)
 

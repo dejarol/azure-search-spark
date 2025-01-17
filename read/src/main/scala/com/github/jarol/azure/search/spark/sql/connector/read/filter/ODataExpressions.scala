@@ -50,9 +50,9 @@ object ODataExpressions {
         )
         case DataTypes.DateType | DataTypes.TimestampType =>
           val offsetDateTime = if (dataType.equals(DataTypes.DateType)) {
-            TimeUtils.fromEpochDays(value.asInstanceOf[Integer])
+            TimeUtils.offsetDateTimeFromEpochDays(value.asInstanceOf[Integer])
           } else {
-            TimeUtils.fromEpochMicros(value.asInstanceOf[Long])
+            TimeUtils.offsetDateTimeFromEpochMicros(value.asInstanceOf[Long])
           }
 
           offsetDateTime.format(Constants.DATETIME_OFFSET_FORMATTER)

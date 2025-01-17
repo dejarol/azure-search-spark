@@ -158,16 +158,16 @@ where
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner')
-.option('partitioner.options.facetField', 'nameOfTheFacetField')
-.option('partitioner.options.numPartitions', 'numOfPartitions')
+.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner.options.facetField", "nameOfTheFacetField")
+.option("partitioner.options.numPartitions", "numOfPartitions")
 ```  
 
 According to the previous example
 ```
-.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner')
-.option('partitioner.options.facetField', 'category')
-.option('partitioner.options.numPartitions', '4')
+.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner.options.facetField", "category")
+.option("partitioner.options.numPartitions", "4")
 ```
 
 #### RangePartitioner
@@ -183,19 +183,22 @@ Partitioner options
     </tr>
     <tr>
         <td>partitionField</td>
-        <td>Name of a filterable numeric or date index field </td>
+        <td>Name of a filterable numeric (<code>Edm.Int32</code>, <code>Edm.Int64</code>, <code>Edm.Double</code>) or date 
+(<code>Edm.DateTimeOffset</code>) index field </td>
         <td>&#9989</td>
         <td></td>
     </tr>
     <tr>
         <td>lowerBound</td>
-        <td>Lower bound for partition generation</td>
+        <td>Lower bound for partition generation. Should be an integer for <code>Edm.Int32</code> or <code>Edm.Int64</code> fields,
+a double for a <code>Edm.Double</code> field, a date with pattern <code>yyyy-MM-dd</code> for<code>Edm.DateTimeOffset</code> fields </td>
         <td>&#9989</td>
         <td></td>
     </tr>
     <tr>
         <td>upperBound</td>
-        <td>Upper bound for partition generation</td>
+        <td>Upper bound for partition generation. Should be an integer for <code>Edm.Int32</code> or <code>Edm.Int64</code> fields,
+a double for a <code>Edm.Double</code> field, a date with pattern <code>yyyy-MM-dd</code> for<code>Edm.DateTimeOffset</code> fields</td>
         <td>&#9989</td>
         <td></td>
     </tr>
@@ -216,27 +219,51 @@ and <code>numPartitions</code> JDBC datasource options
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option('partitioner', 'com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner')
-.option('partitioner.options.partitionField', 'numericOrDateFieldName')
-.option('partitioner.options.lowerBound', 'lb')
-.option('partitioner.options.upperBound', 'ub')
-.option('partitioner.options.numPartitions', 'numOfPartitions')
-```  
+.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner")
+.option("partitioner.options.partitionField", "numericOrDateFieldName")
+.option("partitioner.options.lowerBound", "lb")
+.option("partitioner.options.upperBound", "ub")
+.option("partitioner.options.numPartitions", "numOfPartitions")
+```
+
+<ul>
+    <li>For <code>Edm.Int32</code> or <code>Edm.Int64</code> fields, the bounds should be values that can be parsed to Integers, 
+like <code>"1"</code></li>
+        <li>For <code>Edm.Double</code> fields, the bounds should be values that can be parsed to Doubles, 
+like <code>"3.14"</code> </li>
+    <li>For <code>Edm.DateTimeOffset</code> fields, the bounds should be strings with pattern <code>yyyy-MM-dd</code>, 
+like <code>"2024-12-31"</code> </li>
+</ul>
 
 #### SinglePartitionPartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner</code>.
-<br>
 The simplest partitioner: retrieves all documents within a single partition. Suitable only for scenarios where the total number of documents 
-to retrieve is smaller than 100K
+to retrieve is smaller than 100K. No options are required
+
+##### Usage
+```
+.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner")
+```
 
 #### Custom
 
 Of course, you can create your own partitioner implementation, given that
 <ul>
     <li>it implements the interface <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code></li>
-    <li>it provides a single, one-arg constructor accepting an instance of <code>com.github.jarol.azure.search.spark.sql.connector.read.ReadConfig</code></li>
+    <li>it provides a single, one-arg constructor accepting an instance of <code>com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig</code></li>
 </ul>
+
+For Scala-based partitioners, you can extend class 
+<code>com.github.jarol.azure.search.spark.connector.read.partitioning.AbstractSearchPartitioner</code>,
+that satisfies both conditions and allows users to access partitioner options by means of attribute <code>partitionerOptions</code>
+
+##### Usage
+
+```
+.option("partitioner", "your.own.partitioner.class")
+.option("partitioner.options.x", "valueOfPartitionerPropertyX")
+.option("partitioner.options.y", "valueOfPartitionerPropertyY")
+```
 
 ---
 

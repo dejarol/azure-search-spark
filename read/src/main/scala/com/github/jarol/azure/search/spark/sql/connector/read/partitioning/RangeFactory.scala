@@ -2,9 +2,9 @@ package com.github.jarol.azure.search.spark.sql.connector.read.partitioning
 
 import com.github.jarol.azure.search.spark.sql.connector.core.Constants
 import com.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.{StringUtils, Time}
-import com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.{StringUtils, TimeUtils}
 
+import java.lang.{Double => JDouble}
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import scala.util.Try
@@ -113,8 +113,8 @@ trait RangeFactory[T, D] {
                                  ): Either[ConfigException, Seq[String]] = {
 
     val either = for {
-      lb <- toInternalValue(ReadConfig.LOWER_BOUND_CONFIG, lower)
-      ub <- toInternalValue(ReadConfig.UPPER_BOUND_CONFIG, upper)
+      lb <- toInternalValue(SearchPartitioner.LOWER_BOUND_CONFIG, lower)
+      ub <- toInternalValue(SearchPartitioner.UPPER_BOUND_CONFIG, upper)
       _ <- isLowerBoundLessThanUpperBound(lb, ub)
       np <- validateNumPartitions(numPartitions)
     } yield createRange(lb, ub, np)
@@ -152,7 +152,7 @@ trait RangeFactory[T, D] {
     if (ordering.lt(upper, lower)) {
       Left(
         ConfigException.forIllegalOptionValue(
-          ReadConfig.LOWER_BOUND_CONFIG,
+          SearchPartitioner.LOWER_BOUND_CONFIG,
           asString(lower),
           "Lower bound cannot be greater than upper bound"
         )
@@ -173,7 +173,7 @@ trait RangeFactory[T, D] {
     if (numPartitions <= 1) {
       Left(
         ConfigException.forIllegalOptionValue(
-          ReadConfig.NUM_PARTITIONS_CONFIG,
+          SearchPartitioner.NUM_PARTITIONS_CONFIG,
           s"$numPartitions",
           "should be greater than 1"
         )
@@ -205,7 +205,10 @@ object RangeFactory {
     override protected def getDelta(lower: OffsetDateTime, upper: OffsetDateTime): Long = ChronoUnit.SECONDS.between(lower, upper)
     override protected def getStride(delta: Long, numPartitions: Int): Long = delta / numPartitions
     override protected def add(value: OffsetDateTime, delta: Long): OffsetDateTime = value.plus(delta, ChronoUnit.SECONDS)
-    override protected def tryFromString(value: String): Try[OffsetDateTime] = Time.tryFromDate(value).orElse(Time.tryFromTimestamp(value))
+    override protected def tryFromString(value: String): Try[OffsetDateTime] = Try {
+      TimeUtils.offsetDateTimeFromLocalDate(value)
+    }
+
     override protected def asString(value: OffsetDateTime): String = StringUtils.singleQuoted(value.format(Constants.DATETIME_OFFSET_FORMATTER))
   }
 
@@ -215,7 +218,7 @@ object RangeFactory {
     override protected def getStride(delta: Double, numPartitions: Int): Double = delta / numPartitions
     override protected def add(value: Double, delta: Double): Double = value + delta
     override protected def tryFromString(value: String): Try[Double] = Try {
-      java.lang.Double.parseDouble(value)
+      JDouble.parseDouble(value)
     }
 
     override protected def asString(value: Double): String = String.valueOf(value)

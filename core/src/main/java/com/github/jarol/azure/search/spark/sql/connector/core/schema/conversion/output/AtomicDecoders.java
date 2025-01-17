@@ -74,7 +74,7 @@ public final class AtomicDecoders {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
 
-                return TimeUtils.fromEpochDays((Integer) value);
+                return TimeUtils.offsetDateTimeFromEpochDays((Integer) value);
             }
         };
     }
@@ -109,7 +109,7 @@ public final class AtomicDecoders {
         return new TimeDecoder() {
             @Override
             protected OffsetDateTime toOffsetDateTime(Object value) {
-                return TimeUtils.fromEpochMicros((Long) value);
+                return TimeUtils.offsetDateTimeFromEpochMicros((Long) value);
             }
         };
     }

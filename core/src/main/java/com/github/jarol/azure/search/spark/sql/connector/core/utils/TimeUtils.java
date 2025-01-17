@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 /**
@@ -17,13 +18,33 @@ import java.time.temporal.ChronoUnit;
 public final class TimeUtils {
 
     /**
+     * Converts a string representation of a date into a {@link OffsetDateTime}
+     * <br>
+     * The string should have format <code>yyyy-MM-dd</code>
+     * @param date date
+     * @return an offset datetime with time at midnight and UTC offset
+     */
+
+    @Contract("_ -> new")
+    public static @NotNull OffsetDateTime offsetDateTimeFromLocalDate(
+            String date
+        ) {
+
+        return OffsetDateTime.of(
+                LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE),
+                LocalTime.MIDNIGHT,
+                Constants.UTC_OFFSET
+        );
+    }
+
+    /**
      * Convert an integer representing epoch days to an {@link OffsetDateTime} object with time at midnight and UTC offset
      * @param epochDays epoch days
      * @return an offset datetime with time at midnight and UTC offset
      */
 
     @Contract("_ -> new")
-    public static @NotNull OffsetDateTime fromEpochDays(
+    public static @NotNull OffsetDateTime offsetDateTimeFromEpochDays(
             @NotNull Integer epochDays
     ) {
 
@@ -41,7 +62,7 @@ public final class TimeUtils {
      */
 
     @Contract("_ -> new")
-    public static @NotNull OffsetDateTime fromEpochMicros(
+    public static @NotNull OffsetDateTime offsetDateTimeFromEpochMicros(
             @NotNull Long epochMicros
     ) {
 

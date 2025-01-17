@@ -28,7 +28,6 @@ case class RangePartitioner(override protected val readConfig: ReadConfig)
   @throws[ConfigException]
   override def createPartitions(): JList[SearchPartition] = {
 
-    val partitionerOptions = readConfig.partitionerOptions
     val partitionFieldName = partitionerOptions.unsafelyGet(SearchPartitioner.PARTITION_FIELD_CONFIG, Some(ReadConfig.PARTITIONER_OPTIONS_PREFIX), None)
 
     // Get either a ConfigException reporting illegal configurations, or the collection of range value
