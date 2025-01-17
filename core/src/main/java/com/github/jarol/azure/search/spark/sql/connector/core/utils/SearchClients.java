@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * Collection of Java-based utilities for interacting with Azure Search clients
  */
 
-public final class SearchUtils {
+public final class SearchClients {
 
     /**
      * Return a {@link SearchPagedIterable} by querying a Search client using some query options

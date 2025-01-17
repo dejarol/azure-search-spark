@@ -157,6 +157,20 @@ class SearchOptionsBuilderImplSpec
         }
       }
 
+      it("search fields") {
+
+        emptyConfig.searchFields shouldBe empty
+        val expected = Seq("hello", "world")
+        val actual = createConfig(
+          Map(
+            SearchOptionsBuilderImpl.SEARCH_FIELDS -> expected.mkString(",")
+          )
+        ).searchFields
+
+        actual shouldBe defined
+        actual.get should contain theSameElementsAs expected
+      }
+
       describe("let a user add") {
         it("a filter") {
 

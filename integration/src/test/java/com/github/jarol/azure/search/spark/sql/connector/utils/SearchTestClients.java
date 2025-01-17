@@ -9,7 +9,7 @@ import com.azure.search.documents.models.IndexAction;
 import com.azure.search.documents.models.IndexActionType;
 import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.util.SearchPagedIterable;
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils;
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients;
 import com.github.jarol.azure.search.spark.sql.connector.models.DocumentSerializer;
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Utility for Java-based integration test methods
  */
 
-public final class SearchClientTestUtils {
+public final class SearchTestClients {
 
     /**
      * List of existing indexes
@@ -54,7 +54,7 @@ public final class SearchClientTestUtils {
     ) {
 
         SearchOptions inputOptions = Objects.isNull(searchOptions) ? new SearchOptions() : searchOptions;
-        return SearchUtils.getSearchPagedIterable(client, searchText, inputOptions)
+        return SearchClients.getSearchPagedIterable(client, searchText, inputOptions)
                 .stream().map(result -> result.getDocument(SearchDocument.class))
                 .collect(Collectors.toList());
     }
@@ -110,7 +110,7 @@ public final class SearchClientTestUtils {
             @NotNull SearchClient client
     ) {
 
-        SearchPagedIterable iterable = SearchUtils.getSearchPagedIterable(
+        SearchPagedIterable iterable = SearchClients.getSearchPagedIterable(
                 client,
                 null,
                 new SearchOptions().setFilter(

@@ -136,38 +136,6 @@ class RangePartitionITSpec
           )
         }
       }
-
-      describe("combine input filter with") {
-        it("only upper bound filter") {
-
-          assertCountPerPartition[PushdownBean](
-            documents,
-            indexName,
-            createPartition(None, Some(upperBound)),
-            p => p.stringValue.isDefined && lessThanUpperBoundOrNull(p)
-          )
-        }
-
-        it("only lower bound filter") {
-
-          assertCountPerPartition[PushdownBean](
-            documents,
-            indexName,
-            createPartition(Some(lowerBound), None),
-            p => p.stringValue.isDefined && greaterOrEqualLowerBound(p)
-          )
-        }
-
-        it("range filter") {
-
-          assertCountPerPartition[PushdownBean](
-            documents,
-            indexName,
-            createPartition(Some(lowerBound), Some(upperBound)),
-            p => p.stringValue.isDefined && inRange(p)
-          )
-        }
-      }
     }
   }
 }

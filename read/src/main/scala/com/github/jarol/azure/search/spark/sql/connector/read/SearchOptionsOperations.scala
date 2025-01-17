@@ -33,7 +33,13 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
    * @return this options updated with a filter (if defined)
    */
 
-  def setFilter(filter: Option[String]): SearchOptions = maybeUpdate[String](filter, (o, f) => o.setFilter(f))
+  def setFilter(filter: Option[String]): SearchOptions = {
+
+    maybeUpdate[String](
+      filter,
+      (o, f) => o.setFilter(f)
+    )
+  }
 
   /**
    * Set the index fields to select, if defined
@@ -80,7 +86,7 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
   /**
    * Set the search mode, if defined
    * @param mode search mode
-   * @return this options with
+   * @return this options updated with a search mode (if defined)
    */
 
   def setSearchMode(mode: Option[SearchMode]): SearchOptions = {
@@ -88,6 +94,20 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
     maybeUpdate[SearchMode](
       mode,
       (o, s) => o.setSearchMode(s)
+    )
+  }
+
+  /**
+   * Set the search fields, if defined
+   * @param fields search fields
+   * @return this options updated with some search fields
+   */
+
+  def setSearchFields(fields: Option[Seq[String]]): SearchOptions = {
+
+    maybeUpdate[Seq[String]](
+      fields,
+      (o, f) => o.setSearchFields(f: _*)
     )
   }
 }

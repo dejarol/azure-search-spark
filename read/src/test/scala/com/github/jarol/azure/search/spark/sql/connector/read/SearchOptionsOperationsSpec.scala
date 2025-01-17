@@ -52,6 +52,14 @@ class SearchOptionsOperationsSpec
           original.setSearchMode(None).getSearchMode shouldBe null
           original.setSearchMode(Some(searchMode)).getSearchMode shouldBe searchMode
         }
+
+        it("search fields") {
+
+          val searchFields = Seq("f1", "f2", "f3", "f4")
+          original.getSearchFields shouldBe null
+          original.setSearchFields(None).getSearchFields shouldBe null
+          original.setSearchFields(Some(searchFields)).getSearchFields should contain theSameElementsAs searchFields
+        }
       }
     }
   }

@@ -4,7 +4,7 @@ import com.azure.search.documents.models.{FacetResult, SearchResult}
 import com.azure.search.documents.util.SearchPagedIterable
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import com.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients
 import com.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
 import com.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartition, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
@@ -119,7 +119,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
     // Retrieve the results
     withSearchClientDo {
       client =>
-        SearchUtils.getSearchPagedIterable(
+        SearchClients.getSearchPagedIterable(
           client,
           enrichedOptions.searchText.orNull,
           enrichedOptions.buildOptions().setIncludeTotalCount(includeTotalCount)
@@ -172,7 +172,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
     val builder = searchOptionsBuilderConfig.addFacet(facetExpression)
     val listOfFacetResult = withSearchClientDo {
       client =>
-        SearchUtils.getSearchPagedIterable(
+        SearchClients.getSearchPagedIterable(
           client,
           builder.searchText.orNull,
           builder.buildOptions()

@@ -123,6 +123,13 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
 
   private[read] def facets: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.FACETS, '|')
 
+  /**
+   * Get the list of fields to which text search should be limited
+   * @return list of field to be used for text search
+   */
+
+  private[read] def searchFields: Option[Seq[String]] = getAsList(SearchOptionsBuilderImpl.SEARCH_FIELDS)
+
   override def addFilter(other: String): SearchOptionsBuilderImpl = {
 
     val newFilterValue: String = filter.map {
@@ -151,7 +158,8 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
       .setSelect(select)
       .setFacets(facets)
       .setQueryType(queryType)
-      .setSearchMode(searchMode).setSearchFields()
+      .setSearchMode(searchMode)
+      .setSearchFields(searchFields)
   }
 }
 
@@ -164,6 +172,7 @@ object SearchOptionsBuilderImpl {
   final val QUERY_TYPE = "queryType"
   final val SEARCH_MODE = "searchMode"
   final val FACETS = "facets"
+  final val SEARCH_FIELDS = "searchFields"
 
   /**
    * Create an instance from a [[SearchConfig]]

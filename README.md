@@ -16,7 +16,7 @@ Here is the list of available datasource options for reading
 
 <table>
     <tr>
-        <th>Option</th>
+        <th>Key</th>
         <th>Description</th>
         <th>Required</th>
         <th>Default</th>
@@ -40,14 +40,8 @@ Here is the list of available datasource options for reading
         <td></td>
     </tr>
     <tr>
-        <td>filter</td>
-        <td>OData filter for restricting the set of documents to retrieve</td>
-        <td></td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>select</td>
-        <td>Comma-separated list of index fields to retrieve</td>
+        <td>searchOptions.*</td>
+        <td>Options for querying documents. See the <b>Search options</b> section for more details</td>
         <td></td>
         <td></td>
     </tr>
@@ -68,6 +62,48 @@ Have a look at the <b>Partitioners</b> section for more information about partit
     </tr>
 </table>
 
+### Search options
+
+Here is the list of available options for refining documents search
+
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Description</th>
+        <th>Default</th>
+    </tr>
+    <tr>
+        <td>searchText</td>
+        <td>A full-text search query expression</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>filter</td>
+        <td>OData $filter expression to apply to the search query</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>select</td>
+        <td>Comma-separated list of top-level fields to select</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>queryType</td>
+        <td>Query type. Should be a valid value of enum <code>com.azure.search.documents.models.QueryType</code></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>searchMode</td>
+        <td>Search mode. Should be a valid value of enum <code>com.azure.search.documents.models.SearchMode</code></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>searchFields</td>
+        <td>Comma-separated list of field names to which to scope the full-text search</td>
+        <td></td>
+    </tr>
+</table>
+
 ### Partitioners
 
 Since Azure Search Service does not allow to retrieve more than 100K documents per read operation 
@@ -83,19 +119,19 @@ Here's a summary on available partitioners and how to define a custom partitione
 
 #### FacetedPartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner</code></li>.
+Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner</code>
 <br>
 // TODO: add description
 
 #### RangePartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner</code></li>.
+Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner</code>
 <br>
 // TODO: add description
 
 #### SinglePartitionPartitioner
 
-Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner</code></li>.
+Class name <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SinglePartitionPartitioner</code>.
 <br>
 The simplest partitioner: retrieves all documents within a single partition. Suitable only for scenarios where the total number of documents 
 to retrieve is smaller than 100K
@@ -116,7 +152,7 @@ Here is the list of available datasource options for writing
 
 <table>
     <tr>
-        <th>Configuration</th>
+        <th>Key</th>
         <th>Description</th>
         <th>Required</th>
         <th>Default</th>
@@ -180,7 +216,7 @@ Here is the list of supported field attributes
 
 <table>
     <tr>
-        <th>Name</th>
+        <th>Key</th>
         <th>Description</th>
         <th>Required</th>
     </tr>

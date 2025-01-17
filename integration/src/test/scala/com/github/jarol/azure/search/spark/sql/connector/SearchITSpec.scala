@@ -6,10 +6,10 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import com.github.jarol.azure.search.spark.sql.connector.core.config.IOConfig
 import com.github.jarol.azure.search.spark.sql.connector.core.schema.SchemaUtils
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients
 import com.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 import com.github.jarol.azure.search.spark.sql.connector.models.{DocumentDeserializer, DocumentSerializer, ITDocument}
-import com.github.jarol.azure.search.spark.sql.connector.utils.SearchClientTestUtils
+import com.github.jarol.azure.search.spark.sql.connector.utils.SearchTestClients
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
@@ -144,7 +144,7 @@ trait SearchITSpec
   protected final def listIndexes(): Seq[String] = {
 
     JavaScalaConverters.listToSeq(
-      SearchClientTestUtils.listIndexes(searchIndexClient)
+      SearchTestClients.listIndexes(searchIndexClient)
     )
   }
 
@@ -154,7 +154,7 @@ trait SearchITSpec
    * @return true for existing indexes
    */
 
-  protected final def indexExists(name: String): Boolean = SearchUtils.indexExists(searchIndexClient, name)
+  protected final def indexExists(name: String): Boolean = SearchClients.indexExists(searchIndexClient, name)
 
   /**
    * Drop an index, if it exists
@@ -203,7 +203,7 @@ trait SearchITSpec
                                                              documents: Seq[T]
                                                            ): Unit = {
 
-    SearchClientTestUtils.writeDocuments[T](
+    SearchTestClients.writeDocuments[T](
       getSearchClient(indexName),
       JavaScalaConverters.seqToList(documents),
       implicitly[DocumentSerializer[T]]
@@ -224,7 +224,7 @@ trait SearchITSpec
 
     val deserializer = implicitly[DocumentDeserializer[T]]
     JavaScalaConverters.listToSeq(
-      SearchClientTestUtils.readAllDocuments(getSearchClient(index))
+      SearchTestClients.readAllDocuments(getSearchClient(index))
     ).map {
       deserializer.deserialize(_)
     }

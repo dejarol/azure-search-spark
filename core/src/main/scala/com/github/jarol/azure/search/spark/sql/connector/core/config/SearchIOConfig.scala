@@ -5,7 +5,7 @@ import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import com.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
-import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchUtils
+import com.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -141,7 +141,7 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
 
     withSearchIndexClientDo {
         client =>
-          SearchUtils.indexExists(client, getIndex)
+          SearchClients.indexExists(client, getIndex)
     }
   }
 
