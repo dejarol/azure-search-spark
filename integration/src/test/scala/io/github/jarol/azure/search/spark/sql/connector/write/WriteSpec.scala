@@ -4,6 +4,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.jarol.azure.search.spark.sql.connector.models._
 import io.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import io.github.jarol.azure.search.spark.sql.connector.core.Constants
+import io.github.jarol.azure.search.spark.sql.connector.write.config.{SearchFieldCreationOptions, WriteConfig}
 import org.apache.spark.sql.SaveMode
 
 import java.lang.{Double => JDouble, Long => JLong}
