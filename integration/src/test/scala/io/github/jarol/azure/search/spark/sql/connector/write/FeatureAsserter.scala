@@ -2,6 +2,7 @@ package io.github.jarol.azure.search.spark.sql.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.jarol.azure.search.spark.sql.connector.core.schema.SearchFieldFeature
+import io.github.jarol.azure.search.spark.sql.connector.write.config.SearchFieldCreationOptions
 
 import java.lang.{Boolean => JBoolean}
 
@@ -40,7 +41,7 @@ trait FeatureAsserter {
   def getFeatureValue(searchField: SearchField): Option[JBoolean]
 
   /**
-   * Get the [[WriteConfig]] suffix related to this feature
+   * Get the write config option suffix related to this feature
    * @return feature suffix
    */
 

@@ -16,17 +16,4 @@ public interface SearchDecoder extends Serializable {
      */
 
     Object apply(Object value);
-
-    /**
-     * Combine this decoder with another
-     * <br>
-     * This instance's transformation will be applied first, and the <b>after</b> transformation later
-     * @param after transformation to apply right after the one defined by this instance
-     * @return a combined decoder
-     */
-
-    default SearchDecoder andThen(SearchDecoder after) {
-
-        return (value -> after.apply(this.apply(value)));
-    }
 }
