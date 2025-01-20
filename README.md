@@ -48,11 +48,11 @@ Here is the list of available datasource options for reading
     <tr>
         <td>partitioner</td>
         <td>The partitioner full class name. 
-You can specify a custom implementation that must implement the <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code> interface.
+You can specify a custom implementation that must implement the <code>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code> interface.
 Have a look at the <b>Partitioners</b> section for more information about partitioners.
 </td>
         <td></td>
-        <td>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner</td>
+        <td>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner</td>
     </tr>
     <tr>
         <td>partitioner.options.*</td>
@@ -107,7 +107,7 @@ Here is the list of available options for refining documents search
 ### Partitioners
 
 Since Azure Search Service does not allow to retrieve more than 100K documents per read operation 
-(have a look at <a href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.search.models.searchparameters.skip?view=azure-dotnet-legacy">this</a>, 
+(have a look at <a href="#skip_limit">this reference</a>, 
 or just google <b>"azure search skip limit"</b>), we need to address parallel read operations very carefully.
 Partitioners are components for handling the generation of partitions for parallel read operations.
 <br>
@@ -249,8 +249,8 @@ to retrieve is smaller than 100K. No options are required
 
 Of course, you can create your own partitioner implementation, given that
 <ul>
-    <li>it implements the interface <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code></li>
-    <li>it provides a single, one-arg constructor accepting an instance of <code>com.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig</code></li>
+    <li>it implements the interface <code>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code></li>
+    <li>it provides a single, one-arg constructor accepting an instance of <code>io.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig</code></li>
 </ul>
 
 For Scala-based partitioners, you can extend class 
@@ -306,7 +306,7 @@ Here is the list of available datasource options for writing
         <td>action</td>
         <td>Action for indexing all documents within the input DataFrame.
 It should be a valid index action according to the Azure Search API 
-(see <a href="https://learn.microsoft.com/en-us/rest/api/searchservice/documents/?view=rest-searchservice-2024-07-01&tabs=HTTP#indexactiontype">this</a>)</td>
+(see <a href="#index_action_type">this reference</a>)</td>
         <td></td>
         <td>mergeOrUpload</td>
     </tr>
@@ -380,24 +380,68 @@ Here is the list of supported field attributes
 
 ### Index attributes
 
-Here is the list of supported index attributes. They resemble the same definition stated by the Search Service REST API
+Here is the list of supported index attributes. Most of the supported attributes should be expressed in JSON form and match 
+the definition stated by the Search Service REST API
 (see <a href="#api_index_creation">this reference</a> for description and concrete examples for each attribute)
-<ul>
-    <li>similarity</li>
-    <li>tokenizers</li>
-    <li>suggesters</li>
-    <li>analyzers</li>
-    <li>charFilters</li>
-    <li>scoringProfiles</li>
-    <li>tokenFilters</li>
-    <li>corsOptions</li>
-    <li>defaultScoringProfile</li>
-</ul>
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Description</th>
+        <th>Required</th>
+    </tr>
+    <tr>
+        <td>similarity</td>
+        <td>JSON object matching the <code>similarity</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>tokenizers</td>
+        <td>JSON array of objects matching the <code>tokenizers</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>suggesters</td>
+        <td>JSON array of objects matching the <code>suggesters</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>analyzers</td>
+        <td>JSON array of objects matching the <code>analyzers</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>charFilters</td>
+        <td>JSON array of objects matching the <code>charFilters</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>scoringProfiles</td>
+        <td>JSON array of objects matching the <code>scoringProfiles</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>tokenFilters</td>
+        <td>JSON array of objects matching the <code>tokenFilters</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>corsOptions</td>
+        <td>JSON object matching the <code>corsOptions</code> attribute of an index</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>defaultScoringProfile</td>
+        <td>A simple string representing the <code>defaultScoringProfile</code> attribute of an index</td>
+        <td></td>
+    </tr>
+</table>
 
 ---
 
 ## Azure Search References
 
 <ol type="1">
-    <li><a id="api_index_creation" href="https://learn.microsoft.com/en-us/rest/api/searchservice/indexes?view=rest-searchservice-2023-11-01">API for index creation</a></li>
+    <li><a id="api_index_creation" href="https://learn.microsoft.com/en-us/rest/api/searchservice/indexes?view=rest-searchservice-2023-11-01">Search API for index creation</a></li>
+    <li><a id="index_action_type" href="https://learn.microsoft.com/en-us/rest/api/searchservice/documents/?view=rest-searchservice-2024-07-01&tabs=HTTP#indexactiontype">Index Action types</a></li>
+    <li><a id="skip_limit" href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.search.models.searchparameters.skip?view=azure-dotnet-legacy">Skip Limit</a></li>
 </ol>

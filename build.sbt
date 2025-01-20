@@ -1,3 +1,5 @@
+import sbt.librarymanagement.InclExclRule
+
 lazy val scala212 = "2.12.18"
 lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
@@ -26,12 +28,9 @@ ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
 
-ThisBuild / assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
-ThisBuild / assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false)
-
 // Dependencies versions
 lazy val sparkVersion = "3.3.0"
-lazy val azureSearchVersion = "11.6.0"
+lazy val azureSearchDocumentsVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
 lazy val scalaTestVersion = "3.2.16"
 lazy val scalaMockVersion = "5.1.0"
@@ -39,8 +38,27 @@ lazy val scalaMockVersion = "5.1.0"
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion % Provided
 lazy val sparkSQL = "org.apache.spark" %% "spark-sql" % sparkVersion % Provided
-lazy val azureSearchClient = ("com.azure" % "azure-search-documents" % azureSearchVersion).exclude("com.azure", "azure-core-http-netty")
-lazy val azureCoreOkHttp = "com.azure" % "azure-core-http-okhttp" % azureCoreOkHttpVersion
+lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % azureSearchDocumentsVersion)
+  .excludeAll(
+    InclExclRule("com.azure", "azure-core-http-netty"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-core"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-databind"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
+    InclExclRule("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310"),
+    InclExclRule("org.slf4j", "slf4j-api")
+   )
+
+lazy val azureCoreOkHttp = ("com.azure" % "azure-core-http-okhttp" % azureCoreOkHttpVersion)
+  .excludeAll(
+    InclExclRule("com.azure", "azure-core-http-netty"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-core"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-databind"),
+    InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
+    InclExclRule("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310"),
+    InclExclRule("org.slf4j", "slf4j-api")
+  )
 
 // Test dependencies
 lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
@@ -56,7 +74,7 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL,
-      azureSearchClient,
+      azureSearchDocuments,
       azureCoreOkHttp,
       scalactic,
       scalaTest,
@@ -96,12 +114,24 @@ lazy val write = (project in file("write"))
 lazy val root = (project in file("."))
   .enablePlugins(ScalaUnidocPlugin)
   .settings(
+
     crossScalaVersions := Nil,
     name := "azure-search-spark",
     libraryDependencies ++= Seq(
       sparkCore,
       sparkSQL
-    )
+    ),
+
+    assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
+    assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
+    assemblyMergeStrategy := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case PathList("module-info.class") => MergeStrategy.discard
+      case other if other.endsWith("/module-info.class") => MergeStrategy.discard
+      case default =>
+        val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
+        oldStrategy(default)
+    }
   )
   .aggregate(core, read, write)
   .dependsOn(
