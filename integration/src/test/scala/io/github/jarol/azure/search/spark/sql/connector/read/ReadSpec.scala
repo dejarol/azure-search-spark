@@ -51,6 +51,7 @@ class ReadSpec
    * @return index data
    */
 
+    // TODO: remove select
   private def readUsingDatasource(
                                    name: String,
                                    filter: Option[String],
@@ -161,16 +162,7 @@ class ReadSpec
           createIndexFromSchemaOf[AtomicBean](atomicBeansIndex)
           writeDocuments[AtomicBean](atomicBeansIndex, atomicBeans)
           val df = readUsingDatasource(atomicBeansIndex, Some("stringValue ne null"), None, None)
-            .select("id", "stringValue", "intValue")
           df.count() shouldBe atomicBeans.count(_.stringValue.isDefined)
-        }
-
-        it("selecting some fields") {
-
-          val select = Seq("id", "stringValue")
-          val df = readUsingDatasource(atomicBeansIndex, None, Some(select), None)
-          df.count() shouldBe atomicBeans.size
-          df.columns should contain theSameElementsAs select
         }
 
         describe("translating") {
@@ -496,6 +488,15 @@ class ReadSpec
               p => p.stringValue.isDefined || p.intValue.isDefined
             )
           }
+        }
+
+        it("applying column pruning") {
+
+          // TODO: test for column pruning
+          val (head, tail) = ("id", Seq("stringValue"))
+          val df = readUsingDatasource(atomicBeansIndex, None, None, None).select(head, tail: _*)
+          df.count() shouldBe atomicBeans.size
+          df.columns should contain theSameElementsAs (head +: tail)
         }
       }
     }
