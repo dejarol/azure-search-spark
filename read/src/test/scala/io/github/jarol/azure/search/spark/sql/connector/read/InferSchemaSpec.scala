@@ -29,35 +29,7 @@ class InferSchemaSpec
           an[InferSchemaException] shouldBe thrownBy {
             InferSchema.forIndex(
               "index",
-              Seq(hiddenField),
-              None
-            )
-          }
-        }
-      }
-      describe("select search fields") {
-        it("included in a selection list") {
-
-          val selectionList = Seq(f2, f3)
-          InferSchema.selectFields(
-            searchFields,
-            Some(selectionList)
-          ) should contain theSameElementsAs searchFields.filter {
-            sf => !sf.isHidden && selectionList.contains(sf.getName)
-          }
-        }
-
-        it(s"throwing a ${nameOf[ConfigException]} if selected fields do not exist") {
-
-          a[ConfigException] shouldBe thrownBy {
-
-            InferSchema.selectFields(
-              Seq(stringField, intField),
-              Some(
-                Seq(
-                  dateField.getName
-                )
-              )
+              Seq(hiddenField)
             )
           }
         }
@@ -67,27 +39,11 @@ class InferSchemaSpec
         it("only for non-hidden and selected fields") {
 
           // no selection provided
-          InferSchema.forIndex(
-            "index",
-            searchFields,
-            None
-          ) should have size searchFields.count {
+          val expectedSize = searchFields.count {
             sf => !sf.isHidden
           }
 
-          // selection provided
-          val selection = Seq(
-            stringField.getName,
-            dateField.getName
-          )
-
-          InferSchema.forIndex(
-            "index",
-            searchFields,
-            Some(selection)
-          ) should have size searchFields.count {
-            sf => !sf.isHidden && selection.contains(sf.getName)
-          }
+          InferSchema.forIndex("index", searchFields) should have size expectedSize
         }
       }
     }

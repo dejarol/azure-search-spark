@@ -60,6 +60,12 @@ Have a look at the <b>Partitioners</b> section for more information about partit
         <td></td>
         <td></td>
     </tr>
+    <tr>
+        <td>pushDownPredicate</td>
+        <td>Flag for enabling Spark's predicate pushdown for this datasource scan</td>
+        <td></td>
+        <td>true</td>
+    </tr>
 </table>
 
 ### Search options
@@ -80,11 +86,6 @@ Here is the list of available options for refining documents search
     <tr>
         <td>filter</td>
         <td>OData $filter expression to apply to the search query</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>select</td>
-        <td>Comma-separated list of top-level fields to select</td>
         <td></td>
     </tr>
     <tr>

@@ -7,18 +7,18 @@ import org.apache.spark.sql.types.StructType
 /**
  * Scan for Search dataSource
  * @param readConfig read configuration
- * @param schema input schema (either inferred or user-defined)
+ * @param prunedSchema the schema for this scan, passed by the ScanBuilder implementation (pruned, if necessary)
  */
 
 class SearchScan(
                   private val readConfig: ReadConfig,
-                  private val schema: StructType
+                  private val prunedSchema: StructType
                 )
   extends Scan {
 
-  override def readSchema(): StructType = schema
+  override def readSchema(): StructType = prunedSchema
 
-  override def toBatch: Batch = new SearchBatch(readConfig, schema)
+  override def toBatch: Batch = new SearchBatch(readConfig, prunedSchema)
 
   protected[read] val pushedPredicate: Option[String] = readConfig.searchOptionsBuilderConfig.pushedPredicate
 

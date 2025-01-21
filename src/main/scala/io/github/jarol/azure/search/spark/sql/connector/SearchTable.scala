@@ -27,9 +27,24 @@ class SearchTable(
     with SupportsRead
       with SupportsWrite {
 
+  /**
+   * Gets the table name
+   * @return table name
+   */
+
   override def name(): String = s"AzureSearchTable($tableName)"
 
+  /**
+   * Gets the table schema
+   * @return table schema
+   */
+
   override def schema(): StructType = tableSchema
+
+  /**
+   * Gets the table capabilities
+   * @return table capabilities
+   */
 
   override def capabilities(): JSet[TableCapability] = {
 
@@ -39,6 +54,12 @@ class SearchTable(
       add(TableCapability.TRUNCATE)
     }}
   }
+
+  /**
+   * Creates the [[ScanBuilder]] implementation of this datasource
+   * @param options set of options been configured at session level and/or provided to Spark reader
+   * @return the [[ScanBuilder]] implementation of this datasource
+   */
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
@@ -51,6 +72,12 @@ class SearchTable(
       schema()
     )
   }
+
+  /**
+   * Creates the [[WriteBuilder]] implementation for this datasource
+   * @param info logical write info
+   * @return the [[WriteBuilder]] implementation for this datasource
+   */
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
 

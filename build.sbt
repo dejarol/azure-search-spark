@@ -5,7 +5,7 @@ lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
 lazy val compileTestDependency = "test->test;compile->compile"
 
-ThisBuild / version := "0.5.0"
+ThisBuild / version := "0.6.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
@@ -45,18 +45,15 @@ lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % azureS
     InclExclRule("com.fasterxml.jackson.core", "jackson-core"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-databind"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
-    InclExclRule("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310"),
     InclExclRule("org.slf4j", "slf4j-api")
    )
 
 lazy val azureCoreOkHttp = ("com.azure" % "azure-core-http-okhttp" % azureCoreOkHttpVersion)
   .excludeAll(
-    InclExclRule("com.azure", "azure-core-http-netty"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-core"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-databind"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
-    InclExclRule("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310"),
     InclExclRule("org.slf4j", "slf4j-api")
   )
 
@@ -125,9 +122,8 @@ lazy val root = (project in file("."))
     assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
     assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
     assemblyMergeStrategy := {
-      case PathList("META-INF", _*) => MergeStrategy.discard
+      case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.discard
       case PathList("module-info.class") => MergeStrategy.discard
-      case other if other.endsWith("/module-info.class") => MergeStrategy.discard
       case default =>
         val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
         oldStrategy(default)
@@ -149,6 +145,8 @@ lazy val integration = (project in file("integration"))
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
-      sparkSQL
+      sparkSQL,
+      azureSearchDocuments,
+      azureCoreOkHttp
     )
   )

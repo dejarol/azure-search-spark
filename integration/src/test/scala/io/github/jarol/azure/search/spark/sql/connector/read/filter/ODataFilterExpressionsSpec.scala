@@ -10,7 +10,7 @@ import io.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
 import java.time.LocalDate
 import java.util.{List => JList}
 
-class ODataExpressionsSpec
+class ODataFilterExpressionsSpec
   extends SearchITSpec
     with ODataExpressionFactory {
 
@@ -39,13 +39,14 @@ class ODataExpressionsSpec
   }
 
   /**
-   * Retrieve document from an index, filtering documents according to the filter provided by a [[ODataExpression]] instance
+   * Retrieve document from an index, filtering documents according to the filter provided by a [[ODataFilterExpression]] instance
+ *
    * @param expression adapter instance (will provide the OData filter string)
    * @return indexed documents that match the OData filter provided by the adapter
    */
 
   protected final def assertExpressionBehavior(
-                                                expression: ODataExpression,
+                                                expression: ODataFilterExpression,
                                                 predicate: PushdownBean => Boolean
                                               ): Unit = {
 

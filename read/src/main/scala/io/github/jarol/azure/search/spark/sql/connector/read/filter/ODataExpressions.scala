@@ -6,10 +6,10 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 
 /**
- * Collection of concrete implementations and factory methods for [[ODataExpression]]
+ * Collection of concrete implementations and factory methods for [[ODataFilterExpression]]
  * <br>
- * In order to create a [[ODataExpression]] from an [[org.apache.spark.sql.connector.expressions.Expression]],
- * use [[ODataExpressionBuilder]] instead
+ * In order to create a [[ODataFilterExpression]] from an [[org.apache.spark.sql.connector.expressions.Expression]],
+ * use [[ODataFilterExpressionBuilder]] instead
  */
 
 object ODataExpressions {
@@ -20,7 +20,7 @@ object ODataExpressions {
    */
 
   private[filter] case class FieldReference(private val names: Seq[String])
-    extends ODataExpression {
+    extends ODataFilterExpression {
     override def name(): String = "FIELD_REFERENCE"
     override def toUriLiteral: String = names.mkString("/")
   }
@@ -35,7 +35,7 @@ object ODataExpressions {
                                       private val dataType: DataType,
                                       private val value: Any
                                     )
-    extends ODataExpression {
+    extends ODataFilterExpression {
 
     override def name(): String = "LITERAL"
 
@@ -68,10 +68,10 @@ object ODataExpressions {
    */
 
   private[filter] case class IsNull(
-                                     private val left: ODataExpression,
+                                     private val left: ODataFilterExpression,
                                      private val negate: Boolean
                                    )
-    extends ODataExpression {
+    extends ODataFilterExpression {
 
     override def name(): String = if (negate) "IS_NOT_NULL" else "IS_NULL"
 
@@ -90,11 +90,11 @@ object ODataExpressions {
    */
 
   private[filter] case class Comparison(
-                                         private val left: ODataExpression,
-                                         private val right: ODataExpression,
+                                         private val left: ODataFilterExpression,
+                                         private val right: ODataFilterExpression,
                                          private val comparator: ODataComparator
                                        )
-    extends ODataExpression {
+    extends ODataFilterExpression {
 
     override def name(): String = "COMPARISON"
 
@@ -106,8 +106,8 @@ object ODataExpressions {
    * @param child expression to negate
    */
 
-  private[filter] case class Not(private val child: ODataExpression)
-    extends ODataExpression {
+  private[filter] case class Not(private val child: ODataFilterExpression)
+    extends ODataFilterExpression {
     override def name(): String = "NOT"
     override def toUriLiteral: String = s"not (${child.toUriLiteral})"
   }
@@ -119,11 +119,11 @@ object ODataExpressions {
    */
 
   private[filter] case class In(
-                                 private val left: ODataExpression,
-                                 private val inList: Seq[ODataExpression],
+                                 private val left: ODataFilterExpression,
+                                 private val inList: Seq[ODataFilterExpression],
                                  private val separator: String
                                )
-    extends ODataExpression {
+    extends ODataFilterExpression {
 
     override def name(): String = "IN"
 
@@ -152,10 +152,10 @@ object ODataExpressions {
    */
 
   private[filter] case class Logical(
-                                      private val expressions: Seq[ODataExpression],
+                                      private val expressions: Seq[ODataFilterExpression],
                                       private val isAnd: Boolean
                                     )
-    extends ODataExpression {
+    extends ODataFilterExpression {
 
     override def name(): String = if (isAnd) "AND" else "OR"
 
@@ -174,7 +174,7 @@ object ODataExpressions {
    * @return an expression representing a field reference
    */
 
-  def fieldReference(names: Seq[String]): ODataExpression = FieldReference(names)
+  def fieldReference(names: Seq[String]): ODataFilterExpression = FieldReference(names)
 
   /**
    * Create a literal (i.e. constant) expression
@@ -186,7 +186,7 @@ object ODataExpressions {
   def literal(
                dataType: DataType,
                value: Any
-             ): ODataExpression = {
+             ): ODataFilterExpression = {
 
     Literal(
       dataType,
@@ -202,9 +202,9 @@ object ODataExpressions {
    */
 
   def isNull(
-              left: ODataExpression,
+              left: ODataFilterExpression,
               negate: Boolean
-            ): ODataExpression = {
+            ): ODataFilterExpression = {
 
     IsNull(
       left,
@@ -221,10 +221,10 @@ object ODataExpressions {
    */
 
   def comparison(
-                  left: ODataExpression,
-                  right: ODataExpression,
+                  left: ODataFilterExpression,
+                  right: ODataFilterExpression,
                   comparator: ODataComparator
-                ): ODataExpression = {
+                ): ODataFilterExpression = {
 
     Comparison(
       left,
@@ -239,7 +239,7 @@ object ODataExpressions {
    * @return a negation expression
    */
 
-  def not(child: ODataExpression): ODataExpression = Not(child)
+  def not(child: ODataFilterExpression): ODataFilterExpression = Not(child)
 
   /**
    * Create an <code>in</code> expression
@@ -249,10 +249,10 @@ object ODataExpressions {
    */
 
   def in(
-          left: ODataExpression,
-          inList: Seq[ODataExpression],
+          left: ODataFilterExpression,
+          inList: Seq[ODataFilterExpression],
           separator: String
-        ): ODataExpression = {
+        ): ODataFilterExpression = {
 
     In(
       left,
@@ -268,9 +268,9 @@ object ODataExpressions {
    */
 
   def logical(
-               expressions: Seq[ODataExpression],
+               expressions: Seq[ODataFilterExpression],
                isAnd: Boolean
-             ): ODataExpression = {
+             ): ODataFilterExpression = {
 
     Logical(expressions, isAnd)
   }

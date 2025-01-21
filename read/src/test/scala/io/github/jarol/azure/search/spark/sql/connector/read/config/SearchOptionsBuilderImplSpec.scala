@@ -90,7 +90,7 @@ class SearchOptionsBuilderImplSpec
           emptyConfig.select shouldBe empty
           val actual: Option[Seq[String]] = createConfig(
             Map(
-              SearchOptionsBuilderImpl.SELECT_CONFIG -> expected.mkString(",")
+              SearchOptionsBuilderImpl.SELECT -> expected.mkString(",")
             )
           ).select
 
@@ -213,7 +213,7 @@ class SearchOptionsBuilderImplSpec
           Map(
             SearchOptionsBuilderImpl.FILTER -> filter,
             SearchOptionsBuilderImpl.PUSHED_PREDICATE -> pushedPredicate,
-            SearchOptionsBuilderImpl.SELECT_CONFIG -> select.mkString(","),
+            SearchOptionsBuilderImpl.SELECT -> select.mkString(","),
             SearchOptionsBuilderImpl.QUERY_TYPE -> queryType.name(),
             SearchOptionsBuilderImpl.SEARCH_FIELDS -> searchFields.mkString(","),
             SearchOptionsBuilderImpl.SEARCH_MODE -> searchMode.name(),

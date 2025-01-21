@@ -38,8 +38,7 @@ class SearchTableProvider
     if (readConfig.indexExists) {
       InferSchema.forIndex(
         readConfig.getIndex,
-        readConfig.getSearchIndexFields,
-        readConfig.searchOptionsBuilderConfig.select
+        readConfig.getSearchIndexFields
       )
     } else {
       throw new IndexDoesNotExistException(readConfig.getIndex)

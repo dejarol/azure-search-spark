@@ -3,9 +3,9 @@ package io.github.jarol.azure.search.spark.sql.connector.read.config
 import com.azure.search.documents.SearchDocument
 import io.github.jarol.azure.search.spark.sql.connector.models._
 import io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
-import io.github.jarol.azure.search.spark.sql.connector.utils.JVM
 import io.github.jarol.azure.search.spark.sql.connector.SearchITSpec
 import io.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, JavaScalaConverters}
+import io.github.jarol.azure.search.spark.sql.connector.utils.JavaCollections
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 
@@ -82,7 +82,7 @@ class ReadConfigITSpec
     // Compute the set of expected and actual documents
     val expectedDocuments = documents.filter(expectedPredicate)
     val actualDocuments = JavaScalaConverters.listToSeq(
-      JVM.iteratorToList(
+      JavaCollections.iteratorToList(
         createConfig(filter).getResultsForPartition(
           partition
         )

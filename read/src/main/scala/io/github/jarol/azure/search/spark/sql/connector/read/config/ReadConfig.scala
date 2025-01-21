@@ -5,9 +5,10 @@ import com.azure.search.documents.util.SearchPagedIterable
 import io.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import io.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import io.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressions}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressions, ODataFilterExpression}
 import io.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartition, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
+import org.apache.spark.sql.types.StructType
 
 import java.util.{Iterator => Jiterator}
 
@@ -41,7 +42,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * @return this configuration with new key-value pair related to the pushed predicate
    */
 
-  def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = {
+  def withPushedPredicates(predicates: Seq[ODataFilterExpression]): ReadConfig = {
 
     // If there are no predicates, do not set the option
     if (predicates.isEmpty) {
@@ -58,6 +59,26 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
       withOption(
         ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.PUSHED_PREDICATE,
         pushedPredicate
+      )
+    }
+  }
+
+  /**
+   * Extends this configuration by adding a select clause based on the provided schema.
+   * If the schema is not empty, it creates a comma-separated list of field names
+   * and adds it as a SELECT option to the search configuration.
+   * @param schema schema of the data to be selected. If empty, no SELECT clause will be added.
+   * @return this config instance, maybe with a select clause
+   */
+
+  def withSelectClause(schema: StructType): ReadConfig = {
+
+    if (schema.isEmpty) {
+      this
+    } else {
+      withOption(
+        ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT,
+        schema.map(_.name).mkString(",")
       )
     }
   }
@@ -193,7 +214,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 object ReadConfig {
 
   final val PARTITIONER_CLASS_CONFIG = "partitioner"
-  final val PUSHDOWN_PREDICATE_CONFIG = "pushDownPredicate"
+  final val PUSHDOWN_PREDICATE_CONFIG = "pushdownPredicate"
   final val SEARCH_OPTIONS_PREFIX = "searchOptions."
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
 

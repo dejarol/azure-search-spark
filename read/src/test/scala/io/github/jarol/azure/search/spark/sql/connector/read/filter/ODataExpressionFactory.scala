@@ -6,7 +6,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import java.time.LocalDate
 
 /**
- * Trait to mix-in for creating [[ODataExpression]](s)
+ * Trait to mix-in for creating [[ODataFilterExpression]](s)
  */
 
 trait ODataExpressionFactory {
@@ -17,15 +17,16 @@ trait ODataExpressionFactory {
    * @return an expression for a top-level field
    */
 
-  protected final def topLevelFieldReference(name: String): ODataExpression = ODataExpressions.fieldReference(Seq(name))
+  protected final def topLevelFieldReference(name: String): ODataFilterExpression = ODataExpressions.fieldReference(Seq(name))
 
   /**
    * Create a string literal
+ *
    * @param value literal value
-   * @return an [[ODataExpression]] representing a string literal
+   * @return an [[ODataFilterExpression]] representing a string literal
    */
 
-  protected final def createStringLiteral(value: String): ODataExpression = {
+  protected final def createStringLiteral(value: String): ODataFilterExpression = {
 
     ODataExpressions.literal(
       DataTypes.StringType,
@@ -35,11 +36,12 @@ trait ODataExpressionFactory {
 
   /**
    * Create an integer literal
+ *
    * @param value literal value
-   * @return an [[ODataExpression]] representing a numeric literal
+   * @return an [[ODataFilterExpression]] representing a numeric literal
    */
 
-  protected final def createIntLiteral(value: Int): ODataExpression = {
+  protected final def createIntLiteral(value: Int): ODataFilterExpression = {
 
     ODataExpressions.literal(
       DataTypes.IntegerType,
@@ -49,11 +51,12 @@ trait ODataExpressionFactory {
 
   /**
    * Create a datetime literal
+ *
    * @param value literal value
-   * @return an [[ODataExpression]] representing a datetime literal
+   * @return an [[ODataFilterExpression]] representing a datetime literal
    */
 
-  protected final def createDateLiteral(value: LocalDate): ODataExpression = {
+  protected final def createDateLiteral(value: LocalDate): ODataFilterExpression = {
 
     ODataExpressions.literal(
       DataTypes.DateType,

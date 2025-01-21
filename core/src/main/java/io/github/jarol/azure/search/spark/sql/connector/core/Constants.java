@@ -22,8 +22,7 @@ public final class Constants {
     public static final String DATASOURCE_KEY_PREFIX = "azure.search";
 
     /**
-     * Maximum number of documents that can be read per partition.
-     * See <a href="https://learn.microsoft.com/en-us/dotnet/api/azure.search.documents.searchoptions.skip?view=azure-dotnet">this</a>
+     * Maximum number of documents that can be read per partition
      */
 
     public static final int DOCUMENTS_PER_PARTITION_LIMIT = 100000;

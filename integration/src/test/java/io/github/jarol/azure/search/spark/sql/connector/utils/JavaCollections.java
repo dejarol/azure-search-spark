@@ -11,7 +11,7 @@ import java.util.stream.StreamSupport;
  * Collection of utility methods for dealing with Java objects
  */
 
-public final class JVM {
+public final class JavaCollections {
 
     /**
      * Convert an iterator to a list

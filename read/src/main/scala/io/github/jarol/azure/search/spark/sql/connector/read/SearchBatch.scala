@@ -12,12 +12,12 @@ import scala.util.Try
 /**
  * [[Batch]] implementation for Search dataSource
  * @param readConfig read configuration
- * @param schema schema
+ * @param prunedSchema schema passed by the Scan implementation (pruned, if necessary)
  */
 
 class SearchBatch(
                    private val readConfig: ReadConfig,
-                   private val schema: StructType
+                   private val prunedSchema: StructType
                  )
   extends Batch
     with Logging {
@@ -32,7 +32,7 @@ class SearchBatch(
     }
   }
 
-  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, schema)
+  override def createReaderFactory(): PartitionReaderFactory = new SearchPartitionReaderFactory(readConfig, prunedSchema)
 
   /**
    * Create an array of partitions from a partitioner

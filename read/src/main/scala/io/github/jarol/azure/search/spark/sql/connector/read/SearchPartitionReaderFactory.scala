@@ -10,11 +10,13 @@ import org.apache.spark.sql.types.StructType
 /**
  * Partition reader factory for Search dataSource
  * @param readConfig read configuration
- * @param schema schema to user for data reading (either inferred or user-defined)
+ * @param prunedSchema schema passed by the Batch implementation of this source (pruned, if necessary)
  */
 
-class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
-                                   private val schema: StructType)
+class SearchPartitionReaderFactory(
+                                    private val readConfig: ReadConfig,
+                                    private val prunedSchema: StructType
+                                  )
   extends PartitionReaderFactory {
 
   /**
@@ -44,7 +46,7 @@ class SearchPartitionReaderFactory(private val readConfig: ReadConfig,
   private def createSearchReader(partition: SearchPartition): PartitionReader[InternalRow] = {
 
     val searchDocumentToInternalRowConverter = SearchDocumentEncoder
-      .safeApply(schema, readConfig.getSearchIndexFields) match {
+      .safeApply(prunedSchema, readConfig.getSearchIndexFields) match {
       case Left(value) => throw value
       case Right(value) => value
     }

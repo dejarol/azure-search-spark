@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.DataTypes
  * Builder for generating OData expressions
  */
 
-object ODataExpressionBuilder {
+object ODataFilterExpressionBuilder {
 
   /**
    * Convert a Spark [[Expression]] to an OData expression, if possible
@@ -16,7 +16,7 @@ object ODataExpressionBuilder {
    * @return an OData expression if the input expression is supported, an empty Option otherwise
    */
 
-  final def build(expression: Expression): Option[ODataExpression] = {
+  final def build(expression: Expression): Option[ODataFilterExpression] = {
 
     expression match {
       case literal: Literal[_] => Some(fromLiteral(literal))
@@ -47,7 +47,7 @@ object ODataExpressionBuilder {
    * @return a string representing a top-level or nested field
    */
 
-  private[filter] def fromNamedReference(ref: NamedReference): ODataExpression = {
+  private[filter] def fromNamedReference(ref: NamedReference): ODataFilterExpression = {
 
     ODataExpressions.fieldReference(
       ref.fieldNames()
@@ -60,7 +60,7 @@ object ODataExpressionBuilder {
    * @return
    */
 
-  private[filter] def fromLiteral(literal: Literal[_]): ODataExpression = {
+  private[filter] def fromLiteral(literal: Literal[_]): ODataFilterExpression = {
 
     ODataExpressions.literal(
       literal.dataType(),
@@ -76,9 +76,9 @@ object ODataExpressionBuilder {
    */
 
   private[filter] def nullEqualityExpression(
-                                              left: Option[ODataExpression],
+                                              left: Option[ODataFilterExpression],
                                               notNull: Boolean
-                                            ): Option[ODataExpression] = {
+                                            ): Option[ODataFilterExpression] = {
 
     left.map {
       expr => ODataExpressions.isNull(expr, notNull)
@@ -95,9 +95,9 @@ object ODataExpressionBuilder {
 
   private[filter] def comparisonExpression(
                                             exprName: String,
-                                            leftSide: Option[ODataExpression],
-                                            rightSide: Option[ODataExpression]
-                                          ): Option[ODataExpression] = {
+                                            leftSide: Option[ODataFilterExpression],
+                                            rightSide: Option[ODataFilterExpression]
+                                          ): Option[ODataFilterExpression] = {
 
     // Match the expression name to an OData comparison operator
     val maybeComparator = Enums.safeValueOf[ODataComparator](
@@ -121,9 +121,9 @@ object ODataExpressionBuilder {
    */
 
   private def inExpression(
-                            leftSide: Option[ODataExpression],
-                            inExpressions: Seq[Option[ODataExpression]]
-                          ): Option[ODataExpression] = {
+                            leftSide: Option[ODataFilterExpression],
+                            inExpressions: Seq[Option[ODataFilterExpression]]
+                          ): Option[ODataFilterExpression] = {
 
     val allDefined = inExpressions.forall(_.isDefined)
     val allStringLiterals: Boolean = inExpressions.collect {
@@ -153,9 +153,9 @@ object ODataExpressionBuilder {
    */
 
   private def createInExpression(
-                                  leftSide: Option[ODataExpression],
-                                  expressions: Seq[ODataExpression]
-                                ): Option[ODataExpression] = {
+                                  leftSide: Option[ODataFilterExpression],
+                                  expressions: Seq[ODataFilterExpression]
+                                ): Option[ODataFilterExpression] = {
 
     val expressionsAsStrings: Seq[String] = expressions.map(_.toUriLiteral)
     val maybeSeparator: Option[String] = maybeSetSeparator(expressionsAsStrings, ",")
@@ -188,7 +188,7 @@ object ODataExpressionBuilder {
    * @return a <code>not</code> expression
    */
 
-  private def notExpression(expression: Option[ODataExpression]): Option[ODataExpression] = expression.map(ODataExpressions.not)
+  private def notExpression(expression: Option[ODataFilterExpression]): Option[ODataFilterExpression] = expression.map(ODataExpressions.not)
 
   /**
    * Create a logical (<code>and</code> or <code>or</code>) expression
@@ -198,9 +198,9 @@ object ODataExpressionBuilder {
    */
 
   private def logicalExpression(
-                                 expressions: Seq[Option[ODataExpression]],
+                                 expressions: Seq[Option[ODataFilterExpression]],
                                  createAnd: Boolean
-                               ): Option[ODataExpression] = {
+                               ): Option[ODataFilterExpression] = {
 
     val allDefined = expressions.forall(_.isDefined)
     if (allDefined) {

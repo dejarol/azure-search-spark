@@ -2,7 +2,7 @@ package io.github.jarol.azure.search.spark.sql.connector.read
 
 import io.github.jarol.azure.search.spark.sql.connector.models._
 import io.github.jarol.azure.search.spark.sql.connector.read.config.{ReadConfig, SearchOptionsBuilderImpl}
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataComparator, ODataExpression, ODataExpressionFactory, ODataExpressions}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataComparator, ODataFilterExpression, ODataExpressionFactory, ODataExpressions}
 import io.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import io.github.jarol.azure.search.spark.sql.connector.core.Constants
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
@@ -39,8 +39,8 @@ class ReadSpec
     PushdownBean(Some("jane"), None, None)
   )
 
-  private lazy val stringValueRef: ODataExpression = topLevelFieldReference("stringValue")
-  private lazy val intValueRef: ODataExpression = topLevelFieldReference("intValue")
+  private lazy val stringValueRef: ODataFilterExpression = topLevelFieldReference("stringValue")
+  private lazy val intValueRef: ODataFilterExpression = topLevelFieldReference("intValue")
 
   /**
    * Read data from a target index
@@ -61,7 +61,7 @@ class ReadSpec
     // Set extra options
     val extraOptions = Map(
       ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.FILTER -> filter,
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT_CONFIG -> select.map(_.mkString(","))
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT -> select.map(_.mkString(","))
     ).collect {
       case (k, Some(v)) => (k, v)
     }
@@ -123,7 +123,7 @@ class ReadSpec
 
   private def assertEffectOfPredicatePushdown(
                                                columnPredicate: Column,
-                                               expectedPredicate: ODataExpression,
+                                               expectedPredicate: ODataFilterExpression,
                                                modelPredicate: PushdownBean => Boolean
                                              ): Unit = {
 
@@ -161,6 +161,7 @@ class ReadSpec
           createIndexFromSchemaOf[AtomicBean](atomicBeansIndex)
           writeDocuments[AtomicBean](atomicBeansIndex, atomicBeans)
           val df = readUsingDatasource(atomicBeansIndex, Some("stringValue ne null"), None, None)
+            .select("id", "stringValue", "intValue")
           df.count() shouldBe atomicBeans.count(_.stringValue.isDefined)
         }
 
