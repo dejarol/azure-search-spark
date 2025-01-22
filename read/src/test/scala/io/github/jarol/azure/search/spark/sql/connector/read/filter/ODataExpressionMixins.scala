@@ -40,7 +40,7 @@ trait ODataExpressionMixins {
 
   protected final def createIntLiteral(value: Int): ODataExpression = {
 
-    ODataExpressions.V1Literal[Integer](value)
+    ODataExpressions.V1Literal[Integer](value)(numericLiterable)
   }
 
   /**

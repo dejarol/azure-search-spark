@@ -152,9 +152,9 @@ object ODataExpressions {
 
     (dataType, value) match {
       case (DataTypes.StringType, s: String) => Some(V1Literal[String](s))
-      case (DataTypes.IntegerType, i: Integer) => Some(V1Literal[Integer](i)(numericLiterable[Integer]))
-      case (DataTypes.LongType, l: JLong) => Some(V1Literal[JLong](l)(numericLiterable[JLong]))
-      case (DataTypes.DoubleType, l: JDouble) => Some(V1Literal[JDouble](l))
+      case (DataTypes.IntegerType, i: Integer) => Some(V1Literal[Integer](i)(numericLiterable))
+      case (DataTypes.LongType, l: JLong) => Some(V1Literal[JLong](l)(numericLiterable))
+      case (DataTypes.DoubleType, l: JDouble) => Some(V1Literal[JDouble](l)(numericLiterable))
       case (DataTypes.TimestampType, t: Timestamp) => Some(V1Literal[Timestamp](t))
       case _ => None
     }
