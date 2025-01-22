@@ -4,8 +4,8 @@ import com.azure.search.documents.SearchDocument
 import io.github.jarol.azure.search.spark.sql.connector.models._
 import io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartition
 import io.github.jarol.azure.search.spark.sql.connector.SearchITSpec
+import io.github.jarol.azure.search.spark.sql.connector.core.utils.JavaCollections
 import io.github.jarol.azure.search.spark.sql.connector.core.{FieldFactory, JavaScalaConverters}
-import io.github.jarol.azure.search.spark.sql.connector.utils.JavaCollections
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 

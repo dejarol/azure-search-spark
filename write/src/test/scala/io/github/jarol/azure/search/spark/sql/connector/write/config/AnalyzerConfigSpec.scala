@@ -4,6 +4,7 @@ import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import io.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import io.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, JsonMixIns}
 
+import java.io.IOException
 import java.util.function.Supplier
 import scala.reflect.ClassTag
 
@@ -67,7 +68,7 @@ class AnalyzerConfigSpec
       AnalyzerConfig.NAME_PROPERTY -> analyzerName.map(StringUtils.quoted),
       AnalyzerConfig.TYPE_PROPERTY -> analyzerType.map(StringUtils.quoted),
       AnalyzerConfig.FIELDS_PROPERTY -> fields.map {
-        _.map(StringUtils.quoted).mkString("[", ",", "]")
+        _.mkString("[", ",", "]")
       }
     ).collect {
       case (key, Some(v)) => f"${StringUtils.quoted(key)}: $v"
@@ -111,7 +112,7 @@ class AnalyzerConfigSpec
           assertDeserializationFails[NullPointerException](
             None,
             Some(analyzerType.name()),
-            Some(fields),
+            Some(fields.map(StringUtils.quoted)),
             AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.NAME_PROPERTY)
           )
 
@@ -119,7 +120,7 @@ class AnalyzerConfigSpec
           assertDeserializationFails[NoSuchElementException](
             Some(invalidAnalyzerName),
             Some(analyzerType.description()),
-            Some(fields),
+            Some(fields.map(StringUtils.quoted)),
             () => f"Analyzer '$invalidAnalyzerName' does not exist"
           )
         }
@@ -129,7 +130,7 @@ class AnalyzerConfigSpec
           assertDeserializationFails[NullPointerException](
             Some(analyzerName.toString),
             None,
-            Some(fields),
+            Some(fields.map(StringUtils.quoted)),
             AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.TYPE_PROPERTY)
           )
 
@@ -137,7 +138,7 @@ class AnalyzerConfigSpec
           assertDeserializationFails[NoSuchElementException](
             Some(analyzerName.toString),
             Some(invalidTypeName),
-            Some(fields),
+            Some(fields.map(StringUtils.quoted)),
             () => f"Search analyzer type '$invalidTypeName' does not exist"
           )
         }
@@ -149,6 +150,22 @@ class AnalyzerConfigSpec
             Some(analyzerType.name()),
             None,
             AnalyzerConfig.supplierForNonNullAnalyzerProperty(AnalyzerConfig.FIELDS_PROPERTY)
+          )
+        }
+
+        it("fields are not strings") {
+
+          val fieldObject =
+            """
+              |{
+              | "name": "id"
+              |}""".stripMargin
+
+          assertDeserializationFails[IOException](
+            Some(analyzerName.toString),
+            Some(analyzerType.name()),
+            Some(Seq(fieldObject)),
+            () => "All elements must be strings"
           )
         }
       }

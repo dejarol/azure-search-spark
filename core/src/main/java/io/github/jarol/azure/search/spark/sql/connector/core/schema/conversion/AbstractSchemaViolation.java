@@ -1,6 +1,5 @@
 package io.github.jarol.azure.search.spark.sql.connector.core.schema.conversion;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

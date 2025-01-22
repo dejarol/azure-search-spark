@@ -1,4 +1,4 @@
-package io.github.jarol.azure.search.spark.sql.connector.utils;
+package io.github.jarol.azure.search.spark.sql.connector.core.utils;
 
 import org.jetbrains.annotations.NotNull;
 

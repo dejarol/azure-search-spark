@@ -3,7 +3,7 @@ package io.github.jarol.azure.search.spark.sql.connector.write
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import io.github.jarol.azure.search.spark.sql.connector.write.config.WriteConfig
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.connector.write.{SupportsTruncate, Write, WriteBuilder}
+import org.apache.spark.sql.connector.write.{BatchWrite, SupportsTruncate, WriteBuilder}
 import org.apache.spark.sql.types.StructType
 
 import scala.language.implicitConversions
@@ -46,7 +46,7 @@ class SearchWriteBuilder(
    */
 
   @throws[IndexCreationException]
-  override def build(): Write = {
+  override def buildForBatch(): BatchWrite = {
 
     val indexName = writeConfig.getIndex
     if (writeConfig.indexExists) {
@@ -58,7 +58,7 @@ class SearchWriteBuilder(
       unsafelyCreateIndex(indexName)
     }
 
-    new SearchWrite(writeConfig, schema)
+    new SearchBatchWrite(writeConfig, schema)
   }
 
   /**

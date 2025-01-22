@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.github.jarol.azure.search.spark.sql.connector.core.utils.JavaCollections;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +74,7 @@ public class AnalyzerConfig {
             return new AnalyzerConfig(
                     resolveName(name),
                     resolveType(type),
-                    getFields(fieldsNode, ctxt)
+                    getFields(fieldsNode)
             );
         }
 
@@ -161,20 +163,43 @@ public class AnalyzerConfig {
         /**
          * Deserialize given node as a list of string representing config fields
          * @param node node
-         * @param ctxt deserialization context
          * @return a collection of strings
          * @throws IOException if deserialization fails
          */
 
         private List<String> getFields(
-                @NotNull JsonNode node,
-                @NotNull DeserializationContext ctxt
+                @NotNull JsonNode node
         ) throws IOException {
 
-            return ctxt.<List<String>>readTreeAsValue(
-                    node,
-                    ctxt.getTypeFactory().constructCollectionType(List.class, String.class)
-            ).stream().map(String::trim).collect(Collectors.toList());
+            // Check if node is an array and all elements are strings
+            if (node.isArray()) {
+
+                ArrayNode arrayNode = (ArrayNode) node;
+                List<JsonNode> children = JavaCollections.iteratorToList(arrayNode.elements());
+                boolean allChildrenAreStrings = children.stream().allMatch(JsonNode::isTextual);
+
+                // If all elements are strings, convert them to a list and return
+                if (allChildrenAreStrings) {
+                    return children.stream()
+                           .map(JsonNode::asText)
+                           .collect(Collectors.toList());
+                } else {
+                    throw new IOException(
+                            String.format(
+                                    "Invalid format for %s property. All elements must be strings",
+                                    FIELDS_PROPERTY
+                            )
+                    );
+                }
+
+            } else {
+                throw new IOException(
+                        String.format(
+                                "Invalid format for %s property. Expected an array",
+                                FIELDS_PROPERTY
+                                )
+                );
+            }
         }
     }
 
