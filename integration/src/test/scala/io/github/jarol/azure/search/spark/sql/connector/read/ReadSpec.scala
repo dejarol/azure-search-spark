@@ -46,23 +46,19 @@ class ReadSpec
    * Read data from a target index
    * @param name index name
    * @param filter filter to apply on index data
-   * @param select list of fields to select
    * @param schema optional read schema
    * @return index data
    */
 
-    // TODO: remove select
   private def readUsingDatasource(
                                    name: String,
                                    filter: Option[String],
-                                   select: Option[Seq[String]],
                                    schema: Option[StructType]
                                  ): DataFrame = {
 
     // Set extra options
     val extraOptions = Map(
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.FILTER -> filter,
-      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.SELECT -> select.map(_.mkString(","))
+      ReadConfig.SEARCH_OPTIONS_PREFIX + SearchOptionsBuilderImpl.FILTER -> filter
     ).collect {
       case (k, Some(v)) => (k, v)
     }
@@ -116,6 +112,24 @@ class ReadSpec
   }
 
   /**
+   * Extracts the [[org.apache.spark.sql.connector.read.Scan]] implementation from a given DataFrame.
+   * It analyzes the query execution plan of the provided DataFrame
+   * to find and return the [[SearchScan]] implementation, if defined.
+   * @param df dataFrame to analyze
+   * @return an optional [[SearchScan]] implementation
+   */
+
+  private def scanImplementationOf(df: DataFrame): Option[SearchScan] = {
+
+    df.queryExecution.executedPlan.collect {
+      case scan: BatchScanExec =>
+        scan.scan
+    }.headOption.collect {
+      case scan: SearchScan => scan
+    }
+  }
+
+  /**
    * Assert that Search datasource has pushed down a Spark predicate
    * @param columnPredicate Spark predicate
    * @param expectedPredicate expected pushed predicate
@@ -134,12 +148,7 @@ class ReadSpec
       .load().filter(columnPredicate)
 
     // Retrieve pushed predicates
-    val maybePushedPredicates: Option[String] = df.queryExecution.executedPlan.collect {
-      case scan: BatchScanExec =>
-        scan.scan
-    }.headOption.flatMap {
-      case scan: SearchScan => scan.pushedPredicate
-    }
+    val maybePushedPredicates: Option[String] = scanImplementationOf(df).flatMap(_.pushedPredicate)
 
     // Assert that some predicates have been pushed down
     maybePushedPredicates shouldBe defined
@@ -161,8 +170,23 @@ class ReadSpec
           dropIndexIfExists(atomicBeansIndex, sleep = true)
           createIndexFromSchemaOf[AtomicBean](atomicBeansIndex)
           writeDocuments[AtomicBean](atomicBeansIndex, atomicBeans)
-          val df = readUsingDatasource(atomicBeansIndex, Some("stringValue ne null"), None, None)
+          val df = readUsingDatasource(atomicBeansIndex, Some("stringValue ne null"), None)
           df.count() shouldBe atomicBeans.count(_.stringValue.isDefined)
+        }
+
+        it("applying column pruning") {
+
+          val (head, tail) = ("id", Seq("stringValue"))
+          val df = readUsingDatasource(atomicBeansIndex, None, None).select(head, tail: _*)
+
+          // Assert that pruned schema contains only required columns
+          val maybePrunedSchema: Option[StructType] = scanImplementationOf(df).map(_.readSchema())
+          maybePrunedSchema shouldBe defined
+          maybePrunedSchema.get.fields.map(_.name) should contain theSameElementsAs (head +: tail)
+
+          // Assert correct df size and columns
+          df.count() shouldBe atomicBeans.size
+          df.columns should contain theSameElementsAs (head +: tail)
         }
 
         describe("translating") {
@@ -177,7 +201,7 @@ class ReadSpec
               }
 
               // Read data and do assertions
-              val rows: Seq[Row] = readUsingDatasource(atomicBeansIndex, None, None, Some(createStructType(schemaRead: _*))).collect()
+              val rows: Seq[Row] = readUsingDatasource(atomicBeansIndex, None, Some(createStructType(schemaRead: _*))).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (row, sample) =>
@@ -195,7 +219,7 @@ class ReadSpec
                 createStructField("longValue", DataTypes.DoubleType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (row, bean) =>
@@ -213,7 +237,7 @@ class ReadSpec
                 createStructField("booleanValue", DataTypes.BooleanType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
@@ -228,7 +252,7 @@ class ReadSpec
                 createStructField("booleanValue", DataTypes.StringType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
@@ -245,7 +269,7 @@ class ReadSpec
                 createStructField("timestampValue", DataTypes.DateType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
@@ -262,7 +286,7 @@ class ReadSpec
                 createStructField("timestampValue", DataTypes.TimestampType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
@@ -277,7 +301,7 @@ class ReadSpec
                 createStructField("timestampValue", DataTypes.StringType)
               )
 
-              val rows = readUsingDatasource(atomicBeansIndex, None, None, Some(schemaRead)).collect()
+              val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
@@ -305,7 +329,7 @@ class ReadSpec
               writeDocuments[CollectionBean[String]](collectionBeansIndex, samples)(
                 CollectionBean.serializerFor[String]
               )
-              val rows = readUsingDatasource(collectionBeansIndex, None, None, None).collect()
+              val rows = readUsingDatasource(collectionBeansIndex, None, None).collect()
               rows should have size samples.size
               forAll(zipRowsAndBeans(rows, samples)) {
                 case (r, s) =>
@@ -331,7 +355,7 @@ class ReadSpec
               writeDocuments[CollectionBean[ActionTypeBean]](collectionBeansIndex, samples)(
                 CollectionBean.serializerFor[ActionTypeBean]
               )
-              val rows = toSeqOf[CollectionBean[ActionTypeBean]](readUsingDatasource(collectionBeansIndex, None, None, None))
+              val rows = toSeqOf[CollectionBean[ActionTypeBean]](readUsingDatasource(collectionBeansIndex, None, None))
               rows should have size samples.size
               forAll(rows.sortBy(_.id).zip(samples.sortBy(_.id))) {
                 case (r, s) =>
@@ -370,7 +394,7 @@ class ReadSpec
                 CollectionBean.serializerFor[GeoBean]
               )
               val rows = toSeqOf[CollectionBean[GeoBean]](
-                readUsingDatasource(collectionBeansIndex, None, None, None)
+                readUsingDatasource(collectionBeansIndex, None, None)
               )
 
               rows should have size samples.size
@@ -488,15 +512,6 @@ class ReadSpec
               p => p.stringValue.isDefined || p.intValue.isDefined
             )
           }
-        }
-
-        it("applying column pruning") {
-
-          // TODO: test for column pruning
-          val (head, tail) = ("id", Seq("stringValue"))
-          val df = readUsingDatasource(atomicBeansIndex, None, None, None).select(head, tail: _*)
-          df.count() shouldBe atomicBeans.size
-          df.columns should contain theSameElementsAs (head +: tail)
         }
       }
     }

@@ -1,7 +1,6 @@
 package io.github.jarol.azure.search.spark.sql.connector.read
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.jarol.azure.search.spark.sql.connector.core.config.ConfigException
 import io.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 
 class InferSchemaSpec
