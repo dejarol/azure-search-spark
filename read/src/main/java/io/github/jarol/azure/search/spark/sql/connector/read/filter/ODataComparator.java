@@ -24,7 +24,6 @@ public enum ODataComparator {
      * @param oDataValue inner value
      */
 
-    @Contract(pure = true)
     ODataComparator(
             @NotNull String predicateName,
             @NotNull String oDataValue

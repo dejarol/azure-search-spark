@@ -189,7 +189,6 @@ public class AnalyzerConfig {
      * @param fields fields
      */
 
-    @Contract(pure = true)
     public AnalyzerConfig(
             @NotNull LexicalAnalyzerName name,
             @NotNull SearchFieldAnalyzerType type,

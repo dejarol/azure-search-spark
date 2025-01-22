@@ -22,7 +22,6 @@ public abstract class AbstractSchemaViolation
      * @param type violation type
      */
 
-    @Contract(pure = true)
     protected AbstractSchemaViolation(
             @NotNull String name,
             @NotNull SchemaViolation.Type type

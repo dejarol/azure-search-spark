@@ -69,7 +69,6 @@ public final class SchemaViolations {
          * @param subFieldViolations violations on subFields
          */
 
-        @Contract(pure = true)
         private ComplexFieldViolation(
                 @NotNull String name,
                 List<SchemaViolation> subFieldViolations

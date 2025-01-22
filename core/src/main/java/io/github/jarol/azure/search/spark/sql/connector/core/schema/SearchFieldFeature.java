@@ -83,7 +83,6 @@ public enum SearchFieldFeature {
      * @param featurePredicate predicate for evaluating if the feature is enabled
      */
 
-    @Contract(pure = true)
     SearchFieldFeature(
             String description,
             BiFunction<SearchField, Boolean, SearchField> enablingFunction,

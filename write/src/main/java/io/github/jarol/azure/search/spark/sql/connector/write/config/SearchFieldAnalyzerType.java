@@ -64,7 +64,6 @@ public enum SearchFieldAnalyzerType {
      * @param getter function for getting an analyzer
      */
 
-    @Contract(pure = true)
     SearchFieldAnalyzerType(
             @NotNull String description,
             @NotNull BiFunction<SearchField, LexicalAnalyzerName, SearchField> setter,

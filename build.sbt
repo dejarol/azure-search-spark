@@ -5,7 +5,7 @@ lazy val scala213 = "2.13.10"
 lazy val supportedScalaVersions = List(scala212, scala213)
 lazy val compileTestDependency = "test->test;compile->compile"
 
-ThisBuild / version := "0.6.0"
+ThisBuild / version := "0.7.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
@@ -29,7 +29,7 @@ ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
 
 // Dependencies versions
-lazy val sparkVersion = "3.3.0"
+lazy val sparkVersion = "3.1.0"
 lazy val azureSearchDocumentsVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
 lazy val scalaTestVersion = "3.2.16"
