@@ -6,8 +6,10 @@ import io.github.jarol.azure.search.spark.sql.connector.utils.SearchTestClients
 import io.github.jarol.azure.search.spark.sql.connector.SearchITSpec
 import io.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import io.github.jarol.azure.search.spark.sql.connector.models.PushdownBean
+import org.apache.spark.sql.types.DataTypes
 
-import java.time.LocalDate
+import java.sql.{Date, Timestamp}
+import java.time.{Instant, LocalDate}
 import java.util.{List => JList}
 
 class ODataExpressionsSpec
@@ -39,8 +41,7 @@ class ODataExpressionsSpec
   }
 
   /**
-   * Retrieve document from an index, filtering documents according to the filter provided by a [[ODataExpression]] instance
- *
+   * Retrieve document from an index, filtering documents according to the filter provided by an [[ODataExpression]] instance
    * @param expression adapter instance (will provide the OData filter string)
    * @return indexed documents that match the OData filter provided by the adapter
    */
@@ -71,6 +72,24 @@ class ODataExpressionsSpec
   describe(`object`[ODataExpressions.type ]) {
     describe(SHOULD) {
       describe("create OData expressions for") {
+
+        it("field references") {
+
+          val fields = Seq("parent", "child")
+          ODataExpressions.fieldReference(fields).toUriLiteral shouldBe fields.mkString("/")
+        }
+
+        it("literal values") {
+
+          val (intVal, longVal, doubleVal) = (1, 123, 3.14)
+          ODataExpressions.safelyGetLiteral(DataTypes.StringType, "hello") shouldBe defined
+          ODataExpressions.safelyGetLiteral(DataTypes.IntegerType, intVal) shouldBe defined
+          ODataExpressions.safelyGetLiteral(DataTypes.LongType, longVal) shouldBe defined
+          ODataExpressions.safelyGetLiteral(DataTypes.DoubleType, doubleVal) shouldBe defined
+          ODataExpressions.safelyGetLiteral(DataTypes.DateType, Date.valueOf(LocalDate.now())) shouldBe defined
+          ODataExpressions.safelyGetLiteral(DataTypes.TimestampType, Timestamp.from(Instant.now())) shouldBe defined
+        }
+
         it("null equality conditions") {
 
           // IS_NULL

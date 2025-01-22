@@ -9,7 +9,7 @@ package io.github.jarol.azure.search.spark.sql.connector.read.filter
 trait ODataExpressionFactory[T] {
 
   /**
-   * Safely converts a type instance into an OData expression
+   * Safely converts an expression into an OData expression
    * @param expression expression
    * @return a non-empty OData expression if the given expression is supported
    */

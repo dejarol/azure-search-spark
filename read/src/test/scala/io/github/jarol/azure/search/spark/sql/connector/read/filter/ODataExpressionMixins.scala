@@ -29,7 +29,7 @@ trait ODataExpressionMixins {
 
   protected final def createStringLiteral(value: String): ODataExpression = {
 
-    ODataExpressions.V1Literal[String](value)
+    ODataExpressions.Literal[String](value)
   }
 
   /**
@@ -40,7 +40,7 @@ trait ODataExpressionMixins {
 
   protected final def createIntLiteral(value: Int): ODataExpression = {
 
-    ODataExpressions.V1Literal[Integer](value)(numericLiterable)
+    ODataExpressions.Literal[Integer](value)(numericLiterable)
   }
 
   /**
@@ -51,7 +51,7 @@ trait ODataExpressionMixins {
 
   protected final def createDateLiteral(value: LocalDate): ODataExpression = {
 
-    ODataExpressions.V1Literal[Timestamp](
+    ODataExpressions.Literal[Timestamp](
       Timestamp.from(
         value.atStartOfDay(Constants.UTC_OFFSET).toInstant
       )

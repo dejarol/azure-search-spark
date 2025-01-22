@@ -4,7 +4,7 @@ import io.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 import java.lang.{Double => JDouble, Long => JLong}
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 
 /**
  * Collection of concrete implementations and factory methods for [[ODataExpression]]
@@ -22,21 +22,21 @@ object ODataExpressions {
    * @param names field names (only 1 name for a top-level field, a list of names for nested field)
    */
 
-  private[filter] case class FieldReference(private val names: Seq[String])
+  private case class FieldReference(private val names: Seq[String])
     extends ODataExpression {
     override def toUriLiteral: String = names.mkString("/")
   }
 
   /**
    * A literal (i.e. constant) value
-   *
    * @param value value to be rendered
    * @tparam T value type. Should have an implicit [[ODataLiterable]] in scope
    */
 
-  private[filter] case class V1Literal[T: ODataLiterable](protected val value: T)
+  private[filter] case class Literal[T: ODataLiterable](protected val value: T)
     extends ODataExpression {
-    override final def toUriLiteral: String = implicitly[ODataLiterable[T]].toLiteral(value)
+    private lazy val literable = implicitly[ODataLiterable[T]]
+    override final def toUriLiteral: String = literable.toLiteral(value)
   }
 
   /**
@@ -45,10 +45,10 @@ object ODataExpressions {
    * @param negate true for creating a filter that evaluates non-null equality
    */
 
-  private[filter] case class IsNull(
-                                     private val left: ODataExpression,
-                                     private val negate: Boolean
-                                   )
+  private case class IsNull(
+                             private val left: ODataExpression,
+                             private val negate: Boolean
+                           )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -65,11 +65,11 @@ object ODataExpressions {
    * @param comparator comparison operator
    */
 
-  private[filter] case class Comparison(
-                                         private val left: ODataExpression,
-                                         private val right: ODataExpression,
-                                         private val comparator: ODataComparator
-                                       )
+  private case class Comparison(
+                                 private val left: ODataExpression,
+                                 private val right: ODataExpression,
+                                 private val comparator: ODataComparator
+                               )
     extends ODataExpression {
 
     override def toUriLiteral: String = s"${left.toUriLiteral} ${comparator.oDataValue()} ${right.toUriLiteral}"
@@ -80,7 +80,7 @@ object ODataExpressions {
    * @param child expression to negate
    */
 
-  private[filter] case class Not(private val child: ODataExpression)
+  private case class Not(private val child: ODataExpression)
     extends ODataExpression {
     override def toUriLiteral: String = s"not (${child.toUriLiteral})"
   }
@@ -91,11 +91,11 @@ object ODataExpressions {
    * @param inList collection of expressions to match
    */
 
-  private[filter] case class In(
-                                 private val left: ODataExpression,
-                                 private val inList: Seq[ODataExpression],
-                                 private val separator: String
-                               )
+  private case class In(
+                         private val left: ODataExpression,
+                         private val inList: Seq[ODataExpression],
+                         private val separator: String
+                       )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -122,10 +122,10 @@ object ODataExpressions {
    * @param isAnd true for creating an <code>and</code> expression
    */
 
-  private[filter] case class Logical(
-                                      private val expressions: Seq[ODataExpression],
-                                      private val isAnd: Boolean
-                                    )
+  private case class Logical(
+                              private val expressions: Seq[ODataExpression],
+                              private val isAnd: Boolean
+                            )
     extends ODataExpression {
 
     override def toUriLiteral: String = {
@@ -145,17 +145,25 @@ object ODataExpressions {
 
   def fieldReference(names: Seq[String]): ODataExpression = FieldReference(names)
 
-  def maybeLiteral(
-                    dataType: DataType,
-                    value: Any
-                  ): Option[ODataExpression] = {
+  /**
+   * Safely creates a literal expression, by pattern-matching both data type and value type
+   * @param dataType data type
+   * @param value literal value
+   * @return a non-empty expression if both data type and literal type match a supported case
+   */
+
+  def safelyGetLiteral(
+                        dataType: DataType,
+                        value: Any
+                      ): Option[ODataExpression] = {
 
     (dataType, value) match {
-      case (DataTypes.StringType, s: String) => Some(V1Literal[String](s))
-      case (DataTypes.IntegerType, i: Integer) => Some(V1Literal[Integer](i)(numericLiterable))
-      case (DataTypes.LongType, l: JLong) => Some(V1Literal[JLong](l)(numericLiterable))
-      case (DataTypes.DoubleType, l: JDouble) => Some(V1Literal[JDouble](l)(numericLiterable))
-      case (DataTypes.TimestampType, t: Timestamp) => Some(V1Literal[Timestamp](t))
+      case (DataTypes.StringType, s: String) => Some(Literal[String](s))
+      case (DataTypes.IntegerType, i: Integer) => Some(Literal[Integer](i)(numericLiterable))
+      case (DataTypes.LongType, l: JLong) => Some(Literal[JLong](l)(numericLiterable))
+      case (DataTypes.DoubleType, l: JDouble) => Some(Literal[JDouble](l)(numericLiterable))
+      case (DataTypes.DateType, d: Date) => Some(Literal[Date](d))
+      case (DataTypes.TimestampType, t: Timestamp) => Some(Literal[Timestamp](t))
       case _ => None
     }
   }

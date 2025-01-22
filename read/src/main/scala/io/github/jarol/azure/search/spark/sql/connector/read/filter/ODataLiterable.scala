@@ -3,7 +3,7 @@ package io.github.jarol.azure.search.spark.sql.connector.read.filter
 import io.github.jarol.azure.search.spark.sql.connector.core.Constants
 import io.github.jarol.azure.search.spark.sql.connector.core.utils.StringUtils
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 
 /**
  * Trait for converting a constant value to a String to use on
@@ -50,18 +50,32 @@ object ODataLiterables {
   }
 
   /**
+   * Implementation for dates
+   */
+
+  private[filter] implicit object DateLiterable
+    extends ODataLiterable[Date] {
+
+    override def toLiteral(value: Date): String = {
+
+      value.toLocalDate
+        .atStartOfDay(Constants.UTC_OFFSET)
+        .format(Constants.DATETIME_OFFSET_FORMATTER)
+    }
+  }
+
+  /**
    * Implementation for timestamps
    */
 
   private[filter] implicit object TimestampLiterable
     extends ODataLiterable[Timestamp] {
+
     override def toLiteral(value: Timestamp): String = {
 
-      value.toInstant.atOffset(
-        Constants.UTC_OFFSET
-      ).format(
-        Constants.DATETIME_OFFSET_FORMATTER
-      )
+      value.toInstant
+        .atOffset(Constants.UTC_OFFSET)
+        .format(Constants.DATETIME_OFFSET_FORMATTER)
     }
   }
 }
