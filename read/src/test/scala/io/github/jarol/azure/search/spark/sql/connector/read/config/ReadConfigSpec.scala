@@ -2,13 +2,13 @@ package io.github.jarol.azure.search.spark.sql.connector.read.config
 
 import io.github.jarol.azure.search.spark.sql.connector.core.{BasicSpec, FieldFactory}
 import io.github.jarol.azure.search.spark.sql.connector.core.config.{ConfigException, SearchConfig}
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressionFactory, ODataExpressions}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressionMixins, ODataExpressions}
 import io.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, EmptyPartitioner}
 import org.apache.spark.sql.types.DataTypes
 
 class ReadConfigSpec
   extends BasicSpec
-    with ODataExpressionFactory
+    with ODataExpressionMixins
       with FieldFactory {
 
   /**

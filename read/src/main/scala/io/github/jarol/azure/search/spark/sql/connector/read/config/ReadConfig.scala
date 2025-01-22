@@ -5,7 +5,7 @@ import com.azure.search.documents.util.SearchPagedIterable
 import io.github.jarol.azure.search.spark.sql.connector.core.JavaScalaConverters
 import io.github.jarol.azure.search.spark.sql.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import io.github.jarol.azure.search.spark.sql.connector.core.utils.SearchClients
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressions, ODataFilterExpression}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpressions, ODataExpression}
 import io.github.jarol.azure.search.spark.sql.connector.read.partitioning.{DefaultPartitioner, SearchPartition, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
@@ -42,7 +42,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * @return this configuration with new key-value pair related to the pushed predicate
    */
 
-  def withPushedPredicates(predicates: Seq[ODataFilterExpression]): ReadConfig = {
+  def withPushedPredicates(predicates: Seq[ODataExpression]): ReadConfig = {
 
     // If there are no predicates, do not set the option
     if (predicates.isEmpty) {

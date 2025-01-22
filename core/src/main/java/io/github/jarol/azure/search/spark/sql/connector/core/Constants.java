@@ -39,16 +39,9 @@ public final class Constants {
 
     public static final DateTimeFormatter DATETIME_OFFSET_FORMATTER;
 
-    /**
-     * Allowed formatters for converting a String to a OffsetDateTime
-     */
-
-    public static final DateTimeFormatter TIMESTAMP_FORMATTER;
-
     static {
 
         UTC_OFFSET = ZoneOffset.UTC;
         DATETIME_OFFSET_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
-        TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS]");
     }
 }

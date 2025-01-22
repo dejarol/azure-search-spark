@@ -2,9 +2,9 @@ package io.github.jarol.azure.search.spark.sql.connector.read
 
 import io.github.jarol.azure.search.spark.sql.connector.core.IndexDoesNotExistException
 import io.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataFilterExpression, ODataFilterExpressionBuilder}
-import org.apache.spark.sql.connector.expressions.filter.Predicate
-import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownRequiredColumns, SupportsPushDownV2Filters}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataExpression, ODataExpressionV1FilterFactory}
+import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
+import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
@@ -18,11 +18,12 @@ class SearchScanBuilder(
                          private val schema: StructType
                        )
   extends ScanBuilder
-    with SupportsPushDownV2Filters
+    with SupportsPushDownFilters
       with SupportsPushDownRequiredColumns {
 
   private var prunedSchema: StructType = schema
-  private var supportedPredicates: Array[Predicate] = Array.empty
+  private var supportedPredicates: Array[Filter] = Array.empty
+  private lazy val predicateFactory = new ODataExpressionV1FilterFactory(schema)
 
   /**
    * Build the scan
@@ -36,8 +37,8 @@ class SearchScanBuilder(
     if (!readConfig.indexExists) {
       throw new IndexDoesNotExistException(readConfig.getIndex)
     } else {
-      val supportedODataExpressions: Seq[ODataFilterExpression] = supportedPredicates
-        .map(ODataFilterExpressionBuilder.build)
+      val supportedODataExpressions: Seq[ODataExpression] = supportedPredicates
+        .map(predicateFactory.build)
         .collect {
           case Some(value) => value
         }
@@ -53,18 +54,18 @@ class SearchScanBuilder(
 
   /**
    * Pushes down predicates, returning predicates to be evaluated after scanning
-   * @param predicates predicate pushed down
+   * @param filters predicate pushed down
    * @return predicates to be evaluated after scanning
    */
 
-  override def pushPredicates(predicates: Array[Predicate]): Array[Predicate] = {
+  override def pushFilters(filters: Array[Filter]): Array[Filter] = {
 
     // The method should return predicates to be evaluated after scanning
     // So, if pushdown is enabled, we should separate supported predicates from unsupported
     if (readConfig.pushdownPredicate) {
 
-      val (supported, unsupported) = predicates.partition {
-        predicate => ODataFilterExpressionBuilder.build(predicate).isDefined
+      val (supported, unsupported) = filters.partition {
+        predicate => predicateFactory.build(predicate).isDefined
       }
 
       supportedPredicates = supported
@@ -72,7 +73,7 @@ class SearchScanBuilder(
     } else {
 
       // If pushdown is disabled, return all predicates
-      predicates
+      filters
     }
   }
 
@@ -81,7 +82,7 @@ class SearchScanBuilder(
    * @return predicates that can be pushed
    */
 
-  override def pushedPredicates(): Array[Predicate] = supportedPredicates
+  override def pushedFilters(): Array[Filter] = supportedPredicates
 
   /**
    * Applies column pruning with respect to a given required schema

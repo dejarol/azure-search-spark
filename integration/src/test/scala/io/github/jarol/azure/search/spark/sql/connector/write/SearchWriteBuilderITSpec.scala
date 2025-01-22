@@ -534,7 +534,7 @@ class SearchWriteBuilderITSpec
           currentSchema
         ).truncate()
 
-        truncatingBuilder.build()
+        truncatingBuilder.buildForBatch()
         indexExists(testIndex) shouldBe true
         assertMatchBetweenSchemaAndIndex(currentSchema, testIndex)
       }
@@ -553,7 +553,7 @@ class SearchWriteBuilderITSpec
           false
         )
 
-        nonTruncatingBuilder.build()
+        nonTruncatingBuilder.buildForBatch()
         indexExists(testIndex) shouldBe true
         assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
       }

@@ -2,7 +2,7 @@ package io.github.jarol.azure.search.spark.sql.connector.read
 
 import io.github.jarol.azure.search.spark.sql.connector.models._
 import io.github.jarol.azure.search.spark.sql.connector.read.config.{ReadConfig, SearchOptionsBuilderImpl}
-import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataComparator, ODataFilterExpression, ODataExpressionFactory, ODataExpressions}
+import io.github.jarol.azure.search.spark.sql.connector.read.filter.{ODataComparator, ODataExpression, ODataExpressionMixins, ODataExpressions}
 import io.github.jarol.azure.search.spark.sql.connector.{SearchITSpec, SparkSpec}
 import io.github.jarol.azure.search.spark.sql.connector.core.Constants
 import org.apache.spark.sql.execution.datasources.v2.BatchScanExec
@@ -17,7 +17,7 @@ import java.time.{LocalDate, OffsetDateTime}
 class ReadSpec
   extends SearchITSpec
     with SparkSpec
-      with ODataExpressionFactory {
+      with ODataExpressionMixins {
 
   private lazy val atomicBeansIndex = "read-atomic-beans"
   private lazy val collectionBeansIndex = "read-collection-beans"
@@ -39,8 +39,8 @@ class ReadSpec
     PushdownBean(Some("jane"), None, None)
   )
 
-  private lazy val stringValueRef: ODataFilterExpression = topLevelFieldReference("stringValue")
-  private lazy val intValueRef: ODataFilterExpression = topLevelFieldReference("intValue")
+  private lazy val stringValueRef: ODataExpression = topLevelFieldReference("stringValue")
+  private lazy val intValueRef: ODataExpression = topLevelFieldReference("intValue")
 
   /**
    * Read data from a target index
@@ -138,7 +138,7 @@ class ReadSpec
 
   private def assertEffectOfPredicatePushdown(
                                                columnPredicate: Column,
-                                               expectedPredicate: ODataFilterExpression,
+                                               expectedPredicate: ODataExpression,
                                                modelPredicate: PushdownBean => Boolean
                                              ): Unit = {
 
@@ -165,6 +165,7 @@ class ReadSpec
   describe("Search dataSource") {
     describe(SHOULD) {
       describe("read documents") {
+
         it("that match a filter") {
 
           dropIndexIfExists(atomicBeansIndex, sleep = true)
