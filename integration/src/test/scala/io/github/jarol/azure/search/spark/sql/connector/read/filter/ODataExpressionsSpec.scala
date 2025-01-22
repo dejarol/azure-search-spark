@@ -81,7 +81,7 @@ class ODataExpressionsSpec
 
         it("literal values") {
 
-          val (intVal, longVal, doubleVal) = (1, 123, 3.14)
+          val (intVal, longVal, doubleVal): (Int, Long, Double) = (1, 123, 3.14)
           ODataExpressions.safelyGetLiteral(DataTypes.StringType, "hello") shouldBe defined
           ODataExpressions.safelyGetLiteral(DataTypes.IntegerType, intVal) shouldBe defined
           ODataExpressions.safelyGetLiteral(DataTypes.LongType, longVal) shouldBe defined
