@@ -28,7 +28,7 @@ class SearchScanBuilder(
 
   /**
    * Build the scan
-   * @throws IndexDoesNotExistException if the target index does not exist
+   * @throws io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException if the target index does not exist
    * @return a scan to be used for Search DataSource
    */
 

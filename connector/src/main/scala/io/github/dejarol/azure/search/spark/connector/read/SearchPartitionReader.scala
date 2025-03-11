@@ -11,9 +11,10 @@ import org.apache.spark.sql.connector.read.PartitionReader
 import java.util.{Iterator => JIterator}
 
 /**
- * Partition reader for Search dataSource
+ * [[org.apache.spark.sql.connector.read.PartitionReader]] implementation for this datasource
  * @param readConfig read configuration
- * @param documentEncoder encoder for translating a [[SearchDocument]] into an [[InternalRow]]
+ * @param documentEncoder encoder for translating a [[com.azure.search.documents.SearchDocument]]
+ *                        into an [[org.apache.spark.sql.catalyst.InternalRow]]
  * @param searchPartition a search partition
  */
 

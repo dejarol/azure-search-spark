@@ -24,7 +24,7 @@ class SearchTableProvider
   /**
    * Infer the schema for a target Search index
    * @param options options for retrieving the Search index
-   * @throws IndexDoesNotExistException if the target index does not exist
+   * @throws  io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException if the target index does not exist
    * @return the index schema
    */
 

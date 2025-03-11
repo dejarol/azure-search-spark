@@ -53,13 +53,13 @@ object RangePartitioner {
   /**
    * Return the eligible partitioning field, if it exists
    * <br>
-   * A [[SearchField]] is eligible for partitioning if
+   * A [[com.azure.search.documents.indexes.models.SearchField]] is eligible for partitioning if
    *  - it exists
    *  - it's filterable
    *  - its datatype is either numeric (but not single) or date time
    * @param searchFields search fields
    * @param name partition field name
-   * @return either a [[ConfigException]] describing the non-eligibility reason, or the field itself
+   * @return either a [[io.github.dejarol.azure.search.spark.connector.core.config.ConfigException]] describing the non-eligibility reason, or the field itself
    */
 
   protected[partitioning] def getPartitionField(
@@ -87,9 +87,9 @@ object RangePartitioner {
   }
 
   /**
-   * Evaluate if an existing [[SearchField]] is a candidate for partitioning
+   * Evaluate if an existing [[com.azure.search.documents.indexes.models.SearchField]] is a candidate for partitioning
    * <br>
-   * * An existing [[SearchField]] is a valid candidate for partitioning if
+   * * An existing [[com.azure.search.documents.indexes.models.SearchField]] is a valid candidate for partitioning if
    *  - it's filterable
    *  - its datatype is either numeric (but not single) or date time
    * @param searchField Search field

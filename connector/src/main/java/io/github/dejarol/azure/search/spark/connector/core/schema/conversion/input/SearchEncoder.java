@@ -21,7 +21,7 @@ public interface SearchEncoder
     /**
      * Compose a new encoder by combining this instance with a second encoder, so that
      * this encoder is applied first, and the second right afterward (similarly to
-     * {@link java.util.function.Function#compose})
+     * <code>java.util.function.Functions</code>'s <code>compose</code> method)
      * @param after encoder to apply after this instance
      * @return a combined encoder
      */

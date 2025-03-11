@@ -96,8 +96,8 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Get the [[SearchPartitioner]] to use for generating the search partitions.
-   * If not provided, a [[DefaultPartitioner]] will be used
+   * Get the [[io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner]] to use for generating the search partitions.
+   * If not provided, a [[io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner]] will be used
    * @return a search partitioner instance
    */
 
@@ -126,7 +126,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
   /**
    * Get the result obtained by querying documents combining inner Search options with the filter
-   * defined by a given [[SearchPartition]]
+   * defined by a given [[io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition]]
    * @param partition a Search partition
    * @param includeTotalCount whether to include the <code>totalCount</code> property in the result
    * @return an object representing the Search result
@@ -158,7 +158,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * Get the overall Search result by querying documents combining inner Search options with the
    * filter defined by a partition, and get an iterator with retrieved results
    * @param partition a Search partition
-   * @return an iterator of [[SearchResult]]
+   * @return an iterator of [[com.azure.search.documents.models.SearchResult]]
    */
 
   def getResultsForPartition(partition: SearchPartition): Jiterator[SearchResult] = {
@@ -184,10 +184,10 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Get the [[FacetResult]](s) from a facetable field
+   * Get the [[com.azure.search.documents.models.FacetResult]](s) from a facetable field
    * @param facetField name of the facetable field
    * @param facetExpression facet expression
-   * @return a collection of [[FacetResult]]
+   * @return a collection of facet results
    */
 
   def getFacets(

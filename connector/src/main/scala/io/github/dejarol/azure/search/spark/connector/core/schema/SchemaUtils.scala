@@ -14,9 +14,9 @@ import java.util.{List => JList}
 object SchemaUtils {
 
   /**
-   * Return the Spark equivalent [[DataType]] for a search field
+   * Return the Spark equivalent [[org.apache.spark.sql.types.DataType]] for a search field
    * @param searchField a search field
-   * @throws DataTypeException if given search type is not supported
+   * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException if given search type is not supported
    * @return the equivalent Spark data type for given search field
    */
 
@@ -51,7 +51,7 @@ object SchemaUtils {
   /**
    * Infer the Spark type for an atomic Search type
    * @param searchType search type
-   * @throws DataTypeException for unsupported Search types
+   * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for unsupported Search types
    * @return the inferred Spark data type
    */
 
@@ -98,9 +98,9 @@ object SchemaUtils {
   }
 
   /**
-   * Convert a search field to a [[StructField]]
+   * Convert a search field to a [[org.apache.spark.sql.types.StructField]]
    * @param searchField search field
-   * @return the equivalent [[StructField]] of this search field
+   * @return the equivalent [[org.apache.spark.sql.types.StructField]] of this search field
    */
 
   protected[schema] def toStructField(searchField: SearchField): StructField = {
@@ -112,7 +112,7 @@ object SchemaUtils {
   }
 
   /**
-   * Convert a SearchIndex schema to a [[StructType]]
+   * Convert a SearchIndex schema to a [[org.apache.spark.sql.types.StructType]]
    * @param fields search index fields
    * @return the schema of the search index
    */
@@ -149,9 +149,9 @@ object SchemaUtils {
   }
 
   /**
-   * Infer the [[SearchFieldDataType]] for a Spark type
+   * Infer the [[com.azure.search.documents.indexes.models.SearchFieldDataType]] for a Spark type
    * @param dataType Spark type
-   * @throws DataTypeException for unsupported data types
+   * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for unsupported data types
    * @return the inferred Search type
    */
 
@@ -182,7 +182,7 @@ object SchemaUtils {
   /**
    * Evaluate if a data type is eligible for being a Search GeoPoint type
    * <br>
-   * An eligible Spark type is a [[StructType]] with 2 inner fields
+   * An eligible Spark type is a [[org.apache.spark.sql.types.StructType]] with 2 inner fields
    *  - <b>type</b> (String)
    *  - <b>coordinates</b> (Array(Double))
    * @param dataType Spark type
@@ -200,7 +200,7 @@ object SchemaUtils {
   /**
    * Infer the Search type for an atomic Spark type
    * @param dataType Spark type
-   * @throws DataTypeException for unsupported data types
+   * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for unsupported data types
    * @return the inferred Search type
    */
 
@@ -231,7 +231,7 @@ object SchemaUtils {
    * @param structField Spark field.
    * @param fieldActions map with keys being field paths and values being a collection of actions to apply for such field
    * @param parentPath parent path for the structField (empty for top-level fields)
-   * @throws DataTypeException for Spark fields with unsupported types
+   * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for Spark fields with unsupported types
    * @return the equivalent Search field
    */
 

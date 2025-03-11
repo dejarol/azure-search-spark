@@ -23,7 +23,8 @@ class SearchPartitionReaderFactory(
   /**
    * Create a Search partition reader
    * @param partition input partition instance
-   * @throws UnexpectedPartitionTypeException if the input partition is not an instance of [[SearchPartition]]
+   * @throws UnexpectedPartitionTypeException if the input partition is not an instance of
+   *                                          [[io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition]]
    * @return a partition reader for Search dataSource
    */
 

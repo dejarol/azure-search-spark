@@ -29,7 +29,7 @@ public abstract class TimeEncoder<T>
     }
 
     /**
-     * Convert an instance of {@link OffsetDateTime} to a Spark internal object
+     * Convert an instance of datetime object to a Spark internal object
      * @param dateTime offset date time
      * @return a Spark internal object
      */

@@ -44,8 +44,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   }
 
   /**
-   * Return the (optional) [[IndexActionType]] to use for indexing all documents
-   *
+   * Return the (optional) [[com.azure.search.documents.models.IndexActionType]] to use for indexing all documents
    * @return action type for indexing all documents
    */
 
@@ -58,7 +57,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   }
 
   /**
-   * Return the [[IndexActionType]] defined by the user or a default. It will be used for indexing all documents.
+   * Return the [[com.azure.search.documents.models.IndexActionType]] defined by the user or a default. It will be used for indexing all documents.
    * If not specified, [[WriteConfig.DEFAULT_ACTION_TYPE]] will be used
    *
    * @return action type for indexing all documents
@@ -68,7 +67,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
 
   /**
    * Return the name of a dataframe column that contains a per-document action type.
-   * It must be the name of an existing string column whose values can be mapped to an [[IndexActionType]]
+   * It must be the name of an existing string column whose values can be mapped to an [[com.azure.search.documents.models.IndexActionType]]
    *
    * @return column name for document action
    */

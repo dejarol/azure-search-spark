@@ -198,7 +198,7 @@ object SearchOptionsBuilderImpl {
   final val SEARCH_FIELDS = "searchFields"
 
   /**
-   * Create an instance from a [[SearchConfig]]
+   * Create an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
    * @param config config instance
    * @return an instance of [[SearchOptionsBuilderImpl]]
    */

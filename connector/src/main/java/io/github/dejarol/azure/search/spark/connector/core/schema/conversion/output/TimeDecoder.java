@@ -22,9 +22,9 @@ public abstract class TimeDecoder
     }
 
     /**
-     * Transform the Spark internal value to an {@link OffsetDateTime}
+     * Transform the Spark internal value to a datetime object with an offset
      * @param value Spark internal value
-     * @return an {@link OffsetDateTime}
+     * @return a datetime with an offset
      */
 
     protected abstract OffsetDateTime toOffsetDateTime(Object value);

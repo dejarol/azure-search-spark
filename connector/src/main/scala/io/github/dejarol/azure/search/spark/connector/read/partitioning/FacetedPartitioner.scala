@@ -13,7 +13,7 @@ import java.util.{List => JList}
  * Faceted partitioner.
  * <br>
  * Given a field <b>f1</b> that is filterable and facetable, it will generate partitions according to the following behavior
- *  - if a value of <b>n</b> is given for [[SearchPartitioner.NUM_PARTITIONS_CONFIG]], it will generate <b>n</b> partitions
+ *  - if a value of <b>n</b> is given for <code>numPartitions</code>, it will generate <b>n</b> partitions
  *    where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
  *    most frequent value of field  <b>f1</b>,
  *    and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
@@ -29,12 +29,12 @@ case class FacetedPartitioner(override protected val readConfig: ReadConfig)
 
   /**
    * Generate a number of partitions equal to
-   *  - the value related to key [[SearchPartitioner.NUM_PARTITIONS_CONFIG]]
+   *  - the value related to key <code>numPartitions</code>
    *  - the number of default facets retrieved by the Azure Search API
    *
    * Each partition should contain o non-overlapping filter
    *
-   * @throws ConfigException if facet field is not facetable and filterable
+   * @throws io.github.dejarol.azure.search.spark.connector.core.config.ConfigException if facet field is not facetable and filterable
    * @return a collection of Search partitions
    */
 

@@ -36,7 +36,7 @@ object PerDocumentSupplier {
   /**
    * Safely create a getter that will retrieve a per-document index action type from an internal row.
    * <br>
-   * If the target column does not exist or its datatype is different from a string, a [[Left]] will be retrieved
+   * If the target column does not exist or its datatype is different from a string, a [[scala.util.Left]] will be retrieved
    * @param name name of the column that should be used for fetching the action type
    * @param schema row schema
    * @param defaultAction default action to use

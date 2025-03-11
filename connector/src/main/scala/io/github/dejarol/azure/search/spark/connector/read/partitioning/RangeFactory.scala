@@ -22,7 +22,7 @@ trait RangeFactory[T, D] {
 
   /**
    * Get the natural ordering for range values
-   * @return value's [[Ordering]]
+   * @return value's [[scala.math.Ordering]]
    */
 
   protected def ordering: Ordering[T]
@@ -57,7 +57,7 @@ trait RangeFactory[T, D] {
   /**
    * Try to convert a string into a range value instance
    * @param value range value as string
-   * @return a [[Try]]
+   * @return a [[scala.util.Try]]
    */
 
   protected def tryFromString(value: String): Try[T]
@@ -103,7 +103,7 @@ trait RangeFactory[T, D] {
    * @param lower lower bound
    * @param upper upper bound
    * @param numPartitions num partitions
-   * @return either a [[Throwable]] if one of the conditions does not hold, or the partition bounds
+   * @return either an exception if one of the conditions does not hold, or the partition bounds
    */
 
   final def createPartitionBounds(

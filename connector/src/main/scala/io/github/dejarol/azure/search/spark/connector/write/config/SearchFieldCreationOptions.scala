@@ -171,7 +171,7 @@ case class SearchFieldCreationOptions(
   }
 
   /**
-   * Starting from a Spark schema, create a collection of [[SearchField]](s)
+   * Starting from a Spark schema, create a collection of [[com.azure.search.documents.indexes.models.SearchField]](s)
    * @param schema Dataframe schema
    * @return a collection of Search fields for index creation
    */

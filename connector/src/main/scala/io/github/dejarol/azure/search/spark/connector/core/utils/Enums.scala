@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
 object Enums {
 
   /**
-   * Safely get the first value of an enum that matches a predicate
+   * Safely gets the first value of an enum that matches a predicate
    * @param value string value
    * @param predicate predicate
    * @tparam E enum type
@@ -24,11 +24,10 @@ object Enums {
   }
 
   /**
-   * Get the first element of an enum matching a predicate, or throw an exception
+   * Gets the first element of an enum matching a predicate, or throws an exception
    * @param value string value
    * @param predicate predicate to match
    * @tparam E enum type
-   * @throws NoSuchElementException if no value matches
    * @return the first enum value that matches the predicate
    */
 

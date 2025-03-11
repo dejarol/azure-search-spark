@@ -87,13 +87,14 @@ lazy val connector = (project in file("connector"))
         functions.collectAzureSearchAPIMappings(filesAndModules)
     },
 
-    assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
+    // Assembly settings
+    assembly / assemblyJarName := s"${constants.ARTIFACT_NAME}_${scalaBinaryVersion.value}-${version.value}.jar",
     assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
     assemblyMergeStrategy := {
       case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.discard
       case PathList("module-info.class") => MergeStrategy.discard
       case default =>
-        val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
+        val oldStrategy = assemblyMergeStrategy.value
         oldStrategy(default)
     }
   )

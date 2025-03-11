@@ -106,7 +106,7 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   private def getSearchClient: SearchClient = getSearchIndexClient.getSearchClient(getIndex)
 
   /**
-   * Perform an action using this instance's [[SearchIndexClient]], and get the result
+   * Perform an action using this instance's [[com.azure.search.documents.indexes.SearchIndexClient]], and get the result
    * @param function action to perform
    * @tparam T action return type
    * @return the action result
@@ -115,7 +115,7 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   final def withSearchIndexClientDo[T](function: SearchIndexClient => T): T = function.apply(getSearchIndexClient)
 
   /**
-   * Perform an action using this instance's [[SearchIndex]], and get the result
+   * Perform an action using this instance's [[com.azure.search.documents.indexes.models.SearchIndex]], and get the result
    * @param function action to perform
    * @tparam T action return type
    * @return the action result
@@ -124,7 +124,7 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   private final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(getSearchIndex)
 
   /**
-   * Perform an action using this instance's [[SearchClient]], and get the result
+   * Perform an action using this instance's [[com.azure.search.documents.SearchClient]], and get the result
    * @param function action to perform
    * @tparam T action return type
    * @return the action result

@@ -25,7 +25,7 @@ case class SearchIndexColumnImpl(
 object SearchIndexColumnImpl {
 
   /**
-   * Create an instance from a [[StructField]]
+   * Create an instance from a [[org.apache.spark.sql.types.StructField]]
    * @param field input StructField
    */
 

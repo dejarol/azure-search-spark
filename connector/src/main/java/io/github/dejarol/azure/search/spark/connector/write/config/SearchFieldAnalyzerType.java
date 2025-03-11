@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write.config;
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName;
 import com.azure.search.documents.indexes.models.SearchField;
-import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldAction;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +84,7 @@ public enum SearchFieldAnalyzerType {
     }
 
     /**
-     * Get a {@link SearchFieldAction} for setting an analyzer
+     * Get a {@link  io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldAction} for setting an analyzer
      * @param name analyzer to set
      * @return an action for setting an analyzer on a field
      */

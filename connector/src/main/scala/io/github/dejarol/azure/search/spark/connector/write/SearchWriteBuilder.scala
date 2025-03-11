@@ -110,7 +110,7 @@ object SearchWriteBuilder {
   /**
    * Convert a Search index instance to a [[io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
    * @param index Search index definition
-   * @return an instance of [[ io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
+   * @return an instance of [[io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
    */
 
   private implicit def toIndexOperations(index: SearchIndex): SearchIndexOperations = new SearchIndexOperations(index)
@@ -119,7 +119,7 @@ object SearchWriteBuilder {
    * Create the target Search index
    * @param writeConfig write configuration
    * @param schema dataFrame schema
-   * @return either an [[ io.github.dejarol.azure.search.spark.connector.write.IndexCreationException]] with the handled exception,
+   * @return either an [[io.github.dejarol.azure.search.spark.connector.write.IndexCreationException]] with the handled exception,
    *         or a [[com.azure.search.documents.indexes.models.SearchIndex]] object representing the created index
    */
 

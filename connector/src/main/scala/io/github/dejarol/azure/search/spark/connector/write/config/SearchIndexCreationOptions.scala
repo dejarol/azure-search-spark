@@ -210,7 +210,7 @@ object SearchIndexCreationOptions {
   final val DEFAULT_SCORING_PROFILE_CONFIG = "defaultScoringProfile"
 
   /**
-   * Create an instance from a [[SearchConfig]]
+   * Create an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
    * @param config configuration object
    * @return an instance of [[SearchIndexCreationOptions]]
    */

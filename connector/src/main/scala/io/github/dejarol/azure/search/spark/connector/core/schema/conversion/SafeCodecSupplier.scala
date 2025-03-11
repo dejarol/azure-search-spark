@@ -11,17 +11,18 @@ import java.util.{List => JList}
  * Safe codec supplier.
  * <br>
  * Used for retrieving encoding or decoding schemas from Spark to Search types and vice versa
- * @tparam CodecType codec type
+ * @tparam CType codec type
  */
 
-trait SafeCodecSupplier[CodecType] {
+trait SafeCodecSupplier[CType] {
 
   /**
    * Safely get the codec between a Spark schema and a Search index schema.
    * <br>
-   * It returns either a collection of [[SchemaViolation]] (reporting fields that are not codecable) or
-   * the codec mapping (a map with keys being [[SearchIndexColumn]] and values being instances of [[CodecType]])
-   *
+   * It returns either a collection of [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolation]]
+   * (reporting fields that are not codecable) or the codec mapping (a map with keys being [[SearchIndexColumn]]
+   * and values being instances of this instance's type
+ *
    * @param schema Spark schema fields
    * @param searchFields Search index fields
    * @return either some schema violations or the codec function
@@ -30,7 +31,7 @@ trait SafeCodecSupplier[CodecType] {
   final def get(
                  schema: StructType,
                  searchFields: Seq[SearchField]
-               ): Either[Seq[SchemaViolation], Map[SearchIndexColumn, CodecType]] = {
+               ): Either[Seq[SchemaViolation], Map[SearchIndexColumn, CType]] = {
 
     val maybeCodec = maybeComplexObjectCodec(schema, searchFields)
 
@@ -64,7 +65,7 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeComplexObjectCodec(
                                        schema: StructType,
                                        searchFields: Seq[SearchField]
-                                     ): Map[SearchIndexColumn, Either[SchemaViolation, CodecType]] = {
+                                     ): Map[SearchIndexColumn, Either[SchemaViolation, CType]] = {
 
     schema.map {
       schemaField =>
@@ -96,7 +97,7 @@ trait SafeCodecSupplier[CodecType] {
   private def getCodecFor(
                            schemaField: StructField,
                            searchField: SearchField
-                         ): Either[SchemaViolation, CodecType] = {
+                         ): Either[SchemaViolation, CType] = {
 
     // Depending on Spark and Search types, detect the converter (if any)
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
@@ -133,7 +134,7 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeAtomicCodec(
                                 schemaField: StructField,
                                 searchField: SearchField
-                              ): Either[SchemaViolation, CodecType] = {
+                              ): Either[SchemaViolation, CType] = {
 
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
     atomicCodecFor(sparkType, searchFieldType)
@@ -155,7 +156,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return an optional codec for given types
    */
 
-  protected def atomicCodecFor(spark: DataType, search: SearchFieldDataType): Option[CodecType]
+  protected def atomicCodecFor(spark: DataType, search: SearchFieldDataType): Option[CType]
 
   /**
    * Safely retrieve a codec for a collection type
@@ -169,7 +170,7 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeCodecForArrays(
                                    sparkType: DataType,
                                    searchField: SearchField
-                                 ): Either[SchemaViolation, CodecType] = {
+                                 ): Either[SchemaViolation, CType] = {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
@@ -209,7 +210,7 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeCodecForComplex(
                                     schemaField: StructField,
                                     searchField: SearchField
-                                  ): Either[SchemaViolation, CodecType] = {
+                                  ): Either[SchemaViolation, CType] = {
 
     maybeComplexCodec(
       schemaField.dataType,
@@ -228,7 +229,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return a codec for collections
    */
 
-  protected def collectionCodec(sparkType: DataType, internal: CodecType): CodecType
+  protected def collectionCodec(sparkType: DataType, internal: CType): CType
 
   /**
    * Safely retrieve the codec for a complex type
@@ -243,7 +244,7 @@ trait SafeCodecSupplier[CodecType] {
   private def maybeComplexCodec(
                                  sparkType: DataType,
                                  searchField: SearchField
-                               ): Either[Seq[SchemaViolation], CodecType] = {
+                               ): Either[Seq[SchemaViolation], CType] = {
 
     // Build a rule that wraps subField conversion rules
     val maybeSubfieldMapping = maybeComplexObjectCodec(
@@ -273,7 +274,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return a converter for handling nested data objects
    */
 
-  protected def createComplexCodec(internal: Map[SearchIndexColumn, CodecType]): CodecType
+  protected def createComplexCodec(internal: Map[SearchIndexColumn, CType]): CType
 
   /**
    * Safely retrieve a codec for geopoints
@@ -285,7 +286,7 @@ trait SafeCodecSupplier[CodecType] {
    * @return a converter for geo points
    */
 
-  private def maybeGeoPointCodec(schemaField: StructField): Either[SchemaViolation, CodecType] = {
+  private def maybeGeoPointCodec(schemaField: StructField): Either[SchemaViolation, CType] = {
 
     // Evaluate if the field is eligible for being a GeoPoint
     val dataType = schemaField.dataType
@@ -307,5 +308,5 @@ trait SafeCodecSupplier[CodecType] {
    * @return converter for GeoPoints
    */
 
-  protected def forGeoPoint(schema: StructType): CodecType
+  protected def forGeoPoint(schema: StructType): CType
 }
