@@ -1,8 +1,7 @@
 import sbt.librarymanagement.InclExclRule
 
 lazy val scala212 = "2.12.18"
-lazy val scala213 = "2.13.10"
-lazy val supportedScalaVersions = List(scala212, scala213)
+lazy val supportedScalaVersions = List(scala212)
 lazy val compileTestDependency = "test->test;compile->compile"
 
 ThisBuild / version := "0.7.0"
@@ -62,11 +61,10 @@ lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
 lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
 lazy val scalaMock = "org.scalamock" %% "scalamock" % scalaMockVersion % Test
 
-// Core project
-lazy val core = (project in file("core"))
-  .disablePlugins(sbtassembly.AssemblyPlugin)
+// Connector
+lazy val connector = (project in file("connector"))
+  .enablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
-    publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
@@ -76,47 +74,6 @@ lazy val core = (project in file("core"))
       scalactic,
       scalaTest,
       scalaMock
-    )
-  )
-
-// Read project
-lazy val read = (project in file("read"))
-  .disablePlugins(sbtassembly.AssemblyPlugin)
-  .settings(
-    publish / skip := true,
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies ++= Seq(
-      sparkCore,
-      sparkSQL
-    )
-  ).dependsOn(
-    core % compileTestDependency
-  )
-
-// Write project
-lazy val write = (project in file("write"))
-  .disablePlugins(sbtassembly.AssemblyPlugin)
-  .settings(
-    publish / skip := true,
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies ++= Seq(
-      sparkCore,
-      sparkSQL
-    )
-  ).dependsOn(
-    core % compileTestDependency
-  )
-
-// Root project
-lazy val root = (project in file("."))
-  .enablePlugins(ScalaUnidocPlugin)
-  .settings(
-
-    crossScalaVersions := Nil,
-    name := "azure-search-spark",
-    libraryDependencies ++= Seq(
-      sparkCore,
-      sparkSQL
     ),
 
     assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
@@ -129,17 +86,11 @@ lazy val root = (project in file("."))
         oldStrategy(default)
     }
   )
-  .aggregate(core, read, write)
-  .dependsOn(
-    core % compileTestDependency,
-    read % compileTestDependency,
-    write % compileTestDependency
-  )
 
 // Integration tests
 lazy val integration = (project in file("integration"))
   .disablePlugins(sbtassembly.AssemblyPlugin)
-  .dependsOn(root % compileTestDependency)
+  .dependsOn(connector % compileTestDependency)
   .settings(
     publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
@@ -149,4 +100,11 @@ lazy val integration = (project in file("integration"))
       azureSearchDocuments,
       azureCoreOkHttp
     )
+  )
+
+// Root project
+lazy val root = (project in file("."))
+  .aggregate(connector, integration)
+  .settings(
+    crossScalaVersions := Nil
   )
