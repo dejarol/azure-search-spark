@@ -1,1 +1,1 @@
-io.github.jarol.azure.search.spark.sql.connector.SearchTableProvider
+io.github.jarol.azure.search.spark.connector.SearchTableProvider

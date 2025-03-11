@@ -48,11 +48,11 @@ Here is the list of available datasource options for reading
     <tr>
         <td>partitioner</td>
         <td>The partitioner full class name. 
-You can specify a custom implementation that must implement the <code>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code> interface.
+You can specify a custom implementation that must implement the <code>io.github.jarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code> interface.
 Have a look at the <b>Partitioners</b> section for more information about partitioners.
 </td>
         <td></td>
-        <td>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner</td>
+        <td>io.github.jarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner</td>
     </tr>
     <tr>
         <td>partitioner.options.*</td>
@@ -250,8 +250,8 @@ to retrieve is smaller than 100K. No options are required
 
 Of course, you can create your own partitioner implementation, given that
 <ul>
-    <li>it implements the interface <code>io.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code></li>
-    <li>it provides a single, one-arg constructor accepting an instance of <code>io.github.jarol.azure.search.spark.sql.connector.read.config.ReadConfig</code></li>
+    <li>it implements the interface <code>io.github.jarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code></li>
+    <li>it provides a single, one-arg constructor accepting an instance of <code>io.github.jarol.azure.search.spark.connector.read.config.ReadConfig</code></li>
 </ul>
 
 For Scala-based partitioners, you can extend class 
