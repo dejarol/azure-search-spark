@@ -6,9 +6,10 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
 /**
- * Supplier for retrieving an [[IndexActionType]] from a Spark internal row
+ * Supplier for retrieving an [[com.azure.search.documents.models.IndexActionType]] from a Spark internal row
  * @param actionColumnIndex index of the column to use for fetching the action type
- * @param default default action type (used when the value of the action column is null or cannot be mapped to an [[IndexActionType]])
+ * @param default default action type (used when the value of the action column is null
+ *                or cannot be mapped to an [[com.azure.search.documents.models.IndexActionType]])
  */
 
 case class PerDocumentSupplier private(private val actionColumnIndex: Int,

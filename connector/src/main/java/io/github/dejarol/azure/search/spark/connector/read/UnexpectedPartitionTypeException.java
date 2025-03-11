@@ -5,7 +5,8 @@ import org.apache.spark.sql.connector.read.InputPartition;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Exception returned when an unexpected {@link InputPartition} (other than {@link SearchPartition})
+ * Exception returned when an unexpected {@link org.apache.spark.sql.connector.read.InputPartition}
+ * (other than {@link io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition})
  * is provided to this dataSource's {@link org.apache.spark.sql.connector.read.PartitionReaderFactory}
  */
 
@@ -14,7 +15,7 @@ public class UnexpectedPartitionTypeException
 
     /**
      * Create an instance for a partition class
-     * @param actual actual {@link InputPartition} class
+     * @param actual actual partition class
      */
 
     public UnexpectedPartitionTypeException(

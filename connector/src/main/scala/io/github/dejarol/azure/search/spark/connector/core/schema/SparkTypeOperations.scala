@@ -1,9 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
+import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import org.apache.spark.sql.types._
 
 /**
- * Set of utility methods for a [[DataType]]
+ * Set of utility methods for a [[org.apache.spark.sql.types.DataType]]
  * @param input input data type
  */
 

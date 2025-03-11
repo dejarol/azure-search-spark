@@ -6,7 +6,7 @@ import org.apache.spark.sql.connector.write.{BatchWrite, DataWriterFactory, Phys
 import org.apache.spark.sql.types.StructType
 
 /**
- * [[BatchWrite]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.write.BatchWrite]] implementation for Search dataSource
  * @param writeConfig write configuration
  * @param schema DataFrame schema
  */

@@ -5,7 +5,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import scala.util.matching.Regex
 
 /**
- * Set of utility methods for a [[SearchFieldDataType]]
+ * Set of utility methods for a [[com.azure.search.documents.indexes.models.SearchFieldDataType]]
  * @param input search data type
  */
 
@@ -59,7 +59,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
   final def isComplex: Boolean = input.equals(SearchFieldDataType.COMPLEX)
 
   /**
-   * Evaluate if this search field type is [[SearchFieldDataType.GEOGRAPHY_POINT]]
+   * Evaluate if this search field type is [[com.azure.search.documents.indexes.models.SearchFieldDataType.GEOGRAPHY_POINT]]
    * @return true if the search type is a geo point
    */
 

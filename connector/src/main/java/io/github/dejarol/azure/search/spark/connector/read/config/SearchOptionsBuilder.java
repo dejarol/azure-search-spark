@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.read;
+package io.github.dejarol.azure.search.spark.connector.read.config;
 
 import com.azure.search.documents.models.SearchOptions;
 
@@ -9,7 +9,7 @@ import com.azure.search.documents.models.SearchOptions;
 public interface SearchOptionsBuilder {
 
     /**
-     * Add an OData <code>$filter</code> to this builder
+     * Add an OData <code>\$filter</code> to this builder
      * @param other filter to add
      * @return this builder with a new filter to add on query options
      */

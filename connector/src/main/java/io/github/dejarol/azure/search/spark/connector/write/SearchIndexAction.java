@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface to extend in order to implement actions
- * to apply on a {@link SearchIndex}
+ * to apply on a {@link com.azure.search.documents.indexes.models.SearchIndex}
  */
 
 @FunctionalInterface

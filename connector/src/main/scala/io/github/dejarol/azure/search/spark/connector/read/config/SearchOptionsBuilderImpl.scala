@@ -3,12 +3,11 @@ package io.github.dejarol.azure.search.spark.connector.read.config
 import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
 import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
-import io.github.dejarol.azure.search.spark.connector.read.SearchOptionsBuilder
 import io.github.dejarol.azure.search.spark.connector.read.SearchOptionsOperations._
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
- * Collection of options related to [[SearchOptions]] building
+ * Collection of options related to [[com.azure.search.documents.models.SearchOptions]] building
  * @param options case-insensitive options
  */
 

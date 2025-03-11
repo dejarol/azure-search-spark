@@ -13,7 +13,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util.{Map => JMap}
 
 /**
- * [[TableProvider]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.catalog.TableProvider]] implementation for this dataSource
  */
 
 class SearchTableProvider

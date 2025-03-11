@@ -4,14 +4,15 @@ import com.azure.search.documents.indexes.models.SearchField;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Parent interface for actions (transformations) to apply on {@link SearchField}(s)
+ * Parent interface for actions (transformations)
+ * to apply on {@link com.azure.search.documents.indexes.models.SearchField}(s)
  */
 
 @FunctionalInterface
 public interface SearchFieldAction {
 
     /**
-     * Transform a {@link SearchField}
+     * Transform a {@link com.azure.search.documents.indexes.models.SearchField}
      * @param field field
      * @return the transformed version of the input field
      */

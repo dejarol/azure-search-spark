@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read.config
 
 import com.azure.search.documents.models.{QueryType, SearchMode}
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 class SearchOptionsBuilderImplSpec

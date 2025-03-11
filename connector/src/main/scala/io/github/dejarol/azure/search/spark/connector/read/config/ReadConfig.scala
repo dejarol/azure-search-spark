@@ -36,7 +36,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Extends this configuration by injecting an OData <code>$filter</code>expression obtained by logically combining the predicates
+   * Extends this configuration by injecting an OData <code>\$filter</code>expression obtained by logically combining the predicates
    * that can be pushed down to the datasource
    * @param predicates predicates that can be pushed down
    * @return this configuration with new key-value pair related to the pushed predicate

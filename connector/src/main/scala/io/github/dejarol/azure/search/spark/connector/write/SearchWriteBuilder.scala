@@ -10,7 +10,7 @@ import scala.language.implicitConversions
 import scala.util.Try
 
 /**
- * [[WriteBuilder]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.write.WriteBuilder]] implementation for this dataSource
  * @param writeConfig write configuration
  * @param schema schema of input [[org.apache.spark.sql.DataFrame]] (retrieved by [[org.apache.spark.sql.connector.write.LogicalWriteInfo]])
  * @param shouldTruncate whether we should truncate target Search index or not (true for truncating)
@@ -26,7 +26,7 @@ class SearchWriteBuilder(
       with Logging {
 
   /**
-   * Constructor for non-truncating [[WriteBuilder]]
+   * Constructor for non-truncating [[org.apache.spark.sql.connector.write.WriteBuilder]]
    * @param writeConfig write configuration
    * @param schema schema of input [[org.apache.spark.sql.DataFrame]]
    */
@@ -62,7 +62,7 @@ class SearchWriteBuilder(
   }
 
   /**
-   * Create the [[WriteBuilder]] implementation of this dataSource that supports table truncation
+   * Create the [[org.apache.spark.sql.connector.write.WriteBuilder]] implementation of this dataSource that supports table truncation
    * @return the write builder that support truncation during write
    */
 
@@ -108,9 +108,9 @@ class SearchWriteBuilder(
 object SearchWriteBuilder {
 
   /**
-   * Convert a Search index instance to a [[SearchIndexOperations]]
+   * Convert a Search index instance to a [[io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
    * @param index Search index definition
-   * @return an instance of [[SearchIndexOperations]]
+   * @return an instance of [[ io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
    */
 
   private implicit def toIndexOperations(index: SearchIndex): SearchIndexOperations = new SearchIndexOperations(index)
@@ -119,8 +119,8 @@ object SearchWriteBuilder {
    * Create the target Search index
    * @param writeConfig write configuration
    * @param schema dataFrame schema
-   * @return either an [[IndexCreationException]] with the handled exception, or a [[SearchIndex]] object
-   *         representing the created index
+   * @return either an [[ io.github.dejarol.azure.search.spark.connector.write.IndexCreationException]] with the handled exception,
+   *         or a [[com.azure.search.documents.indexes.models.SearchIndex]] object representing the created index
    */
 
   def safelyCreateIndex(

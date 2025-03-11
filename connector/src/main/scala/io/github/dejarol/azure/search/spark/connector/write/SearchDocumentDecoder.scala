@@ -11,7 +11,8 @@ import org.apache.spark.sql.types.StructType
 import java.util.{LinkedHashMap => JLinkedMap}
 
 /**
- * Decoder for translating an [[InternalRow]] to a [[SearchDocument]]
+ * Decoder for translating an [[org.apache.spark.sql.catalyst.InternalRow]]
+ * to a [[com.azure.search.documents.SearchDocument]]
  * @param indexColumnToSearchDecoders converters for retrieving document values from an internal row
  */
 
@@ -53,7 +54,8 @@ object SearchDocumentDecoder {
    * Safely create a document decoder instance
    * @param schema Dataframe schema
    * @param searchFields target Search fields
-   * @return either the decoder or a [[SchemaViolationException]]
+   * @return either the decoder or a
+   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolationException]]
    */
 
   final def safeApply(

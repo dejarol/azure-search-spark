@@ -5,6 +5,7 @@ import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**

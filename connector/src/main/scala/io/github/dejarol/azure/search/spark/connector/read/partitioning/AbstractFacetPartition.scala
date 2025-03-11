@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.toSearchTypeOperations
+import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
 /**
  * Parent class for partitions created by a [[FacetedPartitioner]] by retrieving a set of values

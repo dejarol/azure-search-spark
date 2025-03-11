@@ -5,7 +5,7 @@ import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
 import scala.language.implicitConversions
 
 /**
- * Utility class for interacting with [[SearchOptions]] using some standard Scala types
+ * Utility class for interacting with [[com.azure.search.documents.models.SearchOptions]] using some standard Scala types
  * @param original original options
  */
 
@@ -115,9 +115,9 @@ case class SearchOptionsOperations(private val original: SearchOptions) {
 object SearchOptionsOperations {
 
   /**
-   * Implicit conversion from [[SearchOptions]] to this wrapper
+   * Implicit conversion from [[com.azure.search.documents.models.SearchOptions]] to this wrapper
    * @param original original options
-   * @return an instance of [[SearchOptionsOperations]]
+   * @return an instance of [[io.github.dejarol.azure.search.spark.connector.read.SearchOptionsOperations]]
    */
 
   implicit def toOperations(original: SearchOptions): SearchOptionsOperations = SearchOptionsOperations(original)

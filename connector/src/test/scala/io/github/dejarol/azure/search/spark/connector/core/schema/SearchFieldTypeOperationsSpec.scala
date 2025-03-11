@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
 class SearchFieldTypeOperationsSpec

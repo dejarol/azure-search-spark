@@ -5,7 +5,7 @@ import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAc
 import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAnalyzerType
 
 /**
- * Collection of methods for creating [[SearchFieldAction]](s)
+ * Collection of methods for creating [[io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldAction]](s)
  */
 
 object SearchFieldActions {

@@ -1,8 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.{AtomicEncoders, SearchEncoder}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SafeCodecSupplier}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.{AtomicEncoders, CollectionEncoder, ComplexEncoder, SearchEncoder}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SafeCodecSupplier, SearchIndexColumn}
 import io.github.dejarol.azure.search.spark.connector.core.schema.{toSearchTypeOperations, toSparkTypeOperations}
 import org.apache.spark.sql.types.{DataType, DataTypes, StructType}
 

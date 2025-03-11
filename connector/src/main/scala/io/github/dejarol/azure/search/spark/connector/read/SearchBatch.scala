@@ -10,7 +10,7 @@ import org.apache.spark.sql.types.StructType
 import scala.util.Try
 
 /**
- * [[Batch]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.read.Batch]] implementation for Search dataSource
  * @param readConfig read configuration
  * @param prunedSchema schema passed by the Scan implementation (pruned, if necessary)
  */

@@ -8,7 +8,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * Features that can be enabled or disabled on a {@link SearchField}
+ * Features that can be enabled or disabled on a {@link com.azure.search.documents.indexes.models.SearchField}
  */
 
 public enum SearchFieldFeature {
@@ -104,7 +104,7 @@ public enum SearchFieldFeature {
     }
 
     /**
-     * Enable a feature on a {@link SearchField}
+     * Enable a feature on a {@link com.azure.search.documents.indexes.models.SearchField}
      * @param searchField Search field
      * @return input search field with this feature enabled
      */
@@ -118,7 +118,7 @@ public enum SearchFieldFeature {
     }
 
     /**
-     * Disable a feature on a {@link SearchField}
+     * Disable a feature on a {@link com.azure.search.documents.indexes.models.SearchField}
      * @param searchField Search field
      * @return input search field with given feature disabled
      */
@@ -131,7 +131,7 @@ public enum SearchFieldFeature {
     }
 
     /**
-     * Evaluate if the feature is enabled on a {@link SearchField}
+     * Evaluate if the feature is enabled on a {@link com.azure.search.documents.indexes.models.SearchField}
      * @param searchField Search field
      * @return true for enabled features
      */

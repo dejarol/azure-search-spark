@@ -7,7 +7,7 @@ import java.sql.{Date, Timestamp}
 
 /**
  * Trait for converting a constant value to a String to use on
- * an OData <code>$filter</code> expression
+ * an OData <code>\$filter</code> expression
  * @tparam T value type
  */
 

@@ -3,13 +3,14 @@ package io.github.dejarol.azure.search.spark.connector.write
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexAction
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 
 /**
- * [[DataWriter]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.write.DataWriter]] implementation for this dataSource
  * @param writeConfig write configuration
  * @param documentDecoder decoder from Spark internal rows to Search documents
  * @param actionSupplier index action supplier
@@ -45,7 +46,7 @@ class SearchDataWriter(
 
   /**
    * Write remaining documents
-   * @return a [[WriterCommitMessage]] for this writer instance
+   * @return a [[org.apache.spark.sql.connector.write.WriterCommitMessage]] for this writer instance
    */
 
   override def commit(): WriterCommitMessage = {

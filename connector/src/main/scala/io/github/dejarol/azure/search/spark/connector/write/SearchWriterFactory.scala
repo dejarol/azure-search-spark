@@ -1,12 +1,13 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolationException
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory}
 import org.apache.spark.sql.types.{StructField, StructType}
 
 /**
- * [[DataWriterFactory]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.write.DataWriterFactory]] implementation for this dataSource
  * @param writeConfig write configuration
  * @param schema Dataframe schema
  */
@@ -16,6 +17,13 @@ class SearchWriterFactory(
                            private val schema: StructType,
                          )
   extends DataWriterFactory {
+
+  /**
+   * Creates the [[org.apache.spark.sql.connector.write.DataWriter]] implementation of this datasource
+   * @param partitionId partition id
+   * @param taskId task id
+   * @return the data writer implementation of this datasource
+   */
 
   override def createWriter(partitionId: Int, taskId: Long): DataWriter[InternalRow] = {
 

@@ -9,7 +9,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
 /**
- * Encoder for translating a [[SearchDocument]] into an [[InternalRow]]
+ * Encoder for translating a [[com.azure.search.documents.SearchDocument]]
+ * into an [[org.apache.spark.sql.catalyst.InternalRow]]
  * @param indexColumnToEncoders encoders to apply in order to extract row values
  */
 
@@ -38,7 +39,8 @@ object SearchDocumentEncoder {
    * Safely create a document encoder instance
    * @param schema target Dataframe schema
    * @param searchFields input Search fields
-   * @return either the encoder or a [[SchemaViolationException]]
+   * @return either the encoder or a
+   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolationException]]
    */
 
   final def safeApply(

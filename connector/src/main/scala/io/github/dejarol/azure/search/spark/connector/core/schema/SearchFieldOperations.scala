@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import org.apache.spark.sql.types.StructField
 
 /**
- * Set of utilities for dealing with [[SearchField]](s)
+ * Set of utilities for dealing with [[com.azure.search.documents.indexes.models.SearchField]](s)
  * @param field search field
  */
 

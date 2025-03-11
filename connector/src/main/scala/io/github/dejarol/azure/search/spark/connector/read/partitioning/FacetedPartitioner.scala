@@ -2,7 +2,9 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.FacetResult
-import io.github.dejarol.azure.search.spark.connector.core.schema.{toSearchFieldOperations, toSearchTypeOperations}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
+import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 
 import java.util.{List => JList}

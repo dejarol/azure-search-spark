@@ -8,7 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Serializable;
 
 /**
- * Interface for supplying an {@link IndexActionType} from an {@link InternalRow}
+ * Interface for supplying an {@link com.azure.search.documents.models.IndexActionType}
+ * from an {@link org.apache.spark.sql.catalyst.InternalRow}
  */
 
 @FunctionalInterface

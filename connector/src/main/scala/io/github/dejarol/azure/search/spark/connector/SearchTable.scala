@@ -14,7 +14,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util.{HashSet => JHashSet, Set => JSet}
 
 /**
- * [[Table]] implementation for Search dataSource
+ * [[org.apache.spark.sql.connector.catalog.Table]] implementation for this dataSource
  * @param tableSchema table schema (either inferred or user-provided)
  * @param tableName table name
  */
@@ -56,9 +56,9 @@ class SearchTable(
   }
 
   /**
-   * Creates the [[ScanBuilder]] implementation of this datasource
+   * Creates the [[org.apache.spark.sql.connector.read.ScanBuilder]] implementation of this datasource
    * @param options set of options been configured at session level and/or provided to Spark reader
-   * @return the [[ScanBuilder]] implementation of this datasource
+   * @return the [[org.apache.spark.sql.connector.read.ScanBuilder]] implementation of this datasource
    */
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
@@ -74,9 +74,9 @@ class SearchTable(
   }
 
   /**
-   * Creates the [[WriteBuilder]] implementation for this datasource
+   * Creates the [[org.apache.spark.sql.connector.write.WriteBuilder]] implementation of this datasource
    * @param info logical write info
-   * @return the [[WriteBuilder]] implementation for this datasource
+   * @return the [[org.apache.spark.sql.connector.write.WriteBuilder]] implementation of this datasource
    */
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {

@@ -1,3 +1,4 @@
+import BuildSupport.{constants, functions}
 import sbt.librarymanagement.InclExclRule
 
 lazy val scala212 = "2.12.18"
@@ -28,16 +29,14 @@ ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
 
 // Dependencies versions
-lazy val sparkVersion = "3.1.0"
-lazy val azureSearchDocumentsVersion = "11.6.0"
 lazy val azureCoreOkHttpVersion = "1.11.10"
 lazy val scalaTestVersion = "3.2.16"
 lazy val scalaMockVersion = "5.1.0"
 
 // Compile dependencies
-lazy val sparkCore = "org.apache.spark" %% "spark-core" % sparkVersion % Provided
-lazy val sparkSQL = "org.apache.spark" %% "spark-sql" % sparkVersion % Provided
-lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % azureSearchDocumentsVersion)
+lazy val sparkCore = "org.apache.spark" %% "spark-core" % constants.SPARK_VERSION % Provided
+lazy val sparkSQL = "org.apache.spark" %% "spark-sql" % constants.SPARK_VERSION % Provided
+lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % constants.AZURE_SEARCH_DOCUMENTS_VERSION)
   .excludeAll(
     InclExclRule("com.azure", "azure-core-http-netty"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
@@ -75,6 +74,18 @@ lazy val connector = (project in file("connector"))
       scalaTest,
       scalaMock
     ),
+
+    // Enrich API mappings for scaladoc generation
+    apiMappings ++= {
+
+      val filesAndModules: Seq[(Attributed[File], ModuleID)] = (Compile / fullClasspath)
+        .value.flatMap {
+          entry => entry.get(moduleID.key).map(entry -> _)
+        }
+
+      functions.collectSparkAPIMappings(filesAndModules) ++
+        functions.collectAzureSearchAPIMappings(filesAndModules)
+    },
 
     assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
     assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
