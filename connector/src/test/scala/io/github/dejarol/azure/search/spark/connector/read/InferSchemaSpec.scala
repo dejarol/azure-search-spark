@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.FieldFactory
 
 class InferSchemaSpec
   extends BasicSpec

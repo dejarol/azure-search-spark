@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output
 
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.Constants
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.time.format.DateTimeFormatter

@@ -1,6 +1,5 @@
 package io.github.dejarol.azure.search.spark.connector
 
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, RowMixins}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Encoder, Encoders, Row, SparkSession}
 

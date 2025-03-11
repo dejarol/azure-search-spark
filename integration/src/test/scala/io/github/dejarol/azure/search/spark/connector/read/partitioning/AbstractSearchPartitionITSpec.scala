@@ -3,6 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 import com.azure.search.documents.SearchDocument
 import io.github.dejarol.azure.search.spark.connector.SearchITSpec
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.models.ITDocument
 import io.github.dejarol.azure.search.spark.connector.utils.SearchTestClients
 
 /**

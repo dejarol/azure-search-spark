@@ -2,7 +2,8 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.utils.Reflection
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.EmptyPartitioner
+import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{EmptyPartitioner, SearchPartitioner}
 
 import scala.reflect.ClassTag
 

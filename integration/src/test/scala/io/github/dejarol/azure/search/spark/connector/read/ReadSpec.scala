@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
 import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.models._
 import io.github.dejarol.azure.search.spark.connector.read.config.{ReadConfig, SearchOptionsBuilderImpl}
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataComparator, ODataExpression, ODataExpressionMixins, ODataExpressions}
 import io.github.dejarol.azure.search.spark.connector.{SearchITSpec, SparkSpec}

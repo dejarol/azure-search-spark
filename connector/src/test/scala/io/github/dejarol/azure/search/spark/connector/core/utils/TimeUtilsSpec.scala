@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.utils
 
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.Constants
 
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit

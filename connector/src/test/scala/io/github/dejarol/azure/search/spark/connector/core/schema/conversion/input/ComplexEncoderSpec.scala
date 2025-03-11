@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input
 
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SearchIndexColumnImpl
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes

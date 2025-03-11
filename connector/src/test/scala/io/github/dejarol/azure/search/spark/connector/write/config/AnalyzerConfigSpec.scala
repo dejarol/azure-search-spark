@@ -1,8 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
+import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, JsonMixIns}
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
 
 import java.io.IOException
 import java.util.function.Supplier

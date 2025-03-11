@@ -1,5 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
+import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
+import io.github.dejarol.azure.search.spark.connector.core.utils.{StringUtils, TimeUtils}
+
 import java.lang.{Double => JDouble}
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit

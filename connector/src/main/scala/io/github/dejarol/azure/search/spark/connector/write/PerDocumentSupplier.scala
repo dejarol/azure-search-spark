@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.models.IndexActionType
+import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{DataTypes, StructType}
 

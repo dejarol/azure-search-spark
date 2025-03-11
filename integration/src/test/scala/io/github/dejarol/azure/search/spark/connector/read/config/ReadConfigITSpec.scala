@@ -1,9 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.read.config
 
 import com.azure.search.documents.SearchDocument
-import io.github.dejarol.azure.search.spark.connector.SearchITSpec
+import io.github.dejarol.azure.search.spark.connector.{FieldFactory, SearchITSpec}
 import io.github.dejarol.azure.search.spark.connector.core.utils.JavaCollections
-import io.github.dejarol.azure.search.spark.connector.core.{FieldFactory, JavaScalaConverters}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.models.PushdownBean
 import io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest

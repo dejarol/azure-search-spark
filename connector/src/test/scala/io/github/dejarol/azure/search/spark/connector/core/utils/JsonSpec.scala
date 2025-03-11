@@ -1,7 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.core.utils
 
 import com.azure.search.documents.indexes.models.{ClassicSimilarityAlgorithm, SimilarityAlgorithm}
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, SearchAPIModelFactory, TestConstants}
+import io.github.dejarol.azure.search.spark.connector.core.TestConstants
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
 
 class JsonSpec
   extends BasicSpec

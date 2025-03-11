@@ -3,6 +3,8 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
+import io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig
+import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**

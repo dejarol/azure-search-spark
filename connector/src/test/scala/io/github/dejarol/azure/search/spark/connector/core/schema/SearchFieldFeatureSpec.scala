@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, FieldFactory}
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
 class SearchFieldFeatureSpec
   extends BasicSpec

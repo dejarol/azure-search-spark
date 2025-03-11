@@ -1,6 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 import org.scalatest.matchers.{BeMatcher, MatchResult}
 

@@ -1,7 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.SchemaUtils
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
+import io.github.dejarol.azure.search.spark.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldFeature}
+import io.github.dejarol.azure.search.spark.connector.core.utils.Json
 import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructField

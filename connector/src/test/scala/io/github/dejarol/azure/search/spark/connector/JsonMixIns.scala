@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector
 
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import io.github.dejarol.azure.search.spark.connector.core.utils.Reflection
 
 import scala.reflect.ClassTag
 

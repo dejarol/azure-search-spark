@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.FieldFactory
 
 class AbstractFacetPartitionSpec
   extends BasicSpec

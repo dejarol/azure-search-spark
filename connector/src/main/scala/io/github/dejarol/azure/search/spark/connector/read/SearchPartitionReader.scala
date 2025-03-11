@@ -3,6 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.models.SearchResult
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.PartitionReader

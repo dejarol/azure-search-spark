@@ -1,6 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
+import io.github.dejarol.azure.search.spark.connector.core.{Constants, JavaScalaConverters}
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{SearchPartition, SearchPartitioner}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType

@@ -1,5 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read.filter
 
+import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
+
 import java.sql.{Date, Timestamp}
 
 /**

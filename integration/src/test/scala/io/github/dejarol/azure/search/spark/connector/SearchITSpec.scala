@@ -4,11 +4,11 @@ import com.azure.core.credential.AzureKeyCredential
 import com.azure.search.documents.SearchClient
 import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
 import io.github.dejarol.azure.search.spark.connector.core.schema.SchemaUtils
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
-import models.{DocumentDeserializer, DocumentSerializer, ITDocument}
+import io.github.dejarol.azure.search.spark.connector.models.{DocumentDeserializer, DocumentSerializer, ITDocument}
 import io.github.dejarol.azure.search.spark.connector.utils.SearchTestClients
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap

@@ -1,6 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
+import io.github.dejarol.azure.search.spark.connector.models.PushdownBean
+
 import java.time.LocalDate
 
 class FacetNullValuePartitionITSpec

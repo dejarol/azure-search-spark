@@ -1,9 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.FieldFactory
+import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
 import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAnalyzerType
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
 class SearchFieldActionsSpec
   extends BasicSpec

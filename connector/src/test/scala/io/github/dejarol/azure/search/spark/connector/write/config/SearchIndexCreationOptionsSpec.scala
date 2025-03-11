@@ -1,9 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
+import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
-import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
 
 class SearchIndexCreationOptionsSpec
   extends BasicSpec

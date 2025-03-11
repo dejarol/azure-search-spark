@@ -1,6 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{SafeCodecSupplierSpec, SchemaViolationsMixins}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolation.Type
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String

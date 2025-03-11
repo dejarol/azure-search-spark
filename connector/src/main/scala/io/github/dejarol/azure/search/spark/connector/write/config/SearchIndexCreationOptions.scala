@@ -2,6 +2,8 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.json.JsonReader
 import com.azure.search.documents.indexes.models._
+import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
+import io.github.dejarol.azure.search.spark.connector.core.utils.Json
 import io.github.dejarol.azure.search.spark.connector.write.{SearchIndexAction, SearchIndexActions}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 

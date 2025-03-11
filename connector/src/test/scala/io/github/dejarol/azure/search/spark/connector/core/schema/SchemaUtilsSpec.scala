@@ -1,8 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.GeoPointType
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, FieldFactory, JavaScalaConverters}
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types._
 
 import java.util.{List => JList}

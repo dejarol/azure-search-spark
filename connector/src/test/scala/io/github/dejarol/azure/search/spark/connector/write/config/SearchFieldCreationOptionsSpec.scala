@@ -4,6 +4,7 @@ import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchFie
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory, JsonMixIns}
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
 class SearchFieldCreationOptionsSpec

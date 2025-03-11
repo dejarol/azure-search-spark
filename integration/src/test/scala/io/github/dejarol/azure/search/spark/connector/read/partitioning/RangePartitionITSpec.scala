@@ -1,5 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
+import io.github.dejarol.azure.search.spark.connector.models.PushdownBean
+
 class RangePartitionITSpec
   extends AbstractSearchPartitionITSpec {
 

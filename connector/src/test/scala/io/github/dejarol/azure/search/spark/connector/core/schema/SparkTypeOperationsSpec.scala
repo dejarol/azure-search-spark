@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
-import io.github.dejarol.azure.search.spark.connector.core.{BasicSpec, FieldFactory}
+import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.DataTypes
 
 class SparkTypeOperationsSpec

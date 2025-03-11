@@ -1,7 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
+import io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
-import io.github.dejarol.azure.search.spark.connector.read.filter.ODataExpressionV1FilterFactory
+import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressionV1FilterFactory}
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.{StructField, StructType}

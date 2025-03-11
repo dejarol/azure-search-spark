@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output
 
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SearchIndexColumn
 import org.apache.spark.sql.catalyst.InternalRow
 
 import java.util.{LinkedHashMap => JLinkedMap, Map => JMap}

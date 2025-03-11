@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.config
 
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

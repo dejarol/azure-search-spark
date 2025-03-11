@@ -1,8 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.FieldFactory
 import org.scalatest.EitherValues
 
 class FacetedPartitionerSpec

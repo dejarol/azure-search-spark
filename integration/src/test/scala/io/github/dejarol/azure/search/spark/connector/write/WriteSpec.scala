@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.models._
 import io.github.dejarol.azure.search.spark.connector.write.config.{SearchFieldCreationOptions, WriteConfig}
 import io.github.dejarol.azure.search.spark.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.SaveMode

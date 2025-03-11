@@ -1,5 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.filter
 
+import io.github.dejarol.azure.search.spark.connector.core.Constants
+
 import java.sql.Timestamp
 import java.time.LocalDate
 

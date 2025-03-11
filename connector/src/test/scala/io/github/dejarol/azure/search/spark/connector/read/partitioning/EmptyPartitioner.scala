@@ -1,5 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
+import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
+
 import java.util.{Collections => JColl, List => JList}
 
 /**

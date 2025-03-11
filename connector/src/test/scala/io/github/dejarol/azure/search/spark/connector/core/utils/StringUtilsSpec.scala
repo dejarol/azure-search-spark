@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.utils
 
-import io.github.dejarol.azure.search.spark.connector.core.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
 
 class StringUtilsSpec
   extends BasicSpec {

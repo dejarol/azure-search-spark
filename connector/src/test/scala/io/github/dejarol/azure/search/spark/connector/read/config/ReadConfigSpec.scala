@@ -1,10 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.read.config
 
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
-import io.github.dejarol.azure.search.spark.connector.core.FieldFactory
-import io.github.dejarol.azure.search.spark.connector.read.filter.ODataExpressionMixins
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.EmptyPartitioner
+import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
+import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpressionMixins, ODataExpressions}
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, EmptyPartitioner}
 import org.apache.spark.sql.types.DataTypes
 
 class ReadConfigSpec

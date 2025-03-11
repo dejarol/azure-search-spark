@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector
 
+import io.github.dejarol.azure.search.spark.connector.core.TestConstants
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
 /**

@@ -2,6 +2,9 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{SchemaViolationException, SearchIndexColumn}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.SearchDecoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
