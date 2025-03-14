@@ -4,9 +4,14 @@ object BuildSupport {
 
   object constants {
 
-    final val SPARK_VERSION = "3.1.1"
-    final val AZURE_SEARCH_DOCUMENTS_VERSION = "11.6.0"
-    final val ARTIFACT_NAME = "azure-search-spark-connector"
+    final lazy val SPARK_VERSION = "3.1.1"
+    final lazy val AZURE_SEARCH_DOCUMENTS_VERSION = "11.6.0"
+    final lazy val AZURE_CORE_OKHTTP_VERSION = "1.11.10"
+    final lazy val SCALA_TEST_VERSION = "3.2.16"
+    final lazy val SCALA_MOCK_VERSION = "5.1.0"
+
+    final lazy val ORGANIZATION = "io.github.dejarol"
+    final lazy val ARTIFACT_NAME = "azure-search-spark-connector"
   }
 
   object functions {

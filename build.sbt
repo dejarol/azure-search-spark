@@ -3,7 +3,7 @@ import sbt.librarymanagement.InclExclRule
 
 lazy val scala212 = "2.12.18"
 lazy val supportedScalaVersions = List(scala212)
-lazy val compileTestDependency = "test->test;compile->compile"
+lazy val testToTestDependency = "test->test"
 
 ThisBuild / version := "0.7.0"
 ThisBuild / scalaVersion := scala212
@@ -28,10 +28,7 @@ ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
 
-// Dependencies versions
-lazy val azureCoreOkHttpVersion = "1.11.10"
-lazy val scalaTestVersion = "3.2.16"
-lazy val scalaMockVersion = "5.1.0"
+ThisBuild / organization := constants.ORGANIZATION
 
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % constants.SPARK_VERSION % Provided
@@ -46,7 +43,7 @@ lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % consta
     InclExclRule("org.slf4j", "slf4j-api")
    )
 
-lazy val azureCoreOkHttp = ("com.azure" % "azure-core-http-okhttp" % azureCoreOkHttpVersion)
+lazy val azureCoreOkHttp = ("com.azure" % "azure-core-http-okhttp" % constants.AZURE_CORE_OKHTTP_VERSION)
   .excludeAll(
     InclExclRule("com.fasterxml.jackson.core", "jackson-annotations"),
     InclExclRule("com.fasterxml.jackson.core", "jackson-core"),
@@ -56,14 +53,15 @@ lazy val azureCoreOkHttp = ("com.azure" % "azure-core-http-okhttp" % azureCoreOk
   )
 
 // Test dependencies
-lazy val scalactic = "org.scalactic" %% "scalactic" % scalaTestVersion
-lazy val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
-lazy val scalaMock = "org.scalamock" %% "scalamock" % scalaMockVersion % Test
+lazy val scalactic = "org.scalactic" %% "scalactic" % constants.SCALA_TEST_VERSION
+lazy val scalaTest = "org.scalatest" %% "scalatest" % constants.SCALA_TEST_VERSION % Test
+lazy val scalaMock = "org.scalamock" %% "scalamock" % constants.SCALA_MOCK_VERSION % Test
 
 // Connector
 lazy val connector = (project in file("connector"))
   .enablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
+    name := constants.ARTIFACT_NAME,
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies ++= Seq(
       sparkCore,
@@ -91,18 +89,21 @@ lazy val connector = (project in file("connector"))
     assembly / assemblyJarName := s"${constants.ARTIFACT_NAME}_${scalaBinaryVersion.value}-${version.value}.jar",
     assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
     assemblyMergeStrategy := {
-      case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.discard
-      case PathList("module-info.class") => MergeStrategy.discard
+      case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.first
+      case PathList("module-info.class") => MergeStrategy.first
       case default =>
         val oldStrategy = assemblyMergeStrategy.value
         oldStrategy(default)
-    }
+    },
+
+    // Publishing options
+    publishMavenStyle := true
   )
 
 // Integration tests
 lazy val integration = (project in file("integration"))
   .disablePlugins(sbtassembly.AssemblyPlugin)
-  .dependsOn(connector % compileTestDependency)
+  .dependsOn(connector % testToTestDependency)
   .settings(
     publish / skip := true,
     crossScalaVersions := supportedScalaVersions,
