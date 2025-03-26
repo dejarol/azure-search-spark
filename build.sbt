@@ -5,6 +5,18 @@ lazy val scala212 = "2.12.18"
 lazy val supportedScalaVersions = List(scala212)
 lazy val testToTestDependency = "test->test"
 
+ThisBuild / organization := constants.ORGANIZATION
+ThisBuild / licenses += (
+  "Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")
+)
+ThisBuild / developers ++= constants.DEVELOPERS
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/dejarol/azure-search-spark"),
+    "scm:git:git://github.com/dejarol/azure-search-spark.git"
+  )
+)
+
 ThisBuild / version := "0.7.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
@@ -27,8 +39,6 @@ ThisBuild / autoAPIMappings := true
 ThisBuild / test / parallelExecution := false
 ThisBuild / test / logBuffered := false
 ThisBuild / Test / testOptions += Tests.Argument("-oD")
-
-ThisBuild / organization := constants.ORGANIZATION
 
 // Compile dependencies
 lazy val sparkCore = "org.apache.spark" %% "spark-core" % constants.SPARK_VERSION

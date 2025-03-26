@@ -1,3 +1,4 @@
+import sbt.librarymanagement.Developer
 import sbt.{Attributed, File, ModuleID, URL, url}
 
 object BuildSupport {
@@ -13,6 +14,10 @@ object BuildSupport {
     final lazy val ORGANIZATION = "io.github.dejarol"
     final lazy val PROJECT_NAME = "azure-search-spark"
     final lazy val ARTIFACT_NAME = f"$PROJECT_NAME-connector"
+
+    final lazy val DEVELOPERS: List[Developer] = List(
+      Developer("dejarol", "Luca Carloni", "carloniluca91@gmail.com", null)
+    )
   }
 
   object functions {

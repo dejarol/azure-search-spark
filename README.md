@@ -10,6 +10,85 @@ Unofficial Azure Search - Spark connector
 
 ## Documentation
 
+### Data types
+
+Here's a list of the conversions between Azure Search datatypes and Spark datatypes 
+
+<table>
+    <tr>
+        <th>Search Data Type</th>
+        <th>Spark Data Type</th>
+        <th>Scope</th>
+        <th>Notes</th>
+    </tr>
+    <tr>
+        <td>Edm.String</td>
+        <td>StringType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.Boolean</td>
+        <td>BooleanType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.Int32</td>
+        <td>IntegerType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.Int64</td>
+        <td>LongType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.Double</td>
+        <td>DoubleType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.DateTimeOffset</td>
+        <td>TimestampType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Edm.DateTimeOffset</td>
+        <td>DateType</td>
+        <td>Write</td>
+        <td>Dates will be stored as with datetimes with time set to midnight</td>
+    </tr>
+    <tr>
+        <td>Edm.GeographyPoint</td>
+        <td>StructType</td>
+        <td>Read/Write</td>
+        <td>When reading, a Geopoint is converted into a StructType with the following structure
+            <ul>
+                <li><code>Type</code> of type StringType</li>
+                <li><code>Coordinates</code> of type ArrayType(DoubleType)</li>
+            </ul>
+            When writing, every Structype, at every level (both top-level or nested) that matches
+            the previous structure, will be stored as Geopoints
+    </tr>
+    <tr>
+        <td>Edm.ComplexType</td>
+        <td>StructType</td>
+        <td>Read/Write</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Collection(*)</td>
+        <td>ArrayType(*)</td>
+        <td>Read/Write</td>
+        <td>The inner collection type is inferred applying these rules recursively</td>
+    </tr>
+</table>
+
 ### Batch Read
 
 Here is the list of available datasource options for reading
