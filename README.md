@@ -2,10 +2,30 @@
 
 ---
 
-Unofficial Azure Search - Spark connector
+A custom connector for Azure AI Search (formerly known as Azure Cognitive Search)
 
 ## Downloading
 
+The connector is available within Maven central repository
+
+Maven
+```
+<dependency>
+    <groupId>io.github.dejarol</groupId>
+    <artifactId>azure-search-spark_2.12</artifactId>
+    <version>x.y.z</version>
+</dependency>
+```
+
+sbt
+```
+libraryDependencies += "io.github.dejarol" %% "azure-search-spark" % "x.y.z"
+```
+
+gradle
+```
+implementation("io.github.dejarol:azure-search-spark_2.12:x.y.z")
+```
 ----
 
 ## Documentation
@@ -61,7 +81,7 @@ Here's a list of the conversions between Azure Search datatypes and Spark dataty
         <td>Edm.DateTimeOffset</td>
         <td>DateType</td>
         <td>Write</td>
-        <td>Dates will be stored as with datetimes with time set to midnight</td>
+        <td>Dates will be stored as with datetimes with time set to midnight at UTC</td>
     </tr>
     <tr>
         <td>Edm.GeographyPoint</td>
@@ -73,7 +93,7 @@ Here's a list of the conversions between Azure Search datatypes and Spark dataty
                 <li><code>Coordinates</code> of type ArrayType(DoubleType)</li>
             </ul>
             When writing, every Structype, at every level (both top-level or nested) that matches
-            the previous structure, will be stored as Geopoints
+            the previous structure, will be stored as Geopoint
     </tr>
     <tr>
         <td>Edm.ComplexType</td>
@@ -192,7 +212,7 @@ or just google <b>"azure search skip limit"</b>), we need to address parallel re
 Partitioners are components for handling the generation of partitions for parallel read operations.
 <br>
 <br>
-Extending the <code>com.github.jarol.azure.search.spark.sql.connector.read.partitioning.SearchPartitioner</code> interface, each partitioner should 
+Extending the <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code> interface, each partitioner should 
 create a collection of non-overlapping read partitions, and each of these partitions should retrieve a maximum of 100K documents.
 
 Here's a summary on available partitioners and how to define a custom partitioner
@@ -238,14 +258,14 @@ where
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
 .option("partitioner.options.facetField", "nameOfTheFacetField")
 .option("partitioner.options.numPartitions", "numOfPartitions")
 ```  
 
 According to the previous example
 ```
-.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
 .option("partitioner.options.facetField", "category")
 .option("partitioner.options.numPartitions", "4")
 ```
@@ -299,7 +319,7 @@ and <code>numPartitions</code> JDBC datasource options
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.RangePartitioner")
+.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.RangePartitioner")
 .option("partitioner.options.partitionField", "numericOrDateFieldName")
 .option("partitioner.options.lowerBound", "lb")
 .option("partitioner.options.upperBound", "ub")
@@ -322,7 +342,7 @@ to retrieve is smaller than 100K. No options are required
 
 ##### Usage
 ```
-.option("partitioner", "com.github.jarol.azure.search.spark.sql.connector.read.partitioning.DefaultPartitioner")
+.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner")
 ```
 
 #### Custom
@@ -334,7 +354,7 @@ Of course, you can create your own partitioner implementation, given that
 </ul>
 
 For Scala-based partitioners, you can extend class 
-<code>com.github.jarol.azure.search.spark.connector.read.partitioning.AbstractSearchPartitioner</code>,
+<code>io.github.dejarol.azure.search.spark.connector.read.partitioning.AbstractSearchPartitioner</code>,
 that satisfies both conditions and allows users to access partitioner options by means of attribute <code>partitionerOptions</code>
 
 ##### Usage
