@@ -37,11 +37,10 @@ case class SearchFieldCreationOptions(
 
   private[write] def keyField: String = {
 
-    unsafelyGet(
-      SearchFieldCreationOptions.KEY_FIELD_CONFIG,
-      Some(WriteConfig.FIELD_OPTIONS_PREFIX),
-      None
-    )
+    get(SearchFieldCreationOptions.KEY_FIELD_CONFIG) match {
+      case Some(value) => value
+      case None => SearchFieldCreationOptions.DEFAULT_KEY_FIELD_CONFIG_VALUE
+    }
   }
 
   /**
@@ -189,6 +188,7 @@ case class SearchFieldCreationOptions(
 object SearchFieldCreationOptions {
 
   final val KEY_FIELD_CONFIG = "key"
+  final val DEFAULT_KEY_FIELD_CONFIG_VALUE = "id"
   final val NON_FILTERABLE_CONFIG = "nonFilterable"
   final val NON_SORTABLE_CONFIG = "nonSortable"
   final val HIDDEN_FIELDS_CONFIG = "hidden"

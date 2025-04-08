@@ -335,7 +335,7 @@ like <code>"3.14"</code> </li>
 like <code>"2024-12-31"</code> </li>
 </ul>
 
-#### SinglePartitionPartitioner
+#### DefaultPartitioner
 
 The simplest partitioner: retrieves all documents within a single partition. Suitable only for scenarios where the total number of documents 
 to retrieve is smaller than 100K. No options are required
@@ -439,12 +439,12 @@ Here is the list of supported field attributes
     <tr>
         <th>Key</th>
         <th>Description</th>
-        <th>Required</th>
+        <th>Default</th>
     </tr>
     <tr>
         <td>key</td>
         <td>Name of key field</td>
-        <td>&#9989</td>
+        <td>id</td>
     </tr>
     <tr>
         <td>nonFilterable</td>

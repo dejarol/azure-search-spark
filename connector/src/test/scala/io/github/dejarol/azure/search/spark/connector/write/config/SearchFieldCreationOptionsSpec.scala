@@ -17,6 +17,24 @@ class SearchFieldCreationOptionsSpec
   private lazy val analyzerType = SearchFieldAnalyzerType.ANALYZER
 
   /**
+   * Create an instance of [[SearchFieldCreationOptions]]
+   * @param config raw configuration map
+   * @param indexActionColumn index action column
+   * @return an instance for testing
+   */
+
+  private def createInstance(
+                              config: Map[String, String],
+                              indexActionColumn: Option[String]
+                            ): SearchFieldCreationOptions = {
+
+    SearchFieldCreationOptions(
+      new SearchConfig(config),
+      indexActionColumn
+    )
+  }
+
+  /**
    * Create a map with keys being all values from enum [[SearchFieldFeature]], and values the given list of string
    * @param fields list of field names
    * @return a map for enabling/disabling all defined features for given fields
@@ -54,10 +72,7 @@ class SearchFieldCreationOptionsSpec
       case (key, Some(values)) => (key, values.mkString(","))
     }
 
-    SearchFieldCreationOptions(
-      new SearchConfig(featuresMap),
-      indexActionColumn
-    )
+    createInstance(featuresMap, indexActionColumn)
   }
 
   /**
@@ -107,19 +122,31 @@ class SearchFieldCreationOptionsSpec
 
   private def createAnalyzerOptions(analyzerConfigs: Seq[AnalyzerConfig]): SearchFieldCreationOptions = {
 
-    SearchFieldCreationOptions(
-      new SearchConfig(
-        Map(
-          SearchFieldCreationOptions.KEY_FIELD_CONFIG -> "key",
-          SearchFieldCreationOptions.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzerConfigs)
-        )
-      ),
-      None
+    val analyzerConfig = Map(
+      SearchFieldCreationOptions.KEY_FIELD_CONFIG -> "key",
+      SearchFieldCreationOptions.ANALYZERS_CONFIG -> writeValueAs[Seq[AnalyzerConfig]](analyzerConfigs)
     )
+
+    createInstance(analyzerConfig, None)
   }
 
   describe(anInstanceOf[SearchFieldCreationOptions]) {
     describe(SHOULD) {
+      it("retrieve user-defined key field or a default value") {
+
+        // user-defined key field
+        val keyField = "uuid"
+        createInstance(
+          Map(
+            SearchFieldCreationOptions.KEY_FIELD_CONFIG -> keyField
+          ),
+          None
+        ).keyField shouldBe keyField
+
+        // default key field
+        createInstance(Map.empty, None).keyField shouldBe SearchFieldCreationOptions.DEFAULT_KEY_FIELD_CONFIG_VALUE
+      }
+
       it("not include index action column") {
 
         val schema = Seq(

@@ -17,7 +17,7 @@ ThisBuild / scmInfo := Some(
   )
 )
 
-ThisBuild / version := "0.7.0"
+ThisBuild / version := "0.7.1"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
