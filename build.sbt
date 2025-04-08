@@ -1,6 +1,8 @@
 import BuildSupport.{constants, functions}
 import sbt.librarymanagement.InclExclRule
 
+import xerial.sbt.Sonatype.sonatype01
+
 lazy val scala212 = "2.12.18"
 lazy val supportedScalaVersions = List(scala212)
 lazy val testToTestDependency = "test->test"
@@ -16,8 +18,9 @@ ThisBuild / scmInfo := Some(
     "scm:git:git://github.com/dejarol/azure-search-spark.git"
   )
 )
+ThisBuild / versionScheme := Some("early-semver")
 
-ThisBuild / version := "0.7.1"
+ThisBuild / version := "1.0.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
@@ -52,7 +55,6 @@ lazy val azureSearchDocuments = ("com.azure" % "azure-search-documents" % consta
     InclExclRule("org.slf4j", "slf4j-api")
    )
 
-
 // Test dependencies
 lazy val scalactic = "org.scalactic" %% "scalactic" % constants.SCALA_TEST_VERSION
 lazy val scalaTest = "org.scalatest" %% "scalatest" % constants.SCALA_TEST_VERSION % Test
@@ -86,7 +88,9 @@ lazy val connector = (project in file("connector"))
     },
 
     // Publishing options
-    publishMavenStyle := true
+    publishMavenStyle := true,
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeCredentialHost := sonatype01
   )
 
 // Integration tests
