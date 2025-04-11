@@ -20,7 +20,7 @@ jobs:
       - name: 'Release'
         shell: bash
         env:
-          PGP_SECRET_KEY: ${{ secrets.PGP_SECRET_KEY }}
+          PGP_SECRET_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run:
           . devops/import_key.sh "$PGP_SECRET_KEY"
