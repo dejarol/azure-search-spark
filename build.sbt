@@ -1,6 +1,6 @@
 import BuildSupport.{constants, functions}
 import sbt.librarymanagement.InclExclRule
-import xerial.sbt.Sonatype.{sonatype01, sonatypeCentralHost}
+import xerial.sbt.Sonatype.sonatypeCentralHost
 
 lazy val scala212 = "2.12.18"
 lazy val supportedScalaVersions = List(scala212)
