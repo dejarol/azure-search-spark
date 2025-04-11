@@ -26,7 +26,7 @@ fi
 # Create file
 cat <<EOL > "$DIRECTORY/sonatype.sbt" && log "INFO" "Successfully created credentials file"
   credentials += Credentials("Sonatype Nexus Repository Manager",
-          "s01.oss.sonatype.org",
+          "central.sonatype.com",
           "$USERNAME",
           "$PASSWORD")
 EOL
