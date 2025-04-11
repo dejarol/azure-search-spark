@@ -22,6 +22,10 @@ jobs:
         env:
           PGP_SECRET_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           . devops/import_key.sh "$PGP_SECRET_KEY"
+          . devops/create_sonatype_sbt_file.sh "$SONATYPE_USERNAME" "$SONATYPE_PASSWORD"
+          sbt credentials
           sbt "project connector" clean publishSigned
