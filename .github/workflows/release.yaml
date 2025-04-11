@@ -22,6 +22,6 @@ jobs:
         env:
           PGP_SECRET_KEY: ${{ secrets.PGP_PRIVATE_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-        run:
+        run: |
           . devops/import_key.sh "$PGP_SECRET_KEY"
           gpg --list-keys
