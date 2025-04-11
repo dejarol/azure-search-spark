@@ -14,7 +14,7 @@ then
 fi
 
 # Create directory if needed
-DIRECTORY="$HOME/sbt/1.0"
+DIRECTORY="$HOME/.sbt/1.0"
 if [[ -d $DIRECTORY ]];
 then
   log "INFO" "Directory $DIRECTORY already exists"
