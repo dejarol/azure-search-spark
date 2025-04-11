@@ -24,4 +24,4 @@ jobs:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
         run: |
           . devops/import_key.sh "$PGP_SECRET_KEY"
-          gpg --list-keys
+          sbt "project connector" clean publishSigned
