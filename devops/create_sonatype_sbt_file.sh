@@ -31,5 +31,3 @@ cat <<EOL > "$DIRECTORY/sonatype.sbt" && log "INFO" "Successfully created creden
           "$PASSWORD")
 EOL
 
-ls -l "$DIRECTORY"
-

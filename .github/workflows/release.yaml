@@ -13,7 +13,7 @@ jobs:
       - name: 'Set up JDK'
         uses: 'actions/setup-java@v4'
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'temurin'
       - name: 'Set up sbt'
         uses: sbt/setup-sbt@v1
@@ -27,5 +27,5 @@ jobs:
         run: |
           . devops/import_key.sh "$PGP_SECRET_KEY"
           . devops/create_sonatype_sbt_file.sh "$SONATYPE_USERNAME" "$SONATYPE_PASSWORD"
-          sbt credentials
           sbt "project connector" clean publishSigned
+          sbt "project connector" sonatypeBundleRelease
