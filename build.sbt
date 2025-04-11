@@ -1,6 +1,5 @@
 import BuildSupport.{constants, functions}
 import sbt.librarymanagement.InclExclRule
-
 import xerial.sbt.Sonatype.sonatype01
 
 lazy val scala212 = "2.12.18"
@@ -8,6 +7,7 @@ lazy val supportedScalaVersions = List(scala212)
 lazy val testToTestDependency = "test->test"
 
 ThisBuild / organization := constants.ORGANIZATION
+ThisBuild / description := "Azure Search Connector for Apache Spark"
 ThisBuild / licenses += (
   "Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")
 )
