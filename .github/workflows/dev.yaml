@@ -16,16 +16,16 @@ jobs:
       - name: 'Set up JDK'
         uses: 'actions/setup-java@v4'
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'temurin'
       - name: 'Set up sbt'
         uses: sbt/setup-sbt@v1
       - name: 'Unit tests'
         shell: bash
-        run: sbt 'project connector' +clean +test
+        run: sbt "project connector" clean test
       - name: 'Integration tests'
         shell: bash
-        run: sbt 'project integration' +clean +test
+        run: sbt "project integration" clean test
         env:
           IS_CI_CD_ENV: true
           AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}

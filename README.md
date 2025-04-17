@@ -1,12 +1,11 @@
 # Azure Search Spark Connector
 
----
-
-A custom connector for Azure AI Search (formerly known as Azure Cognitive Search)
+A custom implementation of a Spark datasource that supports batch read and write operations
+targeting Azure AI Search (formerly known as Azure Cognitive Search). 
 
 ## Downloading
 
-The connector is available within Maven central repository
+The connector is available at Maven central repository
 
 Maven
 ```
@@ -26,11 +25,17 @@ gradle
 ```
 implementation("io.github.dejarol:azure-search-spark_2.12:x.y.z")
 ```
+
+spark-submit
+```
+spark-submit --packages io.github.dejarol:azure-search-spark_2.12:x.y.z ...
+```
+
 ----
 
 ## Documentation
 
-### Data types
+### Data types conversions
 
 Here's a list of the conversions between Azure Search datatypes and Spark datatypes 
 
@@ -134,7 +139,8 @@ Here is the list of available datasource options for reading
     </tr>
     <tr>
         <td>index</td>
-        <td>Name of target Azure Search index</td>
+        <td>Name of target Azure Search index. 
+It can also be provided as option <code>path</code> or passed as argument to Spark <code>load()</code> method</td>
         <td>&#9989</td>
         <td></td>
     </tr>
@@ -210,6 +216,8 @@ Since Azure Search Service does not allow to retrieve more than 100K documents p
 (have a look at <a href="#skip_limit">this reference</a>, 
 or just google <b>"azure search skip limit"</b>), we need to address parallel read operations very carefully.
 Partitioners are components for handling the generation of partitions for parallel read operations.
+The inspiration behind partitioners comes from the MongoDB Spark connector, where a similar concept
+has been adopted
 <br>
 <br>
 Extending the <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code> interface, each partitioner should 
@@ -365,6 +373,20 @@ that satisfies both conditions and allows users to access partitioner options by
 .option("partitioner.options.y", "valueOfPartitionerPropertyY")
 ```
 
+### A concrete read example
+
+```
+val df = spark.read.format("azsearch")
+    .option("endPoint", "yourEndpoint")
+    .option("apiKey", "yourApiKey")
+    .option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
+    .option("partitioner.options.facetField", "category")
+    .option("partitioner.options.numPartitions", "4")
+    .option("searchOptions.searchText", "hotel")
+    .option("searchOptions.filter", "value eq 10")
+    .option("searchOptions.searchFields", "id,value")
+    .load("yourIndex")
+```
 ---
 
 ### Batch Write
@@ -392,7 +414,8 @@ Here is the list of available datasource options for writing
     </tr>
     <tr>
         <td>index</td>
-        <td>Name of target Azure Search index</td>
+        <td>Name of target Azure Search index.
+It can also be provided as option <code>path</code> or passed as argument to Spark <code>save()</code> method</td>
         <td>&#9989</td>
         <td></td>
     </tr>
@@ -473,7 +496,19 @@ Here is the list of supported field attributes
     </tr>
     <tr>
         <td>analyzers</td>
-        <td>List of field analyzer configurations</td>
+        <td>JSON array of objects that should match the following structure
+            <ul>
+                <li>
+a <code>name</code> field of type string, that should be a value within enum 
+<code>com.azure.search.documents.indexes.models.LexicalAnalyzerName</code>
+                </li>
+                <li>
+a <code>type</code> field of type string, with value being one among <code>analyzer</code> for setting an analyzer for 
+both searching and indexing, <code>searchAnalyzer</code> for a search analyzer 
+or <code>indexAnalyzer for an index analyzer</code>
+                </li>
+                <li>List of comma-separated field names to which the analyzers should be applied to</li>
+            </ul>
         <td></td>
     </tr>
 </table>
@@ -535,6 +570,20 @@ the definition stated by the Search Service REST API
         <td></td>
     </tr>
 </table>
+
+### A concrete write example
+
+```
+df.write.format("azsearch")
+    .option("endPoint", "yourEndpoint")
+    .option("apiKey", "yourApiKey")
+    .option("action", "mergeOrUpload")
+    .option("fieldOptions.nonFilterable", "name")
+    .option("fieldOptions.hidden", "row_id,insert_time")
+    .option("fieldOptions.analyzers", "[{"name": "standard.lucene", "type": "analyzer", "fields": ["description", "label"]}]")
+    .option("indexAttributes.similarity", "{"@odata.type": "#Microsoft.Azure.Search.BM25Similarity", "k": 1.2, "b": 0.75}")
+    .save("yourIndex")
+```
 
 ---
 

@@ -10,7 +10,7 @@ ThisBuild / organization := constants.ORGANIZATION
 ThisBuild / description := "Azure Search Connector for Apache Spark"
 ThisBuild / homepage := Some(url(constants.PROJECT_URL))
 ThisBuild / licenses += (
-  "Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")
+  "Apache License 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")
 )
 ThisBuild / developers ++= constants.DEVELOPERS
 ThisBuild / scmInfo := Some(

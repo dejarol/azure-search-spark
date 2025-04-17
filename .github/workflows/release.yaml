@@ -1,6 +1,8 @@
 name: release
 on:
   push:
+    tags:
+      - v*
     branches:
       - release/v*
 
@@ -29,4 +31,9 @@ jobs:
           . devops/create_sonatype_sbt_file.sh "$SONATYPE_USERNAME" "$SONATYPE_PASSWORD"
           sbt "project connector" clean publishSigned
           sbt "project connector" sonatypeBundleRelease
+      - name: 'Clean up'
+        shell: bash
+        if: always()
+        run: |
           . devops/delete_sonatype_sbt_file.sh
+          . devops/remove_key.sh
