@@ -29,3 +29,4 @@ jobs:
           . devops/create_sonatype_sbt_file.sh "$SONATYPE_USERNAME" "$SONATYPE_PASSWORD"
           sbt "project connector" clean publishSigned
           sbt "project connector" sonatypeBundleRelease
+          . devops/delete_sonatype_sbt_file.sh

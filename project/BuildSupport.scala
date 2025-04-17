@@ -15,6 +15,8 @@ object BuildSupport {
     final lazy val PROJECT_NAME = "azure-search-spark"
     final lazy val ARTIFACT_NAME = f"$PROJECT_NAME-connector"
 
+    final lazy val PROJECT_URL = "https://github.com/dejarol/azure-search-spark"
+
     final lazy val DEVELOPERS: List[Developer] = List(
       Developer("dejarol", "Luca Carloni", "carloniluca91@gmail.com", null)
     )

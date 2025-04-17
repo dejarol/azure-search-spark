@@ -8,19 +8,20 @@ lazy val testToTestDependency = "test->test"
 
 ThisBuild / organization := constants.ORGANIZATION
 ThisBuild / description := "Azure Search Connector for Apache Spark"
+ThisBuild / homepage := Some(url(constants.PROJECT_URL))
 ThisBuild / licenses += (
   "Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")
 )
 ThisBuild / developers ++= constants.DEVELOPERS
 ThisBuild / scmInfo := Some(
   ScmInfo(
-    url("https://github.com/dejarol/azure-search-spark"),
+    url(constants.PROJECT_URL),
     "scm:git:git://github.com/dejarol/azure-search-spark.git"
   )
 )
 ThisBuild / versionScheme := Some("early-semver")
 
-ThisBuild / version := "1.0.0"
+ThisBuild / version := "0.8.0"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(
