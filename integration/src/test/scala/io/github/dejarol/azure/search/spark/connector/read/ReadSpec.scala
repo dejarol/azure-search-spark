@@ -12,7 +12,8 @@ import org.apache.spark.sql.{Column, DataFrame, Row}
 
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, OffsetDateTime}
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, LocalDate, OffsetDateTime}
 
 class ReadSpec
   extends SearchITSpec
@@ -313,8 +314,8 @@ class ReadSpec
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (row, bean) =>
-                  asserEffectOfEncodingOn[Timestamp, Long](
-                    row, bean, "timestampValue", _.timestampValue, _.toInstant.toEpochMilli
+                  asserEffectOfEncodingOn[Timestamp, Instant](
+                    row, bean, "timestampValue", _.timestampValue, _.toInstant.truncatedTo(ChronoUnit.MILLIS)
                   )
               }
             }
@@ -332,8 +333,8 @@ class ReadSpec
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
                   asserEffectOfEncodingOn[String](r, s, "timestampValue", _.timestampValue.map {
-                    _.toInstant.atZone(Constants.UTC_OFFSET)
-                      .format(DateTimeFormatter.ISO_INSTANT)
+                    _.toInstant.atZone(Constants.UTC_OFFSET).truncatedTo(ChronoUnit.MILLIS)
+                      .format(Constants.DATETIME_OFFSET_FORMATTER)
                   })
               }
             }

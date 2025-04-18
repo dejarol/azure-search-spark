@@ -10,6 +10,7 @@ import org.apache.spark.sql.SaveMode
 import java.lang.{Double => JDouble, Long => JLong}
 import java.sql.{Date, Timestamp}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, LocalTime}
 import scala.reflect.runtime.universe.TypeTag
 
@@ -79,10 +80,11 @@ class WriteSpec
     writeUsingDataSource(atomicBeansIndex, Seq(expected), Some(Seq("id", colName)), None)
 
     // Retrieve the document using standard Java client API
-    val output = readAllDocumentsAs[PairBean[TOutput]](atomicBeansIndex)(PairBean.deserializerFor[TOutput](colName))
-      .collectFirst {
-        case bean if bean.id.equals(expected.id) => bean
-      }
+    val output = readAllDocumentsAs[PairBean[TOutput]](atomicBeansIndex)(
+      PairBean.deserializerFor[TOutput](colName)
+    ).collectFirst {
+      case bean if bean.id.equals(expected.id) => bean
+    }
 
     output shouldBe defined
     val actual = output.get
@@ -231,16 +233,18 @@ class WriteSpec
           it("Search strings") {
 
             assertWriteBehaviorFor[Timestamp, String](
-              Timestamp.from(Instant.now()),
+              Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MILLIS)),
               "stringValue",
-              _.toInstant.atOffset(Constants.UTC_OFFSET).format(Constants.DATETIME_OFFSET_FORMATTER)
+              _.toInstant.atOffset(Constants.UTC_OFFSET)
+                .truncatedTo(ChronoUnit.MILLIS)
+                .format(Constants.DATETIME_OFFSET_FORMATTER)
             )
           }
 
           it("Search datetimeOffset") {
 
             assertWriteBehaviorFor[Timestamp, Timestamp](
-              Timestamp.from(Instant.now()),
+              Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MILLIS)),
               "timestampValue",
               identity
             )

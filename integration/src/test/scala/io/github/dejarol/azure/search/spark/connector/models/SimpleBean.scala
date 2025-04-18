@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.models
 
 import java.sql.{Date, Timestamp}
+import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalTime}
 import java.util.{Map => JMap}
 
@@ -35,7 +36,7 @@ object SimpleBean {
     SimpleBean(
       id,
       date.map(Date.valueOf),
-      date.map(d => Timestamp.valueOf(d.atTime(LocalTime.now())))
+      date.map(d => Timestamp.valueOf(d.atTime(LocalTime.now().truncatedTo(ChronoUnit.MILLIS))))
     )
   }
 
