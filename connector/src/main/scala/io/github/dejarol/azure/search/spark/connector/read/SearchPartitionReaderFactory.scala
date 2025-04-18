@@ -47,15 +47,17 @@ class SearchPartitionReaderFactory(
   @throws[SchemaViolationException]
   private def createSearchReader(partition: SearchPartition): PartitionReader[InternalRow] = {
 
-    val searchDocumentToInternalRowConverter = SearchDocumentEncoder
-      .safeApply(prunedSchema, readConfig.getSearchIndexFields) match {
+    val documentEncoder = SearchDocumentEncoderImpl.safeApply(
+      prunedSchema,
+      readConfig.getSearchIndexFields
+    ) match {
       case Left(value) => throw value
       case Right(value) => value
     }
 
     new SearchPartitionReader(
       readConfig,
-      searchDocumentToInternalRowConverter,
+      documentEncoder,
       partition
     )
   }

@@ -75,7 +75,7 @@ class SearchWriterFactory(
       case None => schema
     }
 
-    SearchDocumentDecoder.safeApply(
+    SearchDocumentDecoderImpl.safeApply(
       StructType(schemaMaybeWithoutActionColumn),
       writeConfig.getSearchIndexFields
     ) match {

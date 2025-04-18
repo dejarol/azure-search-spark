@@ -7,6 +7,13 @@ targeting Azure AI Search (formerly known as Azure Cognitive Search).
 
 The connector is available at Maven central repository
 
+Runtime requirements
+<ul>
+    <li>Java version 8+</li>
+    <li>scala-2.12</li>
+    <li>Spark version 3.1.1+</li>
+</ul>
+
 Maven
 ```
 <dependency>

@@ -11,13 +11,12 @@ import org.apache.spark.sql.types.StructType
 import java.util.{LinkedHashMap => JLinkedMap}
 
 /**
- * Decoder for translating an [[org.apache.spark.sql.catalyst.InternalRow]]
- * to a [[com.azure.search.documents.SearchDocument]]
+ * A concrete decoder implementation
  * @param indexColumnToSearchDecoders converters for retrieving document values from an internal row
  */
 
-case class SearchDocumentDecoder(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
-  extends (InternalRow => SearchDocument) {
+case class SearchDocumentDecoderImpl(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
+  extends SearchDocumentDecoder {
 
   // Sorted collection of document properties
   private lazy val sortedColumns: Seq[(SearchIndexColumn, SearchDecoder)] = indexColumnToSearchDecoders
@@ -25,21 +24,21 @@ case class SearchDocumentDecoder(private val indexColumnToSearchDecoders: Map[Se
       case (column, _) => column.index()
   }
 
-  override def apply(v1: InternalRow): SearchDocument = {
+  override def apply(row: InternalRow): SearchDocument = {
 
     // Create a map with non-null properties
     val properties: JLinkedMap[String, Object] = new JLinkedMap()
 
     // Exclude null properties
     sortedColumns.filterNot {
-      case (k, _) => v1.isNullAt(k.index())
+      case (k, _) => row.isNullAt(k.index())
     }.foreach {
       case (k, v) =>
 
         // Add property
         properties.put(
           k.name(),
-          v.apply(v1.get(k.index(), k.sparkType()))
+          v.apply(row.get(k.index(), k.sparkType()))
       )
     }
 
@@ -48,7 +47,7 @@ case class SearchDocumentDecoder(private val indexColumnToSearchDecoders: Map[Se
   }
 }
 
-object SearchDocumentDecoder {
+object SearchDocumentDecoderImpl {
 
   /**
    * Safely create a document decoder instance
@@ -61,7 +60,7 @@ object SearchDocumentDecoder {
   final def safeApply(
                        schema: StructType,
                        searchFields: Seq[SearchField]
-                     ): Either[SchemaViolationException, SearchDocumentDecoder] = {
+                     ): Either[SchemaViolationException, SearchDocumentDecoderImpl] = {
 
     DecodersSupplier.get(
       schema,
@@ -73,7 +72,7 @@ object SearchDocumentDecoder {
       )
     }.right.map {
       // Create decoder
-      v => SearchDocumentDecoder(v)
+      v => SearchDocumentDecoderImpl(v)
     }
   }
 }

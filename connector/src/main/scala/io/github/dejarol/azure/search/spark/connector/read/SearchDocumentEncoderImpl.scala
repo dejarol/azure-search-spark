@@ -9,13 +9,12 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
 /**
- * Encoder for translating a [[com.azure.search.documents.SearchDocument]]
- * into an [[org.apache.spark.sql.catalyst.InternalRow]]
+ * A concrete encoder implementation
  * @param indexColumnToEncoders encoders to apply in order to extract row values
  */
 
-case class SearchDocumentEncoder(private val indexColumnToEncoders: Map[SearchIndexColumn, SearchEncoder])
-  extends (SearchDocument => InternalRow) {
+case class SearchDocumentEncoderImpl(private val indexColumnToEncoders: Map[SearchIndexColumn, SearchEncoder])
+  extends SearchDocumentEncoder {
 
   private lazy val sortedEncoders: Seq[(String, SearchEncoder)] = indexColumnToEncoders.toSeq.sortBy {
     case (k, _) => k.index()
@@ -23,17 +22,17 @@ case class SearchDocumentEncoder(private val indexColumnToEncoders: Map[SearchIn
     case (k, v) => (k.name(), v)
   }
 
-  override def apply(v1: SearchDocument): InternalRow = {
+  override def apply(document: SearchDocument): InternalRow = {
 
     val values: Seq[Any] = sortedEncoders.map {
-      case (name, encoder) => encoder.apply(v1.get(name))
+      case (name, encoder) => encoder.apply(document.get(name))
     }
 
     InternalRow.fromSeq(values)
   }
 }
 
-object SearchDocumentEncoder {
+object SearchDocumentEncoderImpl {
 
   /**
    * Safely create a document encoder instance
@@ -46,7 +45,7 @@ object SearchDocumentEncoder {
   final def safeApply(
                        schema: StructType,
                        searchFields: Seq[SearchField]
-                     ): Either[SchemaViolationException, SearchDocumentEncoder] = {
+                     ): Either[SchemaViolationException, SearchDocumentEncoderImpl] = {
 
     EncodersSupplier.get(
       schema,
@@ -58,7 +57,7 @@ object SearchDocumentEncoder {
       )
     }.right.map {
       // Create encoder
-      v => SearchDocumentEncoder(v)
+      v => SearchDocumentEncoderImpl(v)
     }
   }
 }
