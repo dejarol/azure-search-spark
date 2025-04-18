@@ -112,6 +112,28 @@ class ReadSpec
   }
 
   /**
+   * Assert that an atomic value has been encoded correctly
+   * @param output output row
+   * @param input input row
+   * @param colName column name to test
+   * @param encodingFunction expected encoding function
+   * @tparam U output type
+   */
+
+  private def asserEffectOfEncodingOn[U, V](
+                                             output: Row,
+                                             input: AtomicBean,
+                                             colName: String,
+                                             encodingFunction: AtomicBean => Option[U],
+                                             transformation: U => V,
+                                           ): Unit = {
+
+    val actual: Option[V] = output.getAsOpt[U](colName).map(transformation)
+    val expected: Option[V] = encodingFunction(input).map(transformation)
+    actual shouldBe expected
+  }
+
+  /**
    * Extracts the [[org.apache.spark.sql.connector.read.Scan]] implementation from a given DataFrame.
    * It analyzes the query execution plan of the provided DataFrame
    * to find and return the [[SearchScan]] implementation, if defined.
@@ -290,8 +312,10 @@ class ReadSpec
               val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
-                case (r, s) =>
-                  asserEffectOfEncodingOn[Timestamp](r, s, "timestampValue", _.timestampValue)
+                case (row, bean) =>
+                  asserEffectOfEncodingOn[Timestamp, Long](
+                    row, bean, "timestampValue", _.timestampValue, _.toInstant.toEpochMilli
+                  )
               }
             }
 
@@ -303,12 +327,13 @@ class ReadSpec
               )
 
               val rows = readUsingDatasource(atomicBeansIndex, None, Some(schemaRead)).collect()
+
               rows should have size atomicBeans.size
               forAll(zipRowsAndBeans(rows, atomicBeans)) {
                 case (r, s) =>
                   asserEffectOfEncodingOn[String](r, s, "timestampValue", _.timestampValue.map {
                     _.toInstant.atZone(Constants.UTC_OFFSET)
-                      .format(Constants.DATETIME_OFFSET_FORMATTER)
+                      .format(DateTimeFormatter.ISO_INSTANT)
                   })
               }
             }
