@@ -1,7 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchField
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.StructField
+
+import java.util.Objects
 
 /**
  * Set of utilities for dealing with [[com.azure.search.documents.indexes.models.SearchField]](s)
@@ -37,6 +40,17 @@ class SearchFieldOperations(private val field: SearchField) {
     actions.foldLeft(field) {
       case (field, action) =>
         action.apply(field)
+    }
+  }
+
+  // TODO: document
+  final def unsafeSubFields: Seq[SearchField] = {
+
+    val subFields = field.getFields
+    if (Objects.isNull(subFields) || subFields.isEmpty) {
+      throw DataTypeException.forNonArrayField()
+    } else {
+      JavaScalaConverters.listToSeq(subFields)
     }
   }
 }

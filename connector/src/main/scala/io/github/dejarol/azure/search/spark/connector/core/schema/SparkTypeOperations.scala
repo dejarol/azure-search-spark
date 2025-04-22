@@ -84,7 +84,7 @@ class SparkTypeOperations(override protected val input: DataType)
 
     safeSubFields match {
       case Some(value) => value
-      case None => throw new DataTypeException(s"Could not retrieve subfield for $description $input")
+      case None => throw new DataTypeException(s"Could not retrieve subfields for $description $input")
     }
   }
 }

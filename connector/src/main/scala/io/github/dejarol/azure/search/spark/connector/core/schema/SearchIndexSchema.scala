@@ -22,5 +22,4 @@ case class SearchIndexSchema(private val searchFields: Seq[SearchField]) {
    */
 
   def get(name: String): Option[SearchField] = lowercaseFieldsMap.get(name.toLowerCase)
-
 }

@@ -5,8 +5,10 @@ import org.apache.spark.sql.types.DataType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Supplier;
+
 /**
- * Exception thrown for illegal data type states
+ * Exception thrown for illegal states related to data types
  */
 
 public class DataTypeException
@@ -21,6 +23,13 @@ public class DataTypeException
             String message
     ) {
         super(message);
+    }
+
+    private DataTypeException(
+            @NotNull Supplier<String> message
+    ) {
+
+        super(message.get());
     }
 
     /**
@@ -75,5 +84,42 @@ public class DataTypeException
                         )
                 )
         );
+    }
+
+    // TODO: document
+    public static @NotNull DataTypeException forNonArrayField() {
+
+        return new DataTypeException(
+                String.format(
+                        "Could not retrieve subfields from a field of type %s",
+                        "type" // TODO: replace with concrete type
+                        )
+        );
+    }
+
+    /**
+     * Creates a new exception indicating that field has a Spark type
+     * which is not compatible with the Search type of its homonymous counterpart
+     * @param name field name
+     * @param sparkType field's Spark type
+     * @param searchFieldDataType field's Search type
+     * @return a new exception indicating that field has a Spark type
+     */
+
+    @Contract("_, _, _ -> new")
+    public static @NotNull DataTypeException forIncompatibleField(
+            String name,
+            DataType sparkType,
+            SearchFieldDataType searchFieldDataType
+    ) {
+
+        Supplier<String> message = () -> String.format(
+                "Field %s has Spark type %s and Search type %s, that are not compatible",
+                name,
+                sparkType.typeName(),
+                searchFieldDataType.toString()
+        );
+
+        return new DataTypeException(message);
     }
 }
