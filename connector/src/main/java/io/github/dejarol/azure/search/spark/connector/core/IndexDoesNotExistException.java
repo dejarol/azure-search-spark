@@ -1,13 +1,13 @@
 package io.github.dejarol.azure.search.spark.connector.core;
 
-import java.util.NoSuchElementException;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Exception for non-existing Search indexes
  */
 
 public class IndexDoesNotExistException
-        extends NoSuchElementException {
+        extends IllegalArgumentException {
 
     /**
      * Create an instance for given index name
@@ -15,7 +15,7 @@ public class IndexDoesNotExistException
      */
 
     public IndexDoesNotExistException(
-            String name
+            @NotNull String name
     ) {
 
         super(String.format(

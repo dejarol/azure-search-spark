@@ -44,7 +44,8 @@ public class DataTypeException
     ) {
 
         return new DataTypeException(
-                String.format("Unsupported Search data type (%s)",
+                String.format(
+                        "Unsupported Search data type (%s)",
                         type
                 )
         );
@@ -62,7 +63,8 @@ public class DataTypeException
     ) {
 
         return new DataTypeException(
-                String.format("Unsupported Spark data type (%s)",
+                String.format(
+                        "Unsupported Spark data type (%s)",
                         dataType.typeName()
                 )
         );
@@ -87,7 +89,9 @@ public class DataTypeException
     }
 
     // TODO: document
-    public static @NotNull DataTypeException forNonArrayField() {
+    public static @NotNull DataTypeException forNonComplexField(
+
+    ) {
 
         return new DataTypeException(
                 String.format(

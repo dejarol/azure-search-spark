@@ -73,6 +73,13 @@ public final class StringUtils {
         return surroundedBy(value, '\'');
     }
 
+    /**
+     * Removes a prefix from a string, if present
+     * @param s string
+     * @param prefix prefix
+     * @return the input string, with prefix removed
+     */
+
     @Contract(pure = true)
     public static @NotNull String removePrefix(
             @NotNull String s,
@@ -84,6 +91,13 @@ public final class StringUtils {
                 s;
 
     }
+
+    /**
+     * Removes a suffix from a string, if defined
+     * @param s string
+     * @param suffix suffix
+     * @return the input string with suffix removed
+     */
 
     public static @NotNull String removeSuffix(
             @NotNull String s,

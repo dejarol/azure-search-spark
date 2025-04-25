@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.{DataTypes, StructField}
 
@@ -37,6 +38,29 @@ class SearchFieldOperationsSpec
         val transformedField = searchField.applyActions(notSearchable, makeFacetable)
         transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
         transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
+      }
+
+      it("the field has some subfields, both safely and unsafely") {
+
+        val idField = createSearchField("id", SearchFieldDataType.INT32)
+        val subFields = Seq(
+          idField,
+          createSearchField("description", SearchFieldDataType.STRING)
+        )
+
+        val complexField = createComplexField("complex", subFields)
+
+        // For idField, we expect a None and an exception to be thrown
+        idField.safeSubFields shouldBe empty
+        a [DataTypeException] shouldBe thrownBy {
+          idField.unsafeSubFields
+        }
+
+        // For complex fields, we expect a defined Option and no exception to be thrown
+        val maybeSubFields = complexField.safeSubFields
+        maybeSubFields shouldBe defined
+        maybeSubFields.get should contain theSameElementsAs subFields
+        complexField.unsafeSubFields should contain theSameElementsAs subFields
       }
     }
   }

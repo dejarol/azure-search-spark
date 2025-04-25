@@ -6,44 +6,36 @@ import org.apache.spark.sql.types.DataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class CodecFactoryException
         extends IllegalStateException {
 
     private CodecFactoryException(
-            @NotNull Supplier<String> message,
+            @NotNull String fieldName,
+            @NotNull CodecType codecType,
+            @NotNull Supplier<String> reason,
             @Nullable Throwable cause
     ) {
 
-        super(message.get(), cause);
-    }
-
-    private static @NotNull CodecFactoryException createInstance(
-            String name,
-            @Nullable Throwable cause,
-            @NotNull Supplier<String> reason,
-            boolean forEncoding
-    ) {
-
-        String message = String.format(
-                "Cannot build %s function for field %s (%s)",
-                forEncoding ? "encoding" : "decoding",
-                name,
-                reason.get()
-        );
-
-        return new CodecFactoryException(
-                () -> message,
-                cause
+        super(
+                String.format(
+                        "Cannot build %s function for field %s (%s)",
+                        codecType.description(),
+                        fieldName,
+                        reason.get()
+                ), cause
         );
     }
 
     public static @NotNull CodecFactoryException forIncompatibleTypes(
             String fieldName,
+            @NotNull CodecType codecType,
             @NotNull DataType dataType,
-            @NotNull SearchFieldDataType searchFieldDataType,
-            boolean forEncoding
+            @NotNull SearchFieldDataType searchFieldDataType
     ) {
 
         DataTypeException cause = DataTypeException.forIncompatibleField(
@@ -52,46 +44,78 @@ public class CodecFactoryException
                 searchFieldDataType
         );
 
-        return createInstance(fieldName, cause, cause::getMessage, forEncoding);
-    }
-
-    public static @NotNull CodecFactoryException forArrays(
-            String fieldName,
-            @NotNull Throwable cause,
-            boolean forEncoding
-    ) {
-
-        return createInstance(
+        return new CodecFactoryException(
                 fieldName,
-                cause,
+                codecType,
                 cause::getMessage,
-                forEncoding
+                cause
         );
     }
 
-    public static @NotNull CodecFactoryException forComplex(
-            String fieldName,
-            boolean forEncoding
+    public static @NotNull CodecFactoryException forArrays(
+            @NotNull String fieldName,
+            @NotNull CodecType codecType,
+            @NotNull Throwable cause
     ) {
 
-        return createInstance(
+        return new CodecFactoryException(
                 fieldName,
-                null,
-                () -> "complex",
-                forEncoding
+                codecType,
+                cause::getMessage,
+                cause
+        );
+    }
+
+    public static @NotNull CodecFactoryException forComplexObjectDueToMissingSubfields(
+            @NotNull String fieldName,
+            @NotNull CodecType codecType,
+            @NotNull List<String> subFieldNames
+            ) {
+
+        return new CodecFactoryException(
+                fieldName,
+                codecType,
+                () -> String.format(
+                        "subfields [%s] do not exist",
+                        String.join(", ", subFieldNames)
+                ),
+                null
+        );
+    }
+
+    public static @NotNull CodecFactoryException forComplexObjectDueToIncompatibleSubfields(
+            @NotNull String fieldName,
+            @NotNull CodecType codecType,
+            @NotNull Map<String, String> subFieldsAndCauses
+    ) {
+
+        return new CodecFactoryException(
+                fieldName,
+                codecType,
+                () -> String.format(
+                        "cannot build subcodecs for fields [%s]",
+                        subFieldsAndCauses.entrySet().stream().map(
+                                entry -> String.format(
+                                        "%s (%s)",
+                                        entry.getKey(),
+                                        entry.getValue()
+                                )
+                        ).collect(Collectors.joining(", "))
+                ),
+                null
         );
     }
 
     public static @NotNull CodecFactoryException forGeoPoint(
-            String fieldName,
-            boolean forEncoding
+            @NotNull String fieldName,
+            @NotNull CodecType codecType
     ) {
 
-        return createInstance(
+        return new CodecFactoryException(
                 fieldName,
-                null,
-                () -> "geopoint",
-                forEncoding
+                codecType,
+                () -> "not compatible as geopoint",
+                null
         );
     }
 }

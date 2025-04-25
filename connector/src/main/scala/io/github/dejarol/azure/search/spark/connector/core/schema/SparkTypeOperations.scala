@@ -1,6 +1,5 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
-import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import org.apache.spark.sql.types._
 
 /**
@@ -9,7 +8,8 @@ import org.apache.spark.sql.types._
  */
 
 class SparkTypeOperations(override protected val input: DataType)
-  extends DataTypeOperations[DataType](input, "Spark") {
+  extends DataTypeOperations[DataType](input, "Spark")
+    with SubFieldsSupplier[StructField] {
 
   override final def isString: Boolean = input.equals(DataTypes.StringType)
 
@@ -65,26 +65,11 @@ class SparkTypeOperations(override protected val input: DataType)
    * @return a non-empty collection of subfields, if this type is a struct
    */
 
-  final def safeSubFields: Option[Seq[StructField]] = {
+  override def safeSubFields: Option[Seq[StructField]] = {
 
     input match {
       case StructType(fields) => Some(fields)
       case _ => None
-    }
-  }
-
-  /**
-   * Unsafely retrieve the type subfields
-   * @throws DataTypeException if this type is not a struct
-   * @return struct sub fields
-   */
-
-  @throws[DataTypeException]
-  final def unsafeSubFields: Seq[StructField] = {
-
-    safeSubFields match {
-      case Some(value) => value
-      case None => throw new DataTypeException(s"Could not retrieve subfields for $description $input")
     }
   }
 }

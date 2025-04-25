@@ -1,15 +1,13 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn, SearchIndexColumnImpl}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 import java.util.{List => JList}
 
-trait CodecFactory[T] {
-
-  protected[schema] def forEncoding: Boolean
+abstract class CodecFactory[T](protected val codecType: CodecType) {
 
   final def build(
                    structField: StructField,
@@ -32,7 +30,7 @@ trait CodecFactory[T] {
       maybeGeoPointCodec(structField)
     } else {
       Left(
-        new DataTypeException("a")
+        new DataTypeException("a") // TODO: fix with CodecFactoryException
       )
     }
   }
@@ -54,15 +52,11 @@ trait CodecFactory[T] {
       case Some(value) => Right(value)
       case None => Left(
         CodecFactoryException.forIncompatibleTypes(
-          fieldName,
-          sparkType,
-          searchFieldType,
-          forEncoding
+          fieldName, codecType, sparkType, searchFieldType
         )
       )
     }
   }
-
 
   /**
    * Safely retrieve the codec between two atomic types
@@ -107,12 +101,14 @@ trait CodecFactory[T] {
       case None => searchArrayField
     }
 
-    // Get the converter recursively
+    // Get the codec recursively
     build(
       StructField("array", sparkInnerType),
       searchArrayFieldMaybeWithSubFields
     ).left.map {
-      cause => CodecFactoryException.forArrays(fieldName, cause, forEncoding)
+      cause => CodecFactoryException.forArrays(
+        fieldName, codecType, cause
+      )
     }.map(
       collectionCodec(sparkInnerType, _)
     )
@@ -158,7 +154,9 @@ trait CodecFactory[T] {
     // If any, return a Left
     if (missingSparkFields.nonEmpty) {
       Left(
-        CodecFactoryException.forComplex(fieldName, forEncoding)
+        CodecFactoryException.forComplexObjectDueToMissingSubfields(
+          fieldName, codecType, JavaScalaConverters.seqToList(missingSparkFields.map(_.name))
+        )
       )
     } else {
 
@@ -185,8 +183,14 @@ trait CodecFactory[T] {
       } else {
 
         // Otherwise, we should return a Left
+        val failedSubCodecs = subCodecs.collect {
+          case (k, Left(v)) => (k.name(), v.getMessage)
+        }
+
         Left(
-          CodecFactoryException.forComplex(fieldName, forEncoding)
+          CodecFactoryException.forComplexObjectDueToIncompatibleSubfields(
+            fieldName, codecType, JavaScalaConverters.scalaMapToJava(failedSubCodecs)
+          )
         )
       }
     }
@@ -205,23 +209,27 @@ trait CodecFactory[T] {
    * <br>
    * A codec will exist if and only if given Spark types is compatible with the default geopoint schema
    * (look at [[GeoPointType.SCHEMA]])
-   *
    * @param schemaField spark type
    * @return a converter for geo points
    */
 
-  private def maybeGeoPointCodec(schemaField: StructField): Either[DataTypeException, T] = {
+  private def maybeGeoPointCodec(schemaField: StructField): Either[CodecFactoryException, T] = {
 
     // Evaluate if the field is eligible for being a GeoPoint
     val dataType = schemaField.dataType
-    val allSubFieldsExistAndAreCompatible = SchemaUtils.isEligibleAsGeoPoint(dataType)
-    if (allSubFieldsExistAndAreCompatible) {
+    if (SchemaUtils.isEligibleAsGeoPoint(dataType)) {
       Right(
-        forGeoPoint(StructType(dataType.unsafeSubFields))
+        forGeoPoint(
+          StructType(
+            dataType.unsafeSubFields
+          )
+        )
       )
     } else {
       Left(
-        new DataTypeException("b") // TODO: create ad-hoc constructor
+        CodecFactoryException.forGeoPoint(
+          schemaField.name, codecType
+        )
       )
     }
   }

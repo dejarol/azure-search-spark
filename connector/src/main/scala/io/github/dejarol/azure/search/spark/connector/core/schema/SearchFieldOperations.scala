@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import org.apache.spark.sql.types.StructField
 
 import java.util.Objects
@@ -11,7 +11,8 @@ import java.util.Objects
  * @param field search field
  */
 
-class SearchFieldOperations(private val field: SearchField) {
+class SearchFieldOperations(private val field: SearchField)
+  extends SubFieldsSupplier[SearchField] {
 
   /**
    * Evaluates if this field has the same name with respect to given Spark field
@@ -43,14 +44,17 @@ class SearchFieldOperations(private val field: SearchField) {
     }
   }
 
-  // TODO: document
-  final def unsafeSubFields: Seq[SearchField] = {
+  override def safeSubFields: Option[Seq[SearchField]] = {
 
     val subFields = field.getFields
     if (Objects.isNull(subFields) || subFields.isEmpty) {
-      throw DataTypeException.forNonArrayField()
+      None
     } else {
-      JavaScalaConverters.listToSeq(subFields)
+      Some(
+        JavaScalaConverters.listToSeq(
+          subFields
+        )
+      )
     }
   }
 }
