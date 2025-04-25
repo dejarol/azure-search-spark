@@ -1,11 +1,19 @@
 package io.github.dejarol.azure.search.spark.connector.core
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types.{DataType, StructField}
 
 import scala.language.implicitConversions
 
 package object schema {
+
+  /**
+   * Converts a Spark field into its 'operation' counterpart, in order to use a unified API
+   * @param field a Spark field
+   * @return an instance of [[StructFieldOperations]]
+   */
+
+  implicit def toSparkFieldOperations(field: StructField): StructFieldOperations = StructFieldOperations(field)
 
   /**
    * Create an instance of [[SearchFieldTypeOperations]] from a Search field type

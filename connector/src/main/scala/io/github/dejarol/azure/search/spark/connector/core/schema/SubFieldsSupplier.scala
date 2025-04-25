@@ -31,7 +31,28 @@ trait SubFieldsSupplier[T] {
     safeSubFields match {
       case Some(value) => value
       case None => throw DataTypeException.forNonComplexField(
+        new FieldDescriptor {
+          /**
+           * Gets the field's name
+           *
+           * @return the field's name
+           */
+          override def name(): String = "a"
 
+          /**
+           * Gets the field's description
+           *
+           * @return the field's description
+           */
+          override def description(): String = "b"
+
+          /**
+           * Gets the field's type
+           *
+           * @return the field's type
+           */
+          override def dataTypeDescription(): String = "c"
+}
       )
     }
   }

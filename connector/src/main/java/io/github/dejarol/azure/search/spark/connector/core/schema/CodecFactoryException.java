@@ -32,7 +32,7 @@ public class CodecFactoryException
     }
 
     public static @NotNull CodecFactoryException forIncompatibleTypes(
-            String fieldName,
+            @NotNull String fieldName,
             @NotNull CodecType codecType,
             @NotNull DataType dataType,
             @NotNull SearchFieldDataType searchFieldDataType
@@ -70,7 +70,7 @@ public class CodecFactoryException
             @NotNull String fieldName,
             @NotNull CodecType codecType,
             @NotNull List<String> subFieldNames
-            ) {
+    ) {
 
         return new CodecFactoryException(
                 fieldName,

@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core;
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType;
+import io.github.dejarol.azure.search.spark.connector.core.schema.FieldDescriptor;
 import org.apache.spark.sql.types.DataType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,47 @@ public class DataTypeException
     ) {
 
         super(message.get());
+    }
+
+    /**
+     * Creates a new exception in case of an unsafe operation on a non-collection field
+     * @param descriptor field description
+     * @return a new exception
+     */
+
+    @Contract("_ -> new")
+    public static @NotNull DataTypeException forNonCollectionField(
+            @NotNull FieldDescriptor descriptor
+    ) {
+
+        return new DataTypeException(
+                () -> String.format(
+                        "Cannot retrieve collection inner type for %s field %s (type %s)",
+                        descriptor.description(),
+                        descriptor.name(),
+                        descriptor.dataTypeDescription()
+                )
+        );
+    }
+
+    /**
+     * Creates a new exception in case of an unsafe operation on a non-complex field
+     * @param descriptor field description
+     * @return a new exception
+     */
+
+    public static @NotNull DataTypeException forNonComplexField(
+            @NotNull FieldDescriptor descriptor
+    ) {
+
+        return new DataTypeException(
+                () -> String.format(
+                        "Cannot retrieve subfields from %s field %s (type %s)",
+                        descriptor.description(),
+                        descriptor.name(),
+                        descriptor.dataTypeDescription()
+                )
+        );
     }
 
     /**
@@ -85,19 +127,6 @@ public class DataTypeException
                                 SearchFieldDataType.SINGLE
                         )
                 )
-        );
-    }
-
-    // TODO: document
-    public static @NotNull DataTypeException forNonComplexField(
-
-    ) {
-
-        return new DataTypeException(
-                String.format(
-                        "Could not retrieve subfields from a field of type %s",
-                        "type" // TODO: replace with concrete type
-                        )
         );
     }
 

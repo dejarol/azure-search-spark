@@ -1,18 +1,20 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
-import com.azure.search.documents.indexes.models.SearchFieldDataType
+import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 
+import java.util.Objects
 import scala.util.matching.Regex
 
-/**
- * Set of utility methods for a [[com.azure.search.documents.indexes.models.SearchFieldDataType]]
- * @param input search data type
- */
+case class SearchFieldOperationsV2(private val searchField: SearchField)
+  extends FieldOperations[SearchFieldDataType, SearchField]
+    with FieldDescriptor {
 
-class SearchFieldTypeOperations(override protected val input: SearchFieldDataType)
-  extends DataTypeOperations[SearchFieldDataType](input, "Search") {
+  import SearchFieldOperationsV2._
 
-  final def isString: Boolean = input.equals(SearchFieldDataType.STRING)
+  private val searchFieldDataType: SearchFieldDataType = searchField.getType
+
+  override def isString: Boolean = searchFieldDataType.equals(SearchFieldDataType.STRING)
 
   /**
    * Returns true if refers to a Search numeric type, i.e.
@@ -23,16 +25,16 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    */
 
   final def isNumeric: Boolean = {
-    
-    input match {
+
+    searchFieldDataType match {
       case SearchFieldDataType.INT32 | SearchFieldDataType.INT64 | SearchFieldDataType.DOUBLE => true
       case _ => false
     }
   }
 
-  final def isBoolean: Boolean = input.equals(SearchFieldDataType.BOOLEAN)
+  final def isBoolean: Boolean = searchFieldDataType.equals(SearchFieldDataType.BOOLEAN)
 
-  final def isDateTime: Boolean = input.equals(SearchFieldDataType.DATE_TIME_OFFSET)
+  final def isDateTime: Boolean = searchFieldDataType.equals(SearchFieldDataType.DATE_TIME_OFFSET)
 
   /**
    * Compares this Search type with a custom pattern for detecting if it's a collection.
@@ -40,11 +42,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    * @return a non-empty regex match in case of a collection type
    */
 
-  private def maybeMatchOfCollectionPattern: Option[Regex.Match] = {
-
-    SearchFieldTypeOperations.COLLECTION_PATTERN
-      .findFirstMatchIn(input.toString)
-  }
+  private def maybeMatchOfCollectionPattern: Option[Regex.Match] = COLLECTION_PATTERN.findFirstMatchIn(searchFieldDataType.toString)
 
   final def isCollection: Boolean = maybeMatchOfCollectionPattern.isDefined
 
@@ -63,14 +61,28 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    * @return true for complex types
    */
 
-  final def isComplex: Boolean = input.equals(SearchFieldDataType.COMPLEX)
+  final def isComplex: Boolean = searchFieldDataType.equals(SearchFieldDataType.COMPLEX)
+
+  override def safeSubFields: Option[Seq[SearchField]] = {
+
+    val subFields = searchField.getFields
+    if (Objects.isNull(subFields) || subFields.isEmpty) {
+      None
+    } else {
+      Some(
+        JavaScalaConverters.listToSeq(
+          subFields
+        )
+      )
+    }
+  }
 
   /**
    * Evaluate if this search field type is [[com.azure.search.documents.indexes.models.SearchFieldDataType.GEOGRAPHY_POINT]]
    * @return true if the search type is a geo point
    */
 
-  final def isGeoPoint: Boolean = input.equals(SearchFieldDataType.GEOGRAPHY_POINT)
+  final def isGeoPoint: Boolean = searchFieldDataType.equals(SearchFieldDataType.GEOGRAPHY_POINT)
 
   /**
    * Evaluate if this type is a candidate for partitioning.
@@ -89,9 +101,15 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    */
 
   final def isCandidateForFaceting: Boolean = isString || isNumeric
+
+  override def name(): String = searchField.getName
+
+  override def description(): String = "Search"
+
+  override def dataTypeDescription(): String = searchFieldDataType.toString
 }
 
-private object SearchFieldTypeOperations {
+object SearchFieldOperationsV2 {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 }
