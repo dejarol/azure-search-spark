@@ -74,7 +74,7 @@ trait SafeCodecSupplier[CType] {
           SearchIndexColumnImpl(schemaField, schema),
           // Collect namesake field
           searchFields.collectFirst {
-            case sef if sef.sameNameOf(schemaField) => sef
+            case sef if sef.getName.equalsIgnoreCase(schemaField.name) => sef
           }.toRight(schemaField).left.map {
             // Map missing fields to a SchemaViolation
             sf => SchemaViolations.forMissingField(sf)
@@ -101,16 +101,16 @@ trait SafeCodecSupplier[CType] {
 
     // Depending on Spark and Search types, detect the converter (if any)
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
-    if (sparkType.isAtomic && searchFieldType.isAtomic) {
+    if (sparkType.isAtomic && searchField.isAtomic) {
       // atomic types
       maybeAtomicCodec(schemaField, searchField)
-    } else if (sparkType.isCollection && searchFieldType.isCollection) {
+    } else if (sparkType.isCollection && searchField.isCollection) {
       // array types
       maybeCodecForArrays(sparkType, searchField)
-    } else if (sparkType.isComplex && searchFieldType.isComplex) {
+    } else if (sparkType.isComplex && searchField.isComplex) {
       // complex types
       maybeCodecForComplex(schemaField, searchField)
-    } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
+    } else if (sparkType.isComplex && searchField.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(schemaField)
     } else {
@@ -174,11 +174,11 @@ trait SafeCodecSupplier[CType] {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
-      searchField.getType.unsafeCollectionInnerType
+      searchField.unsafeCollectionInnerType
     )
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
-    val maybeSubFields: Option[JList[SearchField]] = if (searchInnerType.isComplex) {
+    val maybeSubFields: Option[JList[SearchField]] = if (searchInnerType.equals(SearchFieldDataType.COMPLEX)) {
       Some(searchField.getFields)
     } else None
 

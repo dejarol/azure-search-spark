@@ -18,7 +18,7 @@ public interface FieldDescriptor {
      * @return the field's description
      */
 
-    String description();
+    String type();
 
     /**
      * Gets the field's datatype description

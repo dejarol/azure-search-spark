@@ -40,7 +40,7 @@ class StructFieldOperationsSpec
           createAnonymousField(DataTypes.BooleanType).isBoolean shouldBe true
         }
 
-        it("a date or timestamp") {
+        it("a datetime") {
 
           createAnonymousField(DataTypes.LongType).isDateTime shouldBe false
           createAnonymousField(DataTypes.DateType).isDateTime shouldBe true

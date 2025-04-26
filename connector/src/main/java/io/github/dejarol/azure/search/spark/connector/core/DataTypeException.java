@@ -47,7 +47,7 @@ public class DataTypeException
         return new DataTypeException(
                 () -> String.format(
                         "Cannot retrieve collection inner type for %s field %s (type %s)",
-                        descriptor.description(),
+                        descriptor.type(),
                         descriptor.name(),
                         descriptor.dataTypeDescription()
                 )
@@ -67,7 +67,7 @@ public class DataTypeException
         return new DataTypeException(
                 () -> String.format(
                         "Cannot retrieve subfields from %s field %s (type %s)",
-                        descriptor.description(),
+                        descriptor.type(),
                         descriptor.name(),
                         descriptor.dataTypeDescription()
                 )
@@ -105,7 +105,7 @@ public class DataTypeException
     ) {
 
         return new DataTypeException(
-                String.format(
+                () -> String.format(
                         "Unsupported Spark data type (%s)",
                         dataType.typeName()
                 )

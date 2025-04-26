@@ -44,7 +44,7 @@ trait SubFieldsSupplier[T] {
            *
            * @return the field's description
            */
-          override def description(): String = "b"
+          override def `type`(): String = "b"
 
           /**
            * Gets the field's type

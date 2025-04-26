@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
-import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations, toSearchTypeOperations}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 
 import java.util.{List => JList}
@@ -99,9 +99,8 @@ object RangePartitioner {
   protected[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalPartitioningFieldException, SearchField] = {
 
     // Evaluate if related Search field is a good candidate
-    val sfType = searchField.getType
     val isFilterable = searchField.isEnabledFor(SearchFieldFeature.FILTERABLE)
-    val typeIsCandidate = sfType.isCandidateForPartitioning
+    val typeIsCandidate = searchField.isCandidateForPartitioning
 
     if (isFilterable && typeIsCandidate) {
       Right(searchField)

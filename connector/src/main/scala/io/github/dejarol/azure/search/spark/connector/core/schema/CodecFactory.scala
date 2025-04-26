@@ -1,11 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn, SearchIndexColumnImpl}
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
-
-import java.util.{List => JList}
 
 abstract class CodecFactory[T](protected val codecType: CodecType) {
 
@@ -16,16 +14,16 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
     // Depending on Spark and Search types, detect the codec (if any)
     val (fieldName, sparkType, searchFieldType) = (structField.name, structField.dataType, searchField.getType)
-    if (sparkType.isAtomic && searchFieldType.isAtomic) {
+    if (structField.isAtomic && searchField.isAtomic) {
       // atomic types
       maybeAtomicCodec(sparkType, searchFieldType, fieldName)
-    } else if (sparkType.isCollection && searchFieldType.isCollection) {
+    } else if (structField.isCollection && searchField.isCollection) {
       // array types
       maybeCodecForArrays(sparkType, searchField, fieldName)
-    } else if (sparkType.isComplex && searchFieldType.isComplex) {
+    } else if (structField.isComplex && searchField.isComplex) {
       // complex types
-      maybeCodecForComplex(sparkType.unsafeSubFields, searchField.unsafeSubFields, fieldName)
-    } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
+      maybeCodecForComplex(structField.unsafeSubFields, searchField.unsafeSubFields, fieldName)
+    } else if (structField.isComplex && searchField.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(structField)
     } else {
@@ -86,18 +84,13 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
-      searchField.getType.unsafeCollectionInnerType
+      searchField.unsafeCollectionInnerType
     )
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field
-    val maybeSubFields: Option[JList[SearchField]] = if (searchInnerType.isComplex) {
-      Some(searchField.getFields)
-    } else None
-
-    // Bring subField in, if any
     val searchArrayField = new SearchField("array", searchInnerType)
-    val searchArrayFieldMaybeWithSubFields = maybeSubFields match {
-      case Some(value) => searchArrayField.setFields(value)
+    val searchArrayFieldMaybeWithSubFields = searchField.safeSubFields match {
+      case Some(value) => searchArrayField.setFields(value: _*)
       case None => searchArrayField
     }
 

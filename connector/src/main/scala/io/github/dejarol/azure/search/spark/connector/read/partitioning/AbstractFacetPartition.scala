@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.schema.toSearchTypeOperations
+import com.azure.search.documents.indexes.models.SearchField
+import io.github.dejarol.azure.search.spark.connector.core.schema.toSearchFieldOperations
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
 /**
@@ -41,7 +41,7 @@ object AbstractFacetPartition {
                         facets: Seq[Any]
                       ): Seq[AbstractFacetPartition] = {
 
-    val toStringFunction = getFunction(facetField.getType)
+    val toStringFunction = getFunction(facetField)
     val facetFieldName: String = facetField.getName
     val facetStringValues: Seq[String] = facets.map(toStringFunction)
 
@@ -63,24 +63,24 @@ object AbstractFacetPartition {
 
   /**
    * Get the function corresponding to a Search type
-   * @param searchType facetable field type
+   * @param searchField facetable field
    * @throws IllegalStateException for Search types (should not occur)
    * @return a function for value formatting
    */
 
   @throws[IllegalStateException]
-  private def getFunction(searchType: SearchFieldDataType): FacetToStringFunction = {
+  private def getFunction(searchField: SearchField): FacetToStringFunction = {
 
-    if (searchType.isString) {
+    if (searchField.isString) {
       new FacetToStringFunction {
         override def apply(v1: Any): String = StringUtils.singleQuoted(v1.asInstanceOf[String])
       }
-    } else if (searchType.isNumeric) {
+    } else if (searchField.isNumeric) {
       new FacetToStringFunction {
         override def apply(v1: Any): String = String.valueOf(v1)
       }
     } else {
-      throw new IllegalStateException(f"No facet to string function defined for $searchType")
+      throw new IllegalStateException(f"No facet to string function defined for $searchField")
     }
   }
 }

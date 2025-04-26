@@ -67,7 +67,7 @@ case class StructFieldOperations(private val structField: StructField)
 
   override def name(): String = structField.name
 
-  override def description(): String = "Spark"
+  override def `type`(): String = "Spark"
 
   override def dataTypeDescription(): String = dataType.typeName
 }
