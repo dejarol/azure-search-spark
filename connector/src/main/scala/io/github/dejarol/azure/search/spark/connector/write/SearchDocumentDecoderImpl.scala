@@ -4,45 +4,27 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{SchemaViolationException, SearchIndexColumn}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.SearchDecoder
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.{SearchDecoder, StructTypeDecoder}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
-import java.util.{LinkedHashMap => JLinkedMap}
+import java.util.{Map => JMap}
 
 /**
  * A concrete decoder implementation
- * @param indexColumnToSearchDecoders converters for retrieving document values from an internal row
+ * @param delegateInternalMapping converters for retrieving document values from an internal row
  */
 
-case class SearchDocumentDecoderImpl(private val indexColumnToSearchDecoders: Map[SearchIndexColumn, SearchDecoder])
+case class SearchDocumentDecoderImpl(private val delegateInternalMapping: Map[SearchIndexColumn, SearchDecoder])
   extends SearchDocumentDecoder {
 
   // Sorted collection of document properties
-  private lazy val sortedColumns: Seq[(SearchIndexColumn, SearchDecoder)] = indexColumnToSearchDecoders
-    .toSeq.sortBy {
-      case (column, _) => column.index()
-  }
+  private lazy val delegate = StructTypeDecoder(delegateInternalMapping)
 
   override def apply(row: InternalRow): SearchDocument = {
 
     // Create a map with non-null properties
-    val properties: JLinkedMap[String, Object] = new JLinkedMap()
-
-    // Exclude null properties
-    sortedColumns.filterNot {
-      case (k, _) => row.isNullAt(k.index())
-    }.foreach {
-      case (k, v) =>
-
-        // Add property
-        properties.put(
-          k.name(),
-          v.apply(row.get(k.index(), k.sparkType()))
-      )
-    }
-
-    // Create a new document from this properties
+    val properties: JMap[String, Object] = delegate.apply(row)
     new SearchDocument(properties)
   }
 }
@@ -62,7 +44,7 @@ object SearchDocumentDecoderImpl {
                        searchFields: Seq[SearchField]
                      ): Either[SchemaViolationException, SearchDocumentDecoderImpl] = {
 
-    DecodersSupplier.get(
+    DecoderFactory.get(
       schema,
       searchFields
     ).left.map {

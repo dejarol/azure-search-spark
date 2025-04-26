@@ -2,16 +2,16 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.{AtomicEncoders, CollectionEncoder, ComplexEncoder, SearchEncoder}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SafeCodecSupplier, SearchIndexColumn}
-import io.github.dejarol.azure.search.spark.connector.core.schema.{toSearchTypeOperations, toSparkTypeOperations}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactory, CodecType, toSearchTypeOperations, toSparkTypeOperations}
 import org.apache.spark.sql.types.{DataType, DataTypes, StructType}
 
 /**
  * Encoder supplier
  */
 
-object EncodersSupplier
-  extends SafeCodecSupplier[SearchEncoder] {
+object EncodersFactory
+  extends CodecFactory[SearchEncoder](CodecType.ENCODING) {
 
   /**
    * Safely get the encoder between two atomic types

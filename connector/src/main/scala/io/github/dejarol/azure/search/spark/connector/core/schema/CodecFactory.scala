@@ -5,12 +5,27 @@ import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{Ge
 import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
+/**
+ * Factory class to be extended for creating codecs
+ * @param codecType instance of enum [[CodecType]]. Should be [[CodecType.ENCODING]] for encoding and [[CodecType.DECODING]] for decoding
+ * @tparam T codec type
+ */
+
 abstract class CodecFactory[T](protected val codecType: CodecType) {
+
+  /**
+   * Build a codec able to convert data from a [[org.apache.spark.sql.types.StructField]]
+   * to a [[com.azure.search.documents.indexes.models.SearchField]] (or vice versa).
+   * The result will be a left if the conversion is not possible, a right otherwise
+   * @param structField a Spark field
+   * @param searchField a Search field
+   * @return either a codec or a [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException]]
+   */
 
   final def build(
                    structField: StructField,
                    searchField: SearchField
-                 ): Either[Throwable, T] = {
+                 ): Either[CodecFactoryException, T] = {
 
     // Depending on Spark and Search types, detect the codec (if any)
     val (fieldName, sparkType, searchFieldType) = (structField.name, structField.dataType, searchField.getType)
@@ -22,7 +37,8 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
       maybeCodecForArrays(sparkType, searchField, fieldName)
     } else if (sparkType.isComplex && searchFieldType.isComplex) {
       // complex types
-      maybeCodecForComplex(sparkType.unsafeSubFields, searchField.unsafeSubFields, fieldName)
+      buildComplexCodecInternalMapping(sparkType.unsafeSubFields, searchField.unsafeSubFields, Some(fieldName))
+        .right.map(createComplexCodec)
     } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(structField)
@@ -128,11 +144,11 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * @return a codec for complex fields
    */
 
-  private def maybeCodecForComplex(
-                                    sparkSubFields: Seq[StructField],
-                                    searchSubFields: Seq[SearchField],
-                                    fieldName: String
-                                  ): Either[Throwable, T] = {
+  final def buildComplexCodecInternalMapping(
+                                              sparkSubFields: Seq[StructField],
+                                              searchSubFields: Seq[SearchField],
+                                              fieldName: Option[String] = None
+                                            ): Either[CodecFactoryException, Map[SearchIndexColumn, T]] = {
 
     // Create a case-insensitive map that collects Search fields
     // and link each Spark field to its homonymous Search field
@@ -150,7 +166,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
     if (missingSparkFields.nonEmpty) {
       Left(
         CodecFactoryException.forComplexObjectDueToMissingSubfields(
-          fieldName, codecType, JavaScalaConverters.seqToList(missingSparkFields.map(_.name))
+          fieldName.orNull, codecType, JavaScalaConverters.seqToList(missingSparkFields.map(_.name))
         )
       )
     } else {
@@ -169,11 +185,9 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
       val allInternalsAreDefined = subCodecs.values.forall(_.isRight)
       if (allInternalsAreDefined) {
         Right(
-          createComplexCodec(
-            subCodecs.collect {
-              case (k, Right(v)) => (k, v)
-            }
-          )
+          subCodecs.collect {
+            case (k, Right(v)) => (k, v)
+          }
         )
       } else {
 
@@ -184,7 +198,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
         Left(
           CodecFactoryException.forComplexObjectDueToIncompatibleSubfields(
-            fieldName, codecType, JavaScalaConverters.scalaMapToJava(failedSubCodecs)
+            fieldName.orNull, codecType, JavaScalaConverters.scalaMapToJava(failedSubCodecs)
           )
         )
       }

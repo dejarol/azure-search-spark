@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Instant, OffsetDateTime}
 import scala.reflect.ClassTag
 
-class EncodersSupplierSpec
+class EncodersFactorySpec
   extends SafeCodecSupplierSpec
     with SchemaViolationsMixins {
 
@@ -34,7 +34,7 @@ class EncodersSupplierSpec
                                                                     transform: TInput => TOutput
                                                                   ): Unit = {
 
-    val result = EncodersSupplier.atomicCodecFor(dataType, searchType)
+    val result = EncodersFactory.atomicCodecFor(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
@@ -42,7 +42,7 @@ class EncodersSupplierSpec
     output shouldBe transform(value)
   }
 
-  describe(`object`[EncodersSupplier.type ]) {
+  describe(`object`[EncodersFactory.type ]) {
     describe(SHOULD) {
       describe("return an atomic encoder for reading") {
         it("string fields as strings") {
@@ -173,7 +173,7 @@ class EncodersSupplierSpec
       describe("return a Right for") {
         it("perfectly matching schemas") {
 
-          EncodersSupplier.get(
+          EncodersFactory.get(
             createStructType(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
@@ -188,7 +188,7 @@ class EncodersSupplierSpec
         describe("matching schemas with different column order") {
           it("for top-level fields") {
 
-            EncodersSupplier.get(
+            EncodersFactory.get(
               createStructType(
                 createStructField(second, DataTypes.IntegerType),
                 createStructField(first, DataTypes.StringType)
@@ -202,7 +202,7 @@ class EncodersSupplierSpec
 
           it("for nested subfields") {
 
-            EncodersSupplier.get(
+            EncodersFactory.get(
               createStructType(
                 createStructField(second, DataTypes.IntegerType),
                 createStructField(first,
@@ -230,7 +230,7 @@ class EncodersSupplierSpec
         describe("some top-level schema fields") {
           it("miss") {
 
-            val result = EncodersSupplier.get(
+            val result = EncodersFactory.get(
               createStructType(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
@@ -243,7 +243,7 @@ class EncodersSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodersSupplier.get(
+            val result = EncodersFactory.get(
               createStructType(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(first, SearchFieldDataType.collection(SearchFieldDataType.STRING)))
             ).left.value
@@ -258,7 +258,7 @@ class EncodersSupplierSpec
         describe("some nested fields") {
           it("miss") {
 
-            val result = EncodersSupplier.get(
+            val result = EncodersFactory.get(
               createStructType(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -284,7 +284,7 @@ class EncodersSupplierSpec
 
           it("have incompatible dtypes") {
 
-            val result = EncodersSupplier.get(
+            val result = EncodersFactory.get(
               createStructType(
                 createStructField(first, createStructType(
                   createStructField(second, DataTypes.StringType))
@@ -314,7 +314,7 @@ class EncodersSupplierSpec
         describe("some collection fields") {
           it("have incompatible inner type") {
 
-            val result = EncodersSupplier.get(
+            val result = EncodersFactory.get(
               createStructType(
                 createArrayField(first, DataTypes.DateType)
               ),
