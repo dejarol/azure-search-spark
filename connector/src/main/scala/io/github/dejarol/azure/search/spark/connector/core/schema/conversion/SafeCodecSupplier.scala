@@ -101,16 +101,16 @@ trait SafeCodecSupplier[CType] {
 
     // Depending on Spark and Search types, detect the converter (if any)
     val (sparkType, searchFieldType) = (schemaField.dataType, searchField.getType)
-    if (sparkType.isAtomic && searchField.isAtomic) {
+    if (sparkType.isAtomic && searchFieldType.isAtomic) {
       // atomic types
       maybeAtomicCodec(schemaField, searchField)
-    } else if (sparkType.isCollection && searchField.isCollection) {
+    } else if (sparkType.isCollection && searchFieldType.isCollection) {
       // array types
       maybeCodecForArrays(sparkType, searchField)
-    } else if (sparkType.isComplex && searchField.isComplex) {
+    } else if (sparkType.isComplex && searchFieldType.isComplex) {
       // complex types
       maybeCodecForComplex(schemaField, searchField)
-    } else if (sparkType.isComplex && searchField.isGeoPoint) {
+    } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(schemaField)
     } else {
@@ -174,7 +174,7 @@ trait SafeCodecSupplier[CType] {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
-      searchField.unsafeCollectionInnerType
+      searchField.getType.unsafeCollectionInnerType
     )
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field

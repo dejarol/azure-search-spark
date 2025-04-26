@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
-import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, EntityDescription}
 
 /**
  * Parent trait to be implemented by dataTypes or fields in order to access the
@@ -9,6 +9,8 @@ import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
  */
 
 trait SubFieldsSupplier[T] {
+
+  this: EntityDescription =>
 
   /**
    * Safely retrieves the datatype/field's subfields.
@@ -30,29 +32,8 @@ trait SubFieldsSupplier[T] {
 
     safeSubFields match {
       case Some(value) => value
-      case None => throw DataTypeException.forNonComplexField(
-        new FieldDescriptor {
-          /**
-           * Gets the field's name
-           *
-           * @return the field's name
-           */
-          override def name(): String = "a"
-
-          /**
-           * Gets the field's description
-           *
-           * @return the field's description
-           */
-          override def `type`(): String = "b"
-
-          /**
-           * Gets the field's type
-           *
-           * @return the field's type
-           */
-          override def dataTypeDescription(): String = "c"
-}
+      case None => throw DataTypeException.forNonComplexEntity(
+        this
       )
     }
   }

@@ -14,21 +14,23 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
     // Depending on Spark and Search types, detect the codec (if any)
     val (fieldName, sparkType, searchFieldType) = (structField.name, structField.dataType, searchField.getType)
-    if (structField.isAtomic && searchField.isAtomic) {
+    if (sparkType.isAtomic && searchFieldType.isAtomic) {
       // atomic types
       maybeAtomicCodec(sparkType, searchFieldType, fieldName)
-    } else if (structField.isCollection && searchField.isCollection) {
+    } else if (sparkType.isCollection && searchFieldType.isCollection) {
       // array types
       maybeCodecForArrays(sparkType, searchField, fieldName)
-    } else if (structField.isComplex && searchField.isComplex) {
+    } else if (sparkType.isComplex && searchFieldType.isComplex) {
       // complex types
-      maybeCodecForComplex(structField.unsafeSubFields, searchField.unsafeSubFields, fieldName)
-    } else if (structField.isComplex && searchField.isGeoPoint) {
+      maybeCodecForComplex(sparkType.unsafeSubFields, searchField.unsafeSubFields, fieldName)
+    } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(structField)
     } else {
       Left(
-        new DataTypeException("a") // TODO: fix with CodecFactoryException
+        CodecFactoryException.forIncompatibleTypes(
+          fieldName, codecType, sparkType, searchFieldType
+        )
       )
     }
   }
@@ -84,7 +86,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
-      searchField.unsafeCollectionInnerType
+      searchField.getType.unsafeCollectionInnerType
     )
 
     // In inner type is complex, we have to bring in subFields definition from the wrapping Search field

@@ -1,15 +1,19 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
+import io.github.dejarol.azure.search.spark.connector.core.EntityDescription
 import org.apache.spark.sql.types._
 
 /**
- * Set of utility methods for a [[org.apache.spark.sql.types.DataType]]
+ * Set of utility methods for dealing with a [[org.apache.spark.sql.types.DataType]]
  * @param input input data type
  */
 
-class SparkTypeOperations(override protected val input: DataType)
-  extends DataTypeOperations[DataType](input, "Spark")
-    with SubFieldsSupplier[StructField] {
+class SparkTypeOperations(private val input: DataType)
+  extends DataTypeOperations[DataType]
+    with SubFieldsSupplier[StructField]
+    with EntityDescription {
+
+  override def description: String = f"Spark type ${input.typeName}"
 
   override final def isString: Boolean = input.equals(DataTypes.StringType)
 

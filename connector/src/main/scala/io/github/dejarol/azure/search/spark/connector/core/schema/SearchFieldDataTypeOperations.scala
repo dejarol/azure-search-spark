@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
+import io.github.dejarol.azure.search.spark.connector.core.EntityDescription
 
 import scala.util.matching.Regex
 
@@ -9,10 +10,13 @@ import scala.util.matching.Regex
  * @param input search data type
  */
 
-class SearchFieldTypeOperations(override protected val input: SearchFieldDataType)
-  extends DataTypeOperations[SearchFieldDataType](input, "Search") {
+class SearchFieldDataTypeOperations(private val input: SearchFieldDataType)
+  extends DataTypeOperations[SearchFieldDataType]
+    with EntityDescription {
 
-  final def isString: Boolean = input.equals(SearchFieldDataType.STRING)
+  override def description: String = s"Search type ${input.toString}"
+
+  override final def isString: Boolean = input.equals(SearchFieldDataType.STRING)
 
   /**
    * Returns true if refers to a Search numeric type, i.e.
@@ -22,7 +26,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
    * @return true for numeric types
    */
 
-  final def isNumeric: Boolean = {
+  override final def isNumeric: Boolean = {
     
     input match {
       case SearchFieldDataType.INT32 | SearchFieldDataType.INT64 | SearchFieldDataType.DOUBLE => true
@@ -30,9 +34,9 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
     }
   }
 
-  final def isBoolean: Boolean = input.equals(SearchFieldDataType.BOOLEAN)
+  override final def isBoolean: Boolean = input.equals(SearchFieldDataType.BOOLEAN)
 
-  final def isDateTime: Boolean = input.equals(SearchFieldDataType.DATE_TIME_OFFSET)
+  override final def isDateTime: Boolean = input.equals(SearchFieldDataType.DATE_TIME_OFFSET)
 
   /**
    * Compares this Search type with a custom pattern for detecting if it's a collection.
@@ -42,7 +46,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
 
   private def maybeMatchOfCollectionPattern: Option[Regex.Match] = {
 
-    SearchFieldTypeOperations.COLLECTION_PATTERN
+    SearchFieldDataTypeOperations.COLLECTION_PATTERN
       .findFirstMatchIn(input.toString)
   }
 
@@ -91,7 +95,7 @@ class SearchFieldTypeOperations(override protected val input: SearchFieldDataTyp
   final def isCandidateForFaceting: Boolean = isString || isNumeric
 }
 
-private object SearchFieldTypeOperations {
+private object SearchFieldDataTypeOperations {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 }

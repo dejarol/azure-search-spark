@@ -1,7 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core;
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType;
-import io.github.dejarol.azure.search.spark.connector.core.schema.FieldDescriptor;
 import org.apache.spark.sql.types.DataType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +15,9 @@ public class DataTypeException
         extends IllegalStateException {
 
     /**
-     * Create an instance with a message
-     * @param message message
+     * Creates a new instance
+     * @param message message supplier
      */
-
-    public DataTypeException(
-            String message
-    ) {
-        super(message);
-    }
 
     private DataTypeException(
             @NotNull Supplier<String> message
@@ -34,42 +27,38 @@ public class DataTypeException
     }
 
     /**
-     * Creates a new exception in case of an unsafe operation on a non-collection field
-     * @param descriptor field description
+     * Creates a new exception when a collection inner type is requested from a type that is not a collection.
+     * @param description the type description
      * @return a new exception
      */
 
-    @Contract("_ -> new")
-    public static @NotNull DataTypeException forNonCollectionField(
-            @NotNull FieldDescriptor descriptor
+    public static @NotNull DataTypeException forNonCollectionType(
+            @NotNull EntityDescription description
     ) {
 
         return new DataTypeException(
                 () -> String.format(
-                        "Cannot retrieve collection inner type for %s field %s (type %s)",
-                        descriptor.type(),
-                        descriptor.name(),
-                        descriptor.dataTypeDescription()
+                        "Cannot retrieve collection inner type from %s",
+                        description.description()
                 )
+
         );
     }
 
     /**
-     * Creates a new exception in case of an unsafe operation on a non-complex field
-     * @param descriptor field description
+     * Creates a new exception when subFields are requested from an entity that is not complex.
+     * @param description the entity description
      * @return a new exception
      */
 
-    public static @NotNull DataTypeException forNonComplexField(
-            @NotNull FieldDescriptor descriptor
+    public static @NotNull DataTypeException forNonComplexEntity(
+            @NotNull EntityDescription description
     ) {
 
         return new DataTypeException(
                 () -> String.format(
-                        "Cannot retrieve subfields from %s field %s (type %s)",
-                        descriptor.type(),
-                        descriptor.name(),
-                        descriptor.dataTypeDescription()
+                        "Cannot retrieve subFields from %s",
+                        description.description()
                 )
         );
     }
@@ -86,7 +75,7 @@ public class DataTypeException
     ) {
 
         return new DataTypeException(
-                String.format(
+                () -> String.format(
                         "Unsupported Search data type (%s)",
                         type
                 )
@@ -121,7 +110,7 @@ public class DataTypeException
     public static @NotNull DataTypeException forSingleSearchFieldDataType() {
 
         return new DataTypeException(
-                String.format("%s are not supported. Only %s are",
+                () -> String.format("%s are not supported. Only %s are",
                         SearchFieldDataType.SINGLE,
                         SearchFieldDataType.collection(
                                 SearchFieldDataType.SINGLE

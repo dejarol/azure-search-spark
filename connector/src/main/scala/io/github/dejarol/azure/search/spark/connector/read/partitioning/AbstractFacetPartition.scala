@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.toSearchFieldOperations
+import io.github.dejarol.azure.search.spark.connector.core.schema._
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
 /**
@@ -71,11 +71,12 @@ object AbstractFacetPartition {
   @throws[IllegalStateException]
   private def getFunction(searchField: SearchField): FacetToStringFunction = {
 
-    if (searchField.isString) {
+    val searchFieldDataType = searchField.getType
+    if (searchFieldDataType.isString) {
       new FacetToStringFunction {
         override def apply(v1: Any): String = StringUtils.singleQuoted(v1.asInstanceOf[String])
       }
-    } else if (searchField.isNumeric) {
+    } else if (searchFieldDataType.isNumeric) {
       new FacetToStringFunction {
         override def apply(v1: Any): String = String.valueOf(v1)
       }

@@ -1,15 +1,15 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
-import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
+import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, EntityDescription}
 
 /**
  * Parent class for defining utility methods for both Spark and Search data types
  * @tparam T data type (either a [[org.apache.spark.sql.types.DataType]] or a [[com.azure.search.documents.indexes.models.SearchFieldDataType]])
- * @param description type description (for logging)
  */
 
-abstract class DataTypeOperations[T](protected val input: T,
-                                     protected val description: String) {
+trait DataTypeOperations[T] {
+
+  this: EntityDescription =>
 
   /**
    * Returns true if this data type refers to a string
@@ -78,7 +78,7 @@ abstract class DataTypeOperations[T](protected val input: T,
 
     safeCollectionInnerType match {
       case Some(value) => value
-      case None => throw new DataTypeException(s"Could not retrieve collection inner type for $description $input")
+      case None => throw DataTypeException.forNonCollectionType(this)
     }
   }
 }

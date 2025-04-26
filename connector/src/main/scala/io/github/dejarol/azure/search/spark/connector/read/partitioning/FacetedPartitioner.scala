@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.FacetResult
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
-import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldFeature, toSearchFieldOperations}
+import io.github.dejarol.azure.search.spark.connector.core.schema._
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 
 import java.util.{List => JList}
@@ -155,7 +155,7 @@ object FacetedPartitioner {
 
     val facetable = candidate.isEnabledFor(SearchFieldFeature.FACETABLE)
     val filterable = candidate.isEnabledFor(SearchFieldFeature.FILTERABLE)
-    val facetableType = candidate.isCandidateForFaceting
+    val facetableType = candidate.getType.isCandidateForFaceting
     if (facetable && filterable && facetableType) {
       Right(candidate)
     } else {

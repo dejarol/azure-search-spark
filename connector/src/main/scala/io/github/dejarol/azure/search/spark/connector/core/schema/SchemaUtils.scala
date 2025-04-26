@@ -23,12 +23,13 @@ object SchemaUtils {
   @throws[DataTypeException]
   final def inferSparkTypeOf(searchField: SearchField): DataType = {
 
-    if (searchField.isAtomic) {
+    val searchFieldDataType = searchField.getType
+    if (searchFieldDataType.isAtomic) {
       inferSparkAtomicType(searchField)
-    } else if (searchField.isCollection) {
+    } else if (searchFieldDataType.isCollection) {
 
       // Extract collection inner type
-      val innerSearchType = searchField.unsafeCollectionInnerType
+      val innerSearchType = searchFieldDataType.unsafeCollectionInnerType
       val innerSparkType = innerSearchType match {
         case SearchFieldDataType.SINGLE => DataTypes.FloatType
         case SearchFieldDataType.COMPLEX => inferSparkComplexType(searchField.getFields)
@@ -38,9 +39,9 @@ object SchemaUtils {
       }
 
       ArrayType(innerSparkType, containsNull = true)
-    } else if (searchField.isComplex) {
+    } else if (searchFieldDataType.isComplex) {
       inferSparkComplexType(searchField.getFields)
-    } else if (searchField.isGeoPoint) {
+    } else if (searchFieldDataType.isGeoPoint) {
       GeoPointType.SCHEMA
     } else {
       throw DataTypeException.forUnsupportedSearchType(searchField.getType)
@@ -58,9 +59,9 @@ object SchemaUtils {
   private def inferSparkAtomicType(searchField: SearchField): DataType = {
 
     val searchFieldDataType = searchField.getType
-    if (searchField.isString) {
+    if (searchFieldDataType.isString) {
       DataTypes.StringType
-    } else if (searchField.isNumeric) {
+    } else if (searchFieldDataType.isNumeric) {
       searchField.getType match {
         case SearchFieldDataType.INT32 => DataTypes.IntegerType
         case SearchFieldDataType.INT64 => DataTypes.LongType
@@ -68,9 +69,9 @@ object SchemaUtils {
         case SearchFieldDataType.SINGLE => throw DataTypeException.forSingleSearchFieldDataType()
         case _ => throw DataTypeException.forUnsupportedSearchType(searchFieldDataType)
       }
-    } else if (searchField.isBoolean) {
+    } else if (searchFieldDataType.isBoolean) {
       DataTypes.BooleanType
-    } else if (searchField.isDateTime) {
+    } else if (searchFieldDataType.isDateTime) {
       DataTypes.TimestampType
     } else {
       throw DataTypeException.forUnsupportedSearchType(searchFieldDataType)
@@ -248,7 +249,7 @@ object SchemaUtils {
       case None => name
     }
 
-    val searchField: SearchField = if (structField.isAtomic) {
+    val searchField: SearchField = if (dType.isAtomic) {
       new SearchField(name, inferSearchTypeFor(dType))
     } else if (dType.isCollection) {
 

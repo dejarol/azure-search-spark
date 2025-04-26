@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
-class SearchFieldTypeOperationsSpec
+class SearchFieldDataTypeOperationsSpec
   extends BasicSpec
     with FieldFactory {
 
@@ -35,7 +35,7 @@ class SearchFieldTypeOperationsSpec
     assertion.predicate(SearchFieldDataType.GEOGRAPHY_POINT) shouldBe assertion.expectedGeoPoint
   }
 
-  describe(anInstanceOf[SearchFieldTypeOperations]) {
+  describe(anInstanceOf[SearchFieldDataTypeOperations]) {
     describe(SHOULD) {
       describe("evaluate if a search type is") {
         it("a string") {
