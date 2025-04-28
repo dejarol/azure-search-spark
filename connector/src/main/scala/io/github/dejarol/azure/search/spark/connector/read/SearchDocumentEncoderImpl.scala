@@ -2,21 +2,18 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SearchIndexColumn
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.{ComplexEncoder, SearchEncoder}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactoryException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.ComplexEncoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
 /**
  * A concrete encoder implementation
- * @param delegateInternalMapping encoders to apply in order to extract row values
+ * @param delegate encoders to apply in order to extract row values
  */
 
-case class SearchDocumentEncoderImpl(private val delegateInternalMapping: Map[SearchIndexColumn, SearchEncoder])
+case class SearchDocumentEncoderImpl(private val delegate: ComplexEncoder)
   extends SearchDocumentEncoder {
-
-  private lazy val delegate = ComplexEncoder(delegateInternalMapping)
 
   override def apply(document: SearchDocument): InternalRow = delegate.apply(document)
 }
@@ -37,9 +34,13 @@ object SearchDocumentEncoderImpl {
                      ): Either[CodecFactoryException, SearchDocumentEncoderImpl] = {
 
     EncodersFactory.buildComplexCodecInternalMapping(
-      schema, searchFields,
-    ).right.map(
-      value => SearchDocumentEncoderImpl(value)
+      schema, searchFields
+    ).left.map {
+      _ => CodecFactoryException.forGeoPoint("a", CodecType.ENCODING)
+      }.right.map(
+      value => SearchDocumentEncoderImpl(
+        ComplexEncoder(value)
+      )
     )
   }
 }

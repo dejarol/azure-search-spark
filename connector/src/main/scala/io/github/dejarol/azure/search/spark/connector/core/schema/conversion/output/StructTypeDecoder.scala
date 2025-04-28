@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import java.util.{LinkedHashMap => JLinkedMap, Map => JMap}
 
 /**
- * Converter for Spark internal rows
+ * Decoder for Spark internal rows
  * @param indexColumnToSearchDecoders decoders to apply on internal row subfields
  */
 

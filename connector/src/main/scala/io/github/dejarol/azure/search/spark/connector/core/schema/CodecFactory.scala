@@ -1,8 +1,8 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn, SearchIndexColumnImpl}
-import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
@@ -19,34 +19,32 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * The result will be a left if the conversion is not possible, a right otherwise
    * @param structField a Spark field
    * @param searchField a Search field
-   * @return either a codec or a [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException]]
+   * @return either a codec or a [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecError]]
    */
 
   final def build(
                    structField: StructField,
                    searchField: SearchField
-                 ): Either[CodecFactoryException, T] = {
+                 ): Either[CodecError, T] = {
 
     // Depending on Spark and Search types, detect the codec (if any)
-    val (fieldName, sparkType, searchFieldType) = (structField.name, structField.dataType, searchField.getType)
+    val (sparkType, searchFieldType) = (structField.dataType, searchField.getType)
     if (sparkType.isAtomic && searchFieldType.isAtomic) {
       // atomic types
-      maybeAtomicCodec(sparkType, searchFieldType, fieldName)
+      maybeAtomicCodec(sparkType, searchFieldType)
     } else if (sparkType.isCollection && searchFieldType.isCollection) {
       // array types
-      maybeCodecForArrays(sparkType, searchField, fieldName)
+      maybeCodecForArrays(sparkType, searchField)
     } else if (sparkType.isComplex && searchFieldType.isComplex) {
       // complex types
-      buildComplexCodecInternalMapping(sparkType.unsafeSubFields, searchField.unsafeSubFields, Some(fieldName))
+      buildComplexCodecInternalMapping(sparkType.unsafeSubFields, searchField.unsafeSubFields)
         .right.map(createComplexCodec)
     } else if (sparkType.isComplex && searchFieldType.isGeoPoint) {
       // geo points
       maybeGeoPointCodec(structField)
     } else {
       Left(
-        CodecFactoryException.forIncompatibleTypes(
-          fieldName, codecType, sparkType, searchFieldType
-        )
+        CodecErrors.forIncompatibleTypes(sparkType, searchFieldType)
       )
     }
   }
@@ -60,15 +58,14 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
   private def maybeAtomicCodec(
                                 sparkType: DataType,
-                                searchFieldType: SearchFieldDataType,
-                                fieldName: String
-                              ): Either[CodecFactoryException, T] = {
+                                searchFieldType: SearchFieldDataType
+                              ): Either[CodecError, T] = {
 
     atomicCodecFor(sparkType, searchFieldType) match {
       case Some(value) => Right(value)
       case None => Left(
-        CodecFactoryException.forIncompatibleTypes(
-          fieldName, codecType, sparkType, searchFieldType
+        CodecErrors.forIncompatibleTypes(
+          sparkType, searchFieldType
         )
       )
     }
@@ -96,9 +93,8 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
   private def maybeCodecForArrays(
                                    sparkType: DataType,
-                                   searchField: SearchField,
-                                   fieldName: String
-                                 ): Either[CodecFactoryException, T] = {
+                                   searchField: SearchField
+                                 ): Either[CodecError, T] = {
 
     val (sparkInnerType, searchInnerType) = (
       sparkType.unsafeCollectionInnerType,
@@ -116,11 +112,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
     build(
       StructField("array", sparkInnerType),
       searchArrayFieldMaybeWithSubFields
-    ).left.map {
-      cause => CodecFactoryException.forArrays(
-        fieldName, codecType, cause
-      )
-    }.map(
+    ).right.map(
       collectionCodec(sparkInnerType, _)
     )
   }
@@ -146,9 +138,8 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
   final def buildComplexCodecInternalMapping(
                                               sparkSubFields: Seq[StructField],
-                                              searchSubFields: Seq[SearchField],
-                                              fieldName: Option[String] = None
-                                            ): Either[CodecFactoryException, Map[SearchIndexColumn, T]] = {
+                                              searchSubFields: Seq[SearchField]
+                                            ): Either[CodecError, Map[SearchIndexColumn, T]] = {
 
     // Create a case-insensitive map that collects Search fields
     // and link each Spark field to its homonymous Search field
@@ -159,15 +150,13 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
     // Isolate missing fields
     val missingSparkFields = fieldPairs.collect {
-      case (field, None) => field
+      case (field, None) => field.name
     }
 
     // If any, return a Left
     if (missingSparkFields.nonEmpty) {
       Left(
-        CodecFactoryException.forComplexObjectDueToMissingSubfields(
-          fieldName.orNull, codecType, JavaScalaConverters.seqToList(missingSparkFields.map(_.name))
-        )
+        makeExceptionForMissingFields(missingSparkFields)
       )
     } else {
 
@@ -193,16 +182,31 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
 
         // Otherwise, we should return a Left
         val failedSubCodecs = subCodecs.collect {
-          case (k, Left(v)) => (k.name(), v.getMessage)
+          case (k, Left(v)) => (k.name(), v)
         }
 
         Left(
-          CodecFactoryException.forComplexObjectDueToIncompatibleSubfields(
-            fieldName.orNull, codecType, JavaScalaConverters.scalaMapToJava(failedSubCodecs)
-          )
+          CodecErrors.forComplexObject(failedSubCodecs)
         )
       }
     }
+  }
+
+  /**
+   * Create an exception for missing fields, depending on whether fieldName is defined.
+   * If it's defined, it's supposed to be an exception related to a specific field.
+   * @param missingFieldNames collection of missing field names
+   * @return a [[CodecFactoryException]]
+   */
+
+  private def makeExceptionForMissingFields(missingFieldNames: Seq[String]): CodecError = {
+
+    CodecErrors.forComplexObject(
+      missingFieldNames.map {
+        name =>
+          name -> CodecErrors.forMissingField()
+      }.toMap
+    )
   }
 
   /**
@@ -222,7 +226,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * @return a converter for geo points
    */
 
-  private def maybeGeoPointCodec(schemaField: StructField): Either[CodecFactoryException, T] = {
+  private def maybeGeoPointCodec(schemaField: StructField): Either[CodecError, T] = {
 
     // Evaluate if the field is eligible for being a GeoPoint
     val dataType = schemaField.dataType
@@ -236,9 +240,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
       )
     } else {
       Left(
-        CodecFactoryException.forGeoPoint(
-          schemaField.name, codecType
-        )
+        CodecErrors.notSuitableForGeoPoint(dataType)
       )
     }
   }

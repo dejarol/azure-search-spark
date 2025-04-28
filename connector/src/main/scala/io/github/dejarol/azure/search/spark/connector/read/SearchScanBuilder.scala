@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
-import io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException
+import io.github.dejarol.azure.search.spark.connector.core.NoSuchSearchIndexException
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressionV1FilterFactory}
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
@@ -28,15 +28,16 @@ class SearchScanBuilder(
 
   /**
    * Build the scan
-   * @throws io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException if the target index does not exist
+ *
+   * @throws NoSuchSearchIndexException if the target index does not exist
    * @return a scan to be used for Search DataSource
    */
 
-  @throws[IndexDoesNotExistException]
+  @throws[NoSuchSearchIndexException]
   override def build(): Scan = {
 
     if (!readConfig.indexExists) {
-      throw new IndexDoesNotExistException(readConfig.getIndex)
+      throw new NoSuchSearchIndexException(readConfig.getIndex)
     } else {
       val supportedODataExpressions: Seq[ODataExpression] = supportedPredicates
         .map(predicateFactory.build)

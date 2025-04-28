@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
 import io.github.dejarol.azure.search.spark.connector.SearchITSpec
-import io.github.dejarol.azure.search.spark.connector.core.IndexDoesNotExistException
+import io.github.dejarol.azure.search.spark.connector.core.NoSuchSearchIndexException
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import org.apache.spark.sql.types.{DataTypes, StructType}
 
@@ -28,7 +28,7 @@ class SearchScanBuilderITSpec
 
   describe(anInstanceOf[SearchScanBuilder]) {
     describe(SHOULD) {
-      it(s"throw a ${nameOf[IndexDoesNotExistException]} for non-existing index") {
+      it(s"throw a ${nameOf[NoSuchSearchIndexException]} for non-existing index") {
 
         val index = "sca-builder-index"
         indexExists(index) shouldBe false
@@ -39,7 +39,7 @@ class SearchScanBuilderITSpec
           )
         )
 
-        a[IndexDoesNotExistException] shouldBe thrownBy {
+        a[NoSuchSearchIndexException] shouldBe thrownBy {
           scanBuilder.build()
         }
       }

@@ -2,9 +2,8 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{SchemaViolationException, SearchIndexColumn}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.{SearchDecoder, StructTypeDecoder}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactoryException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.StructTypeDecoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 
@@ -12,14 +11,11 @@ import java.util.{Map => JMap}
 
 /**
  * A concrete decoder implementation
- * @param delegateInternalMapping converters for retrieving document values from an internal row
+ * @param delegate delegate object for internal row decoding
  */
 
-case class SearchDocumentDecoderImpl(private val delegateInternalMapping: Map[SearchIndexColumn, SearchDecoder])
+case class SearchDocumentDecoderImpl(private val delegate: StructTypeDecoder)
   extends SearchDocumentDecoder {
-
-  // Sorted collection of document properties
-  private lazy val delegate = StructTypeDecoder(delegateInternalMapping)
 
   override def apply(row: InternalRow): SearchDocument = {
 
@@ -32,29 +28,30 @@ case class SearchDocumentDecoderImpl(private val delegateInternalMapping: Map[Se
 object SearchDocumentDecoderImpl {
 
   /**
-   * Safely create a document decoder instance
+   * Safely create a decoder
    * @param schema Dataframe schema
    * @param searchFields target Search fields
    * @return either the decoder or a
-   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SchemaViolationException]]
+   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException]]
    */
 
   final def safeApply(
                        schema: StructType,
                        searchFields: Seq[SearchField]
-                     ): Either[SchemaViolationException, SearchDocumentDecoderImpl] = {
+                     ): Either[CodecFactoryException, SearchDocumentDecoderImpl] = {
 
-    DecoderFactory.get(
+    DecoderFactory.buildComplexCodecInternalMapping(
       schema,
       searchFields
     ).left.map {
-      // Map left side
-      v => new SchemaViolationException(
-        JavaScalaConverters.seqToList(v)
-      )
-    }.right.map {
+      // TODO : fix
+      _ => CodecFactoryException.forGeoPoint("a", CodecType.DECODING)
+      }
+      .right.map {
       // Create decoder
-      v => SearchDocumentDecoderImpl(v)
+      v => SearchDocumentDecoderImpl(
+        StructTypeDecoder(v)
+      )
     }
   }
 }

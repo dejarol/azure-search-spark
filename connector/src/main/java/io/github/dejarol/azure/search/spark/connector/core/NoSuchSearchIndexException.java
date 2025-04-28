@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
  * Exception for non-existing Search indexes
  */
 
-public class IndexDoesNotExistException
+public class NoSuchSearchIndexException
         extends IllegalArgumentException {
 
     /**
@@ -14,7 +14,7 @@ public class IndexDoesNotExistException
      * @param name index name
      */
 
-    public IndexDoesNotExistException(
+    public NoSuchSearchIndexException(
             @NotNull String name
     ) {
 

@@ -125,7 +125,7 @@ public class DataTypeException
      * @param name field name
      * @param sparkType field's Spark type
      * @param searchFieldDataType field's Search type
-     * @return a new exception indicating that field has a Spark type
+     * @return a new exception indicating a field with incompatible Spark and Search types
      */
 
     @Contract("_, _, _ -> new")
@@ -143,5 +143,23 @@ public class DataTypeException
         );
 
         return new DataTypeException(message);
+    }
+
+    /**
+     * Creates a new exception indicating that field is not compatible with a geopoint
+     * @param name field name
+     * @return a new exception indicating that field is not compatible with a geopoint
+     */
+
+    public static @NotNull DataTypeException notAGeopoint(
+            String name
+    ) {
+
+        return new DataTypeException(
+                () -> String.format(
+                        "Field %s is not compatible with a geopoint",
+                        name
+                )
+        );
     }
 }

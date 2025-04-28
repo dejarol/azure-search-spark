@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector
 
-import io.github.dejarol.azure.search.spark.connector.core.{IndexDoesNotExistException, JavaScalaConverters}
+import io.github.dejarol.azure.search.spark.connector.core.{NoSuchSearchIndexException, JavaScalaConverters}
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 class SearchTableProviderITSpec
@@ -23,11 +23,11 @@ class SearchTableProviderITSpec
 
   describe(anInstanceOf[SearchTableProvider]) {
     describe(SHOULD) {
-      it(s"throw a ${nameOf[IndexDoesNotExistException]} when inferring the schema of a non-existing index") {
+      it(s"throw a ${nameOf[NoSuchSearchIndexException]} when inferring the schema of a non-existing index") {
 
         val indexName = "table-provider-spec"
         indexExists(indexName) shouldBe false
-        an[IndexDoesNotExistException] shouldBe thrownBy {
+        an[NoSuchSearchIndexException] shouldBe thrownBy {
 
           tableProvider.inferSchema(
             createCIMap(

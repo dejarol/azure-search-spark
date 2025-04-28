@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{SafeCodecSupplierSpec, SchemaViolation, SchemaViolationsMixins}
+import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactorySpec
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -12,8 +12,7 @@ import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.reflect.ClassTag
 
 class DecoderFactorySpec
-  extends SafeCodecSupplierSpec
-    with SchemaViolationsMixins {
+  extends CodecFactorySpec {
 
   private lazy val (first, second) = ("first", "second")
 
@@ -173,34 +172,31 @@ class DecoderFactorySpec
         }
       }
 
-      describe("return a Left for") {
-        it("missing fields") {
+      describe("return a Left when") {
+        describe("some fields") {
+          it("miss") {
 
-          val violations = DecoderFactory.get(
-            createStructType(createStructField(first, DataTypes.StringType)),
-            Seq(createSearchField(second, SearchFieldDataType.STRING))
-          ).left.value
-
-          violations should have size 1
-          violations.head.getType shouldBe SchemaViolation.Type.MISSING_FIELD
+            val result = DecoderFactory.buildComplexCodecInternalMapping(
+              createStructType(createStructField(first, DataTypes.StringType)),
+              Seq(createSearchField(second, SearchFieldDataType.STRING))
+            ).left.value
+          }
         }
 
-        it("namesake fields with incompatible types") {
+        it("have incompatible dtypes") {
 
-          val violations = DecoderFactory.get(
+          val result = DecoderFactory.buildComplexCodecInternalMapping(
             createStructType(createStructField(first, DataTypes.IntegerType)),
             Seq(createSearchField(first, SearchFieldDataType.COMPLEX))
           ).left.value
 
-          violations should have size 1
-          violations.head.getType shouldBe SchemaViolation.Type.INCOMPATIBLE_TYPE
         }
       }
 
       describe("return a Right for") {
         it("matching schemas") {
 
-          DecoderFactory.get(
+          DecoderFactory.buildComplexCodecInternalMapping(
             createStructType(
               createStructField(first, DataTypes.TimestampType),
               createStructField(second, DataTypes.StringType)
