@@ -10,7 +10,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Instant, OffsetDateTime}
 import scala.reflect.ClassTag
 
-class EncodersFactorySpec
+class EncoderFactorySpec
   extends CodecFactorySpec {
 
   private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
@@ -32,7 +32,7 @@ class EncodersFactorySpec
                                                                     transform: TInput => TOutput
                                                                   ): Unit = {
 
-    val result = EncodersFactory.atomicCodecFor(dataType, searchType)
+    val result = EncoderFactory.atomicCodecFor(dataType, searchType)
     result shouldBe defined
 
     val output = result.get.apply(value)
@@ -40,7 +40,7 @@ class EncodersFactorySpec
     output shouldBe transform(value)
   }
 
-  describe(`object`[EncodersFactory.type ]) {
+  describe(`object`[EncoderFactory.type ]) {
     describe(SHOULD) {
       describe("return an atomic encoder for reading") {
         it("string fields as strings") {
@@ -172,7 +172,7 @@ class EncodersFactorySpec
       describe("return a Right for") {
         it("perfectly matching schemas") {
 
-          EncodersFactory.buildComplexCodecInternalMapping(
+          EncoderFactory.buildComplexCodecInternalMapping(
             createStructType(
               createStructField(first, DataTypes.StringType),
               createStructField(second, DataTypes.IntegerType)
@@ -187,7 +187,7 @@ class EncodersFactorySpec
         describe("matching schemas with different column order") {
           it("for top-level fields") {
 
-            EncodersFactory.buildComplexCodecInternalMapping(
+            EncoderFactory.buildComplexCodecInternalMapping(
               createStructType(
                 createStructField(second, DataTypes.IntegerType),
                 createStructField(first, DataTypes.StringType)
@@ -201,7 +201,7 @@ class EncodersFactorySpec
 
           it("for nested subfields") {
 
-            EncodersFactory.buildComplexCodecInternalMapping(
+            EncoderFactory.buildComplexCodecInternalMapping(
               createStructType(
                 createStructField(second, DataTypes.IntegerType),
                 createStructField(first,
@@ -229,14 +229,15 @@ class EncodersFactorySpec
         describe("some fields") {
           it("miss") {
 
-            val result = EncodersFactory.buildComplexCodecInternalMapping(
+            val result = EncoderFactory.buildComplexCodecInternalMapping(
               createStructType(createStructField(first, DataTypes.StringType)),
               Seq.empty
             ).left.value
 
-            val jsonMap = jObjectFields(result.toJValue)
-            jsonMap should contain key first
-            jValueAsJSONString(jsonMap(first)) shouldBe codecErrorAsJSONString(CodecErrors.forMissingField())
+            result shouldBe complex
+            val internal = result.internal
+            internal should contain key first
+            internal(first) shouldBe CodecErrors.forMissingField()
           }
 
           it("have incompatible dtypes") {
@@ -246,16 +247,15 @@ class EncodersFactorySpec
               SearchFieldDataType.collection(SearchFieldDataType.STRING)
             )
 
-            val result = EncodersFactory.buildComplexCodecInternalMapping(
+            val result = EncoderFactory.buildComplexCodecInternalMapping(
               createStructType(createStructField(first, sparkType)),
               Seq(createSearchField(first, searchType))
             ).left.value
 
-            val jsonMap = jObjectFields(result.toJValue)
-            jsonMap should contain key first
-            jValueAsJSONString(jsonMap(first)) shouldBe codecErrorAsJSONString(
-              CodecErrors.forIncompatibleTypes(sparkType, searchType)
-            )
+            result shouldBe complex
+            val internal = result.internal
+            internal should contain key first
+            internal(first) shouldBe CodecErrors.forIncompatibleTypes(sparkType, searchType)
           }
         }
 
@@ -267,7 +267,7 @@ class EncodersFactorySpec
               SearchFieldDataType.COMPLEX
             )
 
-            val result = EncodersFactory.buildComplexCodecInternalMapping(
+            val result = EncoderFactory.buildComplexCodecInternalMapping(
               createStructType(
                 createArrayField(first, sparkInnerType)
               ),
@@ -276,11 +276,10 @@ class EncodersFactorySpec
               )
             ).left.value
 
-            val jsonMap = jObjectFields(result.toJValue)
-            jsonMap should contain key first
-            jValueAsJSONString(jsonMap(first)) shouldBe codecErrorAsJSONString(
-              CodecErrors.forIncompatibleTypes(sparkInnerType, searchInnerType)
-            )
+            result shouldBe complex
+            val internal = result.internal
+            internal should contain key first
+            internal(first) shouldBe CodecErrors.forIncompatibleTypes(sparkInnerType, searchInnerType)
           }
         }
       }

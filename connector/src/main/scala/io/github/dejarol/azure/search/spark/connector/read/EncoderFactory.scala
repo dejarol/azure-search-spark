@@ -10,7 +10,7 @@ import org.apache.spark.sql.types.{DataType, DataTypes, StructType}
  * Encoder supplier
  */
 
-object EncodersFactory
+object EncoderFactory
   extends CodecFactory[SearchEncoder](CodecType.ENCODING) {
 
   /**

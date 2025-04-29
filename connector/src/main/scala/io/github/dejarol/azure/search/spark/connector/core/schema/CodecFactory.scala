@@ -1,8 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.DataTypeException
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn, SearchIndexColumnImpl}
+import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{ SearchIndexColumn, SearchIndexColumnImpl}
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
@@ -50,10 +49,10 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
   }
 
   /**
-   * Retrieve the codec between two atomic types, eventually mapping a missing codec to a [[DataTypeException]]
+   * Retrieve the codec between two atomic types, eventually mapping a missing codec to a [[CodecError]]
    * @param sparkType Spark field
    * @param searchFieldType Search field
-   * @return either a [[DataTypeException]] or an atomic codec
+   * @return either a [[CodecError]] or an atomic codec
    */
 
   private def maybeAtomicCodec(
@@ -196,7 +195,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * Create an exception for missing fields, depending on whether fieldName is defined.
    * If it's defined, it's supposed to be an exception related to a specific field.
    * @param missingFieldNames collection of missing field names
-   * @return a [[CodecFactoryException]]
+   * @return a [[CodecCreationException]]
    */
 
   private def makeExceptionForMissingFields(missingFieldNames: Seq[String]): CodecError = {
@@ -221,7 +220,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * Safely retrieve a codec for geopoints
    * <br>
    * A codec will exist if and only if given Spark types is compatible with the default geopoint schema
-   * (look at [[GeoPointType.SCHEMA]])
+   * (look at [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.GeoPointType.SCHEMA]])
    * @param schemaField spark type
    * @return a converter for geo points
    */

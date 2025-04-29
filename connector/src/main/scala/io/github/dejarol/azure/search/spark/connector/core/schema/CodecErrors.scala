@@ -5,23 +5,16 @@ import org.apache.spark.sql.types.{ArrayType, DataType, StructType}
 import org.json4s._
 
 /**
- * Parent class for modeling codec errors
- * <p>
- * Subclasses should take care of implementing [[toJValue]], which should be responsible
- * for providing a JSON representation of the error
+ * Collection of factory methods for creating errors that may occur during encoding/decoding
  */
 
-sealed trait CodecError {
+object CodecErrors {
 
   /**
-   * Gets the JSON representation of this error
-   * @return JSON representation
+   * Get a description for a Spark type
+   * @param dataType Spark type
+   * @return a description of the Spark type
    */
-
-  def toJValue: JValue
-}
-
-object CodecErrors {
 
   private def descriptionForSparkType(dataType: DataType): String = {
 
@@ -39,7 +32,7 @@ object CodecErrors {
    * @param searchType Search type
    */
 
-  private case class DTypesError(
+  private[schema] case class DTypesError(
                                   sparkType: DataType,
                                   searchType: SearchFieldDataType
                                 ) extends CodecError {
@@ -57,7 +50,7 @@ object CodecErrors {
    * Error occurring when a field is missing
    */
 
-  private case object MISSING_FIELD_ERROR
+  private[schema] case object MissingFieldError
     extends CodecError {
 
     override def toJValue: JValue = {
@@ -75,7 +68,7 @@ object CodecErrors {
    * @param internal collection of subfield errors
    */
 
-  private case class ComplexObjectError(internal: Map[String, CodecError])
+  private[schema] case class ComplexObjectError(internal: Map[String, CodecError])
     extends CodecError {
 
     override def toJValue: JValue = {
@@ -91,7 +84,7 @@ object CodecErrors {
    * @param dataType datatype
    */
 
-  private case class NotSuitableForGeoPoint(dataType: DataType)
+  private[schema] case class NotSuitableForGeoPoint(dataType: DataType)
     extends CodecError {
 
     override def toJValue: JValue = {
@@ -109,10 +102,7 @@ object CodecErrors {
    * @return a [[CodecError]]
    */
 
-  def forIncompatibleTypes(
-                            sparkType: DataType,
-                            searchType: SearchFieldDataType
-                          ): CodecError = {
+  def forIncompatibleTypes(sparkType: DataType, searchType: SearchFieldDataType): CodecError = {
 
     DTypesError(sparkType, searchType)
   }
@@ -122,7 +112,7 @@ object CodecErrors {
    * @return a [[CodecError]]
    */
 
-  def forMissingField(): CodecError = MISSING_FIELD_ERROR
+  def forMissingField(): CodecError = MissingFieldError
 
   /**
    * Creates a [[CodecError]] for a complex object

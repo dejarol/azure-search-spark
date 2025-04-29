@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactoryException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecCreationException, CodecType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.StructTypeDecoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
@@ -29,25 +29,27 @@ object SearchDocumentDecoderImpl {
 
   /**
    * Safely create a decoder
+ *
    * @param schema Dataframe schema
    * @param searchFields target Search fields
    * @return either the decoder or a
-   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException]]
+   *         [[CodecCreationException]]
    */
 
   final def safeApply(
                        schema: StructType,
                        searchFields: Seq[SearchField]
-                     ): Either[CodecFactoryException, SearchDocumentDecoderImpl] = {
+                     ): Either[CodecCreationException, SearchDocumentDecoderImpl] = {
 
     DecoderFactory.buildComplexCodecInternalMapping(
       schema,
       searchFields
     ).left.map {
-      // TODO : fix
-      _ => CodecFactoryException.forGeoPoint("a", CodecType.DECODING)
-      }
-      .right.map {
+      error =>
+        CodecCreationException.fromCodedError(
+          CodecType.DECODING, error
+        )
+      }.right.map {
       // Create decoder
       v => SearchDocumentDecoderImpl(
         StructTypeDecoder(v)

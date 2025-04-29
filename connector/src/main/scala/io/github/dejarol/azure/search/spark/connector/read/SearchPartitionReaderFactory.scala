@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.read
 
-import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException
+import io.github.dejarol.azure.search.spark.connector.core.schema.CodecCreationException
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition
 import org.apache.spark.sql.catalyst.InternalRow
@@ -39,12 +39,13 @@ class SearchPartitionReaderFactory(
 
   /**
    * Create the partition reader
+ *
    * @param partition instance of [[SearchPartition]]
-   * @throws io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException if the provided schema clashes with target index fields
+   * @throws CodecCreationException if the provided schema clashes with target index fields
    * @return a Search partition reader
    */
 
-  @throws[CodecFactoryException]
+  @throws[CodecCreationException]
   private def createSearchReader(partition: SearchPartition): PartitionReader[InternalRow] = {
 
     val documentEncoder = SearchDocumentEncoderImpl.safeApply(

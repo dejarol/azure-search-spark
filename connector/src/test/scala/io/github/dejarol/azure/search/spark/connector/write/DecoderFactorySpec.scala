@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
-import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactorySpec
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecErrors, CodecFactorySpec}
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
 class DecoderFactorySpec
   extends CodecFactorySpec {
 
-  private lazy val (first, second) = ("first", "second")
+  private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
 
   /**
    * Assert that an atomic decoder between a Spark type and a Search type exists,
@@ -172,6 +172,62 @@ class DecoderFactorySpec
         }
       }
 
+      describe("return a Right for") {
+        it("perfectly matching schemas") {
+
+          DecoderFactory.buildComplexCodecInternalMapping(
+            createStructType(
+              createStructField(first, DataTypes.StringType),
+              createStructField(second, DataTypes.IntegerType)
+            ),
+            Seq(
+              createSearchField(first, SearchFieldDataType.STRING),
+              createSearchField(second, SearchFieldDataType.INT32)
+            )
+          ) shouldBe 'right
+        }
+
+        describe("matching schemas with different column order") {
+          it("for top-level fields") {
+
+            DecoderFactory.buildComplexCodecInternalMapping(
+              createStructType(
+                createStructField(second, DataTypes.IntegerType),
+                createStructField(first, DataTypes.StringType)
+              ),
+              Seq(
+                createSearchField(first, SearchFieldDataType.STRING),
+                createSearchField(second, SearchFieldDataType.INT32)
+              )
+            ) shouldBe 'right
+          }
+
+          it("for nested subfields") {
+
+            DecoderFactory.buildComplexCodecInternalMapping(
+              createStructType(
+                createStructField(second, DataTypes.IntegerType),
+                createStructField(first,
+                  createStructType(
+                    createStructField(third, DataTypes.TimestampType),
+                    createStructField(fourth, DataTypes.BooleanType)
+                  )
+                )
+              ),
+              Seq(
+                createComplexField(first,
+                  Seq(
+                    createSearchField(fourth, SearchFieldDataType.BOOLEAN),
+                    createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
+                  )
+                ),
+                createSearchField(second, SearchFieldDataType.INT32)
+              )
+            ) shouldBe 'right
+          }
+        }
+      }
+
       describe("return a Left when") {
         describe("some fields") {
           it("miss") {
@@ -180,32 +236,53 @@ class DecoderFactorySpec
               createStructType(createStructField(first, DataTypes.StringType)),
               Seq(createSearchField(second, SearchFieldDataType.STRING))
             ).left.value
+
+            result shouldBe complex
+            val internal = result.internal
+            internal should contain key first
+            internal(first) shouldBe CodecErrors.forMissingField()
           }
         }
 
         it("have incompatible dtypes") {
 
+          val (sparkType, searchType) = (
+            DataTypes.StringType,
+            SearchFieldDataType.collection(SearchFieldDataType.DATE_TIME_OFFSET)
+          )
           val result = DecoderFactory.buildComplexCodecInternalMapping(
-            createStructType(createStructField(first, DataTypes.IntegerType)),
-            Seq(createSearchField(first, SearchFieldDataType.COMPLEX))
+            createStructType(createStructField(first, sparkType)),
+            Seq(createSearchField(first, searchType))
           ).left.value
 
+          result shouldBe complex
+          val internal = result.internal
+          internal should contain key first
+          internal(first) shouldBe CodecErrors.forIncompatibleTypes(sparkType, searchType)
         }
-      }
 
-      describe("return a Right for") {
-        it("matching schemas") {
+        describe("some collection fields") {
+          it("have incompatible inner type") {
 
-          DecoderFactory.buildComplexCodecInternalMapping(
-            createStructType(
-              createStructField(first, DataTypes.TimestampType),
-              createStructField(second, DataTypes.StringType)
-            ),
-            Seq(
-              createSearchField(first, SearchFieldDataType.DATE_TIME_OFFSET),
-              createSearchField(second, SearchFieldDataType.STRING)
+            val (sparkInnerType, searchInnerType) = (
+              DataTypes.DateType,
+              SearchFieldDataType.COMPLEX
             )
-          ) shouldBe 'right
+
+            val result = DecoderFactory.buildComplexCodecInternalMapping(
+              createStructType(
+                createArrayField(first, sparkInnerType)
+              ),
+              Seq(
+                createCollectionField(first, searchInnerType)
+              )
+            ).left.value
+
+            result shouldBe complex
+            val internal = result.internal
+            internal should contain key first
+            internal(first) shouldBe CodecErrors.forIncompatibleTypes(sparkInnerType, searchInnerType)
+          }
         }
       }
     }

@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
-import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException
+import io.github.dejarol.azure.search.spark.connector.core.schema.CodecCreationException
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory}
@@ -60,11 +60,12 @@ class SearchWriterFactory(
 
   /**
    * Create a decoder for converting Spark internal rows to Search documents
-   * @throws io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException if the decoder cannot be built
+ *
+   * @throws CodecCreationException if the decoder cannot be built
    * @return a decoder from Spark internal rows to Search documents
    */
 
-  @throws[CodecFactoryException]
+  @throws[CodecCreationException]
   private def createDocumentDecoder(): SearchDocumentDecoder = {
 
     // Exclude index action column from mapping, if defined

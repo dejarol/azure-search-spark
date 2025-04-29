@@ -1,9 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import org.json4s.jackson.JsonMethods.pretty
-import org.json4s.{JValue, JsonAST}
 import org.scalatest.EitherValues
+import org.scalatest.matchers.{BeMatcher, MatchResult}
+
+import scala.language.implicitConversions
 
 /**
  * Mix-in trait for testing subclasses of [[CodecFactory]]
@@ -14,16 +15,64 @@ trait CodecFactorySpec
     with FieldFactory
       with EitherValues {
 
-  // TODO: document
-  protected final def jValueAsJSONString(value: JValue): String = pretty(value)
+  import CodecFactorySpec._
 
-  protected final def codecErrorAsJSONString(error: CodecError): String = jValueAsJSONString(error.toJValue)
+  protected final val complex = new ComplexObjectErrorMatcher
 
-  protected final def jObjectFields(value: JValue): Map[String, JValue] = {
+  /**
+   * Implicit conversion for creating an instance of [[ComplexObjectErrorOperations]] from an error
+   * @param error input error
+   * @return a utility class for dealing with error instances
+   */
 
-    value match {
-      case JsonAST.JObject(obj) => obj.toMap
-      case _ => Map.empty
+  protected final implicit def toComplexOperations(error: CodecError): ComplexObjectErrorOperations = {
+    new ComplexObjectErrorOperations(error)
+  }
+}
+
+object CodecFactorySpec {
+
+  /**
+   * Custom matcher for asserting that an instance of [[CodecError]] is a [[CodecErrors.ComplexObjectError]]
+   */
+
+  class ComplexObjectErrorMatcher
+    extends BeMatcher[CodecError] {
+
+    override def apply(left: CodecError): MatchResult = {
+      MatchResult(
+        left match {
+          case _: CodecErrors.ComplexObjectError => true
+          case _ => false
+        },
+        "this error is not complex",
+        "this error is complex"
+      )
+    }
+  }
+
+  /**
+   * Utility class for accessing the internal errors of a complex error
+   * @param error codec error instance
+   */
+
+  class ComplexObjectErrorOperations(private val error: CodecError) {
+
+    /**
+     * Retrieves the internal errors of this error
+     * @throws IllegalStateException if this error is not complex
+     * @return the internal errors
+     */
+
+    @throws[IllegalStateException]
+    def internal: Map[String, CodecError] = {
+      error match {
+        case c: CodecErrors.ComplexObjectError => c.internal
+        case _ => throw new IllegalStateException(
+          s"Cannot access the internal errors of a non-complex error. " +
+            s"Please make sure to run the following assertion 'error shouldBe complex' before invoking this method"
+        )
+      }
     }
   }
 }

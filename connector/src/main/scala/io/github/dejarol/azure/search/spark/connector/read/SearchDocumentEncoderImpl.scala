@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactoryException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecCreationException, CodecType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.ComplexEncoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
@@ -22,22 +22,25 @@ object SearchDocumentEncoderImpl {
 
   /**
    * Safely create a document encoder instance
+   *
    * @param schema target Dataframe schema
    * @param searchFields input Search fields
    * @return either the encoder or a
-   *         [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactoryException]]
+   *         [[CodecCreationException]]
    */
 
   final def safeApply(
                        schema: StructType,
                        searchFields: Seq[SearchField]
-                     ): Either[CodecFactoryException, SearchDocumentEncoderImpl] = {
+                     ): Either[CodecCreationException, SearchDocumentEncoderImpl] = {
 
-    EncodersFactory.buildComplexCodecInternalMapping(
+    EncoderFactory.buildComplexCodecInternalMapping(
       schema, searchFields
     ).left.map {
-      _ => CodecFactoryException.forGeoPoint("a", CodecType.ENCODING)
-      }.right.map(
+      error => CodecCreationException.fromCodedError(
+        CodecType.ENCODING, error
+      )
+    }.right.map(
       value => SearchDocumentEncoderImpl(
         ComplexEncoder(value)
       )
