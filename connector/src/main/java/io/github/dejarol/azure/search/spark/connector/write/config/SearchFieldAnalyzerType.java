@@ -84,7 +84,8 @@ public enum SearchFieldAnalyzerType {
     }
 
     /**
-     * Get a {@link  io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldAction} for setting an analyzer
+     * Set an analyzer on a field
+     * @param field field to set the analyzer on
      * @param name analyzer to set
      * @return an action for setting an analyzer on a field
      */

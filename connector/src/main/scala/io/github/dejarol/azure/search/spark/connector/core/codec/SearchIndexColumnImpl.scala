@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema.conversion
+package io.github.dejarol.azure.search.spark.connector.core.codec
 
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 

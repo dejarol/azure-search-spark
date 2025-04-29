@@ -1,9 +1,8 @@
-package io.github.dejarol.azure.search.spark.connector.read
+package io.github.dejarol.azure.search.spark.connector.read.encoding
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.{AtomicEncoders, CollectionEncoder, ComplexEncoder, SearchEncoder}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{GeoPointType, SearchIndexColumn}
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecFactory, CodecType, toSearchTypeOperations, toSparkTypeOperations}
+import io.github.dejarol.azure.search.spark.connector.core.codec.{CodecFactory, CodecType, SearchIndexColumn}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{toSearchTypeOperations, toSparkTypeOperations}
 import org.apache.spark.sql.types.{DataType, DataTypes, StructType}
 
 /**
@@ -130,5 +129,5 @@ object EncoderFactory
 
   override protected def collectionCodec(sparkType: DataType, internal: SearchEncoder): SearchEncoder = CollectionEncoder(internal)
   override protected def createComplexCodec(internal: Map[SearchIndexColumn, SearchEncoder]): SearchEncoder = ComplexEncoder(internal)
-  override protected def forGeoPoint(schema: StructType): SearchEncoder = GeoPointType.encoder(schema)
+  override protected def forGeoPoint(schema: StructType): SearchEncoder = ComplexEncoder.forGeopoints(schema)
 }

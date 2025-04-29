@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.read.encoding.NumericEncoder
 import org.apache.spark.sql.types.{DataType, DataTypes}
 
 import java.lang.{Double => JDouble, Long => JLong}

@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input;
+package io.github.dejarol.azure.search.spark.connector.read.encoding;
 
 import org.apache.spark.unsafe.types.UTF8String;
 import org.jetbrains.annotations.Contract;

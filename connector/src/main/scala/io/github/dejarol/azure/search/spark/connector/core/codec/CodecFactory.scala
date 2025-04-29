@@ -1,7 +1,7 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema
+package io.github.dejarol.azure.search.spark.connector.core.codec
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.{ SearchIndexColumn, SearchIndexColumnImpl}
+import io.github.dejarol.azure.search.spark.connector.core.schema._
 import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
@@ -18,7 +18,7 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * The result will be a left if the conversion is not possible, a right otherwise
    * @param structField a Spark field
    * @param searchField a Search field
-   * @return either a codec or a [[io.github.dejarol.azure.search.spark.connector.core.schema.CodecError]]
+   * @return either a codec or a [[CodecError]]
    */
 
   final def build(
@@ -220,7 +220,6 @@ abstract class CodecFactory[T](protected val codecType: CodecType) {
    * Safely retrieve a codec for geopoints
    * <br>
    * A codec will exist if and only if given Spark types is compatible with the default geopoint schema
-   * (look at [[io.github.dejarol.azure.search.spark.connector.core.schema.conversion.GeoPointType.SCHEMA]])
    * @param schemaField spark type
    * @return a converter for geo points
    */

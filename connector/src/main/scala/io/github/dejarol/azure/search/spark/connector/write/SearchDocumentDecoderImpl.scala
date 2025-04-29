@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecCreationException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.core.codec.{CodecCreationException, CodecType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output.StructTypeDecoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType

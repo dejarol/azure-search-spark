@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema;
+package io.github.dejarol.azure.search.spark.connector.core.codec;
 
 import org.jetbrains.annotations.NotNull;
 

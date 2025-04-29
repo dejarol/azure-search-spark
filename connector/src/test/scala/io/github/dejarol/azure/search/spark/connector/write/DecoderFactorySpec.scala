@@ -2,7 +2,8 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecErrors, CodecFactorySpec}
+import io.github.dejarol.azure.search.spark.connector.core.codec.CodecErrors
+import io.github.dejarol.azure.search.spark.connector.core.schema.CodecFactorySpec
 import org.apache.spark.sql.types.{DataType, DataTypes}
 import org.apache.spark.unsafe.types.UTF8String
 

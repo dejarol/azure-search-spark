@@ -1,9 +1,9 @@
-package io.github.dejarol.azure.search.spark.connector.read
+package io.github.dejarol.azure.search.spark.connector.read.encoding
 
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.SearchField
-import io.github.dejarol.azure.search.spark.connector.core.schema.{CodecCreationException, CodecType}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input.ComplexEncoder
+import io.github.dejarol.azure.search.spark.connector.core.codec.{CodecCreationException, CodecType}
+import io.github.dejarol.azure.search.spark.connector.read.SearchDocumentEncoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.StructType
 

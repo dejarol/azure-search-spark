@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.GeoPointType
 import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types._
 
@@ -155,7 +154,7 @@ class SchemaUtilsSpec
 
           SchemaUtils.inferSparkTypeOf(
             createSearchField("location", SearchFieldDataType.GEOGRAPHY_POINT)
-          ) shouldBe GeoPointType.SCHEMA
+          ) shouldBe GeoPointType.SPARK_SCHEMA
         }
       }
 
@@ -277,7 +276,7 @@ class SchemaUtilsSpec
           it("with compatible geo point type") {
 
             SchemaUtils.inferSearchTypeFor(
-              createArrayType(GeoPointType.SCHEMA)
+              createArrayType(GeoPointType.SPARK_SCHEMA)
             ) shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
             )
@@ -345,7 +344,7 @@ class SchemaUtilsSpec
 
           it("geo points") {
 
-            val structField = createArrayField(first, GeoPointType.SCHEMA)
+            val structField = createArrayField(first, GeoPointType.SPARK_SCHEMA)
             val searchField = simplyToSearchField(structField)
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
@@ -381,7 +380,7 @@ class SchemaUtilsSpec
 
         it("with geo points") {
 
-          val structType = GeoPointType.SCHEMA
+          val structType = GeoPointType.SPARK_SCHEMA
           val structField = createStructField(third, structType)
           val searchField = simplyToSearchField(structField)
 

@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
+import io.github.dejarol.azure.search.spark.connector.core.codec.{CodecError, CodecErrors, CodecFactory}
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.scalatest.EitherValues
 import org.scalatest.matchers.{BeMatcher, MatchResult}

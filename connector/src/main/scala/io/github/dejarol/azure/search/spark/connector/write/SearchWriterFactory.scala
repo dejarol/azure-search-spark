@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
-import io.github.dejarol.azure.search.spark.connector.core.schema.CodecCreationException
+import io.github.dejarol.azure.search.spark.connector.core.codec.CodecCreationException
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory}

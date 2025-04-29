@@ -1,7 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output
 
-import io.github.dejarol.azure.search.spark.connector.core.schema.conversion.SearchIndexColumn
+import io.github.dejarol.azure.search.spark.connector.core.codec.{SearchIndexColumn, SearchIndexColumnImpl}
+import io.github.dejarol.azure.search.spark.connector.core.schema.GeoPointType
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.{ArrayType, DataTypes, StructType}
 
 import java.util.{LinkedHashMap => JLinkedMap, Map => JMap}
 
@@ -38,5 +40,32 @@ case class StructTypeDecoder(private val indexColumnToSearchDecoders: Map[Search
     }
 
     properties
+  }
+}
+
+object StructTypeDecoder {
+
+  /**
+   * Create a decoder for deal with GeoPoints
+   * @param schema schema of candidate GeoPoint field
+   * @return a decoder for GeoPoints
+   */
+
+  final def forGeopoints(schema: StructType): SearchDecoder = {
+
+    StructTypeDecoder(
+      Map(
+        SearchIndexColumnImpl(
+          GeoPointType.TYPE_LABEL,
+          DataTypes.StringType,
+          schema.fieldIndex(GeoPointType.TYPE_LABEL)
+        ) -> AtomicDecoders.forUTF8Strings(),
+        SearchIndexColumnImpl(
+          GeoPointType.COORDINATES_LABEL,
+          ArrayType(DataTypes.DoubleType),
+          schema.fieldIndex(GeoPointType.COORDINATES_LABEL)
+        ) -> ArrayDecoder(DataTypes.DoubleType, AtomicDecoders.identity())
+      )
+    )
   }
 }

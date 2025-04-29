@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input
 
 import io.github.dejarol.azure.search.spark.connector.core.Constants
+import io.github.dejarol.azure.search.spark.connector.read.encoding.AtomicEncoders
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.unsafe.types.UTF8String
 

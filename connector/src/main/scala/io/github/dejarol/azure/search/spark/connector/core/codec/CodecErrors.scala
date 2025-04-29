@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema
+package io.github.dejarol.azure.search.spark.connector.core.codec
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import org.apache.spark.sql.types.{ArrayType, DataType, StructType}
