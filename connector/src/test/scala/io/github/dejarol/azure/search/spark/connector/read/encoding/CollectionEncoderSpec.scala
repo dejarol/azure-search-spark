@@ -1,8 +1,7 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input
+package io.github.dejarol.azure.search.spark.connector.read.encoding
 
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.read.encoding.{AtomicEncoders, CollectionEncoder}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataTypes
 import org.apache.spark.unsafe.types.UTF8String

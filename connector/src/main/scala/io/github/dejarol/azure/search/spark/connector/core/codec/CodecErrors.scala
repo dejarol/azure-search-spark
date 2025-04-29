@@ -32,10 +32,10 @@ object CodecErrors {
    * @param searchType Search type
    */
 
-  private[schema] case class DTypesError(
-                                  sparkType: DataType,
-                                  searchType: SearchFieldDataType
-                                ) extends CodecError {
+  private[codec] case class DTypesError(
+                                         sparkType: DataType,
+                                         searchType: SearchFieldDataType
+                                       ) extends CodecError {
 
     override def toJValue: JValue = {
 
@@ -50,7 +50,7 @@ object CodecErrors {
    * Error occurring when a field is missing
    */
 
-  private[schema] case object MissingFieldError
+  private[codec] case object MissingFieldError
     extends CodecError {
 
     override def toJValue: JValue = {
@@ -68,7 +68,7 @@ object CodecErrors {
    * @param internal collection of subfield errors
    */
 
-  private[schema] case class ComplexObjectError(internal: Map[String, CodecError])
+  private[codec] case class ComplexObjectError(internal: Map[String, CodecError])
     extends CodecError {
 
     override def toJValue: JValue = {
@@ -84,7 +84,7 @@ object CodecErrors {
    * @param dataType datatype
    */
 
-  private[schema] case class NotSuitableForGeoPoint(dataType: DataType)
+  private[codec] case class NotSuitableForGeoPoint(dataType: DataType)
     extends CodecError {
 
     override def toJValue: JValue = {

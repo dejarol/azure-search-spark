@@ -26,9 +26,11 @@ public class InferSchemaException
             String name,
             @NotNull Throwable cause
     ) {
-        super(String.format("%s %s. Reason: (%s)",
-                COULD_NOT_INFER_SCHEMA_PREFIX, name, cause.getMessage()),
-                cause
+        super(
+                String.format(
+                        "%s %s. Reason: (%s)",
+                        COULD_NOT_INFER_SCHEMA_PREFIX, name, cause.getMessage()
+                ), cause
         );
     }
 

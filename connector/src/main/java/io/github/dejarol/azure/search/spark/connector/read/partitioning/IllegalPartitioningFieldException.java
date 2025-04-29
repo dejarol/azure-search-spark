@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  */
 
 public class IllegalPartitioningFieldException
-        extends IllegalSearchFieldException {
+        extends IllegalArgumentException {
 
     /**
      * Private constructor
@@ -27,14 +27,17 @@ public class IllegalPartitioningFieldException
      */
 
     private IllegalPartitioningFieldException(
-            SearchField searchField,
+            @NotNull SearchField searchField,
             @NotNull Supplier<String> supplier
     ) {
-        super(() -> String.format(
-                "Invalid partitioning field (%s, type %s). %s",
-                searchField.getName(),
-                searchField.getType(),
-                supplier.get()));
+        super(
+                String.format(
+                        "Invalid partitioning field (%s, type %s). %s",
+                        searchField.getName(),
+                        searchField.getType(),
+                        supplier.get()
+                )
+        );
     }
 
     /**

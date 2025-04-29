@@ -1,8 +1,7 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.input
+package io.github.dejarol.azure.search.spark.connector.read.encoding
 
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.codec.SearchIndexColumnImpl
-import io.github.dejarol.azure.search.spark.connector.read.encoding.{AtomicEncoders, ComplexEncoder}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataTypes
 

@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.write
+package io.github.dejarol.azure.search.spark.connector.write.decoding
 
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.BasicSpec

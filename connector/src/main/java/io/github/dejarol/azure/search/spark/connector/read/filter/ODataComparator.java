@@ -9,14 +9,13 @@ import org.jetbrains.annotations.NotNull;
 
 public enum ODataComparator {
 
-    GT(">", "gt"),
-    GEQ(">=", "ge"),
-    EQ("=", "eq"),
-    NE("<>", "ne"),
-    LT("<", "lt"),
-    LEQ("<=", "le");
+    GT("gt"),
+    GEQ("ge"),
+    EQ("eq"),
+    NE("ne"),
+    LT("lt"),
+    LEQ("le");
 
-    private final String predicateName;
     private final String oDataValue;
 
     /**
@@ -25,21 +24,9 @@ public enum ODataComparator {
      */
 
     ODataComparator(
-            @NotNull String predicateName,
             @NotNull String oDataValue
     ) {
-        this.predicateName = predicateName;
         this.oDataValue = oDataValue;
-    }
-
-    /**
-     * Get the name of the equivalent Spark predicate
-     * @return name of the equivalent Spark predicate
-     */
-
-    @Contract(pure = true)
-    public String predicateName() {
-        return predicateName;
     }
 
     /**

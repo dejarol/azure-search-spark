@@ -285,8 +285,26 @@ object SchemaUtils {
     fieldActions.collectFirst {
       case (k, v) if k.equalsIgnoreCase(currentPath) => v
     } match {
-      case Some(value) => searchField.applyActions(value: _*)
+      case Some(value) => applyActions(searchField, value)
       case None => searchField
+    }
+  }
+
+  /**
+   * Apply a collection of actions on a field
+   * @param searchField input Search field
+   * @param actions actions to apply
+   * @return this field transformed by the many actions provided
+   */
+
+  private[schema] def applyActions(
+                                    searchField: SearchField,
+                                    actions: Seq[SearchFieldAction]
+                                  ): SearchField = {
+
+    actions.foldLeft(searchField) {
+      case (field, action) =>
+        action.apply(field)
     }
   }
 }

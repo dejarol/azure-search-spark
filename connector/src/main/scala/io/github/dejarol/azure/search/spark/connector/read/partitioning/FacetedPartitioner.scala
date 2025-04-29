@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.SearchField
 import com.azure.search.documents.models.FacetResult
-import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.{JavaScalaConverters, NoSuchSearchFieldException}
 import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
 import io.github.dejarol.azure.search.spark.connector.core.schema._
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
@@ -127,11 +127,14 @@ object FacetedPartitioner {
                                                   ): Either[ConfigException, SearchField] = {
 
     // Collect the namesake field and evaluate it (if any)
-    val maybeExistingField: Either[IllegalSearchFieldException, SearchField] = fields.collectFirst {
+    val maybeExistingField: Either[Throwable, SearchField] = fields.collectFirst {
       case sf if sf.getName.equalsIgnoreCase(name) => sf
-    }.toRight(()).left.map {
-      _ => IllegalSearchFieldException.nonExisting(name)
-    }.right.flatMap(evaluateExistingCandidate)
+    } match {
+      case Some(value) => evaluateExistingCandidate(value)
+      case None => Left(
+        new NoSuchSearchFieldException(name)
+      )
+    }
 
     // Map left side to a ConfigException
     maybeExistingField.left.map {

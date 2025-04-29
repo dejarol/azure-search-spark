@@ -46,24 +46,13 @@ class SearchFieldOperationsSpec
 
           // For a non-complex field, we expect the safe operation to return an empty result,
           // and the unsafe operation to fail
-          val nonComplexField = createAnonymousField(SearchFieldDataType.STRING)
+          val nonComplexField = createAnonymousField(SearchFieldDataType.INT32)
           nonComplexField.safeSubFields shouldBe empty
           a [DataTypeException] shouldBe thrownBy {
             nonComplexField.unsafeSubFields
           }
         }
       }
-    }
-
-    it("apply some actions") {
-
-      lazy val notSearchable: SearchFieldAction = (field: SearchField) => field.setSearchable(false)
-      lazy val makeFacetable: SearchFieldAction = (field: SearchField) => field.setFacetable(true)
-
-      val field = createAnonymousField(SearchFieldDataType.INT32)
-      val transformedField = field.applyActions(notSearchable, makeFacetable)
-      transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
-      transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
     }
   }
 }

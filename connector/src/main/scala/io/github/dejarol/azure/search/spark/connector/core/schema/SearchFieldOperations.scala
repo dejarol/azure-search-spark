@@ -26,20 +26,6 @@ class SearchFieldOperations(private val searchField: SearchField)
   }
 
   /**
-   * Apply a collection of actions on this field
-   * @param actions actions to apply
-   * @return this field transformed by the many actions provided
-   */
-
-  final def applyActions(actions: SearchFieldAction*): SearchField = {
-
-    actions.foldLeft(searchField) {
-      case (field, action) =>
-        action.apply(field)
-    }
-  }
-
-  /**
    * Evaluate if a feature is enabled on this field
    * @param feature feature
    * @return true for enabled features

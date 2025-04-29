@@ -16,7 +16,7 @@ public class IndexCreationException
      */
 
     public IndexCreationException(
-            String name,
+            @NotNull String name,
             @NotNull Throwable cause
     ) {
         super(String.format(

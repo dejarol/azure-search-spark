@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.core.schema.conversion.output;
+package io.github.dejarol.azure.search.spark.connector.write.decoding;
 
 import org.jetbrains.annotations.Nullable;
 

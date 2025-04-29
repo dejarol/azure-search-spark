@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import io.github.dejarol.azure.search.spark.connector.core.codec.CodecCreationException
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
+import io.github.dejarol.azure.search.spark.connector.write.decoding.{SearchDocumentDecoder, SearchDocumentDecoderImpl}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, DataWriterFactory}
 import org.apache.spark.sql.types.{StructField, StructType}

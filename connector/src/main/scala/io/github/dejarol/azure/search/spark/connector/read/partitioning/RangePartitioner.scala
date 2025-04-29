@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.{JavaScalaConverters, NoSuchSearchFieldException}
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.core.schema._
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
@@ -67,14 +67,16 @@ object RangePartitioner {
                                                  name: String
                                                ): Either[ConfigException, SearchField] = {
 
-    val maybeConfigExceptionCauseOrFieldType: Either[IllegalSearchFieldException, SearchField] = searchFields
+    val maybeConfigExceptionCauseOrFieldType: Either[Throwable, SearchField] = searchFields
       .collectFirst {
         // Collect type for namesake field
         case sf if sf.getName.equalsIgnoreCase(name) => sf
-      }.toRight(()).left.map {
-        // Map non-existing fields to an exception
-        _ => IllegalSearchFieldException.nonExisting(name)
-      }.right.flatMap(evaluateExistingCandidate)
+      } match {
+      case Some(value) => evaluateExistingCandidate(value)
+      case None => Left(
+        new NoSuchSearchFieldException(name)
+      )
+    }
 
     // Map the left side to a ConfigException
     maybeConfigExceptionCauseOrFieldType.left.map {
@@ -93,7 +95,7 @@ object RangePartitioner {
    *  - it's filterable
    *  - its datatype is either numeric (but not single) or date time
    * @param searchField Search field
-   * @return either a [[IllegalSearchFieldException]] describing the non-eligibility reason, or the field itself
+   * @return either a [[IllegalPartitioningFieldException]] describing the non-eligibility reason, or the field itself
    */
 
   protected[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalPartitioningFieldException, SearchField] = {

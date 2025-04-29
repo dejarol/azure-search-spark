@@ -18,6 +18,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * Configuration for an analyzer
+ */
+
 @JsonDeserialize(using = AnalyzerConfig.Deserializer.class)
 public class AnalyzerConfig {
 

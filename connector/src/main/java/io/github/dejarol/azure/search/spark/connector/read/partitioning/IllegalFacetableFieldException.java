@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  */
 
 public class IllegalFacetableFieldException
-        extends IllegalSearchFieldException {
+        extends IllegalArgumentException {
 
     /**
      * Private constructor
@@ -30,11 +30,13 @@ public class IllegalFacetableFieldException
             @NotNull SearchField searchField,
             @NotNull Supplier<String> reasonSupplier
     ) {
-        super(() -> String.format(
-                "Invalid facetable field (%s, type %s). %s",
-                searchField.getName(),
-                searchField.getType(),
-                reasonSupplier.get())
+        super(
+                String.format(
+                        "Invalid facetable field (%s, type %s). %s",
+                        searchField.getName(),
+                        searchField.getType(),
+                        reasonSupplier.get()
+                )
         );
     }
 

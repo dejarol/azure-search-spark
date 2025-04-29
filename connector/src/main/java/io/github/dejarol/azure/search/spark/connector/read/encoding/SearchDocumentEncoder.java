@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.read;
+package io.github.dejarol.azure.search.spark.connector.read.encoding;
 
 import com.azure.search.documents.SearchDocument;
 import org.apache.spark.sql.catalyst.InternalRow;

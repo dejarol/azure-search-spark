@@ -439,6 +439,17 @@ class SchemaUtilsSpec
           }
         }
       }
+
+      it("apply some actions") {
+
+        lazy val notSearchable: SearchFieldAction = (field: SearchField) => field.setSearchable(false)
+        lazy val makeFacetable: SearchFieldAction = (field: SearchField) => field.setFacetable(true)
+
+        val field = createSearchField("hello", SearchFieldDataType.INT32)
+        val transformedField = SchemaUtils.applyActions(field, Seq(notSearchable, makeFacetable))
+        transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
+        transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
+      }
     }
   }
 }
