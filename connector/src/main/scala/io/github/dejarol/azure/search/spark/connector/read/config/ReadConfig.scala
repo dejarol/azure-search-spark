@@ -6,7 +6,7 @@ import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressions}
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, PartitionerFactory, RangePartitionerFactory, SearchPartition, SearchPartitioner}
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, FacetedPartitionerFactory, PartitionerFactory, RangePartitionerFactory, SearchPartition, SearchPartitioner}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 
@@ -115,7 +115,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
     get(ReadConfig.PARTITIONER_CLASS_CONFIG) match {
       case Some(value) => value match {
         case "range" => RangePartitionerFactory
-        case "faceted" => null
+        case "faceted" => FacetedPartitionerFactory
         case _ => null
       }
       case None => DefaultPartitioner.FACTORY

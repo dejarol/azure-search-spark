@@ -71,7 +71,7 @@ object RangePartitionerFactory
    * @return either a [[io.github.dejarol.azure.search.spark.connector.core.config.ConfigException]] describing the non-eligibility reason, or the field itself
    */
 
-  protected[partitioning] def getPartitionField(
+  private[partitioning] def getPartitionField(
                                                  searchFields: Seq[SearchField],
                                                  name: String
                                                ): Either[ConfigException, SearchField] = {
@@ -108,7 +108,7 @@ object RangePartitionerFactory
    * @return either a [[IllegalPartitioningFieldException]] describing the non-eligibility reason, or the field itself
    */
 
-  protected[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalPartitioningFieldException, SearchField] = {
+  private[partitioning] def evaluateExistingCandidate(searchField: SearchField): Either[IllegalPartitioningFieldException, SearchField] = {
 
     // Evaluate if related Search field is a good candidate
     val isFilterable = searchField.isEnabledFor(SearchFieldFeature.FILTERABLE)

@@ -32,7 +32,7 @@ class RangePartitionerFactorySpec
                 )
 
                 field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
-                RangePartitioner.evaluateExistingCandidate(field) shouldBe 'right
+                RangePartitionerFactory.evaluateExistingCandidate(field) shouldBe 'right
             }
           }
 
@@ -44,7 +44,7 @@ class RangePartitionerFactorySpec
 
                   val field = createSearchField("first", tp)
                   field should not be enabledFor(SearchFieldFeature.FILTERABLE)
-                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
+                  RangePartitionerFactory.evaluateExistingCandidate(field) shouldBe 'left
               }
             }
 
@@ -63,7 +63,7 @@ class RangePartitionerFactorySpec
                   )
 
                   field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
-                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
+                  RangePartitionerFactory.evaluateExistingCandidate(field) shouldBe 'left
               }
             }
           }
@@ -81,7 +81,7 @@ class RangePartitionerFactorySpec
 
             it("existing, filterable and type-wise valid fields") {
 
-              RangePartitioner.getPartitionField(
+              RangePartitionerFactory.getPartitionField(
                 fields,
                 first
               ) shouldBe 'right
@@ -91,7 +91,7 @@ class RangePartitionerFactorySpec
           describe("returning a Left for") {
             it("non existing fields") {
 
-              RangePartitioner.getPartitionField(
+              RangePartitionerFactory.getPartitionField(
                 fields,
                 fourth
               ) shouldBe 'left
@@ -100,7 +100,7 @@ class RangePartitionerFactorySpec
 
             it("non filterable fields") {
 
-              RangePartitioner.getPartitionField(
+              RangePartitionerFactory.getPartitionField(
                 fields,
                 third
               ) shouldBe 'left
@@ -108,7 +108,7 @@ class RangePartitionerFactorySpec
 
             it("type-wise illegal fields") {
 
-              RangePartitioner.getPartitionField(
+              RangePartitionerFactory.getPartitionField(
                 fields,
                 second
               ) shouldBe 'left
