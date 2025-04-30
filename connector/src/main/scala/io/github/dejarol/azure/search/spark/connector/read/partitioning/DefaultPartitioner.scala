@@ -18,3 +18,12 @@ case class DefaultPartitioner(override protected val readConfig: ReadConfig)
     )
   }
 }
+
+object DefaultPartitioner {
+
+  final val FACTORY: PartitionerFactory = {
+
+    (readConfig: ReadConfig) =>
+      DefaultPartitioner(readConfig)
+  }
+}

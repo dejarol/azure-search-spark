@@ -1,120 +1,43 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
-import com.azure.search.documents.indexes.models.SearchFieldDataType
-import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
-import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
-import org.scalatest.EitherValues
+import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 
 class RangePartitionerSpec
-  extends BasicSpec
-    with FieldFactory
-      with EitherValues {
+  extends BasicSpec {
 
-  private lazy val (first, second, third, fourth) = ("first", "second", "third", "fourth")
-  private lazy val validTypes = Seq(
-    SearchFieldDataType.INT32,
-    SearchFieldDataType.INT64,
-    SearchFieldDataType.DOUBLE,
-    SearchFieldDataType.DATE_TIME_OFFSET
-  )
+  /**
+   * Creates a partitioner instance and retrieves input partitions
+   * @param fieldName candidate field name
+   * @param partitionBounds partition bounds
+   * @return planned partitions
+   */
 
-  describe(`object`[RangePartitioner]) {
+  private def planInputPartitions(
+                                   fieldName: String,
+                                   partitionBounds: Seq[String]
+                                 ): Seq[SearchPartition] = {
+
+    JavaScalaConverters.listToSeq(
+      RangePartitioner(
+        fieldName,
+        partitionBounds
+      ).createPartitions()
+    )
+  }
+
+  describe(anInstanceOf[RangePartitioner]) {
     describe(SHOULD) {
-      describe("evaluate if an existing field") {
-        describe("is candidate for partitioning returning") {
-          it("a Right for valid cases") {
 
-            forAll(validTypes) {
-              tp =>
+      it("create a collection of partitions") {
 
-                val field = SearchFieldFeature.FILTERABLE.enableOnField(
-                  createSearchField("first", tp)
-                )
-
-                field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
-                RangePartitioner.evaluateExistingCandidate(field) shouldBe 'right
-            }
-          }
-
-          describe("a Left for") {
-            it("non filterable fields") {
-
-              forAll(validTypes) {
-                tp =>
-
-                  val field = createSearchField("first", tp)
-                  field should not be enabledFor(SearchFieldFeature.FILTERABLE)
-                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
-              }
-            }
-
-            it("non-numeric or date time fields") {
-
-              forAll(
-                Seq(
-                  SearchFieldDataType.SINGLE,
-                  SearchFieldDataType.STRING,
-                  SearchFieldDataType.COMPLEX
-                )
-              ) {
-                tp =>
-                  val field = SearchFieldFeature.FILTERABLE.enableOnField(
-                    createSearchField("first", tp)
-                  )
-
-                  field shouldBe enabledFor(SearchFieldFeature.FILTERABLE)
-                  RangePartitioner.evaluateExistingCandidate(field) shouldBe 'left
-              }
-            }
-          }
-        }
-      }
-
-      describe("safely retrieve a partition field") {
-
-        val fields = Seq(
-          SearchFieldFeature.FILTERABLE.enableOnField(createSearchField(first, SearchFieldDataType.INT32)),
-          SearchFieldFeature.FILTERABLE.enableOnField(createSearchField(second, SearchFieldDataType.STRING)),
-          createSearchField(third, SearchFieldDataType.DATE_TIME_OFFSET)
-        )
-
-        describe("returning a Right for") {
-
-          it("existing, filterable and type-wise valid fields") {
-
-            RangePartitioner.getPartitionField(
-              fields,
-              first
-            ) shouldBe 'right
-          }
-        }
-
-        describe("returning a Left for") {
-          it("non existing fields") {
-
-            RangePartitioner.getPartitionField(
-              fields,
-              fourth
-            ) shouldBe 'left
-
-          }
-
-          it("non filterable fields") {
-
-            RangePartitioner.getPartitionField(
-              fields,
-              third
-            ) shouldBe 'left
-          }
-
-          it("type-wise illegal fields") {
-
-            RangePartitioner.getPartitionField(
-              fields,
-              second
-            ) shouldBe 'left
-          }
-        }
+        val (fieldName, values) = ("type", Seq("1", "2", "3"))
+        val partitions = planInputPartitions(fieldName, values)
+        partitions should have size(values.size + 1)
+        val headFilter = partitions.head.getPartitionFilter
+        headFilter should include (s"$fieldName lt ${values.head}")
+        headFilter should include (s"$fieldName eq null")
+        partitions.last.getPartitionFilter shouldBe s"$fieldName ge ${values.last}"
       }
     }
   }

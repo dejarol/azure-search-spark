@@ -39,28 +39,3 @@ case class RangePartition(
 
   private def getLtFilter(value: String) = s"$fieldName lt $value"
 }
-
-object RangePartition {
-
-  /**
-   * Create a collection of partitions
-   * @param fieldName partition field name
-   * @param values partition values
-   * @return a collection of partitions
-   */
-
-  def createCollection(
-                        fieldName: String,
-                        values: Seq[String]
-                      ): Seq[RangePartition] = {
-
-    val lowerValues: Seq[Option[String]] = None +: values.map(Some(_))
-    val upperValues: Seq[Option[String]] = values.map(Some(_)) :+ None
-
-    // Zip lower values with upper values and create the partitions
-    lowerValues.zip(upperValues).zipWithIndex.map {
-      case ((lb, ub), index) =>
-        RangePartition(index, fieldName, lb, ub)
-    }
-  }
-}

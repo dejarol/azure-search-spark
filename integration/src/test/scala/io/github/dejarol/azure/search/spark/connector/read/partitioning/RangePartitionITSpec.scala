@@ -72,21 +72,6 @@ class RangePartitionITSpec
     )
   }
 
-  describe(`object`[RangePartition]) {
-    describe(SHOULD) {
-      it("create a collection of partitions") {
-
-        val (fieldName, values) = ("type", Seq("1", "2", "3"))
-        val partitions = RangePartition.createCollection(fieldName, values)
-        partitions should have size(values.size + 1)
-        val headFilter = partitions.head.getPartitionFilter
-        headFilter should include (s"$fieldName lt ${values.head}")
-        headFilter should include (s"$fieldName eq null")
-        partitions.last.getPartitionFilter shouldBe s"$fieldName ge ${values.last}"
-      }
-    }
-  }
-
   describe(anInstanceOf[RangePartition]) {
     describe(SHOULD) {
       it("generate a filter that combines the 2 sub filters") {

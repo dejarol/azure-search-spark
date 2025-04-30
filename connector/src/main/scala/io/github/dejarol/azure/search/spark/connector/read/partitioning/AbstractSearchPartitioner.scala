@@ -5,7 +5,6 @@ import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 
 /**
  * Parent class for Scala-based [[SearchPartitioner]](s)
- *
  * @param readConfig read configuration
  */
 
