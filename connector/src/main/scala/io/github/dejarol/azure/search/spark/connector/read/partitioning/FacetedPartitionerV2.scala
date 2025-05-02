@@ -5,28 +5,29 @@ import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import java.util.{List => JList}
 
 case class FacetedPartitionerV2(
-                                 private val facetFieldName: String,
-                                 private val facetStringValues: Seq[String]
+                                 private val fieldName: String,
+                                 private val facetValues: Seq[String]
                                )
   extends SearchPartitioner {
 
   override def createPartitions(): JList[SearchPartition] = {
 
     // Create as many partitions as the number of retrieved facet values
-    val partitionsForFacetsValues: Seq[AbstractFacetPartition] = facetStringValues
+    val partitionsForFacetsValues: Seq[AbstractFacetPartition] = facetValues
       .zipWithIndex.map {
         case (value, partitionId) =>
-          FacetValuePartition(partitionId, facetFieldName, value)
+          FacetValuePartition(partitionId, fieldName, value)
       }
 
     // Add another partition for either null values or other facet values
     val partitionForEitherNullOrOtherFacetValues = FacetNullValuePartition(
-      facetFieldName,
-      facetStringValues
+      fieldName,
+      facetValues
     )
 
     JavaScalaConverters.seqToList(
-      partitionsForFacetsValues :+ partitionForEitherNullOrOtherFacetValues
+      partitionsForFacetsValues :+
+        partitionForEitherNullOrOtherFacetValues
     )
   }
 }

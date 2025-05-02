@@ -7,11 +7,36 @@ import io.github.dejarol.azure.search.spark.connector.core.config.ConfigExceptio
 import io.github.dejarol.azure.search.spark.connector.core.schema._
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.AbstractFacetPartition.FacetToStringFunction
+
+/**
+ * Factory class for creating faceted partitioners.
+ * <br>
+ * In order to successfully create a faceted partitioner, the following partitioner options must be provided
+ *  - <code>partitionField</code>: the name of the field to be used for partitioning. Should be a facetable, filterable field
+ *  with either string or numeric datatype
+ *  - <code>numPartitions</code>: the number of partitions (default is the number of facets retrieved by the Azure Search API)
+ *
+ * Given a field <b>f1</b> that is filterable and facetable, it will generate partitions according to the following behavior
+ *  - if a value of <b>n</b> is given for <code>numPartitions</code>, it will generate <b>n</b> partitions
+ *    where partition <b>i = 0, ..., n - 1</b> will contain documents where <b>f1</b> is equal to the <b>i-th</b>
+ *    most frequent value of field  <b>f1</b>,
+ *    and a partition for all documents where <b>f1</b> is null or does not meet one of the  <b>n - 1</b> most frequent values
+ *  - otherwise, the number of partitions will be the default number of facets returned by the Azure Search API
+ */
 
 object FacetedPartitionerFactory
   extends PartitionerFactory {
 
+  sealed trait FacetToStringFunction extends (Any => String)
+
+  /**
+   * Creates a partitioner instance
+   * @param readConfig overall read configuration provided by the user
+   * @throws ConfigException if any of the given partitioner options is missing or invalid
+   * @return a partitioner instance, to be used for planning input partitions
+   */
+
+  @throws[ConfigException]
   override def createPartitioner(readConfig: ReadConfig): SearchPartitioner = {
 
     // Retrieve facet field name and number of partitions
@@ -27,7 +52,8 @@ object FacetedPartitionerFactory
       Integer.parseInt
     )
 
-    val x = for {
+    // Evaluate candidate facet field and provide number of partitions
+    val maybeFieldAndFacets = for {
       searchField <- getCandidateFacetField(facetFieldName, readConfig.getSearchIndexFields)
       partitions <- evaluatePartitionNumber(facetPartitions)
     } yield (
@@ -35,12 +61,35 @@ object FacetedPartitionerFactory
       getFacetResults(readConfig, searchField.getName, partitions)
     )
 
-    x match {
-      case Left(value) => ???
-      case Right((field, facets)) => FacetedPartitionerV2(
-        field.getName,
+    maybeFieldAndFacets match {
+      case Left(value) => throw value
+      case Right((field, facets)) => createPartitionerFromFacets(field, facets)
+    }
+  }
+
+  /**
+   * Creates a partitioner instance from a collection of facet results
+   * @param field candidate facet field
+   * @param facetResults facet results
+   * @return
+   */
+
+  private def createPartitionerFromFacets(
+                                           field: SearchField,
+                                           facetResults: Seq[FacetResult]
+                                         ): SearchPartitioner = {
+
+    val facetToStringFunction = getFunction(field)
+    val facetValues: Seq[String] = facetResults.map {
+      facet => facetToStringFunction(
+        facet.getAdditionalProperties.get("value")
       )
     }
+
+    FacetedPartitionerV2(
+      field.getName,
+      facetValues
+    )
   }
 
   /**
