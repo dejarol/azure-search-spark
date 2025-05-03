@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read.config
 import com.azure.search.documents.models.{FacetResult, SearchResult}
 import com.azure.search.documents.util.SearchPagedIterable
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, SearchConfig, SearchIOConfig}
+import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, ExtendableConfig, SearchConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressions}
 import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, FacetedPartitionerFactory, PartitionerFactory, RangePartitionerFactory, SearchPartition, SearchPartitioner}
@@ -11,6 +11,7 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 
 import java.util.{Iterator => Jiterator}
+import scala.util.Try
 
 /**
  * Read configuration
@@ -110,15 +111,56 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
     )
   }
 
+  /**
+   * Gets the user-defined [[io.github.dejarol.azure.search.spark.connector.read.partitioning.PartitionerFactory]]
+   * (for creating the partitioner responsible for planning input partitions).
+   * <br>
+   * If not provided, the default implementation (
+   * [[io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner]])
+   * will be used
+   * @throws ConfigException if the partitioner type is not valid or any of the partitioner options is missing/invalid
+   * @return a partitioner factory instance
+   */
+
+  @throws[ConfigException]
   def partitionerFactory: PartitionerFactory = {
 
     get(ReadConfig.PARTITIONER_CLASS_CONFIG) match {
-      case Some(value) => value match {
+      case Some(value) => value.toLowerCase match {
         case "range" => RangePartitionerFactory
         case "faceted" => FacetedPartitionerFactory
-        case _ => null
+        case _ => createCustomPartitionerFactory(value)
       }
       case None => DefaultPartitioner.FACTORY
+    }
+  }
+
+  /**
+   * Creates a custom partitioner factory by using the provided class name. This value should be the
+   * fully qualified name of a class that extends [[io.github.dejarol.azure.search.spark.connector.read.partitioning.PartitionerFactory]]
+   * and provides a single no-arg constructor
+   * @param factoryClassName fully qualified name of the factory class
+   * @throws ConfigException if factory creation fails
+   * @return a partitioner factory instance
+   */
+
+  @throws[ConfigException]
+  private[read] def createCustomPartitionerFactory(factoryClassName: String): PartitionerFactory = {
+
+    Try {
+      Class.forName(factoryClassName)
+        .getDeclaredConstructor()
+        .newInstance()
+        .asInstanceOf[PartitionerFactory]
+    }.toEither match {
+      case Left(cause) => throw ConfigException.forIllegalOptionValue(
+        ReadConfig.PARTITIONER_CLASS_CONFIG,
+        factoryClassName,
+        "The only valid values are 'range', 'faceted' or the fully qualified name of a custom class " +
+          s"that extends ${classOf[PartitionerFactory].getName} and provides a single no-arg constructor",
+        cause
+      )
+      case Right(value) => value
     }
   }
 

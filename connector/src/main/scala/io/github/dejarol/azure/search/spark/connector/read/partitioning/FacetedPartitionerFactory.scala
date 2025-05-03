@@ -27,7 +27,13 @@ import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 object FacetedPartitionerFactory
   extends PartitionerFactory {
 
-  sealed trait FacetToStringFunction extends (Any => String)
+  /**
+   * Private trait for defining how a facet value should be converted to a string
+   */
+
+  private sealed trait FacetToStringFunction {
+    def apply(value: Any): String
+  }
 
   /**
    * Creates a partitioner instance
@@ -86,7 +92,7 @@ object FacetedPartitionerFactory
       )
     }
 
-    FacetedPartitionerV2(
+    FacetedPartitioner(
       field.getName,
       facetValues
     )
@@ -166,7 +172,7 @@ object FacetedPartitionerFactory
 
     val facetable = candidate.isEnabledFor(SearchFieldFeature.FACETABLE)
     val filterable = candidate.isEnabledFor(SearchFieldFeature.FILTERABLE)
-    val facetableType = candidate.getType.isCandidateForFaceting
+    val facetableType = candidate.getType.isString || candidate.getType.isNumeric
     if (facetable && filterable && facetableType) {
       Right(candidate)
     } else {

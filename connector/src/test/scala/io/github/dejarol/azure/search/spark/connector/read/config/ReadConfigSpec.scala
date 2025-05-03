@@ -97,6 +97,28 @@ class ReadConfigSpec
           }
         }
 
+        describe("a partitioner factory instance of type") {
+          it("range") {
+
+            // TODO: test
+          }
+
+          it("faceted") {
+
+            // TODO: test
+          }
+
+          it("custom") {
+
+            // TODO: test
+          }
+
+          it("default") {
+
+            emptyConfig.partitionerFactory shouldBe DefaultPartitioner.FACTORY
+          }
+        }
+
         it("the predicate pushdown flag") {
 
           // Default

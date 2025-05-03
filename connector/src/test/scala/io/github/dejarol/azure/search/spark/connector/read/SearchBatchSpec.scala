@@ -13,7 +13,8 @@ class SearchBatchSpec
   /**
    * Create a partitioner, by feeding [[SearchBatch.createPartitioner]] with
    *  - a [[ReadConfig]] that contains only key [[ReadConfig.PARTITIONER_CLASS_CONFIG]], with value the class name of given type
-   *  - an empty array of [[org.apache.spark.sql.connector.expressions.filter.Predicate]](s)
+   *  - an empty array of [[org.apache.spark.sql.sources.Filter]](s)
+   *
    * @tparam T type whose class name will represent the partitioner class name
    * @return either a [[SearchBatchException]] (if partitioner creation fails) or a partitioner instance
    */
@@ -32,6 +33,7 @@ class SearchBatchSpec
 
   /**
    * Assert that the partitioner creation failed, when using the class name of a type as value for [[ReadConfig.PARTITIONER_CLASS_CONFIG]]
+   *
    * @tparam T type whose class name will represent the partitioner class name
    */
 

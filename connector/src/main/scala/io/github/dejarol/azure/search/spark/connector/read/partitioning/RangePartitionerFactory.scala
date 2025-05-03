@@ -112,7 +112,7 @@ object RangePartitionerFactory
 
     // Evaluate if related Search field is a good candidate
     val isFilterable = searchField.isEnabledFor(SearchFieldFeature.FILTERABLE)
-    val typeIsCandidate = searchField.getType.isCandidateForPartitioning
+    val typeIsCandidate = searchField.getType.isDateTime || searchField.getType.isNumeric
 
     if (isFilterable && typeIsCandidate) {
       Right(searchField)
