@@ -93,14 +93,10 @@ object SearchBatch {
     // Try to detect a one-arg constructor requiring a ReadConfig
     // and create a partitioner instance
     Try {
-      readConfig.partitionerClass.getDeclaredConstructor(
-        classOf[ReadConfig]
-      ).newInstance(readConfig)
+      val partitionerFactory = readConfig.partitionerFactory
+      partitionerFactory.createPartitioner(readConfig)
     }.toEither.left.map {
-      SearchBatchException.forFailedPartitionerCreation(
-        readConfig.partitionerClass,
-        _
-      )
+      SearchBatchException.forFailedPartitionerCreation
     }
   }
 }

@@ -17,7 +17,8 @@ public interface SearchPartitioner {
     String UPPER_BOUND_CONFIG = "upperBound";
 
     /**
-     * Generate a collection of not-overlapping {@link SearchPartition} that will be used for executing parallel searches on an index
+     * Generate a collection of not-overlapping {@link SearchPartition} that will be used for executing
+     * parallel read operations on an index
      * @return a collection of Search partitions
      */
 

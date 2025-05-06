@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.utils.Reflection
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.{EmptyPartitioner, SearchPartitioner}
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{EmptyJavaPartitionerFactory, SearchPartitioner}
 
 import scala.reflect.ClassTag
 
@@ -31,34 +31,19 @@ class SearchBatchSpec
     )
   }
 
-  /**
-   * Assert that the partitioner creation failed, when using the class name of a type as value for [[ReadConfig.PARTITIONER_CLASS_CONFIG]]
-   *
-   * @tparam T type whose class name will represent the partitioner class name
-   */
-
-  private def assertPartitionerCreationFailed[T: ClassTag](): Unit = createPartitioner[T]() shouldBe 'left
-
-  /**
-   * Assert that the partitioner creation succeeded, and then perform a further assertion on the created partitioner
-   * @param assertion assertion on created partitioner
-   * @tparam T partitioner type (should extend [[SearchPartitioner]])
-   */
-
-  private def assertPartitionerCreationSucceeded[T <: SearchPartitioner: ClassTag](assertion: SearchPartitioner => Unit): Unit = {
-
-    val result = createPartitioner[T]()
-    result shouldBe 'right
-    assertion(result.right.get)
-  }
-
   describe(`object`[SearchBatch]) {
     describe(SHOULD) {
-      it("safely create a partitioner") {
+      describe("safely create a partitioner by returning") {
+        it("a Right with a partitioner") {
 
-        assertPartitionerCreationFailed[String]()
-        assertPartitionerCreationSucceeded[EmptyPartitioner] {
-          _ shouldBe an[EmptyPartitioner]
+          val result = createPartitioner[EmptyJavaPartitionerFactory]()
+          result shouldBe 'right
+          result.right.get.createPartitions() shouldBe empty
+        }
+
+        it(s"a Left with a ${nameOf[SearchBatchException]}") {
+
+          createPartitioner[String]() shouldBe 'left
         }
       }
     }

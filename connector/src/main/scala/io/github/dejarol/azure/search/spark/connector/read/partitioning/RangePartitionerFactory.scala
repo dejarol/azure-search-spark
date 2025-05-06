@@ -25,11 +25,14 @@ import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
  *
  */
 
-object RangePartitionerFactory
+class RangePartitionerFactory
   extends PartitionerFactory {
+
+  import RangePartitionerFactory._
 
   /**
    * Creates the partitioner instance
+   *
    * @param readConfig overall read configuration provided by the user
    * @throws ConfigException if any of the given partitioner options is missing or invalid
    * @return a partitioner instance, to be used for planning input partitions
@@ -57,6 +60,9 @@ object RangePartitionerFactory
       case Right(partitioner) => partitioner
     }
   }
+}
+
+object RangePartitionerFactory {
 
   /**
    * Return the eligible partitioning field, if it exists

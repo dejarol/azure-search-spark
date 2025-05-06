@@ -6,7 +6,7 @@ import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, ExtendableConfig, SearchConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressions}
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, FacetedPartitionerFactory, PartitionerFactory, RangePartitionerFactory, SearchPartition, SearchPartitioner}
+import io.github.dejarol.azure.search.spark.connector.read.partitioning._
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 
@@ -97,21 +97,6 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
   }
 
   /**
-   * Get the [[io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner]] to use for generating the search partitions.
-   * If not provided, a [[io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner]] will be used
-   * @return a search partitioner instance
-   */
-
-  def partitionerClass: Class[SearchPartitioner] = {
-
-    getOrDefaultAs[Class[SearchPartitioner]](
-      ReadConfig.PARTITIONER_CLASS_CONFIG,
-      classOf[DefaultPartitioner].asInstanceOf[Class[SearchPartitioner]],
-      s => Class.forName(s).asInstanceOf[Class[SearchPartitioner]]
-    )
-  }
-
-  /**
    * Gets the user-defined [[io.github.dejarol.azure.search.spark.connector.read.partitioning.PartitionerFactory]]
    * (for creating the partitioner responsible for planning input partitions).
    * <br>
@@ -127,11 +112,13 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
     get(ReadConfig.PARTITIONER_CLASS_CONFIG) match {
       case Some(value) => value.toLowerCase match {
-        case "range" => RangePartitionerFactory
-        case "faceted" => FacetedPartitionerFactory
+        case ReadConfig.RANGE_PARTITIONER_CLASS_VALUE => new RangePartitionerFactory
+        case ReadConfig.FACETED_PARTITIONER_CLASS_VALUE => new FacetedPartitionerFactory
         case _ => createCustomPartitionerFactory(value)
       }
-      case None => DefaultPartitioner.FACTORY
+
+      // If not defined, provide an anonymous factory that returns the default partitioner
+      case None => (_: ReadConfig) => DefaultPartitioner()
     }
   }
 
@@ -145,7 +132,7 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    */
 
   @throws[ConfigException]
-  private[read] def createCustomPartitionerFactory(factoryClassName: String): PartitionerFactory = {
+  private def createCustomPartitionerFactory(factoryClassName: String): PartitionerFactory = {
 
     Try {
       Class.forName(factoryClassName)
@@ -156,7 +143,8 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
       case Left(cause) => throw ConfigException.forIllegalOptionValue(
         ReadConfig.PARTITIONER_CLASS_CONFIG,
         factoryClassName,
-        "The only valid values are 'range', 'faceted' or the fully qualified name of a custom class " +
+        s"The only valid values are '${ReadConfig.RANGE_PARTITIONER_CLASS_VALUE}', " +
+          s"'${ReadConfig.FACETED_PARTITIONER_CLASS_VALUE}' or the fully qualified name of a custom class " +
           s"that extends ${classOf[PartitionerFactory].getName} and provides a single no-arg constructor",
         cause
       )
@@ -268,6 +256,8 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 object ReadConfig {
 
   final val PARTITIONER_CLASS_CONFIG = "partitioner"
+  final val RANGE_PARTITIONER_CLASS_VALUE = "range"
+  final val FACETED_PARTITIONER_CLASS_VALUE = "faceted"
   final val PUSHDOWN_PREDICATE_CONFIG = "pushdownPredicate"
   final val SEARCH_OPTIONS_PREFIX = "searchOptions."
   final val PARTITIONER_OPTIONS_PREFIX = "partitioner.options."
@@ -284,4 +274,5 @@ object ReadConfig {
       CaseInsensitiveMap(dsOptions)
     )
   }
+
 }

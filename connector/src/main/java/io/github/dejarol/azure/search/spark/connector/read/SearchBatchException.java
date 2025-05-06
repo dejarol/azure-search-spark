@@ -71,20 +71,17 @@ public class SearchBatchException
 
     /**
      * Create a new instance, due to an exception caught when trying to create a {@link SearchPartitioner} instance
-     * @param partitionerClass class of the attempted partitioner instance
      * @param cause cause
      * @return a new exception instance
      */
 
-    @Contract("_, _ -> new")
+    @Contract("_ -> new")
     public static @NotNull SearchBatchException forFailedPartitionerCreation(
-            @NotNull Class<? extends SearchPartitioner> partitionerClass,
             @NotNull Throwable cause
     ) {
 
         String message = String.format(
-                "Cannot create an instance of %s. Reason: %s",
-                partitionerClass.getName(),
+                "Cannot create the partitioner instance. Reason: %s",
                 cause.getMessage()
         );
 

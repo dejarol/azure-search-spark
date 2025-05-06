@@ -24,19 +24,14 @@ import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
  *  - otherwise, the number of partitions will be the default number of facets returned by the Azure Search API
  */
 
-object FacetedPartitionerFactory
+class FacetedPartitionerFactory
   extends PartitionerFactory {
 
-  /**
-   * Private trait for defining how a facet value should be converted to a string
-   */
-
-  private sealed trait FacetToStringFunction {
-    def apply(value: Any): String
-  }
+  import FacetedPartitionerFactory._
 
   /**
    * Creates a partitioner instance
+   *
    * @param readConfig overall read configuration provided by the user
    * @throws ConfigException if any of the given partitioner options is missing or invalid
    * @return a partitioner instance, to be used for planning input partitions
@@ -71,6 +66,17 @@ object FacetedPartitionerFactory
       case Left(value) => throw value
       case Right((field, facets)) => createPartitionerFromFacets(field, facets)
     }
+  }
+}
+
+object FacetedPartitionerFactory {
+
+  /**
+   * Private trait for defining how a facet value should be converted to a string
+   */
+
+  private sealed trait FacetToStringFunction {
+    def apply(value: Any): String
   }
 
   /**

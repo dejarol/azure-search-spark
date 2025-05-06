@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.read.partitioning
 
 /**
- * Default implementation
+ * Default partition implementation (no filter defined)
  * @param partitionId partition id
  */
 

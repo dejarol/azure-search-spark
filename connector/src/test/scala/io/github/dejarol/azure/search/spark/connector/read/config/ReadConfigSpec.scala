@@ -1,15 +1,16 @@
 package io.github.dejarol.azure.search.spark.connector.read.config
 
-import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpressionMixins, ODataExpressions}
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, EmptyPartitioner}
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, EmptyJavaPartitionerFactory, EmptyScalaPartitionerFactory, FacetedPartitionerFactory, PartitionerFactory, RangePartitionerFactory, SinglePartitionFactory}
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.types.DataTypes
 
 class ReadConfigSpec
   extends BasicSpec
     with ODataExpressionMixins
       with FieldFactory {
+
 
   /**
    * Create a configuration instance
@@ -19,6 +20,7 @@ class ReadConfigSpec
 
   private def createConfig(options: Map[String, String]): ReadConfig = ReadConfig(options)
 
+  // Empty instance for testing
   private lazy val emptyConfig = createConfig(Map.empty)
 
   /**
@@ -46,6 +48,21 @@ class ReadConfigSpec
     }
 
     getter(createdConfig).toMap should contain theSameElementsAs expected
+  }
+
+  /**
+   * Create a configuration instance by setting the given value for key <code>partitioner</code>
+   * @param partitionerName the partitioner factory class name
+   * @return a configuration instance
+   */
+
+  private def createConfigWithPartitionerFactory(partitionerName: String): ReadConfig = {
+
+    createConfig(
+      Map(
+        ReadConfig.PARTITIONER_CLASS_CONFIG -> partitionerName
+      )
+    )
   }
 
   describe(anInstanceOf[ReadConfig]) {
@@ -79,43 +96,69 @@ class ReadConfigSpec
           }
         }
 
-        describe("a partitioner instance using either") {
-          it("a default") {
-
-            emptyConfig.partitionerClass shouldBe classOf[DefaultPartitioner]
-          }
-
-          it("a user provided partitioner") {
-
-            val config = createConfig(
-              Map(
-                ReadConfig.PARTITIONER_CLASS_CONFIG -> classOf[EmptyPartitioner].getName
-              )
-            )
-
-            config.partitionerClass shouldBe classOf[EmptyPartitioner]
-          }
-        }
-
         describe("a partitioner factory instance of type") {
           it("range") {
 
-            // TODO: test
+            createConfigWithPartitionerFactory(
+              ReadConfig.RANGE_PARTITIONER_CLASS_VALUE
+            ).partitionerFactory shouldBe a[RangePartitionerFactory]
           }
 
           it("faceted") {
 
-            // TODO: test
+            createConfigWithPartitionerFactory(
+              ReadConfig.FACETED_PARTITIONER_CLASS_VALUE
+            ).partitionerFactory shouldBe a[FacetedPartitionerFactory]
           }
 
-          it("custom") {
+          describe("custom") {
+            it("using valid Java classes") {
 
-            // TODO: test
+              createConfigWithPartitionerFactory(
+               classOf[EmptyJavaPartitionerFactory].getName
+              ).partitionerFactory shouldBe a[EmptyJavaPartitionerFactory]
+            }
+
+            it("using valid Scala classes") {
+
+              createConfigWithPartitionerFactory(
+                classOf[EmptyScalaPartitionerFactory].getName
+              ).partitionerFactory shouldBe a[EmptyScalaPartitionerFactory]
+            }
+
+            describe(s"throwing a ${nameOf[ConfigException]} for") {
+              it("invalid class names") {
+
+                a [ConfigException] shouldBe thrownBy {
+                  createConfigWithPartitionerFactory("hello")
+                    .partitionerFactory
+                }
+              }
+
+              it(s"class names not implementing ${nameOf[PartitionerFactory]}") {
+
+                a [ConfigException] shouldBe thrownBy {
+                  createConfigWithPartitionerFactory(
+                    classOf[String].getName
+                  ).partitionerFactory
+                }
+              }
+
+              it("partitioner factories without a no-arg constructor") {
+
+                a [ConfigException] shouldBe thrownBy {
+                  createConfigWithPartitionerFactory(
+                    classOf[SinglePartitionFactory].getName
+                  ).partitionerFactory
+                }
+              }
+            }
           }
 
           it("default") {
 
-            emptyConfig.partitionerFactory shouldBe DefaultPartitioner.FACTORY
+            val factory = emptyConfig.partitionerFactory
+            factory.createPartitioner(emptyConfig) shouldBe a [DefaultPartitioner]
           }
         }
 
