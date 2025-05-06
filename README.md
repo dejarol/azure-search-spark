@@ -159,12 +159,14 @@ It can also be provided as option <code>path</code> or passed as argument to Spa
     </tr>
     <tr>
         <td>partitioner</td>
-        <td>The partitioner full class name. 
-You can specify a custom implementation that must implement the <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code> interface.
+        <td>The partitioner type. It should be one among <code>range</code>, <code>faceted</code> or the fully  
+qualified name of a class that implements 
+<code>io.github.dejarol.azure.search.spark.connector.read.partitioning.PartitionerFactory</code> interface and
+provides a no-arg constructor
 Have a look at the <b>Partitioners</b> section for more information about partitioners.
 </td>
         <td></td>
-        <td>io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner</td>
+        <td></td>
     </tr>
     <tr>
         <td>partitioner.options.*</td>
@@ -224,11 +226,19 @@ Since Azure Search Service does not allow to retrieve more than 100K documents p
 or just google <b>"azure search skip limit"</b>), we need to address parallel read operations very carefully.
 Partitioners are components for handling the generation of partitions for parallel read operations.
 The inspiration behind partitioners comes from the MongoDB Spark connector, where a similar concept
-has been adopted
+has been adopted.
 <br>
-<br>
-Extending the <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code> interface, each partitioner should 
-create a collection of non-overlapping read partitions, and each of these partitions should retrieve a maximum of 100K documents.
+
+Up to now, 3 built-in partitioners are available:
+<ul>
+    <li><code>FacetedPartitioner</code></li>
+    <li><code>RangePartitioner</code></li>
+    <li><code>SinglePartitioner</code></li>
+</ul>
+
+The connector allows users to provided their own partitioner implementation, if needed.
+In general, each partitioner should create a collection of non-overlapping read partitions, 
+and each of these partitions should retrieve a maximum of 100K documents.
 
 Here's a summary on available partitioners and how to define a custom partitioner
 
@@ -273,14 +283,14 @@ where
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner", "faceted")
 .option("partitioner.options.facetField", "nameOfTheFacetField")
 .option("partitioner.options.numPartitions", "numOfPartitions")
 ```  
 
 According to the previous example
 ```
-.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
+.option("partitioner", "faceted")
 .option("partitioner.options.facetField", "category")
 .option("partitioner.options.numPartitions", "4")
 ```
@@ -334,7 +344,7 @@ and <code>numPartitions</code> JDBC datasource options
 
 In order to use such partitioner, provide the following options to the Spark reader
 ```
-.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.RangePartitioner")
+.option("partitioner", "range")
 .option("partitioner.options.partitionField", "numericOrDateFieldName")
 .option("partitioner.options.lowerBound", "lb")
 .option("partitioner.options.upperBound", "ub")
@@ -352,32 +362,72 @@ like <code>"2024-12-31"</code> </li>
 
 #### DefaultPartitioner
 
-The simplest partitioner: retrieves all documents within a single partition. Suitable only for scenarios where the total number of documents 
-to retrieve is smaller than 100K. No options are required
+The simplest partitioner: retrieves all documents within a single partition. No options are required
 
-##### Usage
-```
-.option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner")
-```
+> ⚠️ **Warning** Suitable only for scenarios where the total number of documents to retrieve is smaller than 100K.
+
 
 #### Custom
 
-Of course, you can create your own partitioner implementation, given that
+As mentioned before, the connector allows users to provide their own partitioner implementation. 
+In order to do so, users must
 <ul>
-    <li>it implements the interface <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code></li>
-    <li>it provides a single, one-arg constructor accepting an instance of <code>io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig</code></li>
+    <li>
+        a class that implements interface <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartitioner</code>
+        (i.e. the partitioner itself)
+    </li>
+    <li>
+        a class that implements interface <code>io.github.dejarol.azure.search.spark.connector.read.partitioning.PartitionerFactory</code>,
+        that provides a single no-arg constructor and returns an instance of the custom partitioner implementation
+    </li>
+    <li>
+        provide the fully-qualified name of the factory class to option <code>partitioner</code>
+    </li>
 </ul>
 
-For Scala-based partitioners, you can extend class 
-<code>io.github.dejarol.azure.search.spark.connector.read.partitioning.AbstractSearchPartitioner</code>,
-that satisfies both conditions and allows users to access partitioner options by means of attribute <code>partitionerOptions</code>
+Users can access partitioner options by means of attribute <code>partitionerOptions</code> of the 
+<code>ReadConfig</code> instance passed as first parameter to the <code>createPartitioner</code> method
 
 ##### Usage
 
+Define your custom partitioner
+
 ```
-.option("partitioner", "your.own.partitioner.class")
-.option("partitioner.options.x", "valueOfPartitionerPropertyX")
-.option("partitioner.options.y", "valueOfPartitionerPropertyY")
+package your.own.package
+
+class CustomPartitioner(prival val x: Option[String], private val y: Option[String]) 
+    extends SearchPartitioner {
+    
+    override def createPartitions(): java.util.List[SearchPartition] = {
+    
+        // your own custom logic for creating partitions
+    }
+}
+```
+
+Define your custom partitioner factory
+
+```
+package your.own.package
+
+class CustomPartitionerFactory extends PartitionerFactory {
+
+    override def createPartitioner(readConfig: ReadConfig): SearchPartitioner = {
+    
+        val partitionerOptions = readConfig.partitionerOptions
+        new CustomPartitioner(
+            partitionerOptions.get("x"),
+            partitionerOptions.get("y")
+        )
+    }
+}
+```
+
+and then provide the following options
+```
+.option("partitioner", "your.own.package.CustomPartitionerFactory")
+.option("partitioner.options.x", "1")
+.option("partitioner.options.y", "2")
 ```
 
 ### A concrete read example
@@ -386,7 +436,7 @@ that satisfies both conditions and allows users to access partitioner options by
 val df = spark.read.format("azsearch")
     .option("endPoint", "yourEndpoint")
     .option("apiKey", "yourApiKey")
-    .option("partitioner", "io.github.dejarol.azure.search.spark.connector.read.partitioning.FacetedPartitioner")
+    .option("partitioner", "faceted")
     .option("partitioner.options.facetField", "category")
     .option("partitioner.options.numPartitions", "4")
     .option("searchOptions.searchText", "hotel")
