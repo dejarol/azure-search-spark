@@ -12,9 +12,9 @@ package object partitioning
    * @return a mock partitioner
    */
 
-  def mockPartitioner(partitions: Seq[SearchPartition]): SearchPartitioner = {
+  def stubPartitioner(partitions: Seq[SearchPartition]): SearchPartitioner = {
 
-    val partitioner = mock[SearchPartitioner]
+    val partitioner = stub[SearchPartitioner]
     (partitioner.createPartitions _).when().returns(
       JavaScalaConverters.seqToList(
         partitions
@@ -30,10 +30,23 @@ package object partitioning
    * @return a mock partition
    */
 
-  def mockPartition(id: Int): SearchPartition = {
+  def stubPartitionById(id: Int): SearchPartition = {
 
-    val partition = mock[SearchPartition]
+    val partition = stub[SearchPartition]
     (partition.getPartitionId _).when().returns(id)
+    partition
+  }
+
+  /**
+   * Creates a mock partition, that will return the provided filter
+   * @param filter partition filter
+   * @return a mock partition
+   */
+
+  def stubPartitionByFilter(filter: String): SearchPartition = {
+
+    val partition = stub[SearchPartition]
+    (partition.getPartitionFilter _).when().returns(filter)
     partition
   }
 }

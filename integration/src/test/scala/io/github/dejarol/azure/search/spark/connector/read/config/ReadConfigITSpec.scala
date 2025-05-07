@@ -5,24 +5,15 @@ import io.github.dejarol.azure.search.spark.connector.{FieldFactory, SearchITSpe
 import io.github.dejarol.azure.search.spark.connector.core.utils.JavaCollections
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.models.PushdownBean
-import io.github.dejarol.azure.search.spark.connector.read.partitioning.SearchPartition
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.OneInstancePerTest
+import io.github.dejarol.azure.search.spark.connector.read.partitioning.{SearchPartition, stubPartitionByFilter}
 
 class ReadConfigITSpec
   extends SearchITSpec
-    with FieldFactory
-      with MockFactory
-        with OneInstancePerTest {
+    with FieldFactory {
 
   private lazy val indexName = "read-config-it-spec"
   private lazy val (hello, world) = ("hello", "world")
-
-  private lazy val mockPartition = mock[SearchPartition]
-  (mockPartition.getPartitionFilter _).expects()
-    .returning(s"stringValue eq '$hello'")
-    .anyNumberOfTimes()
-
+  private lazy val stubPartition = stubPartitionByFilter(s"stringValue eq '$hello'")
   private lazy val documents: Seq[PushdownBean] = Seq(
     PushdownBean("one", Some(hello), Some(1), None),
     PushdownBean("two", Some(hello), Some(1), None),
@@ -170,13 +161,13 @@ class ReadConfigITSpec
 
           assertCorrectPartitionResults(
             None,
-            mockPartition,
+            stubPartition,
             stringValueEqHelloPredicate
           )
 
           assertCorrectPartitionResults(
             Some(intValueEqTwoFilter),
-            mockPartition,
+            stubPartition,
             d => stringValueEqHelloPredicate(d) && intValueEqTwoPredicate(d)
           )
         }
@@ -185,13 +176,13 @@ class ReadConfigITSpec
 
           assertCorrectCountPerPartition(
             None,
-            mockPartition,
+            stubPartition,
             stringValueEqHelloPredicate
           )
 
           assertCorrectCountPerPartition(
             Some(intValueEqTwoFilter),
-            mockPartition,
+            stubPartition,
             d => stringValueEqHelloPredicate(d) && intValueEqTwoPredicate(d)
           )
         }

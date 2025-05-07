@@ -11,7 +11,7 @@ class EmptyScalaPartitionerFactory
 
   override def createPartitioner(readConfig: ReadConfig): SearchPartitioner = {
 
-    mockPartitioner(
+    stubPartitioner(
       Seq.empty
     )
   }
@@ -28,9 +28,9 @@ class SinglePartitionFactory(private val partitionId: Int)
 
   override def createPartitioner(readConfig: ReadConfig): SearchPartitioner = {
 
-    mockPartitioner(
+    stubPartitioner(
       Seq(
-        mockPartition(partitionId)
+        stubPartitionById(partitionId)
       )
     )
   }
