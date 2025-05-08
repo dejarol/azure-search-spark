@@ -17,16 +17,4 @@ public final class TestConstants {
      */
 
     public static final String CLASSIC_SIMILARITY_ALGORITHM = "#Microsoft.Azure.Search.ClassicSimilarity";
-
-    /**
-     * Name of the BM25 similarity algorithm
-     */
-
-    public static final String BM25_SIMILARITY_ALGORITHM = "#Microsoft.Azure.Search.BM25Similarity";
-
-    /**
-     * Name of the classic tokenizer
-     */
-
-    public static final String CLASSIC_TOKENIZER = "#Microsoft.Azure.Search.ClassicTokenizer";
 }

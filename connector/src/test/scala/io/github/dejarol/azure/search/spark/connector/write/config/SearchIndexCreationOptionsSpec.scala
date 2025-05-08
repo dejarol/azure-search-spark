@@ -237,7 +237,7 @@ class SearchIndexCreationOptionsSpec
           val (allowedOrigins, maxAge) = (Seq("first"), 15)
           assertBehaviorForIndexOption[CorsOptions](
             SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
-            "{}",
+            "[]",
             createCorsOptions(allowedOrigins, maxAge),
             _.corsOptions
           ) {
@@ -256,6 +256,27 @@ class SearchIndexCreationOptionsSpec
               SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
             )
           ).defaultScoringProfile shouldBe Some(name)
+        }
+
+        it("vector search") {
+
+          assertBehaviorForIndexOption[VectorSearch](
+            SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+            "{",
+            createVectorSearch(
+              Seq(
+                createHnswAlgorithm("algo", 1, 2, 3, VectorSearchAlgorithmMetric.COSINE)
+              ),
+              Seq(
+                createVectorSearchProfile("hello", "world")
+              )
+            ),
+            _.vectorSearch
+          ) {
+            vectorSearch =>
+              vectorSearch.getAlgorithms should have size 1
+              vectorSearch.getProfiles should have size 1
+          }
         }
 
         it("the set of actions to apply on a Search index") {
@@ -282,12 +303,20 @@ class SearchIndexCreationOptionsSpec
                 SearchIndexCreationOptions.CORS_OPTIONS_CONFIG -> createCorsOptions(
                   Seq("second"), 10
                 ),
-                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> "profileName"
+                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> "profileName",
+                SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG -> createVectorSearch(
+                  Seq(
+                    createHnswAlgorithm("hello", 2, 3, 4, VectorSearchAlgorithmMetric.DOT_PRODUCT)
+                  ),
+                  Seq(
+                    createVectorSearchProfile("first", "second")
+                  )
+                )
               )
             )
           ).searchIndexActions
 
-          actions should have size 8
+          actions should have size 9
         }
       }
     }

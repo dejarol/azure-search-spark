@@ -1,13 +1,34 @@
 package io.github.dejarol.azure.search.spark.connector
 
-import io.github.dejarol.azure.search.spark.connector.core.TestConstants
+import com.azure.json.{JsonProviders, JsonSerializable, JsonWriter}
+import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, CharFilter, ClassicTokenizer, CorsOptions, HnswAlgorithmConfiguration, HnswParameters, LexicalAnalyzer, LexicalTokenizer, MappingCharFilter, PatternReplaceTokenFilter, ScoringProfile, SearchSuggester, SimilarityAlgorithm, StopAnalyzer, TextWeights, TokenFilter, VectorSearch, VectorSearchAlgorithmConfiguration, VectorSearchAlgorithmMetric, VectorSearchProfile}
+import io.github.dejarol.azure.search.spark.connector.core.{JavaScalaConverters, TestConstants}
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
+
+import java.io.StringWriter
+import java.lang.{Double => JDouble}
 
 /**
  * Mix-in trait for specs that deal with JSON representing Azure Search REST API models
  */
 
 trait SearchAPIModelFactory {
+
+  /**
+   * Creates the JSON string representation of Search API model
+   * @param model an API model instance
+   * @tparam T model type
+   * @return a JSON string representing the model
+   */
+
+  protected final def apiModelToJson[T <: JsonSerializable[T]](model: T): String = {
+
+    val stringWriter = new StringWriter()
+    val jsonWriter: JsonWriter = JsonProviders.createWriter(stringWriter)
+    model.toJson(jsonWriter)
+    jsonWriter.flush()
+    stringWriter.toString
+  }
 
   /**
    * Create a JSON array by joining many JSON strings
@@ -51,11 +72,11 @@ trait SearchAPIModelFactory {
                                                      b: Double
                                                    ): String = {
 
-    s"""{
-       |  "${TestConstants.ODATA_TYPE}": "${TestConstants.BM25_SIMILARITY_ALGORITHM}",
-       |  "k1": $k1,
-       |  "b": $b
-       |}""".stripMargin
+    apiModelToJson[SimilarityAlgorithm](
+      new BM25SimilarityAlgorithm()
+        .setK1(k1)
+        .setB(b)
+    )
   }
 
   /**
@@ -70,12 +91,10 @@ trait SearchAPIModelFactory {
                                               maxTokenLength: Int
                                             ): String = {
 
-    s"""
-       |{
-       |  "${TestConstants.ODATA_TYPE}": "${TestConstants.CLASSIC_TOKENIZER}",
-       |  "name": "$name",
-       |  "maxTokenLength": $maxTokenLength
-       |}""".stripMargin
+    apiModelToJson[LexicalTokenizer](
+      new ClassicTokenizer(name)
+        .setMaxTokenLength(maxTokenLength)
+    )
   }
 
   /**
@@ -89,11 +108,13 @@ trait SearchAPIModelFactory {
                                              name: String,
                                              fields: Seq[String]
                                            ): String = {
-    s"""
-       |{
-       |  "name": "$name",
-       |  "sourceFields": ${createArrayOfStrings(fields)}
-       |}""".stripMargin
+
+    apiModelToJson[SearchSuggester](
+      new SearchSuggester(
+        name,
+        JavaScalaConverters.seqToList(fields)
+      )
+    )
   }
 
   /**
@@ -108,12 +129,10 @@ trait SearchAPIModelFactory {
                                           stopWords: Seq[String]
                                         ): String = {
 
-    s"""
-       |{
-       |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.StopAnalyzer",
-       |  "name": "$name",
-       |  "stopwords": ${createArrayOfStrings(stopWords)}
-       |}""".stripMargin
+    apiModelToJson[LexicalAnalyzer](
+      new StopAnalyzer(name)
+        .setStopwords(stopWords: _*)
+    )
   }
 
   protected final def createMappingCharFilter(
@@ -121,12 +140,12 @@ trait SearchAPIModelFactory {
                                                mappings: Seq[String]
                                              ): String = {
 
-    s"""
-       |{
-       | "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.MappingCharFilter",
-       | "name": "$name",
-       | "mappings": ${createArrayOfStrings(mappings)}
-       |}""".stripMargin
+    apiModelToJson[CharFilter](
+      new MappingCharFilter(
+        name,
+        JavaScalaConverters.seqToList(mappings)
+      )
+    )
   }
 
   /**
@@ -141,17 +160,16 @@ trait SearchAPIModelFactory {
                                             weights: Map[String, Double]
                                           ): String = {
 
-    val weightsMap = weights.map {
-      case (k, v) => s"${StringUtils.quoted(k)}: $v"
-    }.mkString("{", ",", "}")
-
-    s"""
-       |{
-       |  "name": ${StringUtils.quoted(name)},
-       |  "text": {
-       |    "weights": $weightsMap
-       |  }
-       |}""".stripMargin
+    apiModelToJson[ScoringProfile](
+      new ScoringProfile(name)
+        .setTextWeights(
+          new TextWeights(
+            JavaScalaConverters.scalaMapToJava(
+              weights.mapValues(JDouble.valueOf)
+            )
+          )
+        )
+    )
   }
 
   /**
@@ -168,13 +186,13 @@ trait SearchAPIModelFactory {
                                                        replacement: String
                                                      ): String = {
 
-    s"""
-       |{
-       |  "${TestConstants.ODATA_TYPE}": "#Microsoft.Azure.Search.PatternReplaceTokenFilter",
-       |  "name": "$name",
-       |  "pattern": "$pattern",
-       |  "replacement": "$replacement"
-       |}""".stripMargin
+    apiModelToJson[TokenFilter](
+      new PatternReplaceTokenFilter(
+        name,
+        pattern,
+        replacement
+      )
+    )
   }
 
   /**
@@ -189,10 +207,73 @@ trait SearchAPIModelFactory {
                                          maxAgeInSeconds: Int
                                        ): String = {
 
-    s"""
-       |{
-       |  "allowedOrigins": ${createArrayOfStrings(allowedOrigins)},
-       |  "maxAgeInSeconds": $maxAgeInSeconds
-       |}""".stripMargin
+    apiModelToJson[CorsOptions](
+      new CorsOptions(
+        JavaScalaConverters.seqToList(allowedOrigins)
+      ).setMaxAgeInSeconds(maxAgeInSeconds)
+    )
+  }
+
+  /**
+   * Create a [[com.azure.search.documents.indexes.models.VectorSearchProfile]]
+   * @param name profile name
+   * @param algorithmConfigurationName algorithm configuration name
+   * @return a vector search profile
+   */
+
+  protected final def createVectorSearchProfile(
+                                                 name: String,
+                                                 algorithmConfigurationName: String
+                                               ): VectorSearchProfile = {
+
+    new VectorSearchProfile(
+      name,
+      algorithmConfigurationName
+    )
+  }
+
+  /**
+   * Create a [[com.azure.search.documents.indexes.models.HnswAlgorithmConfiguration]] (an algorithm for vector search)
+   * @param name algorithm name
+   * @param m value of algorithm parameter m
+   * @param efConstruction value of algorithm parameter efConstruction
+   * @param efSearch value of algorithm parameter efSearch
+   * @param metric algorithm metric
+   * @return an algorithm for vector search
+   */
+
+  protected final def createHnswAlgorithm(
+                                           name: String,
+                                           m: Int,
+                                           efConstruction: Int,
+                                           efSearch: Int,
+                                           metric: VectorSearchAlgorithmMetric
+                                         ): VectorSearchAlgorithmConfiguration = {
+
+    new HnswAlgorithmConfiguration(name)
+      .setParameters(
+        new HnswParameters()
+          .setM(m)
+          .setEfConstruction(efConstruction)
+          .setEfSearch(efSearch)
+          .setMetric(metric)
+      )
+  }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.VectorSearch]] instance
+   * @return a JSON representation of a vector search
+   */
+
+  protected final def createVectorSearch(
+                                          algorithms: Seq[VectorSearchAlgorithmConfiguration],
+                                          profiles: Seq[VectorSearchProfile]
+                                        ): String = {
+
+    apiModelToJson[VectorSearch](
+      new VectorSearch()
+        .setAlgorithms(algorithms: _*)
+        .setProfiles(profiles: _*)
+    )
   }
 }

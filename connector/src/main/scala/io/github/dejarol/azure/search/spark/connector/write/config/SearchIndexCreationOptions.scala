@@ -16,7 +16,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   extends SearchConfig(options) {
 
   /**
-   * Get an optional instance representing an Azure Search API model
+   * Gets an optional instance representing an Azure Search API model
    * (like [[SimilarityAlgorithm]], [[LexicalTokenizer]], etc ...)
    * from the JSON string related to a configuration key
    * @param key configuration key
@@ -40,7 +40,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get an optional collection of instances representing Azure Search API models
+   * Gets an optional collection of instances representing Azure Search API models
    * (like [[SimilarityAlgorithm]], [[LexicalTokenizer]], etc ...)
    * from the JSON string related to a configuration key
    * @param key configuration key
@@ -64,7 +64,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) similarity algorithm to set on index definition
+   * Gets the (optional) similarity algorithm to set on index definition
    * @return the [[SimilarityAlgorithm]] for the new index
    */
 
@@ -77,7 +77,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of tokenizers to set on index definition
+   * Gets the (optional) collection of tokenizers to set on index definition
    * @return the collection of [[LexicalTokenizer]] for the new index
    */
 
@@ -90,7 +90,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of search suggesters to set on index definition
+   * Gets the (optional) collection of search suggesters to set on index definition
    * @return the collection of [[SearchSuggester]] for the new index
    */
 
@@ -103,7 +103,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[LexicalAnalyzer]] to set on index definition
+   * Gets the (optional) collection of [[LexicalAnalyzer]] to set on index definition
    * @return collection of [[LexicalAnalyzer]] for the new index
    */
 
@@ -116,7 +116,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[CharFilter]] to set on index definition
+   * Gets the (optional) collection of [[CharFilter]] to set on index definition
    * @return collection of [[CharFilter]] for the new index
    */
 
@@ -129,7 +129,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the (optional) collection of [[ScoringProfile]] to set on index definition
+   * Gets the (optional) collection of [[ScoringProfile]] to set on index definition
    * @return collection of [[ScoringProfile]] for the new index
    */
 
@@ -142,7 +142,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the token filters to set on index definition
+   * Gets the token filters to set on index definition
    * @return the (optional) collection of token filters
    */
     
@@ -155,7 +155,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the CORS options to set on index definition
+   * Gets the CORS options to set on index definition
    * @return the (optional) CORS options
    */
 
@@ -168,14 +168,30 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Get the name of the default scoring profile to set on index definition
+   * Gets the name of the default scoring profile to set on index definition
    * @return name of default scoring profile
    */
 
-  private[write] def defaultScoringProfile: Option[String] = get(SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG)
+  private[write] def defaultScoringProfile: Option[String] = {
+
+    get(SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG)
+  }
 
   /**
-   * Get the set of actions to apply on a simple Search index
+   * Gets the vector search configuration to set on index definition
+   * @return the (optional) vector search configuration
+   */
+
+  private[write] def vectorSearch: Option[VectorSearch] = {
+
+    getAzModel[VectorSearch](
+      SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+      VectorSearch.fromJson
+    )
+  }
+
+  /**
+   * Gets the set of actions to apply on a simple Search index
    * @return actions to apply in order to enrich a Search index definition
    */
 
@@ -190,7 +206,8 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       scoringProfiles.map(SearchIndexActions.forSettingScoringProfiles),
       tokenFilters.map(SearchIndexActions.forSettingTokenFilters),
       corsOptions.map(SearchIndexActions.forSettingCorsOptions),
-      defaultScoringProfile.map(SearchIndexActions.forSettingDefaultScoringProfile)
+      defaultScoringProfile.map(SearchIndexActions.forSettingDefaultScoringProfile),
+      vectorSearch.map(SearchIndexActions.forSettingVectorSearch)
     ).collect {
       case Some(value) => value
     }
@@ -208,9 +225,10 @@ object SearchIndexCreationOptions {
   final val TOKEN_FILTERS_CONFIG = "tokenFilters"
   final val CORS_OPTIONS_CONFIG = "corsOptions"
   final val DEFAULT_SCORING_PROFILE_CONFIG = "defaultScoringProfile"
+  final val VECTOR_SEARCH_CONFIG = "vectorSearch"
 
   /**
-   * Create an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
+   * Creates an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
    * @param config configuration object
    * @return an instance of [[SearchIndexCreationOptions]]
    */

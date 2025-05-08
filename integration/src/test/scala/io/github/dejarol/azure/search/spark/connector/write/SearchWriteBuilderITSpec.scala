@@ -500,6 +500,26 @@ class SearchWriteBuilderITSpec
             index.getScoringProfiles should have size 1
             index.getDefaultScoringProfile shouldBe name
           }
+
+          it("vector search") {
+
+            assertIndexHasBeenEnrichedWith[VectorSearch](
+              SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+              createVectorSearch(
+                Seq(
+                  createHnswAlgorithm("hnsw-1", 4, 400, 500, VectorSearchAlgorithmMetric.COSINE)
+                ),
+                Seq(
+                  createVectorSearchProfile("vector-profile-1", "hnsw-1")
+                )
+              ),
+              _.getVectorSearch
+            ) {
+              vectorSearch =>
+                vectorSearch.getAlgorithms should have size 1
+                vectorSearch.getProfiles should have size 1
+            }
+          }
         }
       }
     }
