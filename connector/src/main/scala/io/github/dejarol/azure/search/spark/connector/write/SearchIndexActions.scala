@@ -117,7 +117,19 @@ object SearchIndexActions {
   }
 
   /**
-   * Create an action for setting the similarity algorithm
+   * Action for setting the vector search
+   * @param vectorSearch vector search
+   */
+
+  private case class SetVectorSearch(private val vectorSearch: VectorSearch)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setVectorSearch(vectorSearch)
+    }
+  }
+
+  /**
+   * Creates an action for setting the similarity algorithm
    * @param algorithm algorithm to set
    * @return an action for setting the similarity algorithm
    */
@@ -125,7 +137,7 @@ object SearchIndexActions {
   final def forSettingSimilarityAlgorithm(algorithm: SimilarityAlgorithm): SearchIndexAction = SetSimilarityAlgorithm(algorithm)
 
   /**
-   * Create an action for setting some tokenizers
+   * Creates an action for setting some tokenizers
    * @param tokenizers tokenizer to set
    * @return an action for setting some tokenizers
    */
@@ -133,7 +145,7 @@ object SearchIndexActions {
   final def forSettingTokenizers(tokenizers: Seq[LexicalTokenizer]): SearchIndexAction = SetTokenizers(tokenizers)
 
   /**
-   * Create an action for setting suggesters
+   * Creates an action for setting suggesters
    * @param suggesters suggesters to set
    * @return an action for setting suggesters
    */
@@ -141,7 +153,7 @@ object SearchIndexActions {
   final def forSettingSuggesters(suggesters: Seq[SearchSuggester]): SearchIndexAction = SetSuggesters(suggesters)
 
   /**
-   * Create an action for setting analyzers
+   * Creates an action for setting analyzers
    * @param analyzers analyzers to set
    * @return an action for setting some lexical analyzers
    */
@@ -149,7 +161,7 @@ object SearchIndexActions {
   final def forSettingAnalyzers(analyzers: Seq[LexicalAnalyzer]): SearchIndexAction = SetAnalyzers(analyzers)
 
   /**
-   * Create an action for setting char filters
+   * Creates an action for setting char filters
    * @param charFilters filters to set
    * @return an action for setting some char filters
    */
@@ -157,7 +169,7 @@ object SearchIndexActions {
   final def forSettingCharFilters(charFilters: Seq[CharFilter]): SearchIndexAction = SetCharFilters(charFilters)
 
   /**
-   * Create an action for setting the scoring profiles
+   * Creates an action for setting the scoring profiles
    * @param profiles profiles to add
    * @return an action for setting the scoring profiles
    */
@@ -165,7 +177,7 @@ object SearchIndexActions {
   final def forSettingScoringProfiles(profiles: Seq[ScoringProfile]): SearchIndexAction = SetScoringProfiles(profiles)
 
   /**
-   * Create an action for setting the token filters
+   * Creates an action for setting the token filters
    * @param tokenFilters token filters
    * @return an action for setting token filters
    */
@@ -173,7 +185,7 @@ object SearchIndexActions {
   final def forSettingTokenFilters(tokenFilters: Seq[TokenFilter]): SearchIndexAction = SetTokenFilters(tokenFilters)
 
   /**
-   * Create an action for setting CORS options
+   * Creates an action for setting CORS options
    * @param corsOptions CORS options to set
    * @return an action for setting CORS options
    */
@@ -181,10 +193,18 @@ object SearchIndexActions {
   final def forSettingCorsOptions(corsOptions: CorsOptions): SearchIndexAction = SetCorsOptions(corsOptions)
 
   /**
-   * Create an action for setting the default scoring profile
+   * Creates an action for setting the default scoring profile
    * @param name profile name
    * @return an action for setting the default scoring profile
    */
 
   final def forSettingDefaultScoringProfile(name: String): SearchIndexAction = SetDefaultScoringProfile(name)
+
+  /**
+   * Creates an action for setting the vector search
+   * @param vectorSearch vector search
+   * @return an action for setting the vector search
+   */
+
+  final def forSettingVectorSearch(vectorSearch: VectorSearch): SearchIndexAction = SetVectorSearch(vectorSearch)
 }

@@ -108,14 +108,6 @@ class SearchWriteBuilder(
 object SearchWriteBuilder {
 
   /**
-   * Convert a Search index instance to a [[io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
-   * @param index Search index definition
-   * @return an instance of [[io.github.dejarol.azure.search.spark.connector.write.SearchIndexOperations]]
-   */
-
-  private implicit def toIndexOperations(index: SearchIndex): SearchIndexOperations = new SearchIndexOperations(index)
-
-  /**
    * Create the target Search index
    * @param writeConfig write configuration
    * @param schema dataFrame schema
@@ -141,9 +133,11 @@ object SearchWriteBuilder {
 
       writeConfig.withSearchIndexClientDo {
         _.createIndex(
-          new SearchIndex(indexName)
-            .setFields(searchFields: _*)
-            .applyActions(searchIndexActions: _*)
+          applyActionsToSearchIndex(
+            new SearchIndex(indexName)
+              .setFields(searchFields: _*),
+            searchIndexActions
+          )
         )
       }
     }.toEither.left.map(
@@ -153,5 +147,23 @@ object SearchWriteBuilder {
         _
       )
     )
+  }
+
+  /**
+   * Apply a sequence of index actions to a Search ndex
+   * @param index a Search index instance
+   * @param actions a sequence of index actions
+   * @return a Search index, modified by the actions
+   */
+
+  private[write] def applyActionsToSearchIndex(
+                                                index: SearchIndex,
+                                                actions: Seq[SearchIndexAction]
+                                              ): SearchIndex = {
+
+    actions.foldLeft(index) {
+      case (index, action) =>
+        action.apply(index)
+    }
   }
 }

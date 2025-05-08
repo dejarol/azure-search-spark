@@ -3,31 +3,23 @@ package io.github.dejarol.azure.search.spark.connector.write
 import com.azure.search.documents.indexes.models.{ClassicSimilarityAlgorithm, SearchIndex}
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
 
-import scala.language.implicitConversions
-
-class SearchIndexOperationsSpec
+class SearchWriteBuilderSpec
   extends BasicSpec {
 
-  /**
-   * Implicit conversion from a Search index to its 'operations' counterpart
-   * @param index a Search index definition
-   * @return an instance of [[SearchIndexOperations]]
-   */
-
-  private implicit def toIndexOperations(index: SearchIndex): SearchIndexOperations = new SearchIndexOperations(index)
-
-  describe(anInstanceOf[SearchIndexOperations]) {
+  describe(`object`[SearchWriteBuilder.type ]) {
     describe(SHOULD) {
-      it("apply some actions") {
+      it("apply some actions on a Search index") {
 
         val index = new SearchIndex("name")
         index.getSimilarity shouldBe null
-        val transformedIndex = index.applyActions(
+
+        val actions = Seq(
           SearchIndexActions.forSettingSimilarityAlgorithm(
             new ClassicSimilarityAlgorithm()
           )
         )
 
+        val transformedIndex = SearchWriteBuilder.applyActionsToSearchIndex(index, actions)
         transformedIndex.getSimilarity shouldBe a [ClassicSimilarityAlgorithm]
       }
     }
