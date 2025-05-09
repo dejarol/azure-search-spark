@@ -33,7 +33,8 @@ class FacetedPartitionerFactory
    * Creates a partitioner instance
    *
    * @param readConfig overall read configuration provided by the user
-   * @throws io.github.dejarol.azure.search.spark.connector.core.config.ConfigException if any of the given partitioner options is missing or invalid
+   * @throws io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
+   * if any of the given partitioner options is missing or invalid
    * @return a partitioner instance, to be used for planning input partitions
    */
 

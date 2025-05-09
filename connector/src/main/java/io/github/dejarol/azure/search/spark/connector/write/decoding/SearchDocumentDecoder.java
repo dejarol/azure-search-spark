@@ -16,7 +16,7 @@ public interface SearchDocumentDecoder
         extends Serializable {
 
     /**
-     * Converts a Spark internal row to a Search document
+     * Converts an internal row to a Search document
      * @param row the row to decode
      * @return a decoded Search document
      */
