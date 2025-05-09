@@ -51,7 +51,19 @@ object SearchFieldActions {
   }
 
   /**
-   * Get an action for enabling a feature
+   * Action for setting a vector search profile
+   * @param profile profile to set
+   */
+
+  private case class SetVectorSearchProfile(private val profile: String)
+    extends SearchFieldAction {
+    override def apply(field: SearchField): SearchField = {
+      field.setVectorSearchProfileName(profile)
+    }
+  }
+
+  /**
+   * Gets an action for enabling a feature
    * @param feature feature to enable
    * @return an action for enabling a feature
    */
@@ -59,7 +71,7 @@ object SearchFieldActions {
   final def forEnablingFeature(feature: SearchFieldFeature): SearchFieldAction = EnableFeature(feature)
 
   /**
-   * Get an action for disabling a feature
+   * Gets an action for disabling a feature
    * @param feature feature to disable
    * @return an action for disabling a feature
    */
@@ -67,7 +79,7 @@ object SearchFieldActions {
   final def forDisablingFeature(feature: SearchFieldFeature): SearchFieldAction = DisableFeature(feature)
 
   /**
-   * Get an action for setting an analyzer
+   * Gets an action for setting an analyzer
    * @param analyzerType analyzer type
    * @param lexicalAnalyzerName lexical analyzer to set
    * @return an action for setting a lexical analyzer
@@ -83,4 +95,12 @@ object SearchFieldActions {
       lexicalAnalyzerName
     )
   }
+
+  /**
+   * Gets an action for setting attribute <code>vectorSearchProfile</code> on a Search field
+   * @param profile profile to set
+   * @return an action for setting the vector search profile
+   */
+
+  final def forSettingVectorSearchProfile(profile: String): SearchFieldAction = SetVectorSearchProfile(profile)
 }

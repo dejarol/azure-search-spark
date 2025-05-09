@@ -26,7 +26,7 @@ import org.apache.spark.sql.types.StructField
 
 case class SearchFieldCreationOptions(
                                        override protected val options: CaseInsensitiveMap[String],
-                                       indexActionColumn: Option[String]
+                                       private val indexActionColumn: Option[String]
                                      )
   extends SearchConfig(options) {
 
@@ -149,6 +149,8 @@ case class SearchFieldCreationOptions(
       }
       .getOrElse(Seq.empty)
   }
+
+  // TODO: create actions for setting vector search profile
 
   /**
    * Create a map that collects the set of actions to apply for each field.

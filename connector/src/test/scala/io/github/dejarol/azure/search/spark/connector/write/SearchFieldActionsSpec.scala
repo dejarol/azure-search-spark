@@ -63,6 +63,14 @@ class SearchFieldActionsSpec
               )
           }
         }
+
+        it("set the vector search profile") {
+
+          val profile = "profileName"
+          sampleField.getVectorSearchProfileName shouldBe null
+          val actual = SearchFieldActions.forSettingVectorSearchProfile(profile).apply(sampleField)
+          actual.getVectorSearchProfileName shouldBe profile
+        }
       }
     }
   }
