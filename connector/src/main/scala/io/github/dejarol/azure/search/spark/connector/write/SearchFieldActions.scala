@@ -63,6 +63,39 @@ object SearchFieldActions {
   }
 
   /**
+   * Action for applying many actions at once
+   * @param actions actions to apply
+   */
+
+  private case class FoldManyActions(private val actions: Seq[SearchFieldAction])
+    extends SearchFieldAction {
+
+    override def apply(field: SearchField): SearchField = {
+
+      actions.foldLeft(field) {
+        case (field, action) =>
+          action.apply(field)
+      }
+    }
+  }
+
+  /**
+   * Creates an action for enabling or disabling a feature
+   * @param feature feature to enable or disable
+   * @param flag true for enabling, false for disabling
+   * @return an action for enabling or disabling a feature
+   */
+
+  final def forEnablingOrDisablingFeature(feature: SearchFieldFeature, flag: Boolean): SearchFieldAction = {
+
+    if (flag) {
+      EnableFeature(feature)
+    } else {
+      DisableFeature(feature)
+    }
+  }
+
+  /**
    * Gets an action for enabling a feature
    * @param feature feature to enable
    * @return an action for enabling a feature
@@ -103,4 +136,12 @@ object SearchFieldActions {
    */
 
   final def forSettingVectorSearchProfile(profile: String): SearchFieldAction = SetVectorSearchProfile(profile)
+
+  /**
+   * Gets an action for applying many actions at once
+   * @param actions actions to apply on a field
+   * @return an action for applying many others
+   */
+
+  final def forFoldingManyActions(actions: Seq[SearchFieldAction]): SearchFieldAction = FoldManyActions(actions)
 }

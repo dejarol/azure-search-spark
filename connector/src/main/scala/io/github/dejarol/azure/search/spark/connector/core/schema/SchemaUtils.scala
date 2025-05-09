@@ -229,7 +229,7 @@ object SchemaUtils {
    * Convert a Spark field into a Search field, by inferring the equivalent Search data type
    * and setting all the required field properties
    * @param structField Spark field.
-   * @param fieldActions map with keys being field paths and values being a collection of actions to apply for such field
+   * @param fieldActions map with keys being field paths and values being an action to apply on the field
    * @param parentPath parent path for the structField (empty for top-level fields)
    * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for Spark fields with unsupported types
    * @return the equivalent Search field
@@ -238,7 +238,7 @@ object SchemaUtils {
   @throws[DataTypeException]
   final def toSearchField(
                            structField: StructField,
-                           fieldActions: Map[String, Seq[SearchFieldAction]],
+                           fieldActions: Map[String, SearchFieldAction],
                            parentPath: Option[String]
                          ): SearchField = {
 
@@ -285,26 +285,8 @@ object SchemaUtils {
     fieldActions.collectFirst {
       case (k, v) if k.equalsIgnoreCase(currentPath) => v
     } match {
-      case Some(value) => applyActions(searchField, value)
+      case Some(value) => value.apply(searchField)
       case None => searchField
-    }
-  }
-
-  /**
-   * Apply a collection of actions on a field
-   * @param searchField input Search field
-   * @param actions actions to apply
-   * @return this field transformed by the many actions provided
-   */
-
-  private[schema] def applyActions(
-                                    searchField: SearchField,
-                                    actions: Seq[SearchFieldAction]
-                                  ): SearchField = {
-
-    actions.foldLeft(searchField) {
-      case (field, action) =>
-        action.apply(field)
     }
   }
 }

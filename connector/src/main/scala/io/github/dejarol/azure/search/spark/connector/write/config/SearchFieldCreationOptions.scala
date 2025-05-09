@@ -150,8 +150,6 @@ case class SearchFieldCreationOptions(
       .getOrElse(Seq.empty)
   }
 
-  // TODO: create actions for setting vector search profile
-
   /**
    * Create a map that collects the set of actions to apply for each field.
    * Keys will be field paths (i.e. <code>name</code> for a top-level atomic field,
@@ -159,15 +157,17 @@ case class SearchFieldCreationOptions(
    * @return a map with keys begin field paths and values being the actions to apply on such field
    */
 
-  private[write] def getActionsMap: Map[String, Seq[SearchFieldAction]] = {
+  private[write] def getActionsMap: Map[String, SearchFieldAction] = {
 
     // Group all actions related to same field
     (actionsForFeatures ++ actionsForAnalyzers).groupBy {
       case (str, _) => str
     }.mapValues {
-      _.map {
-        case (_, action) => action
-      }
+      tuples => SearchFieldActions.forFoldingManyActions(
+        tuples.map {
+          case (_, action) => action
+        }
+      )
     }
   }
 

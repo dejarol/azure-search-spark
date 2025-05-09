@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
-import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchFieldDataType}
+import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
 import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAnalyzerType
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
@@ -9,9 +9,15 @@ class SearchFieldActionsSpec
   extends BasicSpec
     with FieldFactory {
 
-  private lazy val sampleField = createSearchField("hello", SearchFieldDataType.STRING)
   private lazy val feature = SearchFieldFeature.SEARCHABLE
   private lazy val analyzer = LexicalAnalyzerName.AR_LUCENE
+
+  /**
+   * Creates a sample Search field for testing
+   * @return a sample Search field
+   */
+
+  private def getSampleField: SearchField = createSearchField("hello", SearchFieldDataType.STRING)
 
   /**
    * Assert that an action added an analyzer to a Search field definition
@@ -20,15 +26,16 @@ class SearchFieldActionsSpec
    */
 
   private def assertAddedAnalyzer(
+                                   input: SearchField,
                                    analyzerType: SearchFieldAnalyzerType,
                                    analyzerName: LexicalAnalyzerName
                                  ): Unit = {
 
     // Original field should have no analyzer,
-    analyzerType.getFromField(sampleField) shouldBe null
+    analyzerType.getFromField(input) shouldBe null
 
     // while the transformed (actual) field should have it
-    val actual = SearchFieldActions.forSettingAnalyzer(analyzerType, analyzerName).apply(sampleField)
+    val actual = SearchFieldActions.forSettingAnalyzer(analyzerType, analyzerName).apply(input)
     analyzerType.getFromField(actual) shouldBe analyzerName
   }
 
@@ -37,6 +44,8 @@ class SearchFieldActionsSpec
       describe("define actions that") {
         it("enable a feature") {
 
+          // TODO: rework
+          val sampleField = getSampleField
           sampleField should not be enabledFor(feature)
           val actual = SearchFieldActions.forEnablingFeature(feature).apply(sampleField)
           actual shouldBe enabledFor(feature)
@@ -44,8 +53,9 @@ class SearchFieldActionsSpec
 
         it("disable a feature") {
 
+          // TODO: rework
           // First enable the feature
-          val enabledField = feature.enableOnField(sampleField)
+          val enabledField = feature.enableOnField(getSampleField)
           enabledField shouldBe enabledFor(feature)
 
           // Now, let the action disable it
@@ -58,6 +68,7 @@ class SearchFieldActionsSpec
           forAll(SearchFieldAnalyzerType.values().toSeq) {
             analyzerType =>
               assertAddedAnalyzer(
+                getSampleField,
                 analyzerType,
                 analyzer
               )
@@ -66,9 +77,27 @@ class SearchFieldActionsSpec
 
         it("set the vector search profile") {
 
-          val profile = "profileName"
+          val (sampleField, profile) = (getSampleField, "profileName")
           sampleField.getVectorSearchProfileName shouldBe null
           val actual = SearchFieldActions.forSettingVectorSearchProfile(profile).apply(sampleField)
+          actual.getVectorSearchProfileName shouldBe profile
+        }
+
+        it("folds many actions at once") {
+
+          val (sampleField, feature, profile) = (getSampleField, SearchFieldFeature.SEARCHABLE, "hello")
+          val actions = Seq(
+            SearchFieldActions.forEnablingFeature(feature),
+            SearchFieldActions.forSettingVectorSearchProfile(profile)
+          )
+
+          feature.isEnabledOnField(sampleField) shouldBe false
+          sampleField.getVectorSearchProfileName shouldBe null
+          val actual = SearchFieldActions.forFoldingManyActions(
+            actions
+          ).apply(sampleField)
+
+          feature.isEnabledOnField(actual) shouldBe true
           actual.getVectorSearchProfileName shouldBe profile
         }
       }

@@ -395,7 +395,7 @@ class SchemaUtilsSpec
               val (matchingFieldName, feature) = ("hello", SearchFieldFeature.SEARCHABLE)
               val matchingStructField = createStructField(matchingFieldName, DataTypes.StringType)
               val fieldActions = Map(
-                matchingFieldName -> Seq(actionForEnablingFeature(feature))
+                matchingFieldName -> actionForEnablingFeature(feature)
               )
 
               val matchingSearchField = SchemaUtils.toSearchField(matchingStructField, fieldActions, None)
@@ -419,9 +419,7 @@ class SchemaUtilsSpec
               )
 
               val fieldActions = Map(
-                s"$parentName.$matchingFieldName" -> Seq(
-                  actionForEnablingFeature(feature)
-                )
+                s"$parentName.$matchingFieldName" -> actionForEnablingFeature(feature)
               )
 
               val searchField = SchemaUtils.toSearchField(structField, fieldActions, None)
@@ -438,17 +436,6 @@ class SchemaUtilsSpec
             }
           }
         }
-      }
-
-      it("apply some actions") {
-
-        lazy val notSearchable: SearchFieldAction = (field: SearchField) => field.setSearchable(false)
-        lazy val makeFacetable: SearchFieldAction = (field: SearchField) => field.setFacetable(true)
-
-        val field = createSearchField("hello", SearchFieldDataType.INT32)
-        val transformedField = SchemaUtils.applyActions(field, Seq(notSearchable, makeFacetable))
-        transformedField should not be enabledFor(SearchFieldFeature.SEARCHABLE)
-        transformedField shouldBe enabledFor(SearchFieldFeature.FACETABLE)
       }
     }
   }
