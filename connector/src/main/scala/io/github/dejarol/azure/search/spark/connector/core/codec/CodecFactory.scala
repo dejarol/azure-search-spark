@@ -6,7 +6,8 @@ import org.apache.spark.sql.types.{DataType, StructField, StructType}
 
 /**
  * Factory class to be extended for creating codecs
- * @param codecType instance of enum [[CodecType]]. Should be [[CodecType.ENCODING]] for encoding and [[CodecType.DECODING]] for decoding
+ * @param codecType instance of enum [[io.github.dejarol.azure.search.spark.connector.core.codec.CodecType]].
+ *                  Should be <code>ENCODING</code> for encoding and <code>DECODING</code> for decoding
  * @tparam T codec type
  */
 

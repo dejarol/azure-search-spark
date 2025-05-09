@@ -25,7 +25,7 @@ object SearchDocumentEncoderImpl {
    * @param schema target Dataframe schema
    * @param searchFields input Search fields
    * @return either the encoder or a
-   *         [[CodecCreationException]]
+   *         [[io.github.dejarol.azure.search.spark.connector.core.codec.CodecCreationException]]
    */
 
   final def safeApply(
