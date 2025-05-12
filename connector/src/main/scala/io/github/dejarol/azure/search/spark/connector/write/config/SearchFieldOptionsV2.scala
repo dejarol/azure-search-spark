@@ -5,7 +5,8 @@ import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAc
 import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 
 /**
- * Model for collecting options to be set on a [[com.azure.search.documents.indexes.models.SearchField]]
+ * Model for collecting options to be set on a [[com.azure.search.documents.indexes.models.SearchField]].
+ * When not defined, the default values of Azure AI Search client library will be used
  * @param analyzer analyzer name (for both searching and indexing)
  * @param facetable flag that indicates if the field should be facetable
  * @param filterable flag that indicates if the field should be filterable
@@ -38,13 +39,20 @@ case class SearchFieldOptionsV2(
 
   def getAction: SearchFieldAction = {
 
+    // Map each attribute to its related action,
+    // then collect all defined actions into a single action
+
     val definedActions: Seq[SearchFieldAction] = Seq(
-      analyzer.map(SearchFieldActions.forSettingAnalyzer(SearchFieldAnalyzerType.ANALYZER, _)),
+      analyzer.map(SearchFieldActions.forSettingAnalyzer),
       facetable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.FACETABLE, _)),
       filterable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.FILTERABLE, _)),
       indexAnalyzer.map(SearchFieldActions.forSettingAnalyzer(SearchFieldAnalyzerType.INDEX_ANALYZER, _)),
       key.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.KEY, _)),
-      retrievable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.HIDDEN, _)),
+      retrievable.collect {
+        case false => SearchFieldActions.forEnablingOrDisablingFeature(
+          SearchFieldFeature.HIDDEN, flag = true
+        )
+      },
       searchAnalyzer.map(SearchFieldActions.forSettingAnalyzer(SearchFieldAnalyzerType.SEARCH_ANALYZER, _)),
       searchable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SEARCHABLE, _)),
       sortable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SORTABLE, _)),
@@ -53,6 +61,6 @@ case class SearchFieldOptionsV2(
       case Some(value) => value
     }
 
-    SearchFieldActions.forFoldingManyActions(definedActions)
+    SearchFieldActions.forFoldingActions(definedActions)
   }
 }

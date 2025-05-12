@@ -93,7 +93,7 @@ class SearchFieldActionsSpec
 
           feature.isEnabledOnField(sampleField) shouldBe false
           sampleField.getVectorSearchProfileName shouldBe null
-          val actual = SearchFieldActions.forFoldingManyActions(
+          val actual = SearchFieldActions.forFoldingActions(
             actions
           ).apply(sampleField)
 

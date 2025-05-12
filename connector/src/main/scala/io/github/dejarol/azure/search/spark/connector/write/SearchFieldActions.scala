@@ -17,6 +17,7 @@ object SearchFieldActions {
 
   private case class EnableFeature(private val feature: SearchFieldFeature)
     extends SearchFieldAction {
+    override def description(): String = s"ENABLE_${feature.name()}"
     override final def apply(field: SearchField): SearchField = {
       feature.enableOnField(field)
     }
@@ -29,6 +30,7 @@ object SearchFieldActions {
 
   private case class DisableFeature(private val feature: SearchFieldFeature)
     extends SearchFieldAction {
+    override def description(): String = s"DISABLE_${feature.name()}"
     override def apply(field: SearchField): SearchField = {
       feature.disableOnField(field)
     }
@@ -45,6 +47,7 @@ object SearchFieldActions {
                                   private val lexicalAnalyzerName: LexicalAnalyzerName
                                 )
     extends SearchFieldAction {
+    override def description(): String = s"SET_${analyzerType.name()}"
     override def apply(field: SearchField): SearchField = {
       analyzerType.setOnField(field, lexicalAnalyzerName)
     }
@@ -57,6 +60,7 @@ object SearchFieldActions {
 
   private case class SetVectorSearchProfile(private val profile: String)
     extends SearchFieldAction {
+    override def description(): String = "SET_VECTOR_SEARCH_PROFILE"
     override def apply(field: SearchField): SearchField = {
       field.setVectorSearchProfileName(profile)
     }
@@ -67,8 +71,15 @@ object SearchFieldActions {
    * @param actions actions to apply
    */
 
-  private case class FoldManyActions(private val actions: Seq[SearchFieldAction])
+  private case class FoldActions(private val actions: Seq[SearchFieldAction])
     extends SearchFieldAction {
+
+    override def description(): String = {
+
+      s"ACTIONS(" +
+        s"${actions.map(_.description()).mkString(", ")}" +
+        s")"
+    }
 
     override def apply(field: SearchField): SearchField = {
 
@@ -129,6 +140,30 @@ object SearchFieldActions {
     )
   }
 
+  final def forSettingAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
+
+    SetAnalyzer(
+      SearchFieldAnalyzerType.ANALYZER,
+      name
+    )
+  }
+
+  final def forSettingIndexAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
+
+    SetAnalyzer(
+      SearchFieldAnalyzerType.INDEX_ANALYZER,
+      name
+    )
+  }
+
+  final def forSettingSearchAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
+
+    SetAnalyzer(
+      SearchFieldAnalyzerType.SEARCH_ANALYZER,
+      name
+    )
+  }
+
   /**
    * Gets an action for setting attribute <code>vectorSearchProfile</code> on a Search field
    * @param profile profile to set
@@ -143,5 +178,5 @@ object SearchFieldActions {
    * @return an action for applying many others
    */
 
-  final def forFoldingManyActions(actions: Seq[SearchFieldAction]): SearchFieldAction = FoldManyActions(actions)
+  final def forFoldingActions(actions: Seq[SearchFieldAction]): SearchFieldAction = FoldActions(actions)
 }

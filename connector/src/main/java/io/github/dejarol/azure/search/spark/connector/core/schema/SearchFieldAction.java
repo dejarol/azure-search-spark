@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema;
 
 import com.azure.search.documents.indexes.models.SearchField;
+import io.github.dejarol.azure.search.spark.connector.core.EntityDescription;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -8,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
  * to apply on {@link com.azure.search.documents.indexes.models.SearchField}(s)
  */
 
-@FunctionalInterface
-public interface SearchFieldAction {
+public interface SearchFieldAction
+        extends EntityDescription {
 
     /**
      * Transform a {@link com.azure.search.documents.indexes.models.SearchField}

@@ -4,7 +4,8 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig
-import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
+import io.github.dejarol.azure.search.spark.connector.core.utils.{Enums, Json}
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -13,7 +14,8 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
  */
 
 case class WriteConfig(override protected val options: CaseInsensitiveMap[String])
-  extends SearchIOConfig(options) {
+  extends SearchIOConfig(options)
+    with Logging {
 
   /**
    * Index a batch of documents on target index
@@ -85,6 +87,30 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
       getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX),
       actionColumn
     )
+  }
+
+  final def searchFieldOptionsV2: Map[String, SearchFieldOptionsV2] = {
+
+    // Apply JSON deserialization to all options
+    val allUserOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
+      .options.mapValues {
+        Json.safelyReadAsModelUsingJackson[SearchFieldOptionsV2]
+    }
+
+    // Collect invalid options
+    val invalidOptions: Seq[String] = allUserOptions.collect {
+      case (k, Left(_)) => k
+    }.toSeq
+
+    if (invalidOptions.nonEmpty) {
+      log.warn(s"Could not parse field options for fields: " +
+        s"${invalidOptions.mkString("[", ",", "]")}")
+    }
+
+    // Collect valid options
+    allUserOptions.collect {
+      case (k, Right(v)) => (k, v)
+    }
   }
 
   /**

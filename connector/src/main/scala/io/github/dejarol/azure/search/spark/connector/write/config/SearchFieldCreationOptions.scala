@@ -163,7 +163,7 @@ case class SearchFieldCreationOptions(
     (actionsForFeatures ++ actionsForAnalyzers).groupBy {
       case (str, _) => str
     }.mapValues {
-      tuples => SearchFieldActions.forFoldingManyActions(
+      tuples => SearchFieldActions.forFoldingActions(
         tuples.map {
           case (_, action) => action
         }

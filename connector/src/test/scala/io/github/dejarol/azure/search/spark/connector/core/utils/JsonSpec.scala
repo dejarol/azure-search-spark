@@ -65,6 +65,31 @@ class JsonSpec
 
           safeDeserialization(invalidJson) shouldBe 'left
         }
+
+        it("a user-defined model") {
+
+          val id = "hello"
+          val invalidJson =
+            s"""
+              |{
+              |  id": "$id"
+              |}
+              |""".stripMargin
+
+          val expectedLeft = Json.safelyReadAsModelUsingJackson[JsonModel](invalidJson)
+          expectedLeft shouldBe 'left
+
+          val validJson =
+            s"""
+               |{
+               |  "id": "$id"
+               |}
+               |""".stripMargin
+
+          val expectedRight = Json.safelyReadAsModelUsingJackson[JsonModel](validJson)
+          expectedRight shouldBe 'right
+          expectedRight.right.get.id shouldBe id
+        }
       }
     }
   }

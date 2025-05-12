@@ -22,20 +22,35 @@ object Json {
     .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
   /**
- * Deserializes a JSON string into a collection of objects using Jackson.
- * @param json json string
- * @tparam T type of objects in the resulting collection. Must have a ClassTag.
- * @return a collection containing the deserialized objects.
- */
+   * Safely deserialize a JSON string to a model class using Jackson
+   * @param json JSON string
+   * @tparam T target type (should have an implicit ClassTag)
+   * @return either the exception raised by the deserialization function or an instance of the target type
+   */
 
-final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
+  final def safelyReadAsModelUsingJackson[T: ClassTag](json: String): Either[Throwable, T] = {
 
-  val tClass = Reflection.classFromClassTag[T]
-  val collectionType = DEFAULT_OBJECT_MAPPER.getTypeFactory.constructCollectionType(classOf[JList[_]], tClass)
-  JavaScalaConverters.listToSeq[T](
-    DEFAULT_OBJECT_MAPPER.readValue[JList[T]](json, collectionType)
-  )
-}
+    Try {
+      val tClass = Reflection.classFromClassTag[T]
+      DEFAULT_OBJECT_MAPPER.readValue[T](json, tClass)
+    }.toEither
+  }
+
+  /**
+   * Deserializes a JSON string into a collection of objects using Jackson.
+   * @param json json string
+   * @tparam T type of objects in the resulting collection. Must have a ClassTag.
+   * @return a collection containing the deserialized objects.
+   */
+
+  final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
+
+    val tClass = Reflection.classFromClassTag[T]
+    val collectionType = DEFAULT_OBJECT_MAPPER.getTypeFactory.constructCollectionType(classOf[JList[_]], tClass)
+    JavaScalaConverters.listToSeq[T](
+      DEFAULT_OBJECT_MAPPER.readValue[JList[T]](json, collectionType)
+    )
+  }
 
   /**
    * Deserialize a JSON to an Azure Search REST API model.
