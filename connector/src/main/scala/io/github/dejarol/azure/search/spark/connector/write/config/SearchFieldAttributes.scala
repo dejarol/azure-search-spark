@@ -1,7 +1,12 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
+import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConversions, JsonNodeOperations}
 import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 
 /**
@@ -19,6 +24,7 @@ import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
  * @param vectorSearchProfile name of the vector search profile
  */
 
+@JsonDeserialize(using = classOf[SearchFieldAttributes.Deserializer])
 case class SearchFieldAttributes(
                                   analyzer: Option[LexicalAnalyzerName],
                                   facetable: Option[Boolean],
@@ -68,6 +74,33 @@ case class SearchFieldAttributes(
       )
     } else {
       None
+    }
+  }
+}
+
+object SearchFieldAttributes {
+
+  import JsonConversions._
+  import JsonNodeOperations._
+
+  class Deserializer
+    extends StdDeserializer[SearchFieldAttributes](classOf[SearchFieldAttributes]) {
+
+    override def deserialize(p: JsonParser, ctxt: DeserializationContext): SearchFieldAttributes = {
+
+      val jsonNode = ctxt.readTree(p)
+      SearchFieldAttributes(
+        analyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("analyzer")(LexicalAnalyzerNameConversion),
+        facetable = jsonNode.safelyGetAs[Boolean]("facetable")(BooleanConversion),
+        filterable = jsonNode.safelyGetAs[Boolean]("filterable")(BooleanConversion),
+        indexAnalyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("indexAnalyzer")(LexicalAnalyzerNameConversion),
+        key = jsonNode.safelyGetAs[Boolean]("key")(BooleanConversion),
+        retrievable = jsonNode.safelyGetAs[Boolean]("retrievable")(BooleanConversion),
+        searchAnalyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("searchAnalyzer")(LexicalAnalyzerNameConversion),
+        searchable = jsonNode.safelyGetAs[Boolean]("searchable")(BooleanConversion),
+        sortable = jsonNode.safelyGetAs[Boolean]("sortable")(BooleanConversion),
+        vectorSearchProfile = jsonNode.safelyGetAs[String]("vectorSearchProfile")(StringConversion)
+      )
     }
   }
 }

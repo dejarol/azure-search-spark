@@ -1,10 +1,11 @@
-package io.github.dejarol.azure.search.spark.connector.core.utils
+package io.github.dejarol.azure.search.spark.connector.core.utils.json
 
 import com.azure.json.implementation.DefaultJsonReader
 import com.azure.json.{JsonOptions, JsonReader}
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.utils.Reflection
 
 import java.util.{List => JList}
 import scala.reflect.ClassTag
@@ -34,22 +35,6 @@ object Json {
       val tClass = Reflection.classFromClassTag[T]
       DEFAULT_OBJECT_MAPPER.readValue[T](json, tClass)
     }.toEither
-  }
-
-  /**
-   * Deserializes a JSON string into a collection of objects using Jackson.
-   * @param json json string
-   * @tparam T type of objects in the resulting collection. Must have a ClassTag.
-   * @return a collection containing the deserialized objects.
-   */
-
-  final def readAsCollectionUsingJackson[T: ClassTag](json: String): Seq[T] = {
-
-    val tClass = Reflection.classFromClassTag[T]
-    val collectionType = DEFAULT_OBJECT_MAPPER.getTypeFactory.constructCollectionType(classOf[JList[_]], tClass)
-    JavaScalaConverters.listToSeq[T](
-      DEFAULT_OBJECT_MAPPER.readValue[JList[T]](json, collectionType)
-    )
   }
 
   /**

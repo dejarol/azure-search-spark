@@ -224,6 +224,34 @@ class SearchFieldAttributesSpec
           actual.sortable shouldBe None
           actual.vectorSearchProfile shouldBe None
         }
+
+        it("a") {
+
+          val (analyzer, indexAnalyzer, searchAnalyzer, profile) = (
+            LexicalAnalyzerName.AR_LUCENE,
+            LexicalAnalyzerName.BN_MICROSOFT,
+            LexicalAnalyzerName.WHITESPACE,
+            "hello"
+          )
+          val json =
+            s"""
+               |{
+               |  "analyzer": "hello",
+               |  "facetable": true,
+               |  "filterable": false,
+               |  "indexAnalyzer": "$indexAnalyzer",
+               |  "key": true,
+               |  "retrievable": false,
+               |  "searchAnalyzer": "$searchAnalyzer",
+               |  "searchable": false,
+               |  "sortable": true,
+               |  "vectorSearchProfile": "$profile"
+               |}
+               |""".stripMargin
+
+          val actual = readValueAs[SearchFieldAttributes](json)
+          val a = 1
+        }
       }
     }
   }
