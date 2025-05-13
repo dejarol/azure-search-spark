@@ -4,8 +4,7 @@ import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.IndexDocumentsBatch
 import com.azure.search.documents.models.IndexActionType
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig
-import io.github.dejarol.azure.search.spark.connector.core.utils.{Enums, Json}
-import org.apache.spark.internal.Logging
+import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -14,8 +13,7 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
  */
 
 case class WriteConfig(override protected val options: CaseInsensitiveMap[String])
-  extends SearchIOConfig(options)
-    with Logging {
+  extends SearchIOConfig(options) {
 
   /**
    * Index a batch of documents on target index
@@ -77,46 +75,21 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   final def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
 
   /**
-   * Get the set of options for defining Search fields for target index
-   * @return options for defining fields on target Search index
+   * Returns the options for enriching fields on target index. The options are defined by [[WriteConfig.FIELD_OPTIONS_PREFIX]]
+   * @return options for enriching fields
    */
 
-  final def searchFieldCreationOptions: SearchFieldCreationOptions = {
+  final def searchFieldEnrichmentOptions: SearchFieldEnrichmentOptions = {
 
-    SearchFieldCreationOptions(
+    SearchFieldEnrichmentOptions(
       getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX),
-      actionColumn
+      actionColumn,
     )
-  }
-
-  final def searchFieldOptionsV2: Map[String, SearchFieldOptionsV2] = {
-
-    // Apply JSON deserialization to all options
-    val allUserOptions = getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX)
-      .options.mapValues {
-        Json.safelyReadAsModelUsingJackson[SearchFieldOptionsV2]
-    }
-
-    // Collect invalid options
-    val invalidOptions: Seq[String] = allUserOptions.collect {
-      case (k, Left(_)) => k
-    }.toSeq
-
-    if (invalidOptions.nonEmpty) {
-      log.warn(s"Could not parse field options for fields: " +
-        s"${invalidOptions.mkString("[", ",", "]")}")
-    }
-
-    // Collect valid options
-    allUserOptions.collect {
-      case (k, Right(v)) => (k, v)
-    }
   }
 
   /**
    * Retrieves the options for creating a search index (i.e. all configurations that have the prefix defined by
    * [[WriteConfig.INDEX_ATTRIBUTES_PREFIX]])
-   *
    * @return index creation options
    */
 

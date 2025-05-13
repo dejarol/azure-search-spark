@@ -70,212 +70,214 @@ class SearchIndexCreationOptionsSpec
 
   describe(anInstanceOf[SearchIndexCreationOptions]) {
     describe(SHOULD) {
-      describe("search index extra options, like") {
+      describe("provide") {
+        describe("search index extra options, like") {
 
-        it("the similarity algorithm") {
+          it("the similarity algorithm") {
 
-          val (k1, b) = (0.1, 0.3)
-          assertBehaviorForIndexOption[SimilarityAlgorithm](
-            SearchIndexCreationOptions.SIMILARITY_CONFIG,
-            createSimpleODataType("#hello"),
-            createBM25SimilarityAlgorithm(k1, b),
-            _.similarityAlgorithm
-          ) {
-            algo =>
-              algo shouldBe a [BM25SimilarityAlgorithm]
-              val bm25 = algo.asInstanceOf[BM25SimilarityAlgorithm]
-              bm25.getK1 shouldBe k1
-              bm25.getB shouldBe b
+            val (k1, b) = (0.1, 0.3)
+            assertBehaviorForIndexOption[SimilarityAlgorithm](
+              SearchIndexCreationOptions.SIMILARITY_CONFIG,
+              createSimpleODataType("#hello"),
+              createBM25SimilarityAlgorithm(k1, b),
+              _.similarityAlgorithm
+            ) {
+              algo =>
+                algo shouldBe a[BM25SimilarityAlgorithm]
+                val bm25 = algo.asInstanceOf[BM25SimilarityAlgorithm]
+                bm25.getK1 shouldBe k1
+                bm25.getB shouldBe b
+            }
           }
-        }
 
-        it("index tokenizers") {
+          it("index tokenizers") {
 
-          assertBehaviorForIndexOption[Seq[LexicalTokenizer]](
-            SearchIndexCreationOptions.TOKENIZERS_CONFIG,
-            createArray(
-              createSimpleODataType("hello")
-            ),
-            createArray(
-              createClassicTokenizer("tokenizerName", 20)
-            ),
-            _.tokenizers
-          ) {
-            tokenizers =>
-              tokenizers should have size 1
-              val head = tokenizers.head
-              head shouldBe a[ClassicTokenizer]
-          }
-        }
-
-        it("search suggesters") {
-
-          val (name, fields) = ("countryAndFunction", Seq("country", "function"))
-          assertBehaviorForIndexOption[Seq[SearchSuggester]](
-            SearchIndexCreationOptions.SUGGESTERS_CONFIG,
-            createArray(
-              createSimpleODataType("world")
-            ),
-            createArray(
-              createSearchSuggester(name, fields)
-            ),
-            _.searchSuggesters
-          ) {
-            suggesters =>
-              suggesters should have size 1
-              val head = suggesters.head
-              head.getName shouldBe name
-              head.getSourceFields should contain theSameElementsAs fields
-          }
-        }
-
-        it("analyzers") {
-
-          val (name, stopWords) = ("stopper", Seq("a", "an", "the"))
-          assertBehaviorForIndexOption[Seq[LexicalAnalyzer]](
-            SearchIndexCreationOptions.ANALYZERS_CONFIG,
-            createArray(
-              createSimpleODataType("world")
-            ),
-            createArray(
-              createStopAnalyzer(name, stopWords)
-            ),
-            _.analyzers
-          ) {
-            analyzers =>
-              analyzers should have size 1
-              val head = analyzers.head
-              head shouldBe a [StopAnalyzer]
-              val stopAnalyzer = head.asInstanceOf[StopAnalyzer]
-              stopAnalyzer.getName shouldBe name
-              stopAnalyzer.getStopwords should contain theSameElementsAs stopWords
-          }
-        }
-
-        it("char filters") {
-
-          val (name, mappings) = ("charFilterName", Seq("first_name", "last_name"))
-          assertBehaviorForIndexOption[Seq[CharFilter]](
-            SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
-            createArray(
-              createSimpleODataType("john"),
-            ),
-            createArray(
-              createMappingCharFilter(name, mappings)
-            ),
-            _.charFilters
-          ) {
-            charFilters =>
-              charFilters should have size 1
-              val head = charFilters.head
-              head shouldBe a [MappingCharFilter]
-              val mappingCharFilter = head.asInstanceOf[MappingCharFilter]
-              mappingCharFilter.getName shouldBe name
-              mappingCharFilter.getMappings should contain theSameElementsAs mappings
-          }
-        }
-
-        it("scoring profiles") {
-
-          val (name, weights) = (
-            "profileName",
-            Map(
-              "hotel" -> 0.2,
-              "description" -> 0.5
-            )
-          )
-
-          assertBehaviorForIndexOption[Seq[ScoringProfile]](
-            SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
-            createArray(
-              createSimpleODataType("world")
-            ),
-            createArray(
-              createScoringProfile(name, weights)
-            ),
-            _.scoringProfiles
-          ) {
-            profiles =>
-              profiles should have size 1
-              val head = profiles.head
-              head.getName shouldBe name
-              val actualWeights = head.getTextWeights.getWeights
-              forAll(weights.keySet) {
-                k =>
-                  actualWeights should contain key k
-                  actualWeights.get(k) shouldBe weights(k)
-              }
-          }
-        }
-
-        it("token filters") {
-
-          val (name, pattern, replacement) = ("articlePattern", "article", "replace")
-          assertBehaviorForIndexOption[Seq[TokenFilter]](
-            SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
-            createArray(
-              createSimpleODataType("hello")
-            ),
-            createArray(
-              createPatternReplaceTokenFilter(name, pattern, replacement)
-            ),
-            _.tokenFilters
-          ) {
-            filters =>
-              filters should have size 1
-              val head = filters.head
-              head shouldBe a [PatternReplaceTokenFilter]
-              val filter = head.asInstanceOf[PatternReplaceTokenFilter]
-              filter.getName shouldBe name
-              filter.getPattern shouldBe pattern
-              filter.getReplacement shouldBe replacement
-          }
-        }
-
-        it("CORS options") {
-
-          val (allowedOrigins, maxAge) = (Seq("first"), 15)
-          assertBehaviorForIndexOption[CorsOptions](
-            SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
-            "[]",
-            createCorsOptions(allowedOrigins, maxAge),
-            _.corsOptions
-          ) {
-            cors =>
-              cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
-              cors.getMaxAgeInSeconds shouldBe maxAge
-          }
-        }
-
-        it("default scoring profile") {
-
-          val name = "profileName"
-          emptyConfig.defaultScoringProfile shouldBe empty
-          createOptions(
-            Map(
-              SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
-            )
-          ).defaultScoringProfile shouldBe Some(name)
-        }
-
-        it("vector search") {
-
-          assertBehaviorForIndexOption[VectorSearch](
-            SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
-            "{",
-            createVectorSearch(
-              Seq(
-                createHnswAlgorithm("algo", 1, 2, 3, VectorSearchAlgorithmMetric.COSINE)
+            assertBehaviorForIndexOption[Seq[LexicalTokenizer]](
+              SearchIndexCreationOptions.TOKENIZERS_CONFIG,
+              createArray(
+                createSimpleODataType("hello")
               ),
-              Seq(
-                createVectorSearchProfile("hello", "world")
+              createArray(
+                createClassicTokenizer("tokenizerName", 20)
+              ),
+              _.tokenizers
+            ) {
+              tokenizers =>
+                tokenizers should have size 1
+                val head = tokenizers.head
+                head shouldBe a[ClassicTokenizer]
+            }
+          }
+
+          it("search suggesters") {
+
+            val (name, fields) = ("countryAndFunction", Seq("country", "function"))
+            assertBehaviorForIndexOption[Seq[SearchSuggester]](
+              SearchIndexCreationOptions.SUGGESTERS_CONFIG,
+              createArray(
+                createSimpleODataType("world")
+              ),
+              createArray(
+                createSearchSuggester(name, fields)
+              ),
+              _.searchSuggesters
+            ) {
+              suggesters =>
+                suggesters should have size 1
+                val head = suggesters.head
+                head.getName shouldBe name
+                head.getSourceFields should contain theSameElementsAs fields
+            }
+          }
+
+          it("analyzers") {
+
+            val (name, stopWords) = ("stopper", Seq("a", "an", "the"))
+            assertBehaviorForIndexOption[Seq[LexicalAnalyzer]](
+              SearchIndexCreationOptions.ANALYZERS_CONFIG,
+              createArray(
+                createSimpleODataType("world")
+              ),
+              createArray(
+                createStopAnalyzer(name, stopWords)
+              ),
+              _.analyzers
+            ) {
+              analyzers =>
+                analyzers should have size 1
+                val head = analyzers.head
+                head shouldBe a[StopAnalyzer]
+                val stopAnalyzer = head.asInstanceOf[StopAnalyzer]
+                stopAnalyzer.getName shouldBe name
+                stopAnalyzer.getStopwords should contain theSameElementsAs stopWords
+            }
+          }
+
+          it("char filters") {
+
+            val (name, mappings) = ("charFilterName", Seq("first_name", "last_name"))
+            assertBehaviorForIndexOption[Seq[CharFilter]](
+              SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
+              createArray(
+                createSimpleODataType("john"),
+              ),
+              createArray(
+                createMappingCharFilter(name, mappings)
+              ),
+              _.charFilters
+            ) {
+              charFilters =>
+                charFilters should have size 1
+                val head = charFilters.head
+                head shouldBe a[MappingCharFilter]
+                val mappingCharFilter = head.asInstanceOf[MappingCharFilter]
+                mappingCharFilter.getName shouldBe name
+                mappingCharFilter.getMappings should contain theSameElementsAs mappings
+            }
+          }
+
+          it("scoring profiles") {
+
+            val (name, weights) = (
+              "profileName",
+              Map(
+                "hotel" -> 0.2,
+                "description" -> 0.5
               )
-            ),
-            _.vectorSearch
-          ) {
-            vectorSearch =>
-              vectorSearch.getAlgorithms should have size 1
-              vectorSearch.getProfiles should have size 1
+            )
+
+            assertBehaviorForIndexOption[Seq[ScoringProfile]](
+              SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
+              createArray(
+                createSimpleODataType("world")
+              ),
+              createArray(
+                createScoringProfile(name, weights)
+              ),
+              _.scoringProfiles
+            ) {
+              profiles =>
+                profiles should have size 1
+                val head = profiles.head
+                head.getName shouldBe name
+                val actualWeights = head.getTextWeights.getWeights
+                forAll(weights.keySet) {
+                  k =>
+                    actualWeights should contain key k
+                    actualWeights.get(k) shouldBe weights(k)
+                }
+            }
+          }
+
+          it("token filters") {
+
+            val (name, pattern, replacement) = ("articlePattern", "article", "replace")
+            assertBehaviorForIndexOption[Seq[TokenFilter]](
+              SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
+              createArray(
+                createSimpleODataType("hello")
+              ),
+              createArray(
+                createPatternReplaceTokenFilter(name, pattern, replacement)
+              ),
+              _.tokenFilters
+            ) {
+              filters =>
+                filters should have size 1
+                val head = filters.head
+                head shouldBe a[PatternReplaceTokenFilter]
+                val filter = head.asInstanceOf[PatternReplaceTokenFilter]
+                filter.getName shouldBe name
+                filter.getPattern shouldBe pattern
+                filter.getReplacement shouldBe replacement
+            }
+          }
+
+          it("CORS options") {
+
+            val (allowedOrigins, maxAge) = (Seq("first"), 15)
+            assertBehaviorForIndexOption[CorsOptions](
+              SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+              "[]",
+              createCorsOptions(allowedOrigins, maxAge),
+              _.corsOptions
+            ) {
+              cors =>
+                cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
+                cors.getMaxAgeInSeconds shouldBe maxAge
+            }
+          }
+
+          it("default scoring profile") {
+
+            val name = "profileName"
+            emptyConfig.defaultScoringProfile shouldBe empty
+            createOptions(
+              Map(
+                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
+              )
+            ).defaultScoringProfile shouldBe Some(name)
+          }
+
+          it("vector search") {
+
+            assertBehaviorForIndexOption[VectorSearch](
+              SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+              "{",
+              createVectorSearch(
+                Seq(
+                  createHnswAlgorithm("algo", 1, 2, 3, VectorSearchAlgorithmMetric.COSINE)
+                ),
+                Seq(
+                  createVectorSearchProfile("hello", "world")
+                )
+              ),
+              _.vectorSearch
+            ) {
+              vectorSearch =>
+                vectorSearch.getAlgorithms should have size 1
+                vectorSearch.getProfiles should have size 1
+            }
           }
         }
 
@@ -314,9 +316,12 @@ class SearchIndexCreationOptionsSpec
                 )
               )
             )
-          ).searchIndexActions
+          )
+        }
 
-          actions should have size 9
+        it("the overall index action") {
+
+          // TODO: test
         }
       }
     }

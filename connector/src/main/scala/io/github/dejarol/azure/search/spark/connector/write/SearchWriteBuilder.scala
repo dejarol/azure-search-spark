@@ -123,21 +123,22 @@ object SearchWriteBuilder {
     Try {
       val indexName = writeConfig.getIndex
       val searchFields: Seq[SearchField] = writeConfig
-        .searchFieldCreationOptions
+        .searchFieldEnrichmentOptions
         .toSearchFields(schema)
 
-      val searchIndexActions: Seq[SearchIndexAction] = writeConfig
+      // Set name and fields
+      val searchIndex: SearchIndex = new SearchIndex(indexName)
+        .setFields(searchFields: _*)
+
+      // Apply optional actions
+      val maybeEnrichedIndex: SearchIndex = writeConfig
         .searchIndexCreationOptions
-        .searchIndexActions
+        .searchIndexAction.map {
+          _.apply(searchIndex)
+        }.getOrElse(searchIndex)
 
       writeConfig.withSearchIndexClientDo {
-        _.createIndex(
-          applyActionsToSearchIndex(
-            new SearchIndex(indexName)
-              .setFields(searchFields: _*),
-            searchIndexActions
-          )
-        )
+        _.createIndex(maybeEnrichedIndex)
       }
     }.toEither.left.map(
       // Map the left side to a proper exception
@@ -146,23 +147,5 @@ object SearchWriteBuilder {
         _
       )
     )
-  }
-
-  /**
-   * Apply a sequence of index actions to a Search ndex
-   * @param index a Search index instance
-   * @param actions a sequence of index actions
-   * @return a Search index, modified by the actions
-   */
-
-  private[write] def applyActionsToSearchIndex(
-                                                index: SearchIndex,
-                                                actions: Seq[SearchIndexAction]
-                                              ): SearchIndex = {
-
-    actions.foldLeft(index) {
-      case (index, action) =>
-        action.apply(index)
-    }
   }
 }

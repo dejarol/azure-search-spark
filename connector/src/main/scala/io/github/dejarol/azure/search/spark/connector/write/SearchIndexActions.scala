@@ -129,6 +129,23 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for folding multiple actions
+   * @param actions actions to fold
+   */
+
+  private case class FoldActions(private val actions: Seq[SearchIndexAction])
+    extends SearchIndexAction {
+
+    override def apply(index: SearchIndex): SearchIndex = {
+
+      actions.foldLeft(index) {
+        case (index, action) =>
+          action.apply(index)
+      }
+    }
+  }
+
+  /**
    * Creates an action for setting the similarity algorithm
    * @param algorithm algorithm to set
    * @return an action for setting the similarity algorithm
@@ -207,4 +224,12 @@ object SearchIndexActions {
    */
 
   final def forSettingVectorSearch(vectorSearch: VectorSearch): SearchIndexAction = SetVectorSearch(vectorSearch)
+
+  /**
+   * Creates an action for folding multiple actions
+   * @param actions actions to fold
+   * @return an action for folding multiple actions
+   */
+
+  final def forFoldingActions(actions: Seq[SearchIndexAction]): SearchIndexAction = FoldActions(actions)
 }

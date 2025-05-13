@@ -44,7 +44,6 @@ class SearchFieldActionsSpec
       describe("define actions that") {
         it("enable a feature") {
 
-          // TODO: rework
           val sampleField = getSampleField
           sampleField should not be enabledFor(feature)
           val actual = SearchFieldActions.forEnablingFeature(feature).apply(sampleField)
@@ -53,7 +52,6 @@ class SearchFieldActionsSpec
 
         it("disable a feature") {
 
-          // TODO: rework
           // First enable the feature
           val enabledField = feature.enableOnField(getSampleField)
           enabledField shouldBe enabledFor(feature)
@@ -61,6 +59,20 @@ class SearchFieldActionsSpec
           // Now, let the action disable it
           val actual = SearchFieldActions.forDisablingFeature(feature).apply(enabledField)
           actual should not be enabledFor(feature)
+        }
+
+        it("enable/disable a feature") {
+
+          val (sampleField, feature) = (getSampleField, SearchFieldFeature.SEARCHABLE)
+          sampleField should not be enabledFor(feature)
+
+          // Assert that the action enables the feature
+          val enabled = SearchFieldActions.forEnablingOrDisablingFeature(feature, flag = true).apply(sampleField)
+          enabled shouldBe enabledFor(feature)
+
+          // Assert that the action disables the feature
+          val disabled = SearchFieldActions.forEnablingOrDisablingFeature(feature, flag = false).apply(enabled)
+          disabled should not be enabledFor(feature)
         }
 
         it("add analyzers") {

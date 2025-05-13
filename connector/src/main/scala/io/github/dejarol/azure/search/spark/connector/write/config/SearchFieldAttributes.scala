@@ -5,7 +5,7 @@ import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAc
 import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 
 /**
- * Model for collecting options to be set on a [[com.azure.search.documents.indexes.models.SearchField]].
+ * Model for collecting attributes to be set on a [[com.azure.search.documents.indexes.models.SearchField]].
  * When not defined, the default values of Azure AI Search client library will be used
  * @param analyzer analyzer name (for both searching and indexing)
  * @param facetable flag that indicates if the field should be facetable
@@ -19,25 +19,26 @@ import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
  * @param vectorSearchProfile name of the vector search profile
  */
 
-case class SearchFieldOptionsV2(
-                                 analyzer: Option[LexicalAnalyzerName],
-                                 facetable: Option[Boolean],
-                                 filterable: Option[Boolean],
-                                 indexAnalyzer: Option[LexicalAnalyzerName],
-                                 key: Option[Boolean],
-                                 retrievable: Option[Boolean],
-                                 searchAnalyzer: Option[LexicalAnalyzerName],
-                                 searchable: Option[Boolean],
-                                 sortable: Option[Boolean],
-                                 vectorSearchProfile: Option[String]
-                               ) {
+case class SearchFieldAttributes(
+                                  analyzer: Option[LexicalAnalyzerName],
+                                  facetable: Option[Boolean],
+                                  filterable: Option[Boolean],
+                                  indexAnalyzer: Option[LexicalAnalyzerName],
+                                  key: Option[Boolean],
+                                  retrievable: Option[Boolean],
+                                  searchAnalyzer: Option[LexicalAnalyzerName],
+                                  searchable: Option[Boolean],
+                                  sortable: Option[Boolean],
+                                  vectorSearchProfile: Option[String]
+                                ) {
 
   /**
    * Gets an action that, if applied, will set all defined options to a field
+   *
    * @return an action for applying all defined field options
    */
 
-  def getAction: SearchFieldAction = {
+  def toAction: Option[SearchFieldAction] = {
 
     // Map each attribute to its related action,
     // then collect all defined actions into a single action
@@ -61,6 +62,12 @@ case class SearchFieldOptionsV2(
       case Some(value) => value
     }
 
-    SearchFieldActions.forFoldingActions(definedActions)
+    if (definedActions.nonEmpty) {
+      Some(
+        SearchFieldActions.forFoldingActions(definedActions)
+      )
+    } else {
+      None
+    }
   }
 }

@@ -145,9 +145,9 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * Gets the token filters to set on index definition
    * @return the (optional) collection of token filters
    */
-    
+
   private[write] def tokenFilters: Option[Seq[TokenFilter]] = {
-    
+
     getArrayOfAzModels[TokenFilter](
       SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
       TokenFilter.fromJson
@@ -191,13 +191,17 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 
   /**
-   * Gets the set of actions to apply on a simple Search index
-   * @return actions to apply in order to enrich a Search index definition
+   * Gets an optional action to apply on a Search index.
+   * If any of the inner actions is defined (i.e. setting
+   * <code>similarityAlgorithm</code>, <code>tokenizers</code>, etc ....),
+   * an action is returned
+   * @return an optional action
    */
 
-  final def searchIndexActions: Seq[SearchIndexAction] = {
+  final def searchIndexAction: Option[SearchIndexAction] = {
 
-    Seq(
+    // Collect only defined actions
+    val definedActions = Seq(
       similarityAlgorithm.map(SearchIndexActions.forSettingSimilarityAlgorithm),
       tokenizers.map(SearchIndexActions.forSettingTokenizers),
       searchSuggesters.map(SearchIndexActions.forSettingSuggesters),
@@ -210,6 +214,15 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       vectorSearch.map(SearchIndexActions.forSettingVectorSearch)
     ).collect {
       case Some(value) => value
+    }
+
+    // If any, create a folding action
+    if (definedActions.nonEmpty) {
+      Some(
+        SearchIndexActions.forFoldingActions(definedActions)
+      )
+    } else {
+      None
     }
   }
 }

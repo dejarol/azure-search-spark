@@ -215,6 +215,20 @@ class SearchIndexActionsSpec
             _ shouldBe name
           }
         }
+
+        it("folding many actions at once") {
+
+          val (algo, name) = (new ClassicSimilarityAlgorithm, "profileName")
+          val actual = SearchIndexActions.forFoldingActions(
+            Seq(
+              SearchIndexActions.forSettingSimilarityAlgorithm(algo),
+              SearchIndexActions.forSettingDefaultScoringProfile(name)
+            )
+          ).apply(emptyIndex)
+
+          actual.getSimilarity shouldBe algo
+          actual.getDefaultScoringProfile shouldBe name
+        }
       }
     }
   }

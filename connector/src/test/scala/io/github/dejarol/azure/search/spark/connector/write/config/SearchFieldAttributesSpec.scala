@@ -1,15 +1,16 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
-import io.github.dejarol.azure.search.spark.connector.BasicSpec
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
 import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, JsonMixIns}
 
-class SearchFieldOptionsV2Spec
-  extends BasicSpec {
+class SearchFieldAttributesSpec
+  extends BasicSpec
+    with JsonMixIns {
 
   private lazy val lexicalAnalyzer = LexicalAnalyzerName.AR_LUCENE
-  private lazy val emptyOptions = SearchFieldOptionsV2(
+  private lazy val emptyOptions = SearchFieldAttributes(
     analyzer = None,
     facetable = None,
     filterable = None,
@@ -33,18 +34,19 @@ class SearchFieldOptionsV2Spec
 
   private def assertOptionsAction[A](
                                       value: A,
-                                      copyFunction: (SearchFieldOptionsV2, A) => SearchFieldOptionsV2,
+                                      copyFunction: (SearchFieldAttributes, A) => SearchFieldAttributes,
                                       expectedAction: SearchFieldAction
                                     ): Unit = {
 
     val copy = copyFunction(emptyOptions, value)
-    val description = copy.getAction.description()
-    description shouldBe SearchFieldActions.forFoldingActions(
+    val actualAction = copy.toAction
+    actualAction shouldBe defined
+    actualAction.get shouldBe SearchFieldActions.forFoldingActions(
       Seq(expectedAction)
     )
   }
 
-  describe(anInstanceOf[SearchFieldOptionsV2]) {
+  describe(anInstanceOf[SearchFieldAttributes]) {
     describe(SHOULD) {
       describe("return an overall action that") {
         describe("sets") {
@@ -149,12 +151,78 @@ class SearchFieldOptionsV2Spec
             facetable = Some(false)
           )
 
-          copy.getAction shouldBe SearchFieldActions.forFoldingActions(
+          val expectedAction = SearchFieldActions.forFoldingActions(
             Seq(
               SearchFieldActions.forSettingAnalyzer(lexicalAnalyzer),
               SearchFieldActions.forDisablingFeature(SearchFieldFeature.FACETABLE)
             )
           )
+
+          val actualAction = copy.toAction
+          actualAction shouldBe defined
+          actualAction.get shouldBe expectedAction
+        }
+      }
+
+      describe("be deserialized from json when") {
+        it("all attributes are defined") {
+
+          val (analyzer, indexAnalyzer, searchAnalyzer, profile) = (
+            LexicalAnalyzerName.AR_LUCENE,
+            LexicalAnalyzerName.BN_MICROSOFT,
+            LexicalAnalyzerName.WHITESPACE,
+            "hello"
+          )
+
+          val json =
+            s"""
+              |{
+              |  "analyzer": "$analyzer",
+              |  "facetable": true,
+              |  "filterable": false,
+              |  "indexAnalyzer": "$indexAnalyzer",
+              |  "key": true,
+              |  "retrievable": false,
+              |  "searchAnalyzer": "$searchAnalyzer",
+              |  "searchable": false,
+              |  "sortable": true,
+              |  "vectorSearchProfile": "$profile"
+              |}
+              |""".stripMargin
+
+          val actual = readValueAs[SearchFieldAttributes](json)
+          actual.analyzer shouldBe Some(analyzer)
+          actual.facetable shouldBe Some(true)
+          actual.filterable shouldBe Some(false)
+          actual.indexAnalyzer shouldBe Some(indexAnalyzer)
+          actual.key shouldBe Some(true)
+          actual.retrievable shouldBe Some(false)
+          actual.searchAnalyzer shouldBe Some(searchAnalyzer)
+          actual.searchable shouldBe Some(false)
+          actual.sortable shouldBe Some(true)
+          actual.vectorSearchProfile shouldBe Some(profile)
+        }
+
+        it("some attributes are missing") {
+
+          val json =
+            """
+              |{
+              |  "key": true
+              |}
+              |""".stripMargin
+
+          val actual = readValueAs[SearchFieldAttributes](json)
+          actual.analyzer shouldBe None
+          actual.facetable shouldBe None
+          actual.filterable shouldBe None
+          actual.indexAnalyzer shouldBe None
+          actual.key shouldBe Some(true)
+          actual.retrievable shouldBe None
+          actual.searchAnalyzer shouldBe None
+          actual.searchable shouldBe None
+          actual.sortable shouldBe None
+          actual.vectorSearchProfile shouldBe None
         }
       }
     }
