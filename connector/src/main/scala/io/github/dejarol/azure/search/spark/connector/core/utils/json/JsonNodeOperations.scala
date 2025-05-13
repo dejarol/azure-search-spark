@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 
 import scala.language.implicitConversions
 
+// TODO: document
 class JsonNodeOperations(private val node: JsonNode) {
 
   final def safelyGetAs[T: JsonConversion](key: String): Option[T] = {
