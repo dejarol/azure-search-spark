@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.utils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.Contract;
 
 /**
@@ -19,7 +20,7 @@ public class JsonModel {
     @JsonCreator
     @Contract(pure = true)
     public JsonModel(
-            String id
+            @JsonProperty("id") String id
     ) {
         this.id = id;
     }
