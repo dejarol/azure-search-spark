@@ -113,7 +113,6 @@ public enum SearchFieldFeature {
             SearchField searchField
     ) {
 
-
         return enablingFunction.apply(searchField, true);
     }
 

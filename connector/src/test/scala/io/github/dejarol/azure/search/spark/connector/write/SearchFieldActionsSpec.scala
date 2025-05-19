@@ -63,7 +63,7 @@ class SearchFieldActionsSpec
             transformed.getAnalyzerName shouldBe analyzer
           }
 
-          it("for searching only") {
+          it("only for searching") {
 
             val sampleField = getSampleField
             sampleField.getSearchAnalyzerName shouldBe null
@@ -71,7 +71,7 @@ class SearchFieldActionsSpec
             transformed.getSearchAnalyzerName shouldBe analyzer
           }
 
-          it("for indexing only") {
+          it("only for indexing") {
 
             val sampleField = getSampleField
             sampleField.getIndexAnalyzerName shouldBe null

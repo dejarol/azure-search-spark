@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.SearchITSpec
-import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.write.config._
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.BeforeAndAfterEach
@@ -18,7 +17,7 @@ class SearchWriteBuilderITSpec
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
   private lazy val analyzer = LexicalAnalyzerName.STANDARD_ASCII_FOLDING_LUCENE
   private lazy val minimumOptionsForIndexCreation = optionsForAuthAndIndex(testIndex) + (
-    WriteConfig.FIELD_OPTIONS_PREFIX + idFieldName ->
+    fieldOptionKey(idFieldName) ->
       s"""
          |{
          |  "key": true
@@ -51,27 +50,6 @@ class SearchWriteBuilderITSpec
   }
 
   /**
-   * Create an [[AnalyzerConfig]]
-   * @param analyzerName name
-   * @param tpe type
-   * @param fields fields
-   * @return an analyzer config
-   */
-
-  private def createAnalyzerConfig(
-                                    analyzerName: LexicalAnalyzerName,
-                                    tpe: SearchFieldAnalyzerType,
-                                    fields: Seq[String]
-                                  ): AnalyzerConfig = {
-
-    new AnalyzerConfig(
-      analyzerName,
-      tpe,
-      JavaScalaConverters.seqToList(fields),
-    )
-  }
-
-  /**
    * Safely create an index, creating a [[WriteConfig]] instance based on a minimum set of
    * index creation options
    * @param schema schema for setting the index fields
@@ -97,65 +75,40 @@ class SearchWriteBuilderITSpec
   /**
    * Assert that a field has been properly enabled/disabled when creating a new index
    * @param schema schema for index creation
-   * @param fieldList name of fields to enable
-   * @param asserter feature asserter
+   * @param extraOptions extra options for index creation
    */
 
-  private def assertFeatureDisabling(
-                                      schema: StructType,
-                                      fieldList: Seq[String],
-                                      asserter: FeatureAsserter
-                                   ): Unit = {
+  private def createIndexByDisablingFeatures(
+                                              schema: StructType,
+                                              extraOptions: Map[String, String]
+                                            ): Map[String, SearchField] = {
 
-    // Create index
+
     indexExists(testIndex) shouldBe false
-    val options = fieldList.map {
-      field => (
-        WriteConfig.FIELD_OPTIONS_PREFIX + field,
-        s"""
-           |{
-           |  "${asserter.property}": ${!asserter.refersToDisablingFeature}
-           |}
-           |""".stripMargin
-      )
-    }.toMap
 
-    safelyCreateIndex(schema, options)
+    // Create index, assert existence
+    safelyCreateIndex(schema, extraOptions)
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
-    val matchingFields = getIndexFields(testIndex).collect {
-      case (k, v) if fieldList.exists {
-        _.equalsIgnoreCase(k)
-      } => v
-    }
-
-    // Assertion for matching fields
-    forAll(matchingFields) {
-      field =>
-        if (asserter.refersToDisablingFeature) {
-          asserter.getFeatureValue(field) shouldBe Some(false)
-        } else {
-          asserter.getFeatureValue(field) shouldBe Some(true)
-        }
-    }
+    getIndexFields(testIndex)
   }
 
   /**
    * Create a Search index, setting some field analyzers, and get back the list of generated Search fields
-   * @param analyzers analyzer map
+   * @param analyzerOptions options for setting analyzers
    * @return fields from the newly created Search index
    */
 
-  private def createIndexSettingAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, SearchField] = {
+  private def createIndexSettingAnalyzers(analyzerOptions: Map[String, String]): Map[String, SearchField] = {
 
     indexExists(testIndex) shouldBe false
-    safelyCreateIndex(
-      schemaForAnalyzerTests,
-      configForAnalyzers(analyzers)
-    )
 
+    // Create index, assert existence
+    safelyCreateIndex(schemaForAnalyzerTests, analyzerOptions)
     indexExists(testIndex) shouldBe true
+
+    // Retrieve index fields
     getIndexFields(testIndex)
   }
 
@@ -242,29 +195,50 @@ class SearchWriteBuilderITSpec
           describe("some features, like") {
             it("facetable") {
 
-              val nonFacetableField = createStructField("category", DataTypes.StringType)
+              val fieldName = "category"
+              val nonFacetableField = createStructField(fieldName, DataTypes.StringType)
               val schema = createStructType(
                 keyField,
                 createStructField("discount", DataTypes.DoubleType),
                 nonFacetableField
               )
 
-              assertFeatureDisabling(schema, Seq(nonFacetableField.name), FeatureAsserter.FACETABLE)
+              val options = Map(
+                fieldOptionKey(fieldName) ->
+                  s"""
+                     |{
+                     |  "facetable": false
+                     |}
+                     |""".stripMargin
+              )
+
+              val fields = createIndexByDisablingFeatures(schema, options)
+              fields(fieldName).isFacetable shouldBe false
             }
 
             it("filterable") {
 
-              val nonFilterableField = createStructField("level", DataTypes.IntegerType)
+              val fieldName = "level"
+              val nonFilterableField = createStructField(fieldName, DataTypes.IntegerType)
               val schema = createStructType(
                 keyField,
                 nonFilterableField,
                 createStructField("date", DataTypes.TimestampType)
               )
 
-              assertFeatureDisabling(schema, Seq(nonFilterableField.name), FeatureAsserter.FILTERABLE)
+              val options = Map(
+                fieldOptionKey(fieldName) ->
+                  s"""
+                     |{
+                     |  "filterable": false
+                     |}
+                     |""".stripMargin
+              )
+
+              val fields = createIndexByDisablingFeatures(schema, options)
+              fields(fieldName).isFilterable shouldBe false
             }
 
-            // TODO: fix
             it("hidden") {
 
               val firstHidden = createStructField("first", DataTypes.IntegerType)
@@ -276,24 +250,49 @@ class SearchWriteBuilderITSpec
                 createStructField("category", DataTypes.StringType)
               )
 
-              assertFeatureDisabling(schema, Seq(firstHidden.name, secondHidden.name), FeatureAsserter.HIDDEN)
+              val options = Seq(firstHidden, secondHidden).map {
+                field => (
+                  fieldOptionKey(field.name),
+                  s"""
+                     |{
+                     |  "retrievable": false
+                     |}
+                     |""".stripMargin
+                )
+              }.toMap
+
+              val fields = createIndexByDisablingFeatures(schema, options)
+              fields(firstHidden.name).isHidden shouldBe true
+              fields(secondHidden.name).isHidden shouldBe true
             }
 
             it("searchable") {
 
-              val nonSearchableField = createStructField("description", DataTypes.StringType)
+              val fieldName = "description"
+              val nonSearchableField = createStructField(fieldName, DataTypes.StringType)
               val schema = createStructType(
                 keyField,
                 nonSearchableField,
                 createStructField("date", DataTypes.DateType)
               )
 
-              assertFeatureDisabling(schema, Seq(nonSearchableField.name), FeatureAsserter.SEARCHABLE)
+              val options = Map(
+                fieldOptionKey(fieldName) ->
+                  s"""
+                     |{
+                     |  "searchable": false
+                     |}
+                     |""".stripMargin
+              )
+
+              val fields = createIndexByDisablingFeatures(schema, options)
+              fields(fieldName).isSearchable shouldBe false
             }
 
             it("sortable") {
 
-              val nonSortableField = createStructField("level", DataTypes.IntegerType)
+              val fieldName = "level"
+              val nonSortableField = createStructField(fieldName, DataTypes.IntegerType)
               val schema = createStructType(
                 keyField,
                 nonSortableField,
@@ -305,51 +304,75 @@ class SearchWriteBuilderITSpec
                 )
               )
 
-              assertFeatureDisabling(schema, Seq(nonSortableField.name), FeatureAsserter.SORTABLE)
+              val options = Map(
+                fieldOptionKey(fieldName) ->
+                  s"""
+                     |{
+                     |  "sortable": false
+                     |}
+                     |""".stripMargin
+              )
+
+              val fields = createIndexByDisablingFeatures(schema, options)
+              fields(fieldName).isSortable shouldBe false
             }
           }
 
           describe("analyzers for") {
             it("both searching and indexing") {
 
-              val analyzerType = SearchFieldAnalyzerType.ANALYZER
-              val analyzers = Seq(
-                createAnalyzerConfig(analyzer, analyzerType, Seq(uuidFieldName, s"$parent.$subFieldName"))
-              )
+              val fieldsToEnrich = Seq(uuidFieldName, s"$parent.$subFieldName")
+              val analyzersOptions: Map[String, String] = fieldsToEnrich.map {
+                field =>
+                  fieldOptionKey(field) ->
+                    s"""
+                       |{
+                       |  "analyzer": "$analyzer"
+                       |}
+                       |""".stripMargin
+              }.toMap
 
-              val searchFields = createIndexSettingAnalyzers(analyzers)
-              analyzerType.getFromField(searchFields(uuidFieldName)) shouldBe analyzer
+              val searchFields = createIndexSettingAnalyzers(analyzersOptions)
+              searchFields(uuidFieldName).getAnalyzerName shouldBe analyzer
               val maybeSubField = maybeGetSubField(searchFields, parent, subFieldName)
               maybeSubField shouldBe defined
               val subFieldDefinition = maybeSubField.get
-              analyzerType.getFromField(subFieldDefinition) shouldBe analyzer
+              subFieldDefinition.getAnalyzerName shouldBe analyzer
             }
 
-            // TODO: fix
             it("only search or indexing") {
 
-              val fields = Seq(uuidFieldName, s"$parent.$subFieldName")
-              val analyzersConfigs = Seq(
-                createAnalyzerConfig(LexicalAnalyzerName.SIMPLE, SearchFieldAnalyzerType.SEARCH_ANALYZER, fields),
-                createAnalyzerConfig(LexicalAnalyzerName.STOP, SearchFieldAnalyzerType.INDEX_ANALYZER, fields)
-              )
+              val fieldsToEnrich = Seq(uuidFieldName, s"$parent.$subFieldName")
+              val (indexAnalyzer, searchAnalyzer) = (LexicalAnalyzerName.SIMPLE, LexicalAnalyzerName.STOP)
+              val analyzerOptions = fieldsToEnrich.map {
+                field =>
+                  fieldOptionKey(field) ->
+                    s"""
+                       |{
+                       |  "indexAnalyzer": "$indexAnalyzer",
+                       |  "searchAnalyzer": "$searchAnalyzer"
+                       |}
+                       |""".stripMargin
+              }.toMap
 
-              val searchFields = createIndexSettingAnalyzers(analyzersConfigs)
+              val searchFields = createIndexSettingAnalyzers(analyzerOptions)
               val uuidField = searchFields(uuidFieldName)
               val maybeSubField = maybeGetSubField(searchFields, parent, subFieldName)
               maybeSubField shouldBe defined
               val subField = maybeSubField.get
 
-              forAll(analyzersConfigs) {
-                config =>
-                  config.getType.getFromField(uuidField) shouldBe config.getName
-                  config.getType.getFromField(subField) shouldBe config.getName
+              forAll(
+                Seq(uuidField, subField)
+              ) {
+                field =>
+                  field.getIndexAnalyzerName shouldBe indexAnalyzer
+                  field.getSearchAnalyzerName shouldBe searchAnalyzer
               }
             }
           }
         }
 
-        ignore("enriching its definition with") {
+        describe("enriching its definition with") {
           it("a similarity algorithm") {
 
             val (k1, b) = (1.5, 0.8)
@@ -543,7 +566,7 @@ class SearchWriteBuilderITSpec
     }
   }
 
-  ignore(anInstanceOf[SearchWriteBuilder]) {
+  describe(anInstanceOf[SearchWriteBuilder]) {
     describe(SHOULD) {
 
       // Schemas for test execution
