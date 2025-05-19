@@ -53,14 +53,14 @@ case class SearchFieldAttributes(
       analyzer.map(SearchFieldActions.forSettingAnalyzer),
       facetable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.FACETABLE, _)),
       filterable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.FILTERABLE, _)),
-      indexAnalyzer.map(SearchFieldActions.forSettingAnalyzer(SearchFieldAnalyzerType.INDEX_ANALYZER, _)),
+      indexAnalyzer.map(SearchFieldActions.forSettingIndexAnalyzer),
       key.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.KEY, _)),
       retrievable.collect {
         case false => SearchFieldActions.forEnablingOrDisablingFeature(
           SearchFieldFeature.HIDDEN, flag = true
         )
       },
-      searchAnalyzer.map(SearchFieldActions.forSettingAnalyzer(SearchFieldAnalyzerType.SEARCH_ANALYZER, _)),
+      searchAnalyzer.map(SearchFieldActions.forSettingSearchAnalyzer),
       searchable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SEARCHABLE, _)),
       sortable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SORTABLE, _)),
       vectorSearchProfile.map(SearchFieldActions.forSettingVectorSearchProfile)

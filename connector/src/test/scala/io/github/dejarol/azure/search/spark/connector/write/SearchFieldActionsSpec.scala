@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
-import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAnalyzerType
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
 class SearchFieldActionsSpec
@@ -18,26 +17,6 @@ class SearchFieldActionsSpec
    */
 
   private def getSampleField: SearchField = createSearchField("hello", SearchFieldDataType.STRING)
-
-  /**
-   * Assert that an action added an analyzer to a Search field definition
-   * @param analyzerType analyzer type
-   * @param analyzerName analyzer to add
-   */
-
-  private def assertAddedAnalyzer(
-                                   input: SearchField,
-                                   analyzerType: SearchFieldAnalyzerType,
-                                   analyzerName: LexicalAnalyzerName
-                                 ): Unit = {
-
-    // Original field should have no analyzer,
-    analyzerType.getFromField(input) shouldBe null
-
-    // while the transformed (actual) field should have it
-    val actual = SearchFieldActions.forSettingAnalyzer(analyzerType, analyzerName).apply(input)
-    analyzerType.getFromField(actual) shouldBe analyzerName
-  }
 
   describe(`object`[SearchFieldActions.type ]) {
     describe(SHOULD) {
@@ -75,15 +54,29 @@ class SearchFieldActionsSpec
           disabled should not be enabledFor(feature)
         }
 
-        it("add analyzers") {
+        describe("add analyzers") {
+          it("for both searching and indexing") {
 
-          forAll(SearchFieldAnalyzerType.values().toSeq) {
-            analyzerType =>
-              assertAddedAnalyzer(
-                getSampleField,
-                analyzerType,
-                analyzer
-              )
+            val sampleField = getSampleField
+            sampleField.getAnalyzerName shouldBe null
+            val transformed = SearchFieldActions.forSettingAnalyzer(analyzer).apply(sampleField)
+            transformed.getAnalyzerName shouldBe analyzer
+          }
+
+          it("for searching only") {
+
+            val sampleField = getSampleField
+            sampleField.getSearchAnalyzerName shouldBe null
+            val transformed = SearchFieldActions.forSettingSearchAnalyzer(analyzer).apply(sampleField)
+            transformed.getSearchAnalyzerName shouldBe analyzer
+          }
+
+          it("for indexing only") {
+
+            val sampleField = getSampleField
+            sampleField.getIndexAnalyzerName shouldBe null
+            val transformed = SearchFieldActions.forSettingIndexAnalyzer(analyzer).apply(sampleField)
+            transformed.getIndexAnalyzerName shouldBe analyzer
           }
         }
 

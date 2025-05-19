@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField}
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
-import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAnalyzerType
 
 /**
  * Collection of methods for creating [[io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldAction]](s)
@@ -37,19 +36,41 @@ object SearchFieldActions {
   }
 
   /**
-   * Action for setting an analyzer
-   * @param analyzerType analyzer type
-   * @param lexicalAnalyzerName lexical analyzer to set
+   * Action for setting an analyzer for both searching and indexing
+   * @param name analyzer to set
    */
 
-  private case class SetAnalyzer(
-                                  private val analyzerType: SearchFieldAnalyzerType,
-                                  private val lexicalAnalyzerName: LexicalAnalyzerName
-                                )
+  private case class SetAnalyzer(private val name: LexicalAnalyzerName)
     extends SearchFieldAction {
-    override def description(): String = s"SET_${analyzerType.name()}"
+    override def description(): String = "SET_ANALYZER"
     override def apply(field: SearchField): SearchField = {
-      analyzerType.setOnField(field, lexicalAnalyzerName)
+      field.setAnalyzerName(name)
+    }
+  }
+
+  /**
+   * Action for setting only the search analyzer
+   * @param name analyzer to set
+   */
+
+  private case class SetSearchAnalyzer(private val name: LexicalAnalyzerName)
+    extends SearchFieldAction {
+    override def description(): String = "SET_SEARCH_ANALYZER"
+    override def apply(field: SearchField): SearchField = {
+      field.setSearchAnalyzerName(name)
+    }
+  }
+
+  /**
+   * Action for setting only the index analyzer
+   * @param name analyzer to set
+   */
+
+  private case class SetIndexAnalyzer(private val name: LexicalAnalyzerName)
+    extends SearchFieldAction {
+    override def description(): String = "SET_INDEX_ANALYZER"
+    override def apply(field: SearchField): SearchField = {
+      field.setIndexAnalyzerName(name)
     }
   }
 
@@ -123,46 +144,28 @@ object SearchFieldActions {
   final def forDisablingFeature(feature: SearchFieldFeature): SearchFieldAction = DisableFeature(feature)
 
   /**
-   * Gets an action for setting an analyzer
-   * @param analyzerType analyzer type
-   * @param lexicalAnalyzerName lexical analyzer to set
-   * @return an action for setting a lexical analyzer
+   * Gets an action for setting an analyzer (for both indexing and searching)
+   * @param name analyzer to set
+   * @return an action for setting a two-way analyzer
    */
 
-  final def forSettingAnalyzer(
-                                analyzerType: SearchFieldAnalyzerType,
-                                lexicalAnalyzerName: LexicalAnalyzerName
-                              ): SearchFieldAction = {
+  final def forSettingAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = SetAnalyzer(name)
 
-    SetAnalyzer(
-      analyzerType,
-      lexicalAnalyzerName
-    )
-  }
+  /**
+   * Gets an action for setting an index analyzer
+   * @param name analyzer to set
+   * @return an action for setting an index analyzer
+   */
 
-  final def forSettingAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
+  final def forSettingIndexAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = SetIndexAnalyzer(name)
 
-    SetAnalyzer(
-      SearchFieldAnalyzerType.ANALYZER,
-      name
-    )
-  }
+  /**
+   * Gets an action for setting a search analyzer
+   * @param name analyzer to set
+   * @return an action for setting a search analyzer
+   */
 
-  final def forSettingIndexAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
-
-    SetAnalyzer(
-      SearchFieldAnalyzerType.INDEX_ANALYZER,
-      name
-    )
-  }
-
-  final def forSettingSearchAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = {
-
-    SetAnalyzer(
-      SearchFieldAnalyzerType.SEARCH_ANALYZER,
-      name
-    )
-  }
+  final def forSettingSearchAnalyzer(name: LexicalAnalyzerName): SearchFieldAction = SetSearchAnalyzer(name)
 
   /**
    * Gets an action for setting attribute <code>vectorSearchProfile</code> on a Search field
