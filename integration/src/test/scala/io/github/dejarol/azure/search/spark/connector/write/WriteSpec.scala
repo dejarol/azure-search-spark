@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
 import io.github.dejarol.azure.search.spark.connector.models._
-import io.github.dejarol.azure.search.spark.connector.write.config.{SearchFieldCreationOptions, WriteConfig}
+import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import io.github.dejarol.azure.search.spark.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.SaveMode
 
@@ -47,7 +47,13 @@ class WriteSpec
     // Set up the writer
     val basicWriter = dataFrame.write.format(Constants.DATASOURCE_NAME)
       .options(optionsForAuthAndIndex(index))
-      .option(WriteConfig.FIELD_OPTIONS_PREFIX + SearchFieldCreationOptions.KEY_FIELD_CONFIG, "id")
+      .option(
+        s"${WriteConfig.FIELD_OPTIONS_PREFIX}id",
+        s"""
+           |{
+           |  "key": true
+           |}
+           |""".stripMargin)
 
     // Add extra options, if needed
     extraOptions

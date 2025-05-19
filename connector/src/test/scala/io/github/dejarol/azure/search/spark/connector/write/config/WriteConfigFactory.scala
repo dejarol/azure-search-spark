@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.{JsonMixIns, SearchAPIModelFactory}
 
 /**
@@ -34,8 +35,27 @@ trait WriteConfigFactory
 
   protected final def configForAnalyzers(analyzers: Seq[AnalyzerConfig]): Map[String, String] = {
 
-    Map(
-      fieldOptionKey(SearchFieldCreationOptions.ANALYZERS_CONFIG) -> writeValueAs[Seq[AnalyzerConfig]](analyzers)
-    )
+    analyzers.flatMap {
+      cfg => JavaScalaConverters.listToSeq(cfg.getFields).map {
+        field =>
+
+          val property = cfg.getType match {
+            case SearchFieldAnalyzerType.ANALYZER => "analyzer"
+            case SearchFieldAnalyzerType.SEARCH_ANALYZER => "searchAnalyzer"
+            case SearchFieldAnalyzerType.INDEX_ANALYZER => "indexAnalyzer"
+          }
+
+          val json =
+            s"""
+               |{
+               |  "$property": "${cfg.getName}"
+               |}
+               |""".stripMargin
+          (
+            fieldOptionKey(field),
+            json
+          )
+      }
+    }.toMap
   }
 }

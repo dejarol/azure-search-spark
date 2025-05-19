@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.SearchITSpec
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.write.config.{AnalyzerConfig, SearchFieldAnalyzerType, SearchFieldCreationOptions, SearchIndexCreationOptions, WriteConfig, WriteConfigFactory}
+import io.github.dejarol.azure.search.spark.connector.write.config.{AnalyzerConfig, SearchFieldAnalyzerType, SearchIndexCreationOptions, WriteConfig, WriteConfigFactory}
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.BeforeAndAfterEach
 
@@ -18,7 +18,12 @@ class SearchWriteBuilderITSpec
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
   private lazy val analyzer = LexicalAnalyzerName.STANDARD_ASCII_FOLDING_LUCENE
   private lazy val minimumOptionsForIndexCreation = optionsForAuthAndIndex(testIndex) + (
-    WriteConfig.FIELD_OPTIONS_PREFIX + SearchFieldCreationOptions.KEY_FIELD_CONFIG -> idFieldName
+    WriteConfig.FIELD_OPTIONS_PREFIX + idFieldName ->
+      s"""
+         |{
+         |  "key": true
+         |}
+         |""".stripMargin
     )
 
   private lazy val uuidFieldName = "uuid"
@@ -104,7 +109,18 @@ class SearchWriteBuilderITSpec
 
     // Create index
     indexExists(testIndex) shouldBe false
-    safelyCreateIndex(schema, Map(WriteConfig.FIELD_OPTIONS_PREFIX + asserter.suffix -> fieldList.mkString(",")))
+    val options = fieldList.map {
+      field => (
+        WriteConfig.FIELD_OPTIONS_PREFIX + field,
+        s"""
+           |{
+           |  "${asserter.property}": ${!asserter.refersToDisablingFeature}
+           |}
+           |""".stripMargin
+      )
+    }.toMap
+
+    safelyCreateIndex(schema, options)
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
