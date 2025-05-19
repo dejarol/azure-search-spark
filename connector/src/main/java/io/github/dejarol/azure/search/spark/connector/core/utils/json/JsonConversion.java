@@ -10,6 +10,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 public interface JsonConversion<T> {
 
     /**
+     * Gets a user-friendly description of the conversion type
+     * @return a description of this instance's type
+     */
+
+    String typeDescription();
+
+    /**
      * Defines if the conversion can be applied to the given node
      * @param node node to convert
      * @return true for nodes that support the conversion

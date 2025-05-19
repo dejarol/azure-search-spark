@@ -198,7 +198,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return an optional action
    */
 
-  final def searchIndexAction: Option[SearchIndexAction] = {
+  final def action: Option[SearchIndexAction] = {
 
     // Collect only defined actions
     val definedActions = Seq(

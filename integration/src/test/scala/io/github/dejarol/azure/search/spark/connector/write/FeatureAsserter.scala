@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write
 
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
-import io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldCreationOptions
 
 import java.lang.{Boolean => JBoolean}
 

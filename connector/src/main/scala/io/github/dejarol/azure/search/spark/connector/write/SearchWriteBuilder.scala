@@ -133,7 +133,7 @@ object SearchWriteBuilder {
       // Apply optional actions
       val maybeEnrichedIndex: SearchIndex = writeConfig
         .searchIndexCreationOptions
-        .searchIndexAction.map {
+        .action.map {
           _.apply(searchIndex)
         }.getOrElse(searchIndex)
 

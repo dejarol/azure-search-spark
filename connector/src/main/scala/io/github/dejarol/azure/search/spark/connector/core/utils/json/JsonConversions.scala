@@ -17,6 +17,7 @@ object JsonConversions {
    */
 
   case object StringConversion extends JsonConversion[String] {
+    override def typeDescription(): String = "string"
     override def isDefinedAt(node: JsonNode): JBoolean = node.isTextual
     override def apply(node: JsonNode): String = node.asText
   }
@@ -26,6 +27,7 @@ object JsonConversions {
    */
 
   case object BooleanConversion extends JsonConversion[Boolean] {
+    override def typeDescription(): String = "boolean"
     override def isDefinedAt(node: JsonNode): JBoolean = node.isBoolean
     override def apply(node: JsonNode): Boolean = node.asBoolean
   }
@@ -36,6 +38,9 @@ object JsonConversions {
 
   case object LexicalAnalyzerNameConversion
     extends JsonConversion[LexicalAnalyzerName] {
+
+    override def typeDescription(): String = classOf[LexicalAnalyzerName].getName
+
     override def isDefinedAt(node: JsonNode): JBoolean = {
 
       // Evaluate if the node is a string

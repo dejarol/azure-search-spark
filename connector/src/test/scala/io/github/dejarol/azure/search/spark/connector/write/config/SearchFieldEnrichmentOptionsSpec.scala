@@ -47,7 +47,78 @@ class SearchFieldEnrichmentOptionsSpec
       describe("collect actions only for") {
         it("valid field options") {
 
-          // TODO: test
+          val v3 =
+            s"""
+               |{
+               |  "key": true
+               |}
+               |""".stripMargin
+
+          val map = Map(
+            "k1" -> "hello",
+            "k2" -> "{}",
+            "k3" -> v3
+          )
+
+          val fieldActions = createOptions(Some(map), None).fieldActions
+          fieldActions should have size 1
+          val maybeAction = fieldActions.get("k3")
+          maybeAction shouldBe defined
+        }
+      }
+
+      describe("convert a Spark schema to a collection of Search fields") {
+        it("excluding the index action column") {
+
+          val (actionCol, second) = ("first", "second")
+          val options = createOptions(None, Some(actionCol))
+          val searchFields = options.toSearchFields(
+            Seq(
+              createStructField(actionCol, DataTypes.StringType),
+              createStructField(second, DataTypes.IntegerType)
+            )
+          )
+
+          searchFields should have size 1
+          searchFields.head.getName shouldBe second
+        }
+
+        it("applying defined enrichment options") {
+
+          val (keyCol, second) = ("key", "second")
+          val keyColValue =
+            s"""
+               |{
+               |  "key": true
+               |}
+               |""".stripMargin
+
+          val options = createOptions(
+            Some(
+              Map(
+                keyCol -> keyColValue
+              )
+            ),
+            None
+          )
+
+          val searchFields = options.toSearchFields(
+            Seq(
+              createStructField(keyCol, DataTypes.StringType),
+              createStructField(second, DataTypes.IntegerType)
+            )
+          ).map {
+            sf => (sf.getName, sf)
+          }.toMap
+
+          searchFields should have size 2
+          val maybeKeyCol = searchFields.get(keyCol)
+          maybeKeyCol shouldBe defined
+          maybeKeyCol.get.isKey shouldBe true
+
+          val maybeSecond = searchFields.get(second)
+          maybeSecond shouldBe defined
+          maybeSecond.get.isKey shouldBe null
         }
       }
     }

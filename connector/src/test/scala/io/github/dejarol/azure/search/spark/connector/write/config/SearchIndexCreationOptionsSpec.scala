@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
+import io.github.dejarol.azure.search.spark.connector.write.SearchIndexActions
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
 
 class SearchIndexCreationOptionsSpec
@@ -281,47 +282,23 @@ class SearchIndexCreationOptionsSpec
           }
         }
 
-        it("the set of actions to apply on a Search index") {
-
-          val actions = SearchIndexCreationOptions(
-            createOptions(
-              Map(
-                SearchIndexCreationOptions.SIMILARITY_CONFIG -> createBM25SimilarityAlgorithm(0.1, 0.3),
-                SearchIndexCreationOptions.TOKENIZERS_CONFIG -> createArray(
-                  createClassicTokenizer("classicTok", 10)
-                ),
-                SearchIndexCreationOptions.SUGGESTERS_CONFIG -> createArray(
-                  createSearchSuggester("descriptionSuggester", Seq("description"))
-                ),
-                SearchIndexCreationOptions.ANALYZERS_CONFIG -> createArray(
-                  createStopAnalyzer("stop", Seq("a", "the"))
-                ),
-                SearchIndexCreationOptions.SCORING_PROFILES_CONFIG -> createArray(
-                  createScoringProfile("profileName", Map("hotel" -> 0.5))
-                ),
-                SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG -> createArray(
-                  createPatternReplaceTokenFilter("filterName", "patt", "repl")
-                ),
-                SearchIndexCreationOptions.CORS_OPTIONS_CONFIG -> createCorsOptions(
-                  Seq("second"), 10
-                ),
-                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> "profileName",
-                SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG -> createVectorSearch(
-                  Seq(
-                    createHnswAlgorithm("hello", 2, 3, 4, VectorSearchAlgorithmMetric.DOT_PRODUCT)
-                  ),
-                  Seq(
-                    createVectorSearchProfile("first", "second")
-                  )
-                )
-              )
-            )
-          )
-        }
-
         it("the overall index action") {
 
-          // TODO: test
+          emptyConfig.action shouldBe empty
+
+          val profileName = "testScoringProfile"
+          val maybeAction = createOptions(
+            Map(
+              SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> profileName
+            )
+          ).action
+
+          maybeAction shouldBe defined
+          maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
+            Seq(
+              SearchIndexActions.forSettingDefaultScoringProfile(profileName)
+            )
+          )
         }
       }
     }
