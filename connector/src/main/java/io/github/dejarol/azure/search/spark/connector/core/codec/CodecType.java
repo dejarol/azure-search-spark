@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * An enum representing the types of codecs used for data processing
  * <ul>
- *     <li>{@link CodecType#ENCODING} is used for data encoding</li>
- *     <li>{@link CodecType#DECODING} is used for data decoding</li>
+ *     <li><code>ENCODING</code> is used for data encoding</li>
+ *     <li><code>DECODING</code> is used for data decoding</li>
  * </ul>
  */
 

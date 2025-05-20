@@ -6,8 +6,8 @@ import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
  * Factory for creating an instance of [[SearchPartitioner]].
  * <br>
  * Implementations should take care of defining the logic for creating their own partitioner instance,
- * given the overall [[ReadConfig]] provided by the users. Partitioner options can be accessed through
- * [[ReadConfig.partitionerOptions]]
+ * given the overall [[io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig]] provided by the users.
+ * Partitioner options can be accessed through <code>partitionerOptions</code>
  */
 
 trait PartitionerFactory {

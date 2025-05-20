@@ -9,15 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- TODO
+- support for defining a vector search at index creation
+- support for defining a vector search profile at field creation
 
 ### Changed
+- altered <code>fieldOptions.*</code> write options for enriching Search fields
 
 ## [0.9.0]
 
 ### Changed
 
-- altered <code>partitioner</code> read option so that the user does not have to specify the partitioner class name
+- altered <code>partitioner</code> read option so that the user does not have to specify the partitioner class name.
+  - for using <code>FacetedPartitioner</code>
 
 ## [0.8.0]
 

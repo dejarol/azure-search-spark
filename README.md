@@ -513,60 +513,56 @@ Values within such column should be valid index actions according to the Azure S
 
 ### Field options
 
-Here is the list of supported field attributes
+The user should define a <code>fieldOptions.</code> - prefixed property for each field that should be customized.
+- for a top-level field named <code>f1</code>, the key should be <code>fieldOptions.f1</code>
+- for a nested field named <code>address.city</code> (where <code>address</code> is a struct), the key should be <code>fieldOptions.address.city</code>.
+
+The values for each of these properties should be a JSON object with the following attributes (all optional)
 
 <table>
     <tr>
         <th>Key</th>
         <th>Description</th>
-        <th>Default</th>
+    </tr>
+    <tr>
+        <td>analyzer</td>
+        <td>Name of the lexical analyzer to use for both searching and indexing</td>
+    </tr>
+    <tr>
+        <td>facetable</td>
+        <td>Flag for enabling faceting for this field</td>
+    </tr>
+    <tr>
+        <td>filterable</td>
+        <td>Flag for enabling filtering for this field</td>
+    </tr>
+    <tr>
+        <td>indexAnalyzer</td>
+        <td>Name of the lexical analyzer to use for indexing</td>
     </tr>
     <tr>
         <td>key</td>
-        <td>Name of key field</td>
-        <td>id</td>
+        <td>Flag for marking this field as the key field</td>
     </tr>
     <tr>
-        <td>nonFilterable</td>
-        <td>Comma-separated list of fields that should be marked as non-filterable</td>
-        <td></td>
+        <td>retrievable</td>
+        <td>Flag for marking the field as retrievable</td>
     </tr>
     <tr>
-        <td>nonSortable</td>
-        <td>Comma-separated list of fields that should be marked as non-sortable</td>
-        <td></td>
+        <td>searchAnalyzer</td>
+        <td>Name of the lexical analyzer to use for searching</td>
     </tr>
     <tr>
-        <td>hidden</td>
-        <td>Comma-separated list of fields that should be marked as non-retrievable</td>
-        <td></td>
+        <td>searchable</td>
+        <td>Flag for enabling searching for this field</td>
     </tr>
     <tr>
-        <td>nonSearchable</td>
-        <td>Comma-separated list of string fields that should be marked as non-searchable</td>
-        <td></td>
+        <td>sortable</td>
+        <td>Flag for enabling sorting for this field</td>
     </tr>
     <tr>
-        <td>nonFacetable</td>
-        <td>Comma-separated list of fields that should be marked as non-facetable</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>analyzers</td>
-        <td>JSON array of objects that should match the following structure
-            <ul>
-                <li>
-a <code>name</code> field of type string, that should be a value within enum 
-<code>com.azure.search.documents.indexes.models.LexicalAnalyzerName</code>
-                </li>
-                <li>
-a <code>type</code> field of type string, with value being one among <code>analyzer</code> for setting an analyzer for 
-both searching and indexing, <code>searchAnalyzer</code> for a search analyzer 
-or <code>indexAnalyzer for an index analyzer</code>
-                </li>
-                <li>List of comma-separated field names to which the analyzers should be applied to</li>
-            </ul>
-        <td></td>
+        <td>vectorSearchProfile</td>
+        <td>Name of the vector search profile to use for this field</td>
     </tr>
 </table>
 
@@ -635,9 +631,8 @@ df.write.format("azsearch")
     .option("endPoint", "yourEndpoint")
     .option("apiKey", "yourApiKey")
     .option("action", "mergeOrUpload")
-    .option("fieldOptions.nonFilterable", "name")
-    .option("fieldOptions.hidden", "row_id,insert_time")
-    .option("fieldOptions.analyzers", "[{"name": "standard.lucene", "type": "analyzer", "fields": ["description", "label"]}]")
+    .option("fieldOptions.id", "{\"key\": true}")
+    .option("fieldOptions.name", "{\"searchable\": true, \"sortable\": true}")
     .option("indexAttributes.similarity", "{"@odata.type": "#Microsoft.Azure.Search.BM25Similarity", "k": 1.2, "b": 0.75}")
     .save("yourIndex")
 ```

@@ -103,7 +103,8 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
    * If not provided, the default implementation (
    * [[io.github.dejarol.azure.search.spark.connector.read.partitioning.DefaultPartitioner]])
    * will be used
-   * @throws ConfigException if the partitioner type is not valid or any of the partitioner options is missing/invalid
+   * @throws io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
+   * if the partitioner type is not valid or any of the partitioner options is missing/invalid
    * @return a partitioner factory instance
    */
 

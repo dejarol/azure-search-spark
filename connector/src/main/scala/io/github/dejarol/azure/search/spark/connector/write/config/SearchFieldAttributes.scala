@@ -22,6 +22,7 @@ import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
  * @param searchable flag that indicates if the field should be searchable
  * @param sortable flag that indicates if the field should be sortable
  * @param vectorSearchProfile name of the vector search profile
+ * @since 0.10.0
  */
 
 @JsonDeserialize(using = classOf[SearchFieldAttributes.Deserializer])
@@ -83,6 +84,7 @@ object SearchFieldAttributes {
   import JsonConversions._
   import JsonNodeOperations._
 
+  //noinspection ScalaWeakerAccess
   class Deserializer
     extends StdDeserializer[SearchFieldAttributes](classOf[SearchFieldAttributes]) {
 

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import scala.language.implicitConversions
 
 /**
- * Wrapper class for operating on [[com.fasterxml.jackson.databind.JsonNode]] in a Scala-friendly way
+ * Wrapper class for operating on jackson's API JSON nodes in a Scala-friendly way
  * @param node a node instance
  */
 
@@ -41,7 +41,6 @@ class JsonNodeOperations(private val node: JsonNode) {
    * Unsafely gets a value from this node
    * @param key key to convert
    * @tparam T target value type
-   * @throws IllegalArgumentException if the key is not present or the value cannot be converted
    * @return an instance of the target type
    */
 

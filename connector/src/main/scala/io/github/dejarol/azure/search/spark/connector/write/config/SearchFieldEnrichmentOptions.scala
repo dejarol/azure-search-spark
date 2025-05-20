@@ -21,6 +21,7 @@ import org.apache.spark.sql.types.StructField
  * @param options write configuration options prefixed with <code>fieldOptions.</code>
  * @param indexActionColumn name of the column to be used for retrieving the index action for batch upload.
  *                          When converting the Spark fields to Search fields, this field will be excluded
+ * @since 0.10.0
  */
 
 case class SearchFieldEnrichmentOptions(

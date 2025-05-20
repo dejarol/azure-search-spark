@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.core.utils.json;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * Interface for implementing custom JSON conversions, starting from a {@link com.fasterxml.jackson.databind.JsonNode}
+ * Interface for implementing custom JSON conversions
  * @param <T> target deserialization type
  */
 

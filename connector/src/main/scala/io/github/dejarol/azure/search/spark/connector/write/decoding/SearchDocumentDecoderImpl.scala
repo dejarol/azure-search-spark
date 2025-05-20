@@ -32,7 +32,7 @@ object SearchDocumentDecoderImpl {
    * @param schema Dataframe schema
    * @param searchFields target Search fields
    * @return either the decoder or a
-   *         [[CodecCreationException]]
+   *         [[io.github.dejarol.azure.search.spark.connector.core.codec.CodecCreationException]]
    */
 
   final def safeApply(
