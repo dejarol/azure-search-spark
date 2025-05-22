@@ -2,7 +2,6 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
-import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, JsonMixIns}
 
 class SearchFieldAttributesSpec

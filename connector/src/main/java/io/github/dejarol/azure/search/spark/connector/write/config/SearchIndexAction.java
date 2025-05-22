@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.write;
+package io.github.dejarol.azure.search.spark.connector.write.config;
 
 import com.azure.search.documents.indexes.models.SearchIndex;
 import org.jetbrains.annotations.NotNull;

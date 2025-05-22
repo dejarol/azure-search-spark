@@ -93,9 +93,9 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
    * @return index creation options
    */
 
-  def searchIndexCreationOptions: SearchIndexCreationOptions = {
+  def searchIndexCreationOptions: SearchIndexEnrichmentOptions = {
 
-    SearchIndexCreationOptions(
+    SearchIndexEnrichmentOptions(
       getAllWithPrefix(WriteConfig.INDEX_ATTRIBUTES_PREFIX)
     )
   }

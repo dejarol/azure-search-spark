@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.write
+package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
@@ -213,6 +213,21 @@ class SearchIndexActionsSpec
             SearchIndexActions.forSettingDefaultScoringProfile(name)
           ) {
             _ shouldBe name
+          }
+        }
+
+        it("set the semantic search") {
+
+          val semanticSearch = new SemanticSearch()
+            .setDefaultConfigurationName("config")
+
+          assertEffectOfAction[SemanticSearch](
+            _.getSemanticSearch,
+            SearchIndexActions.forSettingSemanticSearch(semanticSearch)
+          ) {
+            actual =>
+              actual.getDefaultConfigurationName shouldBe semanticSearch.getDefaultConfigurationName
+              actual.getConfigurations shouldBe empty
           }
         }
 

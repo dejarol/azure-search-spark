@@ -377,7 +377,7 @@ class SearchWriteBuilderITSpec
 
             val (k1, b) = (1.5, 0.8)
             assertIndexHasBeenEnrichedWith[SimilarityAlgorithm](
-              SearchIndexCreationOptions.SIMILARITY_CONFIG,
+              SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
               createBM25SimilarityAlgorithm(k1, b),
               _.getSimilarity
             ) {
@@ -393,7 +393,7 @@ class SearchWriteBuilderITSpec
 
             val (name, maxTokenLength) = ("tokenizrName", 10)
             assertIndexHasBeenEnrichedWith[JList[LexicalTokenizer]](
-              SearchIndexCreationOptions.TOKENIZERS_CONFIG,
+              SearchIndexEnrichmentOptions.TOKENIZERS_CONFIG,
               createArray(
                 createClassicTokenizer(name, maxTokenLength)
               ),
@@ -413,7 +413,7 @@ class SearchWriteBuilderITSpec
 
             val (name, fields) = ("uuidSuggstr", Seq(uuidFieldName))
             assertIndexHasBeenEnrichedWith[JList[SearchSuggester]](
-              SearchIndexCreationOptions.SUGGESTERS_CONFIG,
+              SearchIndexEnrichmentOptions.SUGGESTERS_CONFIG,
               createArray(
                 createSearchSuggester(name, fields)
               ),
@@ -431,7 +431,7 @@ class SearchWriteBuilderITSpec
 
             val (name, stopWords) = ("analyzrName", Seq("a", "the"))
             assertIndexHasBeenEnrichedWith[JList[LexicalAnalyzer]](
-              SearchIndexCreationOptions.ANALYZERS_CONFIG,
+              SearchIndexEnrichmentOptions.ANALYZERS_CONFIG,
               createArray(
                 createStopAnalyzer(name, stopWords)
               ),
@@ -451,7 +451,7 @@ class SearchWriteBuilderITSpec
 
             val (name, mappings) = ("filterName", Seq("john=>jane"))
             assertIndexHasBeenEnrichedWith[JList[CharFilter]](
-              SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
+              SearchIndexEnrichmentOptions.CHAR_FILTERS_CONFIG,
               createArray(
                 createMappingCharFilter(name, mappings)
               ),
@@ -471,7 +471,7 @@ class SearchWriteBuilderITSpec
 
             val (name, weights) = ("customScoring1", Map(uuidFieldName -> 0.5))
             assertIndexHasBeenEnrichedWith[JList[ScoringProfile]](
-              SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
+              SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG,
               createArray(
                 createScoringProfile(name, weights)
               ),
@@ -494,7 +494,7 @@ class SearchWriteBuilderITSpec
 
             val (name, pattern, replacement) = ("tfName", "a", "")
             assertIndexHasBeenEnrichedWith[JList[TokenFilter]](
-              SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
+              SearchIndexEnrichmentOptions.TOKEN_FILTERS_CONFIG,
               createArray(
                 createPatternReplaceTokenFilter(name, pattern, replacement)
               ),
@@ -515,7 +515,7 @@ class SearchWriteBuilderITSpec
 
             val (allowedOrigins, maxAge) = (Seq("*"), 15)
             assertIndexHasBeenEnrichedWith[CorsOptions](
-              SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+              SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
               createCorsOptions(allowedOrigins, maxAge),
               _.getCorsOptions
             ) {
@@ -531,8 +531,8 @@ class SearchWriteBuilderITSpec
             val either = safelyCreateIndex(
               schemaForAnalyzerTests,
               Map(
-                indexOptionKey(SearchIndexCreationOptions.SCORING_PROFILES_CONFIG) -> createArray(createScoringProfile(name, weights)),
-                indexOptionKey(SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG) -> name
+                indexOptionKey(SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG) -> createArray(createScoringProfile(name, weights)),
+                indexOptionKey(SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG) -> name
               )
             )
 
@@ -545,7 +545,7 @@ class SearchWriteBuilderITSpec
           it("vector search") {
 
             assertIndexHasBeenEnrichedWith[VectorSearch](
-              SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+              SearchIndexEnrichmentOptions.VECTOR_SEARCH_CONFIG,
               createVectorSearch(
                 Seq(
                   createHnswAlgorithm("hnsw-1", 4, 400, 500, VectorSearchAlgorithmMetric.COSINE)

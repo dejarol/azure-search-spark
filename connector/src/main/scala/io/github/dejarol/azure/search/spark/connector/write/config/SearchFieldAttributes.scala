@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
 import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConversions, JsonNodeOperations}
-import io.github.dejarol.azure.search.spark.connector.write.SearchFieldActions
 
 /**
  * Model for collecting attributes to be set on a [[com.azure.search.documents.indexes.models.SearchField]].

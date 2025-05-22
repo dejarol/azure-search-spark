@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.json.{JsonProviders, JsonSerializable, JsonWriter}
-import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, CharFilter, ClassicTokenizer, CorsOptions, HnswAlgorithmConfiguration, HnswParameters, LexicalAnalyzer, LexicalTokenizer, MappingCharFilter, PatternReplaceTokenFilter, ScoringProfile, SearchSuggester, SimilarityAlgorithm, StopAnalyzer, TextWeights, TokenFilter, VectorSearch, VectorSearchAlgorithmConfiguration, VectorSearchAlgorithmMetric, VectorSearchProfile}
+import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, CharFilter, ClassicTokenizer, CorsOptions, HnswAlgorithmConfiguration, HnswParameters, LexicalAnalyzer, LexicalTokenizer, MappingCharFilter, PatternReplaceTokenFilter, ScoringProfile, SearchSuggester, SemanticSearch, SimilarityAlgorithm, StopAnalyzer, TextWeights, TokenFilter, VectorSearch, VectorSearchAlgorithmConfiguration, VectorSearchAlgorithmMetric, VectorSearchProfile}
 import io.github.dejarol.azure.search.spark.connector.core.{JavaScalaConverters, TestConstants}
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
@@ -274,6 +274,20 @@ trait SearchAPIModelFactory {
       new VectorSearch()
         .setAlgorithms(algorithms: _*)
         .setProfiles(profiles: _*)
+    )
+  }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.SemanticSearch]] instance
+   * @param configName default configuration name
+   * @return a JSON representation of a vector search
+   */
+
+  protected final def createSemanticSearch(configName: String): String = {
+
+    apiModelToJson[SemanticSearch](
+      new SemanticSearch()
+        .setDefaultConfigurationName(configName)
     )
   }
 }

@@ -2,10 +2,9 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
-import io.github.dejarol.azure.search.spark.connector.write.SearchIndexActions
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
 
-class SearchIndexCreationOptionsSpec
+class SearchIndexEnrichmentOptionsSpec
   extends BasicSpec
     with SearchAPIModelFactory {
 
@@ -13,13 +12,14 @@ class SearchIndexCreationOptionsSpec
 
   /**
    * Create a set of options from a raw configuration map
+   *
    * @param map raw configuration
-   * @return an instance of [[SearchIndexCreationOptions]]
+   * @return an instance of [[SearchIndexEnrichmentOptions]]
    */
 
-  private def createOptions(map: Map[String, String]): SearchIndexCreationOptions = {
+  private def createOptions(map: Map[String, String]): SearchIndexEnrichmentOptions = {
 
-    SearchIndexCreationOptions(
+    SearchIndexEnrichmentOptions(
       new SearchConfig(map)
     )
   }
@@ -41,7 +41,8 @@ class SearchIndexCreationOptionsSpec
                                                key: String,
                                                invalidValue: String,
                                                validValue: String,
-                                               getter: SearchIndexCreationOptions => Option[T]
+                                               getter: SearchIndexEnrichmentOptions => Option[T],
+                                               actionCreator: T => SearchIndexAction
                                              )(
                                                assertion: T => Unit
                                              ): Unit = {
@@ -59,17 +60,26 @@ class SearchIndexCreationOptionsSpec
     }
 
     // Given a valid configuration, the result should be defined
-    val maybeResult = getter(
-      createOptions(
-        Map(key -> validValue)
-      )
+    val options = createOptions(
+      Map(key -> validValue)
     )
 
+    val maybeResult = getter(options)
     maybeResult shouldBe defined
     assertion(maybeResult.get)
+
+    // TODO: rework test method
+    val maybeAction = options.action
+    maybeAction shouldBe defined
+    maybeAction.get shouldBe a [SearchIndexActions.FoldActions]
+    maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
+      Seq(
+        actionCreator(maybeResult.get)
+      )
+    )
   }
 
-  describe(anInstanceOf[SearchIndexCreationOptions]) {
+  describe(anInstanceOf[SearchIndexEnrichmentOptions]) {
     describe(SHOULD) {
       describe("provide") {
         describe("search index extra options, like") {
@@ -78,10 +88,11 @@ class SearchIndexCreationOptionsSpec
 
             val (k1, b) = (0.1, 0.3)
             assertBehaviorForIndexOption[SimilarityAlgorithm](
-              SearchIndexCreationOptions.SIMILARITY_CONFIG,
+              SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
               createSimpleODataType("#hello"),
               createBM25SimilarityAlgorithm(k1, b),
-              _.similarityAlgorithm
+              _.similarityAlgorithm,
+              SearchIndexActions.forSettingSimilarityAlgorithm
             ) {
               algo =>
                 algo shouldBe a[BM25SimilarityAlgorithm]
@@ -94,14 +105,15 @@ class SearchIndexCreationOptionsSpec
           it("index tokenizers") {
 
             assertBehaviorForIndexOption[Seq[LexicalTokenizer]](
-              SearchIndexCreationOptions.TOKENIZERS_CONFIG,
+              SearchIndexEnrichmentOptions.TOKENIZERS_CONFIG,
               createArray(
                 createSimpleODataType("hello")
               ),
               createArray(
                 createClassicTokenizer("tokenizerName", 20)
               ),
-              _.tokenizers
+              _.tokenizers,
+              SearchIndexActions.forSettingTokenizers
             ) {
               tokenizers =>
                 tokenizers should have size 1
@@ -114,14 +126,15 @@ class SearchIndexCreationOptionsSpec
 
             val (name, fields) = ("countryAndFunction", Seq("country", "function"))
             assertBehaviorForIndexOption[Seq[SearchSuggester]](
-              SearchIndexCreationOptions.SUGGESTERS_CONFIG,
+              SearchIndexEnrichmentOptions.SUGGESTERS_CONFIG,
               createArray(
                 createSimpleODataType("world")
               ),
               createArray(
                 createSearchSuggester(name, fields)
               ),
-              _.searchSuggesters
+              _.searchSuggesters,
+              SearchIndexActions.forSettingSuggesters
             ) {
               suggesters =>
                 suggesters should have size 1
@@ -135,14 +148,15 @@ class SearchIndexCreationOptionsSpec
 
             val (name, stopWords) = ("stopper", Seq("a", "an", "the"))
             assertBehaviorForIndexOption[Seq[LexicalAnalyzer]](
-              SearchIndexCreationOptions.ANALYZERS_CONFIG,
+              SearchIndexEnrichmentOptions.ANALYZERS_CONFIG,
               createArray(
                 createSimpleODataType("world")
               ),
               createArray(
                 createStopAnalyzer(name, stopWords)
               ),
-              _.analyzers
+              _.analyzers,
+              SearchIndexActions.forSettingAnalyzers
             ) {
               analyzers =>
                 analyzers should have size 1
@@ -158,14 +172,15 @@ class SearchIndexCreationOptionsSpec
 
             val (name, mappings) = ("charFilterName", Seq("first_name", "last_name"))
             assertBehaviorForIndexOption[Seq[CharFilter]](
-              SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
+              SearchIndexEnrichmentOptions.CHAR_FILTERS_CONFIG,
               createArray(
                 createSimpleODataType("john"),
               ),
               createArray(
                 createMappingCharFilter(name, mappings)
               ),
-              _.charFilters
+              _.charFilters,
+              SearchIndexActions.forSettingCharFilters
             ) {
               charFilters =>
                 charFilters should have size 1
@@ -188,14 +203,15 @@ class SearchIndexCreationOptionsSpec
             )
 
             assertBehaviorForIndexOption[Seq[ScoringProfile]](
-              SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
+              SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG,
               createArray(
                 createSimpleODataType("world")
               ),
               createArray(
                 createScoringProfile(name, weights)
               ),
-              _.scoringProfiles
+              _.scoringProfiles,
+              SearchIndexActions.forSettingScoringProfiles
             ) {
               profiles =>
                 profiles should have size 1
@@ -214,14 +230,15 @@ class SearchIndexCreationOptionsSpec
 
             val (name, pattern, replacement) = ("articlePattern", "article", "replace")
             assertBehaviorForIndexOption[Seq[TokenFilter]](
-              SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
+              SearchIndexEnrichmentOptions.TOKEN_FILTERS_CONFIG,
               createArray(
                 createSimpleODataType("hello")
               ),
               createArray(
                 createPatternReplaceTokenFilter(name, pattern, replacement)
               ),
-              _.tokenFilters
+              _.tokenFilters,
+              SearchIndexActions.forSettingTokenFilters
             ) {
               filters =>
                 filters should have size 1
@@ -238,10 +255,11 @@ class SearchIndexCreationOptionsSpec
 
             val (allowedOrigins, maxAge) = (Seq("first"), 15)
             assertBehaviorForIndexOption[CorsOptions](
-              SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+              SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
               "[]",
               createCorsOptions(allowedOrigins, maxAge),
-              _.corsOptions
+              _.corsOptions,
+              SearchIndexActions.forSettingCorsOptions
             ) {
               cors =>
                 cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
@@ -253,17 +271,25 @@ class SearchIndexCreationOptionsSpec
 
             val name = "profileName"
             emptyConfig.defaultScoringProfile shouldBe empty
-            createOptions(
+            val options = createOptions(
               Map(
-                SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
+                SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG -> name
               )
-            ).defaultScoringProfile shouldBe Some(name)
+            )
+
+            options.defaultScoringProfile shouldBe Some(name)
+            val maybeAction = options.action
+            maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
+              Seq(
+                SearchIndexActions.forSettingDefaultScoringProfile(name)
+              )
+            )
           }
 
           it("vector search") {
 
             assertBehaviorForIndexOption[VectorSearch](
-              SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+              SearchIndexEnrichmentOptions.VECTOR_SEARCH_CONFIG,
               "{",
               createVectorSearch(
                 Seq(
@@ -273,11 +299,27 @@ class SearchIndexCreationOptionsSpec
                   createVectorSearchProfile("hello", "world")
                 )
               ),
-              _.vectorSearch
+              _.vectorSearch,
+              SearchIndexActions.forSettingVectorSearch
             ) {
               vectorSearch =>
                 vectorSearch.getAlgorithms should have size 1
                 vectorSearch.getProfiles should have size 1
+            }
+          }
+
+          it("semantic search") {
+
+            assertBehaviorForIndexOption[SemanticSearch](
+              SearchIndexEnrichmentOptions.SEMANTIC_SEARCH_CONFIG,
+              "{",
+              createSemanticSearch("name"),
+              _.semanticSearch,
+              SearchIndexActions.forSettingSemanticSearch
+            ) {
+              semanticSearch =>
+                semanticSearch.getDefaultConfigurationName shouldBe "name"
+                semanticSearch.getConfigurations shouldBe null
             }
           }
         }
@@ -289,7 +331,7 @@ class SearchIndexCreationOptionsSpec
           val profileName = "testScoringProfile"
           val maybeAction = createOptions(
             Map(
-              SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG -> profileName
+              SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG -> profileName
             )
           ).action
 

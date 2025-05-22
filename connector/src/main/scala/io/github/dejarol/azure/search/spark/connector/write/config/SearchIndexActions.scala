@@ -1,4 +1,4 @@
-package io.github.dejarol.azure.search.spark.connector.write
+package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
 
@@ -129,11 +129,23 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting the semantic search
+   * @param semanticSearch semantic search
+   */
+
+  private case class SetSemanticSearch(private val semanticSearch: SemanticSearch)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setSemanticSearch(semanticSearch)
+    }
+  }
+
+  /**
    * Action for folding multiple actions
    * @param actions actions to fold
    */
 
-  private case class FoldActions(private val actions: Seq[SearchIndexAction])
+  private[config] case class FoldActions(private[config] val actions: Seq[SearchIndexAction])
     extends SearchIndexAction {
 
     override def apply(index: SearchIndex): SearchIndex = {
@@ -224,6 +236,14 @@ object SearchIndexActions {
    */
 
   final def forSettingVectorSearch(vectorSearch: VectorSearch): SearchIndexAction = SetVectorSearch(vectorSearch)
+
+  /**
+   * Creates an action for setting the semantic search
+   * @param semanticSearch semantic search
+   * @return an action for setting the semantic search
+   */
+
+  final def forSettingSemanticSearch(semanticSearch: SemanticSearch): SearchIndexAction = SetSemanticSearch(semanticSearch)
 
   /**
    * Creates an action for folding multiple actions

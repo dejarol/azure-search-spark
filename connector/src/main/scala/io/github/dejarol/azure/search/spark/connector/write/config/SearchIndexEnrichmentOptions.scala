@@ -4,7 +4,6 @@ import com.azure.json.JsonReader
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
 import io.github.dejarol.azure.search.spark.connector.core.utils.json.Json
-import io.github.dejarol.azure.search.spark.connector.write.{SearchIndexAction, SearchIndexActions}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -12,7 +11,7 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
  * @param options options for index creation
  */
 
-case class SearchIndexCreationOptions(override protected val options: CaseInsensitiveMap[String])
+case class SearchIndexEnrichmentOptions(override protected val options: CaseInsensitiveMap[String])
   extends SearchConfig(options) {
 
   /**
@@ -68,10 +67,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the [[SimilarityAlgorithm]] for the new index
    */
 
-  private[write] def similarityAlgorithm: Option[SimilarityAlgorithm] = {
+  private[config] def similarityAlgorithm: Option[SimilarityAlgorithm] = {
 
     getAzModel[SimilarityAlgorithm](
-      SearchIndexCreationOptions.SIMILARITY_CONFIG,
+      SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
       SimilarityAlgorithm.fromJson
     )
   }
@@ -81,10 +80,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the collection of [[LexicalTokenizer]] for the new index
    */
 
-  private[write] def tokenizers: Option[Seq[LexicalTokenizer]] = {
+  private[config] def tokenizers: Option[Seq[LexicalTokenizer]] = {
 
     getArrayOfAzModels[LexicalTokenizer](
-      SearchIndexCreationOptions.TOKENIZERS_CONFIG,
+      SearchIndexEnrichmentOptions.TOKENIZERS_CONFIG,
       LexicalTokenizer.fromJson
     )
   }
@@ -94,10 +93,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the collection of [[SearchSuggester]] for the new index
    */
 
-  private[write] def searchSuggesters: Option[Seq[SearchSuggester]] = {
+  private[config] def searchSuggesters: Option[Seq[SearchSuggester]] = {
 
     getArrayOfAzModels[SearchSuggester](
-      SearchIndexCreationOptions.SUGGESTERS_CONFIG,
+      SearchIndexEnrichmentOptions.SUGGESTERS_CONFIG,
       SearchSuggester.fromJson
     )
   }
@@ -107,10 +106,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return collection of [[LexicalAnalyzer]] for the new index
    */
 
-  private[write] def analyzers: Option[Seq[LexicalAnalyzer]] = {
+  private[config] def analyzers: Option[Seq[LexicalAnalyzer]] = {
 
     getArrayOfAzModels[LexicalAnalyzer](
-      SearchIndexCreationOptions.ANALYZERS_CONFIG,
+      SearchIndexEnrichmentOptions.ANALYZERS_CONFIG,
       LexicalAnalyzer.fromJson
     )
   }
@@ -120,10 +119,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return collection of [[CharFilter]] for the new index
    */
 
-  private[write] def charFilters: Option[Seq[CharFilter]] = {
+  private[config] def charFilters: Option[Seq[CharFilter]] = {
 
     getArrayOfAzModels[CharFilter](
-      SearchIndexCreationOptions.CHAR_FILTERS_CONFIG,
+      SearchIndexEnrichmentOptions.CHAR_FILTERS_CONFIG,
       CharFilter.fromJson
     )
   }
@@ -133,10 +132,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return collection of [[ScoringProfile]] for the new index
    */
 
-  private[write] def scoringProfiles: Option[Seq[ScoringProfile]] = {
+  private[config] def scoringProfiles: Option[Seq[ScoringProfile]] = {
 
     getArrayOfAzModels[ScoringProfile](
-      SearchIndexCreationOptions.SCORING_PROFILES_CONFIG,
+      SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG,
       ScoringProfile.fromJson
     )
   }
@@ -146,10 +145,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the (optional) collection of token filters
    */
 
-  private[write] def tokenFilters: Option[Seq[TokenFilter]] = {
+  private[config] def tokenFilters: Option[Seq[TokenFilter]] = {
 
     getArrayOfAzModels[TokenFilter](
-      SearchIndexCreationOptions.TOKEN_FILTERS_CONFIG,
+      SearchIndexEnrichmentOptions.TOKEN_FILTERS_CONFIG,
       TokenFilter.fromJson
     )
   }
@@ -159,10 +158,10 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the (optional) CORS options
    */
 
-  private[write] def corsOptions: Option[CorsOptions] = {
+  private[config] def corsOptions: Option[CorsOptions] = {
 
     getAzModel[CorsOptions](
-      SearchIndexCreationOptions.CORS_OPTIONS_CONFIG,
+      SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
       CorsOptions.fromJson
     )
   }
@@ -172,9 +171,9 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return name of default scoring profile
    */
 
-  private[write] def defaultScoringProfile: Option[String] = {
+  private[config] def defaultScoringProfile: Option[String] = {
 
-    get(SearchIndexCreationOptions.DEFAULT_SCORING_PROFILE_CONFIG)
+    get(SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG)
   }
 
   /**
@@ -182,11 +181,24 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
    * @return the (optional) vector search configuration
    */
 
-  private[write] def vectorSearch: Option[VectorSearch] = {
+  private[config] def vectorSearch: Option[VectorSearch] = {
 
     getAzModel[VectorSearch](
-      SearchIndexCreationOptions.VECTOR_SEARCH_CONFIG,
+      SearchIndexEnrichmentOptions.VECTOR_SEARCH_CONFIG,
       VectorSearch.fromJson
+    )
+  }
+
+  /**
+   * Gets the semantic search configuration to set on index definition
+   * @return the (optional) semantic search configuration
+   */
+
+  private[config] def semanticSearch: Option[SemanticSearch] = {
+
+    getAzModel[SemanticSearch](
+      SearchIndexEnrichmentOptions.SEMANTIC_SEARCH_CONFIG,
+      SemanticSearch.fromJson
     )
   }
 
@@ -211,7 +223,8 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
       tokenFilters.map(SearchIndexActions.forSettingTokenFilters),
       corsOptions.map(SearchIndexActions.forSettingCorsOptions),
       defaultScoringProfile.map(SearchIndexActions.forSettingDefaultScoringProfile),
-      vectorSearch.map(SearchIndexActions.forSettingVectorSearch)
+      vectorSearch.map(SearchIndexActions.forSettingVectorSearch),
+      semanticSearch.map(SearchIndexActions.forSettingSemanticSearch)
     ).collect {
       case Some(value) => value
     }
@@ -227,7 +240,7 @@ case class SearchIndexCreationOptions(override protected val options: CaseInsens
   }
 }
 
-object SearchIndexCreationOptions {
+object SearchIndexEnrichmentOptions {
 
   final val SIMILARITY_CONFIG = "similarity"
   final val TOKENIZERS_CONFIG = "tokenizers"
@@ -239,16 +252,18 @@ object SearchIndexCreationOptions {
   final val CORS_OPTIONS_CONFIG = "corsOptions"
   final val DEFAULT_SCORING_PROFILE_CONFIG = "defaultScoringProfile"
   final val VECTOR_SEARCH_CONFIG = "vectorSearch"
+  final val SEMANTIC_SEARCH_CONFIG = "semanticSearch"
 
   /**
    * Creates an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
+   *
    * @param config configuration object
-   * @return an instance of [[SearchIndexCreationOptions]]
+   * @return an instance of [[SearchIndexEnrichmentOptions]]
    */
 
-  def apply(config: SearchConfig): SearchIndexCreationOptions = {
+  def apply(config: SearchConfig): SearchIndexEnrichmentOptions = {
 
-    SearchIndexCreationOptions(
+    SearchIndexEnrichmentOptions(
       CaseInsensitiveMap[String](
         config.toMap
       )
