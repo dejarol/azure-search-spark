@@ -227,7 +227,7 @@ class SearchIndexActionsSpec
           ) {
             actual =>
               actual.getDefaultConfigurationName shouldBe semanticSearch.getDefaultConfigurationName
-              actual.getConfigurations shouldBe empty
+              actual.getConfigurations shouldBe null
           }
         }
 
