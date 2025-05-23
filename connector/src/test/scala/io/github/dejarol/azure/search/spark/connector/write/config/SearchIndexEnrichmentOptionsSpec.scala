@@ -4,6 +4,8 @@ import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
 
+import java.util.{List => JList}
+
 class SearchIndexEnrichmentOptionsSpec
   extends BasicSpec
     with SearchAPIModelFactory {
@@ -41,8 +43,7 @@ class SearchIndexEnrichmentOptionsSpec
                                                key: String,
                                                invalidValue: String,
                                                validValue: String,
-                                               getter: SearchIndexEnrichmentOptions => Option[T],
-                                               actionCreator: T => SearchIndexAction
+                                               getter: SearchIndexEnrichmentOptions => Option[T]
                                              )(
                                                assertion: T => Unit
                                              ): Unit = {
@@ -67,16 +68,44 @@ class SearchIndexEnrichmentOptionsSpec
     val maybeResult = getter(options)
     maybeResult shouldBe defined
     assertion(maybeResult.get)
+  }
 
-    // TODO: rework test method
-    val maybeAction = options.action
+  /**
+   * Assert the behavior of the [[io.github.dejarol.azure.search.spark.connector.write.config.SearchIndexAction]]
+   * instance returned by a config built from a single-paired map. The generated instance should be defined
+   * and alter a Search index (usually, by setting one of its attributes to a non-null value). The assertion of
+   * the behavior is accomplished by getting the attribute and running assertions on it
+   * @param key single key for the config
+   * @param value single value
+   * @param getter getter function for retrieving the value that is supposed to be set by the action
+   * @param assertion assertion on the retrieved value
+   * @tparam T type of retrieved value
+   */
+
+  private def assertBehaviorOfGeneratedAction[T](
+                                                  key: String,
+                                                  value: String,
+                                                  getter: SearchIndex => T
+                                                )(
+                                                  assertion: T => Unit
+                                                ): Unit = {
+
+    // Create the action and check that it is defined
+    val maybeAction = createOptions(
+      Map(key -> value)
+    ).action
+
     maybeAction shouldBe defined
-    maybeAction.get shouldBe a [SearchIndexActions.FoldActions]
-    maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
-      Seq(
-        actionCreator(maybeResult.get)
-      )
+
+    // Apply the action on a newly created index instance
+    val index = maybeAction.get.apply(
+      new SearchIndex("name")
     )
+
+    // Run the assertion
+    assertion {
+      getter(index)
+    }
   }
 
   describe(anInstanceOf[SearchIndexEnrichmentOptions]) {
@@ -91,8 +120,7 @@ class SearchIndexEnrichmentOptionsSpec
               SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
               createSimpleODataType("#hello"),
               createBM25SimilarityAlgorithm(k1, b),
-              _.similarityAlgorithm,
-              SearchIndexActions.forSettingSimilarityAlgorithm
+              _.similarityAlgorithm
             ) {
               algo =>
                 algo shouldBe a[BM25SimilarityAlgorithm]
@@ -112,8 +140,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createClassicTokenizer("tokenizerName", 20)
               ),
-              _.tokenizers,
-              SearchIndexActions.forSettingTokenizers
+              _.tokenizers
             ) {
               tokenizers =>
                 tokenizers should have size 1
@@ -133,8 +160,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createSearchSuggester(name, fields)
               ),
-              _.searchSuggesters,
-              SearchIndexActions.forSettingSuggesters
+              _.searchSuggesters
             ) {
               suggesters =>
                 suggesters should have size 1
@@ -155,8 +181,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createStopAnalyzer(name, stopWords)
               ),
-              _.analyzers,
-              SearchIndexActions.forSettingAnalyzers
+              _.analyzers
             ) {
               analyzers =>
                 analyzers should have size 1
@@ -179,8 +204,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createMappingCharFilter(name, mappings)
               ),
-              _.charFilters,
-              SearchIndexActions.forSettingCharFilters
+              _.charFilters
             ) {
               charFilters =>
                 charFilters should have size 1
@@ -210,8 +234,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createScoringProfile(name, weights)
               ),
-              _.scoringProfiles,
-              SearchIndexActions.forSettingScoringProfiles
+              _.scoringProfiles
             ) {
               profiles =>
                 profiles should have size 1
@@ -237,8 +260,7 @@ class SearchIndexEnrichmentOptionsSpec
               createArray(
                 createPatternReplaceTokenFilter(name, pattern, replacement)
               ),
-              _.tokenFilters,
-              SearchIndexActions.forSettingTokenFilters
+              _.tokenFilters
             ) {
               filters =>
                 filters should have size 1
@@ -258,8 +280,7 @@ class SearchIndexEnrichmentOptionsSpec
               SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
               "[]",
               createCorsOptions(allowedOrigins, maxAge),
-              _.corsOptions,
-              SearchIndexActions.forSettingCorsOptions
+              _.corsOptions
             ) {
               cors =>
                 cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
@@ -299,8 +320,7 @@ class SearchIndexEnrichmentOptionsSpec
                   createVectorSearchProfile("hello", "world")
                 )
               ),
-              _.vectorSearch,
-              SearchIndexActions.forSettingVectorSearch
+              _.vectorSearch
             ) {
               vectorSearch =>
                 vectorSearch.getAlgorithms should have size 1
@@ -314,8 +334,7 @@ class SearchIndexEnrichmentOptionsSpec
               SearchIndexEnrichmentOptions.SEMANTIC_SEARCH_CONFIG,
               "{",
               createSemanticSearch("name"),
-              _.semanticSearch,
-              SearchIndexActions.forSettingSemanticSearch
+              _.semanticSearch
             ) {
               semanticSearch =>
                 semanticSearch.getDefaultConfigurationName shouldBe "name"
@@ -324,23 +343,178 @@ class SearchIndexEnrichmentOptionsSpec
           }
         }
 
-        it("the overall index action") {
+        describe("an overall index action that") {
+          describe("is empty when") {
 
-          emptyConfig.action shouldBe empty
+            it("no enrichment options are defined") {
 
-          val profileName = "testScoringProfile"
-          val maybeAction = createOptions(
-            Map(
-              SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG -> profileName
-            )
-          ).action
+              emptyConfig.action shouldBe empty
+            }
+          }
 
-          maybeAction shouldBe defined
-          maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
-            Seq(
-              SearchIndexActions.forSettingDefaultScoringProfile(profileName)
-            )
-          )
+          describe("is non empty when") {
+            it("the similarity algorithm is defined") {
+
+              assertBehaviorOfGeneratedAction[SimilarityAlgorithm](
+                SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
+                createBM25SimilarityAlgorithm(1.2, 2.3),
+                _.getSimilarity
+              ) {
+                algo =>
+                  algo shouldNot be (null)
+                  algo shouldBe a[BM25SimilarityAlgorithm]
+              }
+            }
+
+            it("tokenizers are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[LexicalTokenizer]](
+                SearchIndexEnrichmentOptions.TOKENIZERS_CONFIG,
+                createArray(
+                  createClassicTokenizer("hello", 14)
+                ),
+                _.getTokenizers
+              ) {
+                tokenizers =>
+                  tokenizers should have size 1
+                  tokenizers.get(0) shouldBe a[ClassicTokenizer]
+              }
+            }
+
+            it("search suggesters are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[SearchSuggester]](
+                SearchIndexEnrichmentOptions.SUGGESTERS_CONFIG,
+                createArray(
+                  createSearchSuggester("world", Seq("first", "second"))
+                ),
+                _.getSuggesters
+              ) {
+                suggesters =>
+                  suggesters should have size 1
+                  val head = suggesters.get(0)
+                  head.getName shouldBe "world"
+                  head.getSourceFields should contain theSameElementsAs Seq("first", "second")
+              }
+            }
+
+            it("analyzers are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[LexicalAnalyzer]](
+                SearchIndexEnrichmentOptions.ANALYZERS_CONFIG,
+                createArray(
+                  createStopAnalyzer("world", Seq("first", "second"))
+                ),
+                _.getAnalyzers
+              ) {
+                analyzers =>
+                  analyzers should have size 1
+                  val head = analyzers.get(0)
+                  head shouldBe a[StopAnalyzer]
+              }
+            }
+
+            it("char filters are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[CharFilter]](
+                SearchIndexEnrichmentOptions.CHAR_FILTERS_CONFIG,
+                createArray(
+                  createMappingCharFilter("world", Seq("first", "second"))
+                ),
+                _.getCharFilters
+              ) {
+                charFilters =>
+                  charFilters should have size 1
+                  val head = charFilters.get(0)
+                  head shouldBe a[MappingCharFilter]
+              }
+            }
+
+            it("scoring profiles are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[ScoringProfile]](
+                SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG,
+                createArray(
+                  createScoringProfile("world", Map("first" -> 1.0))
+                ),
+                _.getScoringProfiles
+              ) {
+                scoringProfiles =>
+                  scoringProfiles should have size 1
+              }
+            }
+
+            it("token filters are defined") {
+
+              assertBehaviorOfGeneratedAction[JList[TokenFilter]](
+                SearchIndexEnrichmentOptions.TOKEN_FILTERS_CONFIG,
+                createArray(
+                  createPatternReplaceTokenFilter("world", "first", "second")
+                ),
+                _.getTokenFilters
+              ) {
+                tokenFilters =>
+                  tokenFilters should have size 1
+                  val head = tokenFilters.get(0)
+                  head shouldBe a[PatternReplaceTokenFilter]
+              }
+            }
+
+            it("cors options are defined") {
+
+              assertBehaviorOfGeneratedAction[CorsOptions](
+                SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
+                createCorsOptions(Seq("first"), 15),
+                _.getCorsOptions
+              ) {
+                corsOptions =>
+                  corsOptions shouldNot be (null)
+              }
+            }
+
+            it("default scoring profile is defined") {
+
+              assertBehaviorOfGeneratedAction[String](
+                SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG,
+                "world",
+                _.getDefaultScoringProfile
+              ) {
+                name =>
+                  name shouldBe "world"
+              }
+            }
+
+            it("vector search is defined") {
+
+              assertBehaviorOfGeneratedAction[VectorSearch](
+                SearchIndexEnrichmentOptions.VECTOR_SEARCH_CONFIG,
+                createVectorSearch(
+                  Seq(
+                    createHnswAlgorithm("algo", 1, 2, 3, VectorSearchAlgorithmMetric.COSINE)
+                  ),
+                  Seq(
+                    createVectorSearchProfile("hello", "world")
+                  )
+                ),
+                _.getVectorSearch
+              ) {
+                vectorSearch =>
+                  vectorSearch shouldNot be (null)
+              }
+            }
+
+            it("semantic search is defined") {
+
+              assertBehaviorOfGeneratedAction[SemanticSearch](
+                SearchIndexEnrichmentOptions.SEMANTIC_SEARCH_CONFIG,
+                createSemanticSearch("name"),
+                _.getSemanticSearch
+              ) {
+                semanticSearch =>
+                  semanticSearch shouldNot be (null)
+              }
+            }
+          }
         }
       }
     }

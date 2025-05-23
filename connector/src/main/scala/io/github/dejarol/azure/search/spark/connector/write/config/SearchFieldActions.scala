@@ -16,7 +16,6 @@ object SearchFieldActions {
 
   private case class EnableFeature(private val feature: SearchFieldFeature)
     extends SearchFieldAction {
-    override def description(): String = s"ENABLE_${feature.name()}"
     override final def apply(field: SearchField): SearchField = {
       feature.enableOnField(field)
     }
@@ -29,7 +28,6 @@ object SearchFieldActions {
 
   private case class DisableFeature(private val feature: SearchFieldFeature)
     extends SearchFieldAction {
-    override def description(): String = s"DISABLE_${feature.name()}"
     override def apply(field: SearchField): SearchField = {
       feature.disableOnField(field)
     }
@@ -42,7 +40,6 @@ object SearchFieldActions {
 
   private case class SetAnalyzer(private val name: LexicalAnalyzerName)
     extends SearchFieldAction {
-    override def description(): String = "SET_ANALYZER"
     override def apply(field: SearchField): SearchField = {
       field.setAnalyzerName(name)
     }
@@ -55,7 +52,6 @@ object SearchFieldActions {
 
   private case class SetSearchAnalyzer(private val name: LexicalAnalyzerName)
     extends SearchFieldAction {
-    override def description(): String = "SET_SEARCH_ANALYZER"
     override def apply(field: SearchField): SearchField = {
       field.setSearchAnalyzerName(name)
     }
@@ -68,7 +64,6 @@ object SearchFieldActions {
 
   private case class SetIndexAnalyzer(private val name: LexicalAnalyzerName)
     extends SearchFieldAction {
-    override def description(): String = "SET_INDEX_ANALYZER"
     override def apply(field: SearchField): SearchField = {
       field.setIndexAnalyzerName(name)
     }
@@ -77,11 +72,11 @@ object SearchFieldActions {
   /**
    * Action for setting a vector search profile
    * @param profile profile to set
+   * @since 0.10.0
    */
 
   private case class SetVectorSearchProfile(private val profile: String)
     extends SearchFieldAction {
-    override def description(): String = "SET_VECTOR_SEARCH_PROFILE"
     override def apply(field: SearchField): SearchField = {
       field.setVectorSearchProfileName(profile)
     }
@@ -94,13 +89,6 @@ object SearchFieldActions {
 
   private case class FoldActions(private val actions: Seq[SearchFieldAction])
     extends SearchFieldAction {
-
-    override def description(): String = {
-
-      s"ACTIONS(" +
-        s"${actions.map(_.description()).mkString(", ")}" +
-        s")"
-    }
 
     override def apply(field: SearchField): SearchField = {
 
@@ -171,6 +159,7 @@ object SearchFieldActions {
    * Gets an action for setting attribute <code>vectorSearchProfile</code> on a Search field
    * @param profile profile to set
    * @return an action for setting the vector search profile
+   * @since 0.10.0
    */
 
   final def forSettingVectorSearchProfile(profile: String): SearchFieldAction = SetVectorSearchProfile(profile)

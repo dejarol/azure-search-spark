@@ -119,6 +119,7 @@ object SearchIndexActions {
   /**
    * Action for setting the vector search
    * @param vectorSearch vector search
+   * @since 0.10.0
    */
 
   private case class SetVectorSearch(private val vectorSearch: VectorSearch)
@@ -131,6 +132,7 @@ object SearchIndexActions {
   /**
    * Action for setting the semantic search
    * @param semanticSearch semantic search
+   * @since 0.10.1
    */
 
   private case class SetSemanticSearch(private val semanticSearch: SemanticSearch)
@@ -145,7 +147,7 @@ object SearchIndexActions {
    * @param actions actions to fold
    */
 
-  private[config] case class FoldActions(private[config] val actions: Seq[SearchIndexAction])
+  private case class FoldActions(private val actions: Seq[SearchIndexAction])
     extends SearchIndexAction {
 
     override def apply(index: SearchIndex): SearchIndex = {
@@ -233,6 +235,7 @@ object SearchIndexActions {
    * Creates an action for setting the vector search
    * @param vectorSearch vector search
    * @return an action for setting the vector search
+   * @since 0.10.0
    */
 
   final def forSettingVectorSearch(vectorSearch: VectorSearch): SearchIndexAction = SetVectorSearch(vectorSearch)
@@ -241,6 +244,7 @@ object SearchIndexActions {
    * Creates an action for setting the semantic search
    * @param semanticSearch semantic search
    * @return an action for setting the semantic search
+   * @since 0.10.1
    */
 
   final def forSettingSemanticSearch(semanticSearch: SemanticSearch): SearchIndexAction = SetSemanticSearch(semanticSearch)

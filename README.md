@@ -523,46 +523,57 @@ The values for each of these properties should be a JSON object with the followi
     <tr>
         <th>Key</th>
         <th>Description</th>
+        <th>Available since</th>
     </tr>
     <tr>
         <td>analyzer</td>
         <td>Name of the lexical analyzer to use for both searching and indexing</td>
+        <td></td>
     </tr>
     <tr>
         <td>facetable</td>
         <td>Flag for enabling faceting for this field</td>
+        <td></td>
     </tr>
     <tr>
         <td>filterable</td>
         <td>Flag for enabling filtering for this field</td>
+        <td></td>
     </tr>
     <tr>
         <td>indexAnalyzer</td>
         <td>Name of the lexical analyzer to use for indexing</td>
+        <td></td>
     </tr>
     <tr>
         <td>key</td>
         <td>Flag for marking this field as the key field</td>
+        <td></td>
     </tr>
     <tr>
         <td>retrievable</td>
         <td>Flag for marking the field as retrievable</td>
+        <td></td>
     </tr>
     <tr>
         <td>searchAnalyzer</td>
         <td>Name of the lexical analyzer to use for searching</td>
+        <td></td>
     </tr>
     <tr>
         <td>searchable</td>
         <td>Flag for enabling searching for this field</td>
+        <td></td>
     </tr>
     <tr>
         <td>sortable</td>
         <td>Flag for enabling sorting for this field</td>
+        <td></td>
     </tr>
     <tr>
         <td>vectorSearchProfile</td>
         <td>Name of the vector search profile to use for this field</td>
+        <td>0.10.0</td>   
     </tr>
 </table>
 
@@ -575,7 +586,7 @@ the definition stated by the Search Service REST API
     <tr>
         <th>Key</th>
         <th>Description</th>
-        <th>Required</th>
+        <th>Available since</th>
     </tr>
     <tr>
         <td>similarity</td>
@@ -620,7 +631,17 @@ the definition stated by the Search Service REST API
     <tr>
         <td>defaultScoringProfile</td>
         <td>A simple string representing the <code>defaultScoringProfile</code> attribute of an index</td>
-        <td></td>
+        <td>0.10.0</td>
+    </tr>
+    <tr>
+        <td>vectorSearch</td>
+        <td>JSON object matching the <code>vectorSearch</code> attribute of an index</td>
+        <td>0.10.0</td>
+    </tr>
+    <tr>
+        <td>semanticSearch</td>
+        <td>JSON object matching the <code>semanticSearch</code> attribute of an index</td>
+        <td>0.10.1</td>
     </tr>
 </table>
 

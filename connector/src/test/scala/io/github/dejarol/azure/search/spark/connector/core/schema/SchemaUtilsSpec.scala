@@ -4,14 +4,12 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataTy
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
 import org.apache.spark.sql.types._
-import org.scalamock.scalatest.MockFactory
 
 import java.util.{List => JList}
 
 class SchemaUtilsSpec
   extends BasicSpec
-    with FieldFactory
-      with MockFactory {
+    with FieldFactory {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
 
@@ -23,10 +21,7 @@ class SchemaUtilsSpec
 
   private def actionForEnablingFeature(feature: SearchFieldFeature): SearchFieldAction = {
 
-    new SearchFieldAction {
-      override def apply(field: SearchField): SearchField = feature.enableOnField(field)
-      override def description(): String = "ENABLE_FEATURE"
-}
+    (field: SearchField) => feature.enableOnField(field)
   }
 
   /**

@@ -179,6 +179,7 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
   /**
    * Gets the vector search configuration to set on index definition
    * @return the (optional) vector search configuration
+   * @since 0.10.0
    */
 
   private[config] def vectorSearch: Option[VectorSearch] = {
@@ -192,6 +193,7 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
   /**
    * Gets the semantic search configuration to set on index definition
    * @return the (optional) semantic search configuration
+   * @since 0.10.1
    */
 
   private[config] def semanticSearch: Option[SemanticSearch] = {
