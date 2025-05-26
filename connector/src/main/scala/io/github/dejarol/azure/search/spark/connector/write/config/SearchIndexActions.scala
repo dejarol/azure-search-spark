@@ -156,6 +156,19 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting the ETag
+   * @param tag tag to set
+   * @since 0.10.2
+   */
+
+  private case class SetETag(private val tag: String)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setETag(tag)
+    }
+  }
+
+  /**
    * Action for folding multiple actions
    * @param actions actions to fold
    */
@@ -270,6 +283,15 @@ object SearchIndexActions {
    */
 
   final def forSettingEncryptionKey(key: SearchResourceEncryptionKey): SearchIndexAction = SetEncryptionKey(key)
+
+  /**
+   * Creates an action for setting the ETag
+   * @param tag ETag
+   * @return an action for setting the ETag
+   * @since 0.10.2
+   */
+
+  final def forSettingETag(tag: String): SearchIndexAction = SetETag(tag)
 
   /**
    * Creates an action for folding multiple actions

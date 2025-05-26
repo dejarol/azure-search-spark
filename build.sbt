@@ -21,7 +21,7 @@ ThisBuild / scmInfo := Some(
 )
 ThisBuild / versionScheme := Some("early-semver")
 
-ThisBuild / version := "0.10.1"
+ThisBuild / version := "0.10.2"
 ThisBuild / scalaVersion := scala212
 ThisBuild / compileOrder := CompileOrder.JavaThenScala
 ThisBuild / javacOptions ++= Seq(

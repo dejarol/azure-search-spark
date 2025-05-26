@@ -245,6 +245,17 @@ class SearchIndexActionsSpec
           }
         }
 
+        it("set the ETAG") {
+
+          assertEffectOfAction[String](
+            _.getETag,
+            SearchIndexActions.forSettingETag("etag")
+          ) {
+            actual =>
+              actual shouldBe "etag"
+          }
+        }
+
         it("folding many actions at once") {
 
           val (algo, name) = (new ClassicSimilarityAlgorithm, "profileName")

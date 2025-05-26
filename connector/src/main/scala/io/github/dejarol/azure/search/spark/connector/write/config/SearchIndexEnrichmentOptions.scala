@@ -219,6 +219,14 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
   }
 
   /**
+   * Gets the etag to set on index definition
+   * @return the (optional) etag
+   * @since 0.10.2
+   */
+
+  private[config] def eTag: Option[String] = get(SearchIndexEnrichmentOptions.ETAG_CONFIG)
+
+  /**
    * Gets an optional action to apply on a Search index.
    * If any of the inner actions is defined (i.e. setting
    * <code>similarityAlgorithm</code>, <code>tokenizers</code>, etc ....),
@@ -241,7 +249,8 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
       defaultScoringProfile.map(SearchIndexActions.forSettingDefaultScoringProfile),
       vectorSearch.map(SearchIndexActions.forSettingVectorSearch),
       semanticSearch.map(SearchIndexActions.forSettingSemanticSearch),
-      encryptionKey.map(SearchIndexActions.forSettingEncryptionKey)
+      encryptionKey.map(SearchIndexActions.forSettingEncryptionKey),
+      eTag.map(SearchIndexActions.forSettingETag)
     ).collect {
       case Some(value) => value
     }
@@ -271,6 +280,7 @@ object SearchIndexEnrichmentOptions {
   final val VECTOR_SEARCH_CONFIG = "vectorSearch"
   final val SEMANTIC_SEARCH_CONFIG = "semanticSearch"
   final val ENCRYPTION_KEY_CONFIG = "encryptionKey"
+  final val ETAG_CONFIG = "etag"
 
   /**
    * Creates an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]
@@ -287,4 +297,5 @@ object SearchIndexEnrichmentOptions {
       )
     )
   }
+
 }

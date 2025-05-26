@@ -299,12 +299,6 @@ class SearchIndexEnrichmentOptionsSpec
             )
 
             options.defaultScoringProfile shouldBe Some(name)
-            val maybeAction = options.action
-            maybeAction.get shouldBe SearchIndexActions.forFoldingActions(
-              Seq(
-                SearchIndexActions.forSettingDefaultScoringProfile(name)
-              )
-            )
           }
 
           it("vector search") {
@@ -355,6 +349,19 @@ class SearchIndexEnrichmentOptionsSpec
                 encryptionKey.getKeyVersion shouldBe "ver"
                 encryptionKey.getVaultUrl shouldBe "vaultUrl"
             }
+          }
+
+          it("etag") {
+
+            val etag = "etag"
+            emptyConfig.eTag shouldBe empty
+            val options = createOptions(
+              Map(
+                SearchIndexEnrichmentOptions.ETAG_CONFIG -> etag
+              )
+            )
+
+            options.eTag shouldBe Some(etag)
           }
         }
 
@@ -544,6 +551,19 @@ class SearchIndexEnrichmentOptionsSpec
                   encryptionKey.getKeyName shouldBe "keyName"
                   encryptionKey.getKeyVersion shouldBe "version"
                   encryptionKey.getVaultUrl shouldBe "vaultUrl"
+              }
+            }
+
+            it("etag is defined") {
+
+              val etag = "etag"
+              assertBehaviorOfGeneratedAction[String](
+                SearchIndexEnrichmentOptions.ETAG_CONFIG,
+                etag,
+                _.getETag
+              ) {
+                actual =>
+                  actual shouldBe etag
               }
             }
           }
