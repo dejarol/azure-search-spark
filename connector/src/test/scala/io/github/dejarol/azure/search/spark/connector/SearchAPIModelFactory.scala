@@ -1,7 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.json.{JsonProviders, JsonSerializable, JsonWriter}
-import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, CharFilter, ClassicTokenizer, CorsOptions, HnswAlgorithmConfiguration, HnswParameters, LexicalAnalyzer, LexicalTokenizer, MappingCharFilter, PatternReplaceTokenFilter, ScoringProfile, SearchSuggester, SemanticSearch, SimilarityAlgorithm, StopAnalyzer, TextWeights, TokenFilter, VectorSearch, VectorSearchAlgorithmConfiguration, VectorSearchAlgorithmMetric, VectorSearchProfile}
+import com.azure.search.documents.indexes.models.{BM25SimilarityAlgorithm, CharFilter, ClassicTokenizer, CorsOptions, HnswAlgorithmConfiguration, HnswParameters, LexicalAnalyzer, LexicalTokenizer, MappingCharFilter, PatternReplaceTokenFilter, ScoringProfile, SearchResourceEncryptionKey, SearchSuggester, SemanticSearch, SimilarityAlgorithm, StopAnalyzer, TextWeights, TokenFilter, VectorSearch, VectorSearchAlgorithmConfiguration, VectorSearchAlgorithmMetric, VectorSearchProfile}
 import io.github.dejarol.azure.search.spark.connector.core.{JavaScalaConverters, TestConstants}
 import io.github.dejarol.azure.search.spark.connector.core.utils.StringUtils
 
@@ -288,6 +288,27 @@ trait SearchAPIModelFactory {
     apiModelToJson[SemanticSearch](
       new SemanticSearch()
         .setDefaultConfigurationName(configName)
+    )
+  }
+
+  /**
+   * Create a JSON representing a [[com.azure.search.documents.indexes.models.SearchResourceEncryptionKey]]
+   * @param name name
+   * @param version version
+   * @param url url
+   * @return a JSON representing a [[com.azure.search.documents.indexes.models.SearchResourceEncryptionKey]]
+   */
+
+  protected final def createSearchResourceEncryptionKey(
+                                                         name: String,
+                                                         version: String,
+                                                         url: String
+                                                       ): String = {
+
+    apiModelToJson[SearchResourceEncryptionKey](
+      new SearchResourceEncryptionKey(
+        name, version, url
+      )
     )
   }
 }

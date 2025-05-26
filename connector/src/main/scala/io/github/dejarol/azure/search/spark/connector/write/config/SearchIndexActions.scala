@@ -143,6 +143,19 @@ object SearchIndexActions {
   }
 
   /**
+   * Action for setting the encryption key
+   * @param key key to set
+   * @since 0.10.1
+   */
+
+  private case class SetEncryptionKey(private val key: SearchResourceEncryptionKey)
+    extends SearchIndexAction {
+    override def apply(index: SearchIndex): SearchIndex = {
+      index.setEncryptionKey(key)
+    }
+  }
+
+  /**
    * Action for folding multiple actions
    * @param actions actions to fold
    */
@@ -248,6 +261,15 @@ object SearchIndexActions {
    */
 
   final def forSettingSemanticSearch(semanticSearch: SemanticSearch): SearchIndexAction = SetSemanticSearch(semanticSearch)
+
+  /**
+   * Creates an action for setting the encryption key
+   * @param key key
+   * @return an action for setting the encryption key
+   * @since 0.10.1
+   */
+
+  final def forSettingEncryptionKey(key: SearchResourceEncryptionKey): SearchIndexAction = SetEncryptionKey(key)
 
   /**
    * Creates an action for folding multiple actions

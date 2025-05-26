@@ -341,6 +341,21 @@ class SearchIndexEnrichmentOptionsSpec
                 semanticSearch.getConfigurations shouldBe null
             }
           }
+
+          it("encryption key") {
+
+            assertBehaviorForIndexOption[SearchResourceEncryptionKey](
+              SearchIndexEnrichmentOptions.ENCRYPTION_KEY_CONFIG,
+              "{",
+              createSearchResourceEncryptionKey("name", "ver", "vaultUrl"),
+              _.encryptionKey
+            ) {
+              encryptionKey =>
+                encryptionKey.getKeyName shouldBe "name"
+                encryptionKey.getKeyVersion shouldBe "ver"
+                encryptionKey.getVaultUrl shouldBe "vaultUrl"
+            }
+          }
         }
 
         describe("an overall index action that") {
@@ -507,11 +522,28 @@ class SearchIndexEnrichmentOptionsSpec
 
               assertBehaviorOfGeneratedAction[SemanticSearch](
                 SearchIndexEnrichmentOptions.SEMANTIC_SEARCH_CONFIG,
-                createSemanticSearch("name"),
+                createSemanticSearch("semSearchConfig"),
                 _.getSemanticSearch
               ) {
                 semanticSearch =>
                   semanticSearch shouldNot be (null)
+                  semanticSearch.getDefaultConfigurationName shouldBe "semSearchConfig"
+                  semanticSearch.getConfigurations shouldBe null
+              }
+            }
+
+            it("encryption key is defined") {
+
+              assertBehaviorOfGeneratedAction[SearchResourceEncryptionKey](
+                SearchIndexEnrichmentOptions.ENCRYPTION_KEY_CONFIG,
+                createSearchResourceEncryptionKey("keyName", "version", "vaultUrl"),
+                _.getEncryptionKey
+              ) {
+                encryptionKey =>
+                  encryptionKey shouldNot be (null)
+                  encryptionKey.getKeyName shouldBe "keyName"
+                  encryptionKey.getKeyVersion shouldBe "version"
+                  encryptionKey.getVaultUrl shouldBe "vaultUrl"
               }
             }
           }

@@ -231,6 +231,20 @@ class SearchIndexActionsSpec
           }
         }
 
+        it("set the encryption key") {
+
+          val key = new SearchResourceEncryptionKey("name", "version", "url")
+          assertEffectOfAction[SearchResourceEncryptionKey](
+            _.getEncryptionKey,
+            SearchIndexActions.forSettingEncryptionKey(key)
+          ) {
+            actual =>
+              actual.getKeyName shouldBe key.getKeyName
+              actual.getKeyVersion shouldBe key.getKeyVersion
+              actual.getVaultUrl shouldBe key.getVaultUrl
+          }
+        }
+
         it("folding many actions at once") {
 
           val (algo, name) = (new ClassicSimilarityAlgorithm, "profileName")

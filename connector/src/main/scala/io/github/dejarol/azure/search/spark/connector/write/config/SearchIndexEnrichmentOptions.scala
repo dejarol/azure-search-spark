@@ -205,6 +205,20 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
   }
 
   /**
+   * Gets the encryption key to set on index definition
+   * @return the (optional) encryption key
+   * @since 0.10.1
+   */
+
+  private[config] def encryptionKey: Option[SearchResourceEncryptionKey] = {
+
+    getAzModel[SearchResourceEncryptionKey](
+      SearchIndexEnrichmentOptions.ENCRYPTION_KEY_CONFIG,
+      SearchResourceEncryptionKey.fromJson
+    )
+  }
+
+  /**
    * Gets an optional action to apply on a Search index.
    * If any of the inner actions is defined (i.e. setting
    * <code>similarityAlgorithm</code>, <code>tokenizers</code>, etc ....),
@@ -226,7 +240,8 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
       corsOptions.map(SearchIndexActions.forSettingCorsOptions),
       defaultScoringProfile.map(SearchIndexActions.forSettingDefaultScoringProfile),
       vectorSearch.map(SearchIndexActions.forSettingVectorSearch),
-      semanticSearch.map(SearchIndexActions.forSettingSemanticSearch)
+      semanticSearch.map(SearchIndexActions.forSettingSemanticSearch),
+      encryptionKey.map(SearchIndexActions.forSettingEncryptionKey)
     ).collect {
       case Some(value) => value
     }
@@ -255,6 +270,7 @@ object SearchIndexEnrichmentOptions {
   final val DEFAULT_SCORING_PROFILE_CONFIG = "defaultScoringProfile"
   final val VECTOR_SEARCH_CONFIG = "vectorSearch"
   final val SEMANTIC_SEARCH_CONFIG = "semanticSearch"
+  final val ENCRYPTION_KEY_CONFIG = "encryptionKey"
 
   /**
    * Creates an instance from a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]]

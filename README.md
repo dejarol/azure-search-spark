@@ -643,6 +643,11 @@ the definition stated by the Search Service REST API
         <td>JSON object matching the <code>semanticSearch</code> attribute of an index</td>
         <td>0.10.1</td>
     </tr>
+    <tr>
+        <td>encryptionKey</td>
+        <td>JSON object matching the <code>encryptionKey</code> attribute of an index</td>
+        <td>0.10.1</td>
+    </tr>
 </table>
 
 ### A concrete write example
