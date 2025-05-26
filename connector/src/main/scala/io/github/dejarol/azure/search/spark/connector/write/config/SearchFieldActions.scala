@@ -83,6 +83,19 @@ object SearchFieldActions {
   }
 
   /**
+   * Action for setting synonyms
+   * @param synonyms synonyms to set
+   * @since 0.10.2
+   */
+
+  private case class SetSynonyms(private val synonyms: Seq[String])
+    extends SearchFieldAction {
+    override def apply(field: SearchField): SearchField = {
+      field.setSynonymMapNames(synonyms: _*)
+    }
+  }
+
+  /**
    * Action for applying many actions at once
    * @param actions actions to apply
    */
@@ -163,6 +176,15 @@ object SearchFieldActions {
    */
 
   final def forSettingVectorSearchProfile(profile: String): SearchFieldAction = SetVectorSearchProfile(profile)
+
+  /**
+   * Gets an action for setting attribute <code>synonymMapNames</code> on a Search field
+   * @param synonyms synonyms to set
+   * @return an action for setting the synonyms
+   * @since 0.10.2
+   */
+
+  final def forSettingSynonyms(synonyms: Seq[String]): SearchFieldAction = SetSynonyms(synonyms)
 
   /**
    * Gets an action for applying many actions at once

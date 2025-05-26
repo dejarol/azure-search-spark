@@ -88,6 +88,14 @@ class SearchFieldActionsSpec
           actual.getVectorSearchProfileName shouldBe profile
         }
 
+        it("set the synonyms") {
+
+          val (sampleField, synonyms) = (getSampleField, Seq("hello", "world"))
+          sampleField.getSynonymMapNames shouldBe null
+          val actual = SearchFieldActions.forSettingSynonyms(synonyms).apply(sampleField)
+          actual.getSynonymMapNames should contain theSameElementsAs synonyms
+        }
+
         it("folds many actions at once") {
 
           val (sampleField, feature, profile) = (getSampleField, SearchFieldFeature.SEARCHABLE, "hello")

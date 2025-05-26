@@ -36,6 +36,7 @@ case class SearchFieldAttributes(
                                   searchable: Option[Boolean],
                                   sortable: Option[Boolean],
                                   vectorSearchProfile: Option[String]
+                                // TODO: add synonyms
                                 ) {
 
   /**
@@ -101,6 +102,7 @@ object SearchFieldAttributes {
         searchable = jsonNode.safelyGetAs[Boolean]("searchable")(BooleanConversion),
         sortable = jsonNode.safelyGetAs[Boolean]("sortable")(BooleanConversion),
         vectorSearchProfile = jsonNode.safelyGetAs[String]("vectorSearchProfile")(StringConversion)
+        // TODO: add synonyms
       )
     }
   }
