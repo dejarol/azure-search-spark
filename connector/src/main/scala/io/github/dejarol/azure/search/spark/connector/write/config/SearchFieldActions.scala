@@ -96,6 +96,18 @@ object SearchFieldActions {
   }
 
   /**
+   * Action for setting vector search dimensions
+   * @param dim dimensions to set
+   */
+
+  private case class SetVectorSearchDimensions(private val dim: Int)
+    extends SearchFieldAction {
+    override def apply(field: SearchField): SearchField = {
+      field.setVectorSearchDimensions(dim)
+    }
+  }
+
+  /**
    * Action for applying many actions at once
    * @param actions actions to apply
    */
@@ -185,6 +197,15 @@ object SearchFieldActions {
    */
 
   final def forSettingSynonyms(synonyms: Seq[String]): SearchFieldAction = SetSynonyms(synonyms)
+
+  /**
+   * Gets an action for setting vector search dimensions
+   * @param dim dimensions to set
+   * @return an action for setting vector search dimensions
+   * @since 0.10.2
+   */
+
+  final def forSettingVectorSearchDimensions(dim: Int): SearchFieldAction = SetVectorSearchDimensions(dim)
 
   /**
    * Gets an action for applying many actions at once

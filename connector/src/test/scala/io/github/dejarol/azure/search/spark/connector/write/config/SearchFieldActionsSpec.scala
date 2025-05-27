@@ -96,6 +96,14 @@ class SearchFieldActionsSpec
           actual.getSynonymMapNames should contain theSameElementsAs synonyms
         }
 
+        it("set the vector search dimensions") {
+
+          val (sampleField, dimensions) = (getSampleField, 3)
+          sampleField.getVectorSearchDimensions shouldBe null
+          val actual = SearchFieldActions.forSettingVectorSearchDimensions(dimensions).apply(sampleField)
+          actual.getVectorSearchDimensions shouldBe dimensions
+        }
+
         it("folds many actions at once") {
 
           val (sampleField, feature, profile) = (getSampleField, SearchFieldFeature.SEARCHABLE, "hello")

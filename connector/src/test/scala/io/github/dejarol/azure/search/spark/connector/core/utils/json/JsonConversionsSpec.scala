@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector.core.utils.json
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, JsonMixIns}
 
@@ -9,6 +10,25 @@ class JsonConversionsSpec
     with JsonMixIns {
 
   private lazy val nodeFactory = JsonNodeFactory.instance
+
+  /**
+   * Creates an array node with the provided values
+   * @param values values to append to the node
+   * @param nodeFactoryFunction function for creating inner array nodes
+   * @tparam T value type
+   * @return an array node holding a JSON node for each value
+   */
+
+  private def createArrayNodeOf[T](values: Seq[T])(nodeFactoryFunction: T => JsonNode): JsonNode = {
+
+    values.foldLeft(
+      nodeFactory.arrayNode()
+    ) {
+      case (node, v) => node.add(
+        nodeFactoryFunction(v)
+      )
+    }
+  }
 
   describe(`object`[JsonConversions.type ]) {
     describe(SHOULD) {
@@ -33,6 +53,16 @@ class JsonConversionsSpec
           booleanConversion.isDefinedAt(nodeFactory.numberNode(44)) shouldBe false
         }
 
+        it("integers") {
+
+          val (intValue, integerConversion) = (44, JsonConversions.IntConversion)
+          val intNode = nodeFactory.numberNode(intValue)
+          integerConversion.isDefinedAt(intNode) shouldBe true
+          integerConversion(intNode) shouldBe intValue
+
+          integerConversion.isDefinedAt(nodeFactory.textNode("hello")) shouldBe false
+        }
+
         it("lexical analyzer names") {
 
           val (analyzerValue, nameConversion) = (LexicalAnalyzerName.BG_MICROSOFT, JsonConversions.LexicalAnalyzerNameConversion)
@@ -44,6 +74,24 @@ class JsonConversionsSpec
           nameConversion.isDefinedAt(nodeFactory.numberNode(44)) shouldBe false
           val invalidNode = nodeFactory.textNode("invalid")
           nameConversion.isDefinedAt(invalidNode) shouldBe false
+        }
+
+        describe("collections of") {
+          it("strings") {
+
+            val innerValues = Seq("hello", "world")
+            val arrayOfStrings = createArrayNodeOf[String](innerValues)(nodeFactory.textNode)
+            val arrayConversion = JsonConversions.forArrayOf(JsonConversions.StringConversion)
+            arrayConversion.isDefinedAt(arrayOfStrings) shouldBe true
+            arrayConversion(arrayOfStrings) should contain theSameElementsAs Seq("hello", "world")
+
+            // Should not be defined for a
+            // [1] non-array node
+            // [2] array node with numbers
+            arrayConversion.isDefinedAt(nodeFactory.numberNode(44)) shouldBe false
+            val arrayOfNumbers = createArrayNodeOf[Int](Seq(1, 2, 3))(nodeFactory.numberNode)
+            arrayConversion.isDefinedAt(arrayOfNumbers) shouldBe false
+          }
         }
       }
     }

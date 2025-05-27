@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2]
+
+### Added
+
+- support for defining a synonym maps at field creation
+- support for defining vector search dimensions at field creation
+
 ## [0.10.1]
 
 ### Added
@@ -20,14 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for defining a vector search profile at field creation
 
 ### Changed
-- altered <code>fieldOptions.*</code> write options for enriching Search fields
+- altered <code>fieldOptions.*</code> write options for enriching Search fields. 
+Look at migration guide for details
 
 ## [0.9.0]
 
 ### Changed
 
 - altered <code>partitioner</code> read option so that the user does not have to specify the partitioner class name.
-  - for using <code>FacetedPartitioner</code>
+Look at migration guide for details
 
 ## [0.8.0]
 

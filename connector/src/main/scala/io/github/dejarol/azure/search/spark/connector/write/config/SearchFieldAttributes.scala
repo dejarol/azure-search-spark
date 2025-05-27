@@ -21,6 +21,8 @@ import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConve
  * @param searchable flag that indicates if the field should be searchable
  * @param sortable flag that indicates if the field should be sortable
  * @param vectorSearchProfile name of the vector search profile
+ * @param synonymMaps sequence of synonyms
+ * @param dimensions vector search dimensions
  * @since 0.10.0
  */
 
@@ -35,8 +37,9 @@ case class SearchFieldAttributes(
                                   searchAnalyzer: Option[LexicalAnalyzerName],
                                   searchable: Option[Boolean],
                                   sortable: Option[Boolean],
-                                  vectorSearchProfile: Option[String]
-                                // TODO: add synonyms
+                                  vectorSearchProfile: Option[String],
+                                  synonymMaps: Option[Seq[String]],
+                                  dimensions: Option[Int]
                                 ) {
 
   /**
@@ -64,7 +67,9 @@ case class SearchFieldAttributes(
       searchAnalyzer.map(SearchFieldActions.forSettingSearchAnalyzer),
       searchable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SEARCHABLE, _)),
       sortable.map(SearchFieldActions.forEnablingOrDisablingFeature(SearchFieldFeature.SORTABLE, _)),
-      vectorSearchProfile.map(SearchFieldActions.forSettingVectorSearchProfile)
+      vectorSearchProfile.map(SearchFieldActions.forSettingVectorSearchProfile),
+      synonymMaps.map(SearchFieldActions.forSettingSynonyms),
+      dimensions.map(SearchFieldActions.forSettingVectorSearchDimensions)
     ).collect {
       case Some(value) => value
     }
@@ -101,8 +106,9 @@ object SearchFieldAttributes {
         searchAnalyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("searchAnalyzer")(LexicalAnalyzerNameConversion),
         searchable = jsonNode.safelyGetAs[Boolean]("searchable")(BooleanConversion),
         sortable = jsonNode.safelyGetAs[Boolean]("sortable")(BooleanConversion),
-        vectorSearchProfile = jsonNode.safelyGetAs[String]("vectorSearchProfile")(StringConversion)
-        // TODO: add synonyms
+        vectorSearchProfile = jsonNode.safelyGetAs[String]("vectorSearchProfile")(StringConversion),
+        synonymMaps = jsonNode.safelyGetAs[Seq[String]]("synonymMaps")(JsonConversions.forArrayOf[String](StringConversion)),
+        dimensions = jsonNode.safelyGetAs[Int]("dimensions")(IntConversion)
       )
     }
   }
