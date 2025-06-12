@@ -632,6 +632,10 @@ the definition stated by the Search Service REST API
         <td>encryptionKey</td>
         <td>JSON object matching the <code>encryptionKey</code> attribute of an index</td>
     </tr>
+    <tr>
+        <td>etag</td>
+        <td>A simple string representing the <code>etag</code> attribute of an index</td>
+    </tr>
 </table>
 
 ### A concrete write example
