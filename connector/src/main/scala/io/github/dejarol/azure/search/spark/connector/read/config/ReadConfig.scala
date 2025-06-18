@@ -275,5 +275,4 @@ object ReadConfig {
       CaseInsensitiveMap(dsOptions)
     )
   }
-
 }
