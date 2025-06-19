@@ -9,7 +9,7 @@ The connector is available at Maven central repository
 
 Runtime requirements
 <ul>
-    <li>Java version 8+</li>
+    <li>8 <= Java version <= 11</li>
     <li>scala-2.12</li>
     <li>Spark version 3.1.1+</li>
 </ul>
