@@ -18,26 +18,16 @@ import org.apache.spark.sql.types.StructField
  * Actions should include operations like setting <code>facetable</code>, <code>sortable</code>
  * or other field properties defined by the Search API.
  *
- * @param options write configuration options prefixed with <code>fieldOptions.</code>
+ * @param fieldActions map with keys being field paths and values being an action to apply on the field
  * @param indexActionColumn name of the column to be used for retrieving the index action for batch upload.
  *                          When converting the Spark fields to Search fields, this field will be excluded
  * @since 0.10.0
  */
 
 case class SearchFieldEnrichmentOptions(
-                                         override protected val options: CaseInsensitiveMap[String],
-                                         private val indexActionColumn: Option[String]
-                                       )
-  extends SearchConfig(options) {
-
-  // Collect valid and defined options
-  private[config] lazy val fieldActions: Map[String, SearchFieldAction] = options.mapValues {
-    Json.safelyReadAsModelUsingJackson[SearchFieldAttributes]
-  }.collect {
-    case (k, Right(v)) => (k, v.toAction)
-  }.collect {
-    case (k, Some(v)) => (k, v)
-  }
+                                         private[config] val fieldActions: Map[String, SearchFieldAction],
+                                         private[config] val indexActionColumn: Option[String]
+                                       ) {
 
   /**
    * Excludes a field from the schema that should be converted to Search fields
@@ -76,6 +66,8 @@ case class SearchFieldEnrichmentOptions(
 
 object SearchFieldEnrichmentOptions {
 
+  final val DEFAULT_ID_COLUMN = "id"
+
   /**
    * Creates an instance by safely parsing all the key-value pairs defined within
    * a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]] instance to
@@ -91,9 +83,43 @@ object SearchFieldEnrichmentOptions {
              indexActionColumn: Option[String]
            ): SearchFieldEnrichmentOptions = {
 
+    // Collect potential actions from deserialized attributes
+    val fieldNamesAndMaybeAttributes = CaseInsensitiveMap(
+      searchConfig.toMap
+    ).mapValues {
+      Json.safelyReadAsModelUsingJackson[SearchFieldAttributes]
+    }
+
+    // Enable the key attribute for the 'id' column
+    val fieldNamesAndActions = fieldNamesAndMaybeAttributes.collect {
+      case (k, Right(v)) =>
+        (k, maybeEnableKeyAttribute(k, v).toAction)
+    }.collect {
+      case (k, Some(action)) => (k, action)
+    }
+
     SearchFieldEnrichmentOptions(
-      CaseInsensitiveMap[String](searchConfig.toMap),
+      fieldNamesAndActions,
       indexActionColumn
     )
+  }
+
+  /**
+   * Enables the <code>key</code> attribute if the field name is <code>id</code>
+   * @param name field name
+   * @param searchFieldAttributes set of field attributes
+   * @return the input set of attributes with the <code>key</code> attribute enabled if the field name is <code>id</code>,
+   *         otherwise the input set of attributes
+   * @since 0.10.3
+   */
+
+  private[config] def maybeEnableKeyAttribute(
+                                               name: String,
+                                               searchFieldAttributes: SearchFieldAttributes
+                                             ): SearchFieldAttributes = {
+
+    if (name.equalsIgnoreCase(DEFAULT_ID_COLUMN)) {
+      searchFieldAttributes.copy(key = Some(true))
+    } else searchFieldAttributes
   }
 }

@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
+import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.DataTypes
@@ -21,7 +22,11 @@ class SearchFieldEnrichmentOptionsSpec
                            ): SearchFieldEnrichmentOptions = {
 
     SearchFieldEnrichmentOptions(
-      CaseInsensitiveMap[String](options.getOrElse(Map.empty)),
+      new SearchConfig(
+        CaseInsensitiveMap[String](
+          options.getOrElse(Map.empty)
+        )
+      ),
       actionColumn
     )
   }
