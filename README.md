@@ -648,6 +648,7 @@ df.write.format("azsearch")
     .option("fieldOptions.id", "{\"key\": true}")
     .option("fieldOptions.name", "{\"searchable\": true, \"sortable\": true}")
     .option("indexAttributes.similarity", "{"@odata.type": "#Microsoft.Azure.Search.BM25Similarity", "k": 1.2, "b": 0.75}")
+    .mode("append")
     .save("yourIndex")
 ```
 
