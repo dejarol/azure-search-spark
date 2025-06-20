@@ -542,7 +542,10 @@ The values for each of these properties should be a JSON object with the followi
     </tr>
     <tr>
         <td>key</td>
-        <td>Flag for marking this field as the key field</td>
+        <td>Flag for marking this field as the key field. 
+            Unnecessary if the field name is <code>id</code>, as it will be
+            be automatically set by the connector
+        </td>
     </tr>
     <tr>
         <td>retrievable</td>
@@ -645,7 +648,7 @@ df.write.format("azsearch")
     .option("endPoint", "yourEndpoint")
     .option("apiKey", "yourApiKey")
     .option("action", "mergeOrUpload")
-    .option("fieldOptions.id", "{\"key\": true}")
+    .option("fieldOptions.id", "{\"key\": true}")   // can be omitted, specify it only if the key field's name <> "id"
     .option("fieldOptions.name", "{\"searchable\": true, \"sortable\": true}")
     .option("indexAttributes.similarity", "{"@odata.type": "#Microsoft.Azure.Search.BM25Similarity", "k": 1.2, "b": 0.75}")
     .mode("append")
