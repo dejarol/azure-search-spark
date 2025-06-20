@@ -43,6 +43,13 @@ case class SearchFieldAttributes(
                                 ) {
 
   /**
+   * Return a copy of this instance, but with the key field enabled
+   * @return a copy of this instance
+   */
+
+  def withKeyFieldEnabled: SearchFieldAttributes = copy(key = Some(true))
+
+  /**
    * Gets an action that, if applied, will set all defined options to a field
    *
    * @return an action for applying all defined field options
@@ -111,5 +118,29 @@ object SearchFieldAttributes {
         dimensions = jsonNode.safelyGetAs[Int]("dimensions")(IntConversion)
       )
     }
+  }
+
+  /**
+   * Create an empty instance (i.e. an instance with no option defined)
+   * @return an empty instance
+   * @since 0.10.3
+   */
+
+  final def empty(): SearchFieldAttributes = {
+
+    SearchFieldAttributes(
+      analyzer = None,
+      facetable = None,
+      filterable = None,
+      indexAnalyzer = None,
+      key = None,
+      retrievable = None,
+      searchAnalyzer = None,
+      searchable = None,
+      sortable = None,
+      vectorSearchProfile = None,
+      synonymMaps = None,
+      dimensions = None
+    )
   }
 }

@@ -18,16 +18,33 @@ import org.apache.spark.sql.types.StructField
  * Actions should include operations like setting <code>facetable</code>, <code>sortable</code>
  * or other field properties defined by the Search API.
  *
- * @param fieldActions map with keys being field paths and values being an action to apply on the field
+ * @param options write options with prefix <code>fieldOptions.</code>
  * @param indexActionColumn name of the column to be used for retrieving the index action for batch upload.
  *                          When converting the Spark fields to Search fields, this field will be excluded
  * @since 0.10.0
  */
 
-case class SearchFieldEnrichmentOptions(
-                                         private[config] val fieldActions: Map[String, SearchFieldAction],
-                                         private[config] val indexActionColumn: Option[String]
-                                       ) {
+case class SearchFieldCreationOptions(
+                                       override protected val options: CaseInsensitiveMap[String],
+                                       private[config] val indexActionColumn: Option[String]
+                                     )
+  extends SearchConfig(options) {
+
+  import SearchFieldCreationOptions._
+
+  // Collect valid field attributes definitions
+  private[config] lazy val originalAttributes: Map[String, SearchFieldAttributes] = options.mapValues {
+    Json.safelyReadAsModelUsingJackson[SearchFieldAttributes]
+  }.collect {
+    case (k, Right(v)) => (k, v)
+  }
+
+  private[config] lazy val enrichedAttributes: Map[String, SearchFieldAttributes] = enrichAttributes(originalAttributes)
+  private[config] lazy val fieldActions: Map[String, SearchFieldAction] = enrichedAttributes.mapValues {
+    _.toAction
+  }.collect {
+    case (k, Some(v)) => (k, v)
+  }
 
   /**
    * Excludes a field from the schema that should be converted to Search fields
@@ -64,7 +81,7 @@ case class SearchFieldEnrichmentOptions(
   }
 }
 
-object SearchFieldEnrichmentOptions {
+object SearchFieldCreationOptions {
 
   final val DEFAULT_ID_COLUMN = "id"
 
@@ -81,45 +98,51 @@ object SearchFieldEnrichmentOptions {
   def apply(
              searchConfig: SearchConfig,
              indexActionColumn: Option[String]
-           ): SearchFieldEnrichmentOptions = {
+           ): SearchFieldCreationOptions = {
 
-    // Collect potential actions from deserialized attributes
-    val fieldNamesAndMaybeAttributes = CaseInsensitiveMap(
-      searchConfig.toMap
-    ).mapValues {
-      Json.safelyReadAsModelUsingJackson[SearchFieldAttributes]
-    }
-
-    // Enable the key attribute for the 'id' column
-    val fieldNamesAndActions = fieldNamesAndMaybeAttributes.collect {
-      case (k, Right(v)) =>
-        (k, maybeEnableKeyAttribute(k, v).toAction)
-    }.collect {
-      case (k, Some(action)) => (k, action)
-    }
-
-    SearchFieldEnrichmentOptions(
-      fieldNamesAndActions,
+    SearchFieldCreationOptions(
+      CaseInsensitiveMap[String](searchConfig.toMap),
       indexActionColumn
     )
   }
 
   /**
-   * Enables the <code>key</code> attribute if the field name is <code>id</code>
-   * @param name field name
-   * @param searchFieldAttributes set of field attributes
-   * @return the input set of attributes with the <code>key</code> attribute enabled if the field name is <code>id</code>,
-   *         otherwise the input set of attributes
+   * Process and potentially enrich a set of attributes, according to the following behavior
+   *  - if a key field is defined, no enrichment is required
+   *  - if no key field is defined, a new key-value pair will be upserted with a key field enabled. That means that,
+   *  if a key <code>id</code> is defined in the original attributes, it will be replaced with a new attribute instance
+   *  which is a copy of the original, but with the key feature enabled.
+   * @param attributes existing attributes
+   * @return an enriched set of attributes
    * @since 0.10.3
    */
 
-  private[config] def maybeEnableKeyAttribute(
-                                               name: String,
-                                               searchFieldAttributes: SearchFieldAttributes
-                                             ): SearchFieldAttributes = {
+  private[config] def enrichAttributes(
+                                        attributes: Map[String, SearchFieldAttributes]
+                                      ): Map[String, SearchFieldAttributes] = {
 
-    if (name.equalsIgnoreCase(DEFAULT_ID_COLUMN)) {
-      searchFieldAttributes.copy(key = Some(true))
-    } else searchFieldAttributes
+    // Evaluate if the key field is defined
+    val existsKeyField: Boolean = attributes.values.exists {
+      _.key.getOrElse(false)
+    }
+
+    // If so, no enrichment is required
+    if (existsKeyField) {
+      attributes
+    } else {
+
+      // Otherwise, retrieve the existing attributes for id column, or create a new one
+      // and then enable the key feature
+      val attributeForIdColumn = attributes.getOrElse(
+        DEFAULT_ID_COLUMN,
+        SearchFieldAttributes.empty()
+      )
+
+      // Upsert the key field
+      attributes + (
+        DEFAULT_ID_COLUMN ->
+          attributeForIdColumn.withKeyFieldEnabled
+        )
+    }
   }
 }

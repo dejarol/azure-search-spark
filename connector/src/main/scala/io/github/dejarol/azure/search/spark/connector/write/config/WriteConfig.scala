@@ -79,9 +79,9 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
    * @return options for enriching fields
    */
 
-  final def searchFieldEnrichmentOptions: SearchFieldEnrichmentOptions = {
+  final def searchFieldEnrichmentOptions: SearchFieldCreationOptions = {
 
-    SearchFieldEnrichmentOptions(
+    SearchFieldCreationOptions(
       getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX),
       actionColumn,
     )

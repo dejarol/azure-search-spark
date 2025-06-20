@@ -191,6 +191,11 @@ class SearchWriteBuilderITSpec
           actualFields.keySet should contain theSameElementsAs expectedSchema.map(_.name)
         }
 
+        it(s"automatically setting the ${SearchFieldCreationOptions.DEFAULT_ID_COLUMN} field as the index key") {
+
+          // TODO: test
+        }
+
         describe("enriching fields with") {
           describe("some features, like") {
             it("facetable") {
