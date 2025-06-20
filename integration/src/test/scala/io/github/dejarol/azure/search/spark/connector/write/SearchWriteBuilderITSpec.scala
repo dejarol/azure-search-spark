@@ -50,26 +50,46 @@ class SearchWriteBuilderITSpec
   }
 
   /**
-   * Safely create an index, creating a [[WriteConfig]] instance based on a minimum set of
-   * index creation options
-   * @param schema schema for setting the index fields
-   * @param options options to add upon the minimum set required for index creation
+   * Safely create an index, creating a [[WriteConfig]] instance based on provided options
+   * @param schema schem for setting the index fields
+   * @param writeConfigOptions write configuration options
+   * @return
    */
 
-  private def safelyCreateIndex(
-                                 schema: StructType,
-                                 options: Map[String, String]
-                               ): Either[IndexCreationException, SearchIndex] = {
+  private def safelyCreateIndexUsingOptions(
+                                             schema: StructType,
+                                             writeConfigOptions: Map[String, String]
+                                           ): Either[IndexCreationException, SearchIndex] = {
 
     // Take options for auth and index,
     // add key field and provided options
     val either = SearchWriteBuilder.safelyCreateIndex(
-      WriteConfig(minimumOptionsForIndexCreation ++ options),
+      WriteConfig(writeConfigOptions),
       schema
     )
 
     Thread.sleep(5000)
     either
+  }
+
+  /**
+   * Safely create an index, creating a [[WriteConfig]] instance by adding given options on top of
+   * the minimum set of index creation options
+   * @param schema schema for setting the index fields
+   * @param extraOptions options to add upon the minimum set required for index creation
+   */
+
+  private def safelyCreateIndexAddingOptions(
+                                              schema: StructType,
+                                              extraOptions: Map[String, String]
+                                            ): Either[IndexCreationException, SearchIndex] = {
+
+    // Trigger the index creation, by adding given options
+    // to the minimum set of index options
+    safelyCreateIndexUsingOptions(
+      schema,
+      minimumOptionsForIndexCreation ++ extraOptions
+    )
   }
 
   /**
@@ -87,7 +107,7 @@ class SearchWriteBuilderITSpec
     indexExists(testIndex) shouldBe false
 
     // Create index, assert existence
-    safelyCreateIndex(schema, extraOptions)
+    safelyCreateIndexAddingOptions(schema, extraOptions)
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
@@ -105,7 +125,7 @@ class SearchWriteBuilderITSpec
     indexExists(testIndex) shouldBe false
 
     // Create index, assert existence
-    safelyCreateIndex(schemaForAnalyzerTests, analyzerOptions)
+    safelyCreateIndexAddingOptions(schemaForAnalyzerTests, analyzerOptions)
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
@@ -129,7 +149,7 @@ class SearchWriteBuilderITSpec
                                                  assertion: A => Unit
                                                ): Unit = {
 
-    val either = safelyCreateIndex(
+    val either = safelyCreateIndexAddingOptions(
       schemaForAnalyzerTests,
       Map(indexOptionKey(key) -> value)
     )
@@ -159,7 +179,7 @@ class SearchWriteBuilderITSpec
           )
 
           indexExists(testIndex) shouldBe false
-          safelyCreateIndex(schema, Map.empty)
+          safelyCreateIndexAddingOptions(schema, Map.empty)
           indexExists(testIndex) shouldBe true
           assertMatchBetweenSchemaAndIndex(schema, testIndex)
         }
@@ -174,7 +194,7 @@ class SearchWriteBuilderITSpec
           )
 
           indexExists(testIndex) shouldBe false
-          safelyCreateIndex(
+          safelyCreateIndexAddingOptions(
             schema,
             Map(
               WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> actionTypeColName
@@ -193,7 +213,24 @@ class SearchWriteBuilderITSpec
 
         it(s"automatically setting the ${SearchFieldCreationOptions.DEFAULT_ID_COLUMN} field as the index key") {
 
-          // TODO: test
+          val schema = createStructType(
+            keyField,
+            createStructField("name", DataTypes.StringType),
+            createStructField("value", DataTypes.LongType)
+          )
+
+          // Use the minimum set of index creation options,
+          // letting the connector automatically set the index key
+          indexExists(testIndex) shouldBe false
+          safelyCreateIndexUsingOptions(
+            schema,
+            optionsForAuthAndIndex(testIndex)
+          )
+          indexExists(testIndex) shouldBe true
+          val actualFields = getIndexFields(testIndex)
+          val maybeKeyField = actualFields.get(keyField.name)
+          maybeKeyField shouldBe defined
+          maybeKeyField.get.isKey shouldBe true
         }
 
         describe("enriching fields with") {
@@ -533,7 +570,7 @@ class SearchWriteBuilderITSpec
           it("default scoring profile") {
 
             val (name, weights) = ("customScoring1", Map(uuidFieldName -> 0.5))
-            val either = safelyCreateIndex(
+            val either = safelyCreateIndexAddingOptions(
               schemaForAnalyzerTests,
               Map(
                 indexOptionKey(SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG) -> createArray(createScoringProfile(name, weights)),
@@ -590,7 +627,7 @@ class SearchWriteBuilderITSpec
       it("truncate an existing index") {
 
         indexExists(testIndex) shouldBe false
-        safelyCreateIndex(previousSchema, Map.empty)
+        safelyCreateIndexAddingOptions(previousSchema, Map.empty)
         indexExists(testIndex) shouldBe true
         assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
 
@@ -608,7 +645,7 @@ class SearchWriteBuilderITSpec
       it("leave an existing index as-is if truncation flag is disabled") {
 
         indexExists(testIndex) shouldBe false
-        safelyCreateIndex(previousSchema, Map.empty)
+        safelyCreateIndexAddingOptions(previousSchema, Map.empty)
         indexExists(testIndex) shouldBe true
         assertMatchBetweenSchemaAndIndex(previousSchema, testIndex)
 

@@ -114,7 +114,7 @@ object SearchFieldCreationOptions {
    *  which is a copy of the original, but with the key feature enabled.
    * @param attributes existing attributes
    * @return an enriched set of attributes
-   * @since 0.10.3
+   * @since 0.11.0
    */
 
   private[config] def enrichAttributes(

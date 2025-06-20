@@ -44,14 +44,14 @@ case class SearchFieldAttributes(
 
   /**
    * Return a copy of this instance, but with the key field enabled
-   * @return a copy of this instance
+   * @return a copy of this instance, but with the key field enabled
+   * @since 0.11.0
    */
 
   def withKeyFieldEnabled: SearchFieldAttributes = copy(key = Some(true))
 
   /**
    * Gets an action that, if applied, will set all defined options to a field
-   *
    * @return an action for applying all defined field options
    */
 
@@ -123,7 +123,7 @@ object SearchFieldAttributes {
   /**
    * Create an empty instance (i.e. an instance with no option defined)
    * @return an empty instance
-   * @since 0.10.3
+   * @since 0.11.0
    */
 
   final def empty(): SearchFieldAttributes = {
