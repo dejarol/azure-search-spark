@@ -78,12 +78,9 @@ class SearchWriteBuilder(
   private def truncateIndex(indexName: String): Unit = {
 
     // Truncate existing index
-    writeConfig.withSearchIndexClientDo {
-      sc =>
-        sc.deleteIndex(indexName)
-        Thread.sleep(5000)
-        log.info(s"Successfully deleted index $indexName")
-    }
+    writeConfig.deleteIndex(indexName)
+    Thread.sleep(1000)
+    log.info(s"Successfully deleted index $indexName")
 
     // Recreate the index with the new schema
     unsafelyCreateIndex(indexName)

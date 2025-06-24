@@ -99,6 +99,21 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
       getAllWithPrefix(WriteConfig.INDEX_ATTRIBUTES_PREFIX)
     )
   }
+
+  /**
+   * Delete an index
+   * @param name name of the index to delete
+   * @since 0.11.0
+   */
+
+  final def deleteIndex(name: String): Unit = {
+
+    withSearchIndexClientDo {
+      client => client.deleteIndex(
+        name
+      )
+    }
+  }
 }
 
 object WriteConfig {

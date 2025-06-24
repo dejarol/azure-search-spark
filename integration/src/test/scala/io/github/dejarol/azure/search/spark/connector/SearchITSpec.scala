@@ -32,6 +32,11 @@ trait SearchITSpec
       .credential(new AzureKeyCredential(propertiesSupplier.apiKey()))
       .buildClient
 
+  protected final lazy val optionsForAuth = Map(
+    IOConfig.END_POINT_CONFIG -> propertiesSupplier.endPoint(),
+    IOConfig.API_KEY_CONFIG -> propertiesSupplier.apiKey()
+  )
+
   /**
    * Clean up all created indexes, at spec start-up
    */
@@ -64,9 +69,7 @@ trait SearchITSpec
 
   protected final def optionsForAuthAndIndex(name: String): Map[String, String] = {
 
-    Map(
-      IOConfig.END_POINT_CONFIG -> propertiesSupplier.endPoint(),
-      IOConfig.API_KEY_CONFIG -> propertiesSupplier.apiKey(),
+    optionsForAuth + (
       IOConfig.INDEX_CONFIG -> name
     )
   }

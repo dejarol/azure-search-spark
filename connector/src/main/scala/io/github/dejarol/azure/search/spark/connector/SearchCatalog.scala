@@ -67,11 +67,7 @@ class SearchCatalog
 
     // If the identifier has no namespace and the index exists, delete it
     if (noNamespace && identExists) {
-      writeConfig.withSearchIndexClientDo {
-        client => client.deleteIndex(
-          ident.name()
-        )
-      }
+      writeConfig.deleteIndex(ident.name())
       true
     } else {
       // Otherwise, return false
@@ -135,6 +131,13 @@ class SearchCatalog
 
 object SearchCatalog {
 
+  private[connector] def identifierOf(name: String): Identifier = {
+
+    Identifier.of(
+      Array.empty, name
+    )
+  }
+
   /**
    * Creates a catalog identifier for an index. As Azure Search doesn't have namespaces, the identifier's namespace
    * would be empty while the identifier's name would be the index name
@@ -142,10 +145,5 @@ object SearchCatalog {
    * @return an identifier for the index
    */
 
-  private[connector] def identifierOf(index: SearchIndex): Identifier = {
-
-    Identifier.of(
-      Array.empty, index.getName
-    )
-  }
+  private[connector] def identifierOf(index: SearchIndex): Identifier = identifierOf(index.getName)
 }

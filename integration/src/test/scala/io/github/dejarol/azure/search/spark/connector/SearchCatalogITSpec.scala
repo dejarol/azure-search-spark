@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
 import io.github.dejarol.azure.search.spark.connector.models.{PushdownBean, SimpleBean}
-import org.apache.spark.sql.connector.catalog.TableCatalog
+import org.apache.spark.sql.connector.catalog.{Identifier, TableCatalog}
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 class SearchCatalogITSpec
@@ -12,12 +12,12 @@ class SearchCatalogITSpec
   import SearchCatalogITSpec._
 
   private lazy val catalog = initializeCatalog(propertiesSupplier)
+  private lazy val (firstIndex, secondIndex) = ("simple-beans", "pushdown-beans")
 
   describe(anInstanceOf[SearchCatalog]) {
     describe(SHOULD) {
       it("list all tables within the catalog") {
 
-        val (firstIndex, secondIndex) = ("simple-beans", "pushdown-beans")
         createIndexFromSchemaOf[SimpleBean](firstIndex)
         createIndexFromSchemaOf[PushdownBean](secondIndex)
 
@@ -34,13 +34,33 @@ class SearchCatalogITSpec
         dropIndexIfExists(firstIndex, sleep = false)
         dropIndexIfExists(secondIndex, sleep = false)
       }
+
+      it("drop a table from the catalog") {
+
+        val identifier = SearchCatalog.identifierOf(firstIndex)
+
+        // The table does not exist, so we expected both assertions to return false
+        indexExists(firstIndex) shouldBe false
+        catalog.dropTable(identifier) shouldBe false
+
+        // The table should exist now, so dropping the table should return true
+        createIndexFromSchemaOf[SimpleBean](firstIndex)
+        indexExists(firstIndex) shouldBe true
+        catalog.dropTable(identifier) shouldBe true
+        indexExists(firstIndex) shouldBe false
+      }
     }
 
     describe(SHOULD_NOT) {
       describe("allow some catalog operations, like") {
         it("renaming a table") {
 
-          // TODO: test
+          an [UnsupportedOperationException] shouldBe thrownBy {
+            catalog.renameTable(
+              Identifier.of(Array.empty, "old"),
+              Identifier.of(Array.empty, "new")
+            )
+          }
         }
       }
     }
