@@ -133,15 +133,40 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   final def withSearchClientDo[T](function: SearchClient => T): T = function.apply(getSearchClient)
 
   /**
+   * Evaluate if an index exists
+   * @param name index name
+   * @return true if the index exists
+   * @since 0.11.0
+   */
+
+  final def indexExists(name: String): Boolean = {
+
+    withSearchIndexClientDo {
+      client =>
+        SearchClients.indexExists(client, name)
+    }
+  }
+
+  /**
    * Evaluate if this instance's index exists
    * @return true if the index exist
    */
 
-  final def indexExists: Boolean = {
+  final def indexExists: Boolean = indexExists(getIndex)
+
+  /**
+   * Get the list of existing Search indexes
+   * @return collection of existing indexes
+   * @since 0.11.0
+   */
+
+  final def listIndexes: Seq[SearchIndex] = {
 
     withSearchIndexClientDo {
-        client =>
-          SearchClients.indexExists(client, getIndex)
+      client =>
+        JavaScalaConverters.listToSeq(
+          SearchClients.listIndexes(client)
+        )
     }
   }
 

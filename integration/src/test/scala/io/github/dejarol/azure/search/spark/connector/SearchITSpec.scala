@@ -26,11 +26,10 @@ trait SearchITSpec
     with FieldFactory
       with BeforeAndAfterAll {
 
-  private lazy val propertiesSupplier: IntegrationPropertiesSupplier = IntegrationPropertiesSuppliers.resolve()
-  private lazy val credentials = new AzureKeyCredential(propertiesSupplier.apiKey())
+  protected final lazy val propertiesSupplier: IntegrationPropertiesSupplier = IntegrationPropertiesSuppliers.resolve()
   protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
       .endpoint(propertiesSupplier.endPoint())
-      .credential(credentials)
+      .credential(new AzureKeyCredential(propertiesSupplier.apiKey()))
       .buildClient
 
   /**

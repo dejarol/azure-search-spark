@@ -2,8 +2,6 @@ package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.search.documents.indexes.models.SearchIndex
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig
-import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.sql.connector.catalog.{Identifier, Table, TableCatalog, TableChange}
@@ -30,14 +28,14 @@ class SearchCatalog
 
     // Retrieve the list of existing indexes
     // and then convert them to identifiers
-    listIndexes(
-      getReadConfig
-    ).map(
-      identifierOf
-    ).toArray
+    getReadConfig.listIndexes
+      .map(identifierOf)
+      .toArray
   }
 
   override def loadTable(ident: Identifier): Table = {
+
+    
 
     println(s"Loading table $ident")
     // TODO: implement
@@ -65,23 +63,28 @@ class SearchCatalog
 
   override def dropTable(ident: Identifier): Boolean = {
 
-    val noNamespace = ident.namespace().isEmpty
-    if (noNamespace) {
+    val writeConfig = getWriteConfig
 
-      val writeConfig = getWriteConfig
-      listIndexes(writeConfig).find {
-        index => index.getName.equalsIgnoreCase(ident.name())
-      }.exists {
-        index =>
-          writeConfig.withSearchIndexClientDo {
-            client => client.deleteIndex(index.getName)
-          }
-          true
+    // Boolean conditions for allowing the table to be dropped
+    val noNamespace = ident.namespace().isEmpty
+    val identExists = writeConfig.indexExists(ident.name())
+
+    // If the identifier has no namespace and the index exists, delete it
+    if (noNamespace && identExists) {
+      writeConfig.withSearchIndexClientDo {
+        client => client.deleteIndex(
+          ident.name()
+        )
       }
-    } else false
+      true
+    } else {
+      // Otherwise, return false
+      false
+    }
   }
 
   override def renameTable(oldIdent: Identifier, newIdent: Identifier): Unit = {
+
     throw new UnsupportedOperationException(
       "Renaming tables is not supported by this catalog"
     )
@@ -147,23 +150,6 @@ object SearchCatalog {
 
     Identifier.of(
       Array.empty, index.getName
-    )
-  }
-
-  /**
-   * Retrieves the list of existing indexes, given a
-   * [[io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig]] instance (which is implemented
-   * by both read and write configurations)
-   * @param config configuration instance
-   * @return
-   */
-
-  private[connector] def listIndexes(config: SearchIOConfig): Seq[SearchIndex] = {
-
-    JavaScalaConverters.listToSeq(
-      config.withSearchIndexClientDo {
-        SearchClients.listIndexes
-      }
     )
   }
 }
