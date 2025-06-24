@@ -35,8 +35,6 @@ class SearchCatalog
 
   override def loadTable(ident: Identifier): Table = {
 
-    
-
     println(s"Loading table $ident")
     // TODO: implement
     null
@@ -49,10 +47,8 @@ class SearchCatalog
                             properties: JMap[String, String]
                           ): Table = {
 
-    new SearchTable(
-      schema,
-      ident.name()
-    )
+    // TODO: implement
+    null
   }
 
   override def alterTable(ident: Identifier, changes: TableChange*): Table = {
