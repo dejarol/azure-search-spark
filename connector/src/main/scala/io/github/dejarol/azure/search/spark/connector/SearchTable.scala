@@ -32,7 +32,7 @@ class SearchTable(
    * @return table name
    */
 
-  override def name(): String = s"AzureSearchTable($tableName)"
+  override def name(): String = tableName
 
   /**
    * Gets the table schema

@@ -1,8 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.core.config
 
+import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.SearchITSpec
 import io.github.dejarol.azure.search.spark.connector.models.{PushdownBean, SimpleBean}
 import org.apache.spark.sql.Encoders
+import org.apache.spark.sql.types.StructType
 
 class SearchIOConfigITSpec
   extends SearchITSpec {
@@ -12,6 +14,21 @@ class SearchIOConfigITSpec
   private lazy val config = new SearchIOConfig(
     optionsForAuthAndIndex(simpleBeansIndex)
   )
+
+  /**
+   * Asserts that a collection of Search fields and a Spark schema have the same size and field names
+   * @param searchFields collection of Search fields
+   * @param schema Spark schema
+   */
+
+  private def assertSameSizeAndFieldNames(
+                                           searchFields: Seq[SearchField],
+                                           schema: StructType
+                                         ): Unit = {
+
+    searchFields should have size schema.size
+    searchFields.map(_.getName) should contain theSameElementsAs schema.fieldNames
+  }
 
   describe(anInstanceOf[SearchIOConfig]) {
     describe(SHOULD) {
@@ -52,10 +69,12 @@ class SearchIOConfigITSpec
 
         createIndexFromSchemaOf[SimpleBean](simpleBeansIndex)
 
-        val indexFields = config.getSearchIndexFields
+        val indexFieldsV1 = config.getSearchIndexFields
+        val indexFieldsV2 = config.getSearchIndexFields(simpleBeansIndex)
         val schemaOfSimpleBean = Encoders.product[SimpleBean].schema
-        indexFields should have size schemaOfSimpleBean.size
-        indexFields.map(_.getName) should contain theSameElementsAs schemaOfSimpleBean.fieldNames
+
+        assertSameSizeAndFieldNames(indexFieldsV1, schemaOfSimpleBean)
+        assertSameSizeAndFieldNames(indexFieldsV2, schemaOfSimpleBean)
 
         // Clean up
         dropIndexIfExists(simpleBeansIndex, sleep = true)

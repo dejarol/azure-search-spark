@@ -2,8 +2,10 @@ package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.search.documents.indexes.models.SearchIndex
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
+import io.github.dejarol.azure.search.spark.connector.core.schema.SchemaUtils
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
+import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
 import org.apache.spark.sql.connector.catalog.{Identifier, Table, TableCatalog, TableChange}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.types.StructType
@@ -35,9 +37,21 @@ class SearchCatalog
 
   override def loadTable(ident: Identifier): Table = {
 
-    println(s"Loading table $ident")
-    // TODO: implement
-    null
+    val readConfig = getReadConfig
+    val indexExists = readConfig.indexExists(ident.name())
+    if (indexExists) {
+
+      // Retrieve the index fields and convert them to a StructType
+      val tableSchema = SchemaUtils.toStructType(
+        readConfig.getSearchIndexFields(
+          ident.name()
+        )
+      )
+
+      new SearchTable(tableSchema, ident.name())
+    } else {
+      throw new NoSuchTableException(ident)
+    }
   }
 
   override def createTable(
@@ -53,8 +67,14 @@ class SearchCatalog
 
   override def alterTable(ident: Identifier, changes: TableChange*): Table = {
 
-    // TODO: implement
-    null
+    val readConfig = getReadConfig
+    val indexExists = readConfig.indexExists(ident.name())
+    if (indexExists) {
+      // TODO: implement
+      null
+    } else {
+      throw new NoSuchTableException(ident)
+    }
   }
 
   override def dropTable(ident: Identifier): Boolean = {
@@ -131,6 +151,13 @@ class SearchCatalog
 
 object SearchCatalog {
 
+  /**
+   * Creates a catalog identifier from a name. As Azure Search doesn't have namespaces, the identifier's namespace
+   * would be empty while the identifier's name would be the given name
+   * @param name identifier name
+   * @return an identifier for this datasource's catalog implementation
+   */
+
   private[connector] def identifierOf(name: String): Identifier = {
 
     Identifier.of(
@@ -139,8 +166,7 @@ object SearchCatalog {
   }
 
   /**
-   * Creates a catalog identifier for an index. As Azure Search doesn't have namespaces, the identifier's namespace
-   * would be empty while the identifier's name would be the index name
+   * Creates a catalog identifier for an index
    * @param index an existing Search index
    * @return an identifier for the index
    */

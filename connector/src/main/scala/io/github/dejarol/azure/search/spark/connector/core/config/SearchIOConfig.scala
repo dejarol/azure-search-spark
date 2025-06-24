@@ -148,7 +148,10 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   }
 
   /**
-   * Evaluate if this instance's index exists
+   * Evaluate if this instance's target index exists.
+   * The index name will be retrieved either from
+   *  - option <code>path</code> or
+   *  - option <code>index</code>
    * @return true if the index exist
    */
 
@@ -171,17 +174,28 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   }
 
   /**
-   * Get the list of Search index fields
-   * @return list of Search index fields
+   * Get the fields defined in a Search index
+   * @param name index name
+   * @return a collection of index fields
+   * @since 0.11.0
    */
 
-  final def getSearchIndexFields: Seq[SearchField] = {
+  final def getSearchIndexFields(name: String): Seq[SearchField] = {
 
-    withSearchIndexDo {
-      si =>
-      JavaScalaConverters.listToSeq(
-        si.getFields
+    withSearchIndexClientDo {
+      client => JavaScalaConverters.listToSeq(
+        client.getIndex(name).getFields
       )
     }
   }
+
+  /**
+   * Get the fields defined by this instance's target index.
+   * The index name will be retrieved either from
+   *  - option <code>path</code> or
+   *  - option <code>index</code>
+   * @return a collection of index fields
+   */
+
+  final def getSearchIndexFields: Seq[SearchField] = getSearchIndexFields(getIndex)
 }
