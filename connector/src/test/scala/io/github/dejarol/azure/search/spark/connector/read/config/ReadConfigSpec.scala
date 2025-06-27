@@ -242,6 +242,18 @@ class ReadConfigSpec
             maybeResult shouldBe defined
             maybeResult.get should contain theSameElementsAs fields.map(_.name)
           }
+
+          it("index name") {
+
+            // For an empty configuration, a ConfigException should be thrown
+            a [ConfigException] shouldBe thrownBy {
+              emptyConfig.getIndex
+            }
+
+            emptyConfig
+              .withIndexName("hello")
+              .getIndex shouldBe "hello"
+          }
         }
       }
     }

@@ -118,25 +118,10 @@ object SearchWriteBuilder {
 
     // Try to create the index
     Try {
-      val indexName = writeConfig.getIndex
-      val searchFields: Seq[SearchField] = writeConfig
-        .searchFieldEnrichmentOptions
-        .toSearchFields(schema)
-
-      // Set name and fields
-      val searchIndex: SearchIndex = new SearchIndex(indexName)
-        .setFields(searchFields: _*)
-
-      // Apply optional actions
-      val maybeEnrichedIndex: SearchIndex = writeConfig
-        .searchIndexCreationOptions
-        .action.map {
-          _.apply(searchIndex)
-        }.getOrElse(searchIndex)
-
-      writeConfig.withSearchIndexClientDo {
-        _.createIndex(maybeEnrichedIndex)
-      }
+      writeConfig.createIndex(
+        writeConfig.getIndex,
+        schema
+      )
     }.toEither.left.map(
       // Map the left side to a proper exception
       new IndexCreationException(

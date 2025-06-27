@@ -5,7 +5,7 @@ import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.schema.SchemaUtils
 import io.github.dejarol.azure.search.spark.connector.read.config.ReadConfig
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
-import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
+import org.apache.spark.sql.catalyst.analysis.{NoSuchTableException, TableAlreadyExistsException}
 import org.apache.spark.sql.connector.catalog.{Identifier, Table, TableCatalog, TableChange}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.types.StructType
@@ -37,18 +37,16 @@ class SearchCatalog
 
   override def loadTable(ident: Identifier): Table = {
 
-    val readConfig = getReadConfig
-    val indexExists = readConfig.indexExists(ident.name())
+    val readConfig = getReadConfig.withIndexName(ident.name())
+    val indexExists = readConfig.indexExists
     if (indexExists) {
 
       // Retrieve the index fields and convert them to a StructType
       val tableSchema = SchemaUtils.toStructType(
-        readConfig.getSearchIndexFields(
-          ident.name()
-        )
+        readConfig.getSearchIndexFields
       )
 
-      new SearchTable(tableSchema, ident.name())
+      new SearchTable(tableSchema, ident.name(), readConfig)
     } else {
       throw new NoSuchTableException(ident)
     }
@@ -61,15 +59,28 @@ class SearchCatalog
                             properties: JMap[String, String]
                           ): Table = {
 
-    // TODO: implement
-    null
+    // TODO: enrich write config with table properties
+    val writeConfig = getWriteConfig
+      .withIndexName(ident.name())
+
+    if (writeConfig.indexExists) {
+      throw new TableAlreadyExistsException(ident)
+    } else {
+      if (partitions.nonEmpty) {
+        throw new UnsupportedOperationException(
+          "Partitioning is not supported by this catalog"
+        )
+      }
+
+      writeConfig.createIndex(ident.name(), schema)
+      new SearchTable(schema, ident.name(), writeConfig)
+    }
   }
 
   override def alterTable(ident: Identifier, changes: TableChange*): Table = {
 
-    val readConfig = getReadConfig
-    val indexExists = readConfig.indexExists(ident.name())
-    if (indexExists) {
+    val readConfig = getReadConfig.withIndexName(ident.name())
+    if (readConfig.indexExists) {
       // TODO: implement
       null
     } else {
@@ -79,14 +90,8 @@ class SearchCatalog
 
   override def dropTable(ident: Identifier): Boolean = {
 
-    val writeConfig = getWriteConfig
-
-    // Boolean conditions for allowing the table to be dropped
-    val noNamespace = ident.namespace().isEmpty
-    val identExists = writeConfig.indexExists(ident.name())
-
-    // If the identifier has no namespace and the index exists, delete it
-    if (noNamespace && identExists) {
+    val writeConfig = getWriteConfig.withIndexName(ident.name())
+    if (writeConfig.indexExists) {
       writeConfig.deleteIndex(ident.name())
       true
     } else {

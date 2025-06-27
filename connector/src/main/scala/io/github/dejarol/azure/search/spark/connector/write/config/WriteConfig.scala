@@ -1,11 +1,12 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.SearchDocument
-import com.azure.search.documents.indexes.models.IndexDocumentsBatch
+import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, SearchField, SearchIndex}
 import com.azure.search.documents.models.IndexActionType
-import io.github.dejarol.azure.search.spark.connector.core.config.SearchIOConfig
+import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, IOConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
+import org.apache.spark.sql.types.StructType
 
 /**
  * Write configuration
@@ -13,7 +14,33 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
  */
 
 case class WriteConfig(override protected val options: CaseInsensitiveMap[String])
-  extends SearchIOConfig(options) {
+  extends SearchIOConfig(options)
+    with ExtendableConfig[WriteConfig] {
+
+  /**
+   * Updates this configuration by upserting the given key-value pair
+   * @param key   key
+   * @param value value
+   * @return this configuration, with either a newly added key-value pair or an updated pair
+   * @since 0.11.0
+   */
+
+  override def withOption(key: String, value: String): WriteConfig = {
+
+    this.copy(
+      options = options + (key, value)
+    )
+  }
+
+  /**
+   * Extends this configuration by setting the index name.
+   * The given value will correspond to the <code>index</code> option in write configurations
+   * @param name index name
+   * @return this config instance, extended with option <code>index</code>
+   * @since 0.11.0
+   */
+
+  def withIndexName(name: String): WriteConfig = withOption(IOConfig.INDEX_CONFIG, name)
 
   /**
    * Index a batch of documents on target index
@@ -112,6 +139,35 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
       client => client.deleteIndex(
         name
       )
+    }
+  }
+
+  /**
+   * Creates an index, using the provided name and Spark schema.
+   * Fields from the Spark will be converted to Azure Search fields and enriched with options prefixed by
+   * <code>fieldOptions.</code> while the Search index will be enriched with options prefixed by
+   * <code>indexAttributes.</code>
+   * @param name index name
+   * @param schema Spark schema
+   * @return the created index
+   * @since 0.11.0
+   */
+
+  final def createIndex(name: String, schema: StructType): SearchIndex = {
+
+    val searchFields: Seq[SearchField] = searchFieldEnrichmentOptions.toSearchFields(schema)
+    val searchIndex: SearchIndex = new SearchIndex(name)
+      .setFields(searchFields: _*)
+
+    val maybeEnrichedIndex: SearchIndex = searchIndexCreationOptions.action.map {
+      _.apply(searchIndex)
+    }.getOrElse(searchIndex)
+
+    withSearchIndexClientDo {
+      client =>
+        client.createIndex(
+          maybeEnrichedIndex
+        )
     }
   }
 }

@@ -66,7 +66,8 @@ class SearchTableProvider
 
     new SearchTable(
       schema,
-      config.getIndex
+      config.getIndex,
+      config
     )
   }
 

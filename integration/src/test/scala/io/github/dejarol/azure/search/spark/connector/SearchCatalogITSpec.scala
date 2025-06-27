@@ -3,7 +3,8 @@ package io.github.dejarol.azure.search.spark.connector
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
 import io.github.dejarol.azure.search.spark.connector.models.{PushdownBean, SimpleBean}
-import org.apache.spark.sql.connector.catalog.{Identifier, TableCatalog}
+import org.apache.spark.sql.Encoders
+import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 class SearchCatalogITSpec
@@ -49,17 +50,41 @@ class SearchCatalogITSpec
         catalog.dropTable(identifier) shouldBe true
         indexExists(firstIndex) shouldBe false
       }
-    }
 
-    describe(SHOULD_NOT) {
-      describe("allow some catalog operations, like") {
-        it("renaming a table") {
+      describe("load a table") {
+        it(s"returning a ${nameOf[NoSuchTableException]} for a non-existent table") {
 
-          an [UnsupportedOperationException] shouldBe thrownBy {
-            catalog.renameTable(
-              Identifier.of(Array.empty, "old"),
-              Identifier.of(Array.empty, "new")
-            )
+          indexExists(firstIndex) shouldBe false
+          a[NoSuchTableException] shouldBe thrownBy {
+            catalog.loadTable(SearchCatalog.identifierOf(firstIndex))
+          }
+        }
+
+        it("metadata for an existing table") {
+
+          indexExists(firstIndex) shouldBe false
+          createIndexFromSchemaOf[SimpleBean](firstIndex)
+          indexExists(firstIndex) shouldBe true
+
+          // Assertions on table metadata
+          val table = catalog.loadTable(SearchCatalog.identifierOf(firstIndex))
+          table.name() shouldBe firstIndex
+          table.schema() should contain theSameElementsAs Encoders.product[SimpleBean].schema
+
+          dropIndexIfExists(firstIndex, sleep = false)
+        }
+      }
+
+      describe(SHOULD_NOT) {
+        describe("allow some catalog operations, like") {
+          it("renaming a table") {
+
+            an[UnsupportedOperationException] shouldBe thrownBy {
+              catalog.renameTable(
+                SearchCatalog.identifierOf("old"),
+                SearchCatalog.identifierOf("new")
+              )
+            }
           }
         }
       }
@@ -75,7 +100,7 @@ object SearchCatalogITSpec {
    * @return the [[org.apache.spark.sql.connector.catalog.TableCatalog]] implementation of this datasource
    */
 
-  private def initializeCatalog(propertiesSupplier: IntegrationPropertiesSupplier): TableCatalog = {
+  private def initializeCatalog(propertiesSupplier: IntegrationPropertiesSupplier): SearchCatalog = {
 
     val catalog = new SearchCatalog
     val options = new CaseInsensitiveStringMap(

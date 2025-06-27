@@ -31,7 +31,7 @@ class SearchConfig(protected val options: CaseInsensitiveMap[String])
    * @return the original configuration object (case-sensitive)
    */
 
-  final def toMap: Map[String, String] = options.toMap
+  final def toMap: Map[String, String] = options
 
   /**
    * Safely get the value of a key by inspecting local options and then [[org.apache.spark.SparkConf]] options

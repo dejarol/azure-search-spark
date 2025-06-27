@@ -19,6 +19,13 @@ class WriteConfigITSpec
         writeConfig.deleteIndex(indexName)
         indexExists(indexName) shouldBe false
       }
+
+      describe("create an index from a name and a schema") {
+        it("todo") {
+
+          // TODO: implement here tests related to index creation (from SearchWriteBuilderITSpec)
+        }
+      }
     }
   }
 }

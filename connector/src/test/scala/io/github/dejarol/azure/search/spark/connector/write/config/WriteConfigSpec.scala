@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.models.IndexActionType
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
 
 class WriteConfigSpec
   extends BasicSpec
@@ -88,6 +89,18 @@ class WriteConfigSpec
           fieldCreationOptions should contain key k1
           fieldCreationOptions should contain key k2
           fieldCreationOptions shouldNot contain key k3
+        }
+      }
+
+      describe("upsert") {
+        it("the index name") {
+
+          // For an empty config, a ConfigException should be thrown
+          a [ConfigException] should be thrownBy {
+            emptyConfig.getIndex
+          }
+
+          emptyConfig.withIndexName("hello").getIndex shouldBe "hello"
         }
       }
     }

@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.read.config
 import com.azure.search.documents.models.{FacetResult, SearchResult}
 import com.azure.search.documents.util.SearchPagedIterable
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, ExtendableConfig, SearchConfig, SearchIOConfig}
+import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, ExtendableConfig, IOConfig, SearchConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpression, ODataExpressions}
 import io.github.dejarol.azure.search.spark.connector.read.partitioning._
@@ -83,6 +83,16 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
       )
     }
   }
+
+  /**
+   * Extends this configuration by setting the index name.
+   * The given value will correspond to the <code>index</code> option in read configurations
+   * @param indexName index name
+   * @return this config instance, extended with option <code>index</code>
+   * @since 0.11.0
+   */
+
+  def withIndexName(indexName: String): ReadConfig = withOption(IOConfig.INDEX_CONFIG, indexName)
 
   /**
    * Collect options related to documents search
