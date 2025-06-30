@@ -4,7 +4,7 @@ import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
 import io.github.dejarol.azure.search.spark.connector.models.{AtomicBean, PushdownBean, SimpleBean}
 import org.apache.spark.sql.Encoders
-import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
+import org.apache.spark.sql.catalyst.analysis.{NoSuchTableException, TableAlreadyExistsException}
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 class SearchCatalogITSpec
@@ -79,12 +79,32 @@ class SearchCatalogITSpec
         describe("allow some catalog operations, like") {
           it("renaming a table") {
 
+            // Old table should not exist, so we should throw a NoSuchTableException
+            a [NoSuchTableException] shouldBe thrownBy {
+              catalog.renameTable(
+                SearchCatalog.identifierOf("old"),
+                SearchCatalog.identifierOf("new")
+              )
+            }
+
+            // New table should not exist, so we should throw a TableAlreadyExistsException
+            createIndexFromSchemaOf[AtomicBean]("old")
+            a [TableAlreadyExistsException] shouldBe thrownBy {
+              catalog.renameTable(
+                SearchCatalog.identifierOf("old"),
+                SearchCatalog.identifierOf("old")
+              )
+            }
+
+            // Default case: operation is not supported
             an[UnsupportedOperationException] shouldBe thrownBy {
               catalog.renameTable(
                 SearchCatalog.identifierOf("old"),
                 SearchCatalog.identifierOf("new")
               )
             }
+
+            dropIndexIfExists("old", sleep = false)
           }
 
           it("altering a table") {

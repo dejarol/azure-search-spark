@@ -151,6 +151,20 @@ class SearchCatalog
 
   override def renameTable(oldIdent: Identifier, newIdent: Identifier): Unit = {
 
+    val writeConfig = getWriteConfig
+    val oldIdentDoesNotExist = !writeConfig.indexExists(oldIdent.name())
+
+    // If the table referred by the old identifier doesn't exist, throw NoSuchTableException
+    if (oldIdentDoesNotExist) {
+      throw new NoSuchTableException(oldIdent)
+    }
+
+    // If the table referred by the new identifier already exists, throw TableAlreadyExistsException
+    val newIdentExists = writeConfig.indexExists(newIdent.name())
+    if (newIdentExists) {
+      throw new TableAlreadyExistsException(newIdent)
+    }
+
     throw new UnsupportedOperationException(
       "Renaming an Azure Search index is not supported"
     )
