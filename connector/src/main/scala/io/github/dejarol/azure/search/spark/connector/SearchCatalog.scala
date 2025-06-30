@@ -60,9 +60,8 @@ class SearchCatalog
                           ): Table = {
 
     // TODO: enrich write config with table properties
-    val writeConfig = getWriteConfig
-      .withIndexName(ident.name())
-
+    val indexName = ident.name()
+    val writeConfig = getWriteConfig.withIndexName(indexName)
     if (writeConfig.indexExists) {
       throw new TableAlreadyExistsException(ident)
     } else {
@@ -72,8 +71,8 @@ class SearchCatalog
         )
       }
 
-      writeConfig.createIndex(ident.name(), schema)
-      new SearchTable(schema, ident.name(), writeConfig)
+      writeConfig.createIndex(indexName, schema)
+      new SearchTable(schema, indexName, writeConfig)
     }
   }
 

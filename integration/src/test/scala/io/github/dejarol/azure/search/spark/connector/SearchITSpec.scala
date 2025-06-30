@@ -110,15 +110,19 @@ trait SearchITSpec
   }
 
   /**
-   * Create an index from the schema of a document that extends [[ITDocument]]
-   * @param indexName index name
-   * @tparam T type of document (must extend [[ITDocument]] and be a case class)
+   * Create an index with given name and Spark schema
+   * @param name index name
+   * @param schema Spark schema
+   * @since 0.11.0
    */
 
-  protected final def createIndexFromSchemaOf[T <: ITDocument with Product: TypeTag](indexName: String): Unit = {
+  protected final def createIndexWithSchema(
+                                             name: String,
+                                             schema: StructType
+                                           ): Unit = {
 
     // Define Search fields
-    val searchFields = Encoders.product[T].schema.map {
+    val searchFields = schema.map {
       structField =>
         val searchField = SchemaUtils.toSearchField(structField, Map.empty, None)
         if (searchField.getName.equals("id")) {
@@ -126,16 +130,25 @@ trait SearchITSpec
         } else searchField
     }
 
-    // Create index
-    searchIndexClient.createIndex(
-      new SearchIndex(
-        indexName,
-        JavaScalaConverters.seqToList(searchFields)
-      )
-    )
+    createIndex(name, searchFields)
 
     // Wait for some seconds in order to ensure test consistency
-    Thread.sleep(5000)
+    Thread.sleep(3000)
+  }
+
+
+  /**
+   * Create an index from the schema of a document that extends [[ITDocument]]
+   * @param indexName index name
+   * @tparam T type of document (must extend [[ITDocument]] and be a case class)
+   */
+
+  protected final def createIndexFromSchemaOf[T <: ITDocument with Product: TypeTag](indexName: String): Unit = {
+
+    createIndexWithSchema(
+      indexName,
+      Encoders.product[T].schema
+    )
   }
 
   /**
@@ -171,7 +184,7 @@ trait SearchITSpec
     if (indexExists(name)) {
       searchIndexClient.deleteIndex(name)
       if (sleep) {
-        Thread.sleep(10000)
+        Thread.sleep(5000)
       }
     }
   }

@@ -1,6 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.write
 
-import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
+import com.azure.search.documents.indexes.models.SearchIndex
 import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.connector.write.{BatchWrite, SupportsTruncate, WriteBuilder}
@@ -79,7 +79,7 @@ class SearchWriteBuilder(
 
     // Truncate existing index
     writeConfig.deleteIndex(indexName)
-    Thread.sleep(1000)
+    Thread.sleep(2000)
     log.info(s"Successfully deleted index $indexName")
 
     // Recreate the index with the new schema
@@ -94,38 +94,28 @@ class SearchWriteBuilder(
   @throws[IndexCreationException]
   private def unsafelyCreateIndex(indexName: String): Unit = {
 
-    SearchWriteBuilder.safelyCreateIndex(writeConfig, schema) match {
+    safelyCreateIndex(indexName) match {
       case Left(value) => throw value
       case Right(_) => log.info(s"Successfully created index $indexName")
     }
   }
-}
-
-object SearchWriteBuilder {
 
   /**
-   * Create the target Search index
-   * @param writeConfig write configuration
-   * @param schema dataFrame schema
-   * @return either an [[io.github.dejarol.azure.search.spark.connector.write.IndexCreationException]] with the handled exception,
-   *         or a [[com.azure.search.documents.indexes.models.SearchIndex]] object representing the created index
+   * Safely create a Search index with given name using exception-handling
+   * @param indexName index name
+   * @return either the created index or a [[io.github.dejarol.azure.search.spark.connector.write.IndexCreationException]]
+   *         caused by the handled exception
    */
 
-  def safelyCreateIndex(
-                         writeConfig: WriteConfig,
-                         schema: StructType
-                       ): Either[IndexCreationException, SearchIndex] = {
+  private def safelyCreateIndex(indexName: String): Either[IndexCreationException, SearchIndex] = {
 
     // Try to create the index
     Try {
-      writeConfig.createIndex(
-        writeConfig.getIndex,
-        schema
-      )
+      writeConfig.createIndex(indexName, schema)
     }.toEither.left.map(
       // Map the left side to a proper exception
       new IndexCreationException(
-        writeConfig.getIndex,
+        indexName,
         _
       )
     )

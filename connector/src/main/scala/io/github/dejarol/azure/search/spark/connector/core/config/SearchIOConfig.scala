@@ -90,13 +90,6 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
   }
 
   /**
-   * Get a [[SearchIndex]] definition
-   * @return the definition of a Search index
-   */
-
-  private def getSearchIndex: SearchIndex = getSearchIndexClient.getIndex(getIndex)
-
-  /**
    * Get a [[SearchClient]] for
    *  - searching your indexed documents
    *  - adding, updating or deleting documents from an index
@@ -113,15 +106,6 @@ class SearchIOConfig(override protected val options: CaseInsensitiveMap[String])
    */
 
   final def withSearchIndexClientDo[T](function: SearchIndexClient => T): T = function.apply(getSearchIndexClient)
-
-  /**
-   * Perform an action using this instance's [[com.azure.search.documents.indexes.models.SearchIndex]], and get the result
-   * @param function action to perform
-   * @tparam T action return type
-   * @return the action result
-   */
-
-  private final def withSearchIndexDo[T](function: SearchIndex => T): T = function.apply(getSearchIndex)
 
   /**
    * Perform an action using this instance's [[com.azure.search.documents.SearchClient]], and get the result
