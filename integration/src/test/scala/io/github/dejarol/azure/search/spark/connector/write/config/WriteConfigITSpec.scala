@@ -151,8 +151,10 @@ class WriteConfigITSpec
       options
     )
 
-    val result: A = getter(searchIndexObj)
-    assertion(result)
+    // Retrieve the index specification and run assertion
+    assertion(
+      getter(searchIndexObj)
+    )
   }
 
   /**
@@ -171,9 +173,9 @@ class WriteConfigITSpec
                                                )(
                                                  assertion: A => Unit
                                                ): Unit = {
-    assertIndexHasBeenEnrichedWith(
-      Map(indexOptionKey(key) -> value),
-      getter
+    assertIndexHasBeenEnrichedWith[A](
+      options = Map(indexOptionKey(key) -> value),
+      getter = getter
     ) {
       assertion
     }
@@ -450,7 +452,7 @@ class WriteConfigITSpec
             assertIndexHasBeenEnrichedWith[SimilarityAlgorithm](
               SearchIndexEnrichmentOptions.SIMILARITY_CONFIG,
               createBM25SimilarityAlgorithm(k1, b),
-              _.getSimilarity
+              (index: SearchIndex) => index.getSimilarity
             ) {
               algo =>
                 algo shouldBe a [BM25SimilarityAlgorithm]
@@ -468,7 +470,7 @@ class WriteConfigITSpec
               createArray(
                 createClassicTokenizer(name, maxTokenLength)
               ),
-              _.getTokenizers
+              (index: SearchIndex) => index.getTokenizers
             ) {
               tokenizers =>
                 tokenizers should have size 1
@@ -488,7 +490,7 @@ class WriteConfigITSpec
               createArray(
                 createSearchSuggester(name, fields)
               ),
-              _.getSuggesters
+              (index: SearchIndex) => index.getSuggesters
             ) {
               suggesters =>
                 suggesters should have size 1
@@ -506,7 +508,7 @@ class WriteConfigITSpec
               createArray(
                 createStopAnalyzer(name, stopWords)
               ),
-              _.getAnalyzers
+              (index: SearchIndex) => index.getAnalyzers
             ) {
               analyzers =>
                 analyzers should have size 1
@@ -526,7 +528,7 @@ class WriteConfigITSpec
               createArray(
                 createMappingCharFilter(name, mappings)
               ),
-              _.getCharFilters
+              (index: SearchIndex) => index.getCharFilters
             ) {
               charFilters =>
                 charFilters should have size 1
@@ -546,7 +548,7 @@ class WriteConfigITSpec
               createArray(
                 createScoringProfile(name, weights)
               ),
-              _.getScoringProfiles
+              (index: SearchIndex) => index.getScoringProfiles
             ) {
               profiles =>
                 profiles should have size 1
@@ -569,7 +571,7 @@ class WriteConfigITSpec
               createArray(
                 createPatternReplaceTokenFilter(name, pattern, replacement)
               ),
-              _.getTokenFilters
+              (index: SearchIndex) => index.getTokenFilters
             ) {
               filters =>
                 filters should have size 1
@@ -588,7 +590,7 @@ class WriteConfigITSpec
             assertIndexHasBeenEnrichedWith[CorsOptions](
               SearchIndexEnrichmentOptions.CORS_OPTIONS_CONFIG,
               createCorsOptions(allowedOrigins, maxAge),
-              _.getCorsOptions
+              (index: SearchIndex) => index.getCorsOptions
             ) {
               cors =>
                 cors.getAllowedOrigins should contain theSameElementsAs allowedOrigins
@@ -604,7 +606,7 @@ class WriteConfigITSpec
                 indexOptionKey(SearchIndexEnrichmentOptions.SCORING_PROFILES_CONFIG) -> createArray(createScoringProfile(name, weights)),
                 indexOptionKey(SearchIndexEnrichmentOptions.DEFAULT_SCORING_PROFILE_CONFIG) -> name
               ),
-              idx => (
+              (idx: SearchIndex) => (
                 idx.getDefaultScoringProfile,
                 idx.getScoringProfiles
               )
@@ -627,7 +629,7 @@ class WriteConfigITSpec
                   createVectorSearchProfile("vector-profile-1", "hnsw-1")
                 )
               ),
-              _.getVectorSearch
+              (index: SearchIndex) => index.getVectorSearch
             ) {
               vectorSearch =>
                 vectorSearch.getAlgorithms should have size 1

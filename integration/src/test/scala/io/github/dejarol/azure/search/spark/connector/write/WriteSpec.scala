@@ -63,7 +63,7 @@ class WriteSpec
       .save()
 
     // Wait for some time in order to ensure test consistency
-    Thread.sleep(5000)
+    Thread.sleep(3000)
   }
 
   /**

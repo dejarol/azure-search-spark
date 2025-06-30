@@ -184,7 +184,7 @@ trait SearchITSpec
     if (indexExists(name)) {
       searchIndexClient.deleteIndex(name)
       if (sleep) {
-        Thread.sleep(5000)
+        Thread.sleep(3000)
       }
     }
   }
@@ -225,7 +225,7 @@ trait SearchITSpec
     )
 
     // Wait for some seconds in order to ensure test consistency
-    Thread.sleep(5000)
+    Thread.sleep(3000)
   }
 
   /**
