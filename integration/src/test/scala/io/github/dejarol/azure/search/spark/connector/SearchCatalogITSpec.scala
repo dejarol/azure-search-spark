@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector
 
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
-import io.github.dejarol.azure.search.spark.connector.models.{PushdownBean, SimpleBean}
+import io.github.dejarol.azure.search.spark.connector.models.{AtomicBean, PushdownBean, SimpleBean}
 import org.apache.spark.sql.Encoders
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
@@ -52,7 +52,7 @@ class SearchCatalogITSpec
       }
 
       describe("load a table") {
-        it(s"returning a ${nameOf[NoSuchTableException]} for a non-existent table") {
+        it(s"throwing a ${nameOf[NoSuchTableException]} for a non-existent table") {
 
           indexExists(firstIndex) shouldBe false
           a[NoSuchTableException] shouldBe thrownBy {
@@ -60,16 +60,16 @@ class SearchCatalogITSpec
           }
         }
 
-        it("metadata for an existing table") {
+        it("returning metadata for an existing table") {
 
           indexExists(firstIndex) shouldBe false
-          createIndexFromSchemaOf[SimpleBean](firstIndex)
+          createIndexFromSchemaOf[AtomicBean](firstIndex)
           indexExists(firstIndex) shouldBe true
 
           // Assertions on table metadata
           val table = catalog.loadTable(SearchCatalog.identifierOf(firstIndex))
           table.name() shouldBe firstIndex
-          table.schema() should contain theSameElementsAs Encoders.product[SimpleBean].schema
+          table.schema() should contain theSameElementsAs Encoders.product[AtomicBean].schema
 
           dropIndexIfExists(firstIndex, sleep = false)
         }
@@ -83,6 +83,24 @@ class SearchCatalogITSpec
               catalog.renameTable(
                 SearchCatalog.identifierOf("old"),
                 SearchCatalog.identifierOf("new")
+              )
+            }
+          }
+
+          it("altering a table") {
+
+            // If the table doesn't exist, we should throw a NoSuchTableException
+            a[NoSuchTableException] shouldBe thrownBy {
+              catalog.alterTable(
+                SearchCatalog.identifierOf("old")
+              )
+            }
+
+            // If the table exists, we should throw an UnsupportedOperationException
+            createIndexFromSchemaOf[AtomicBean]("old")
+            an[IllegalArgumentException] shouldBe thrownBy {
+              catalog.alterTable(
+                SearchCatalog.identifierOf("old")
               )
             }
           }

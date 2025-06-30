@@ -14,7 +14,9 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util.{Map => JMap}
 
 /**
- * [[org.apache.spark.sql.connector.catalog.TableCatalog]] implementation for this dataSource
+ * [[org.apache.spark.sql.connector.catalog.TableCatalog]] implementation for this dataSource.
+ * As Azure Search doesn't have namespaces, this catalog implementation simply doesn't care about namespace
+ * management and will handle identifiers considering only the table name
  * @since 0.11.0
  */
 
@@ -26,6 +28,12 @@ class SearchCatalog
   private var catalogName: Option[String] = None
   private var originalOptions: Option[CaseInsensitiveStringMap] = None
 
+  /**
+   * List all the tables in the catalog
+   * @param namespace table namespace (unused as Azure Search doesn't have namespaces)
+   * @return
+   */
+
   override def listTables(namespace: Array[String]): Array[Identifier] = {
 
     // Retrieve the list of existing indexes
@@ -34,6 +42,12 @@ class SearchCatalog
       .map(identifierOf)
       .toArray
   }
+
+  /**
+   * Load a table's metadata, if the table exists
+   * @param ident table identifier
+   * @return table metadata
+   */
 
   override def loadTable(ident: Identifier): Table = {
 
@@ -52,6 +66,17 @@ class SearchCatalog
     }
   }
 
+  /**
+   * Create a table. Table will be created if
+   *  - it doesn't exist
+   *  - it does not define partitions
+   * @param ident table identifier
+   * @param schema table schema
+   * @param partitions table partitions (unsupported by this catalog)
+   * @param properties table properties
+   * @return metadata of newly created table
+   */
+
   override def createTable(
                             ident: Identifier,
                             schema: StructType,
@@ -59,9 +84,13 @@ class SearchCatalog
                             properties: JMap[String, String]
                           ): Table = {
 
-    // TODO: enrich write config with table properties
+    // Enrich write config with table properties
     val indexName = ident.name()
-    val writeConfig = getWriteConfig.withIndexName(indexName)
+    val writeConfig = getWriteConfig
+      .withIndexName(indexName)
+      .withOptions(properties)
+
+    // If the index already exists, we have to throw a TableAlreadyExistsException
     if (writeConfig.indexExists) {
       throw new TableAlreadyExistsException(ident)
     } else {
@@ -76,16 +105,31 @@ class SearchCatalog
     }
   }
 
+  /**
+   * Alter an existing table.
+   * As changes to existing Azure Search indexes require reloading data, this operation is not supported
+   * @param ident table identifier
+   * @param changes changes to apply
+   * @return metadata of the altered table
+   */
+
   override def alterTable(ident: Identifier, changes: TableChange*): Table = {
 
     val readConfig = getReadConfig.withIndexName(ident.name())
     if (readConfig.indexExists) {
-      // TODO: implement
-      null
+      throw new IllegalArgumentException(
+        s"Altering an Azure Search index is not supported"
+      )
     } else {
       throw new NoSuchTableException(ident)
     }
   }
+
+  /**
+   * Drop a table from the catalog, if it exists
+   * @param ident table identifier
+   * @return true if the table was dropped
+   */
 
   override def dropTable(ident: Identifier): Boolean = {
 
@@ -99,10 +143,16 @@ class SearchCatalog
     }
   }
 
+  /**
+   * Rename a table. As Azure Search doesn't allow index renaming, this operation is not supported
+   * @param oldIdent old identifier
+   * @param newIdent new identifier
+   */
+
   override def renameTable(oldIdent: Identifier, newIdent: Identifier): Unit = {
 
     throw new UnsupportedOperationException(
-      "Renaming tables is not supported by this catalog"
+      "Renaming an Azure Search index is not supported"
     )
   }
 
