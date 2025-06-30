@@ -16,7 +16,13 @@ import java.util.{Map => JMap}
 /**
  * [[org.apache.spark.sql.connector.catalog.TableCatalog]] implementation for this dataSource.
  * As Azure Search doesn't have namespaces, this catalog implementation simply doesn't care about namespace
- * management and will handle identifiers considering only the table name
+ * management and will handle identifiers considering only the table name.
+ * In order to use this catalog, you need to define the following in your application's Spark configuration
+ * {{{
+ *  spark.sql.catalog.search_catalog = io.github.dejarol.azure.search.spark.connector.SearchCatalog
+ *  spark.sql.catalog.search_catalog.endpoint = yourEndpoint
+ *  spark.sql.catalog.search_catalog.adminKey = yourAdminKey
+ * }}}
  * @since 0.11.0
  */
 

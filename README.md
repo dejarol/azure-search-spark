@@ -654,6 +654,23 @@ df.write.format("azsearch")
     .mode("append")
     .save("yourIndex")
 ```
+---
+### Search catalog
+
+Starting from version 0.11.0, the connector defines its own catalog implementation for Spark SQL. To
+use the catalog, you need to set the following options in your application's Spark configuration
+
+```
+spark.sql.catalog.search = io.github.dejarol.azure.search.spark.connector.SearchCatalog
+spark.sql.catalog.search.endpoint = <yourAzureSearchEndpoint>
+spark.sql.catalog.search.apiKey = <yourAzureSearchApiKey>
+```
+
+However, due to some limitations in the Azure Search service, the connector does not support some operations like
+<ul>
+    <li>altering the schema of an index (<code>ALTER TABLE</code>)</li>
+    <li>renaming an index (<code>RENAME TABLE</code>)</li>
+</ul>
 
 ---
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.11.0]
 
+### Added
+
+- catalog implementation for Spark SQL
+
 ### Changed 
 
 - logic for setting the index key field at index creation. If the user hasn't specified the index key field,
