@@ -10,7 +10,7 @@ import io.github.dejarol.azure.search.spark.connector.read.partitioning._
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 
-import java.util.{Iterator => Jiterator}
+import java.util.{Iterator => Jiterator, Map => JMap}
 import scala.util.Try
 
 /**
@@ -33,6 +33,22 @@ case class ReadConfig(override protected val options: CaseInsensitiveMap[String]
 
     this.copy(
       options = options + (key, value)
+    )
+  }
+
+  /**
+   * Updates this configuration by upserting the given key-value pairs
+   * @param options map containing new key-value pairs
+   * @return a copy of this configuration, with updated key-value pairs
+   * @since 0.11.0
+   */
+
+  override def withOptions(options: JMap[String, String]): ReadConfig = {
+
+    this.copy(
+      options = this.options ++ CaseInsensitiveMap(
+        JavaScalaConverters.javaMapToScala(options)
+      )
     )
   }
 

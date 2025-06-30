@@ -1,5 +1,6 @@
 package io.github.dejarol.azure.search.spark.connector.read.config
 
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ConfigException, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.read.filter.{ODataExpressionMixins, ODataExpressions}
 import io.github.dejarol.azure.search.spark.connector.read.partitioning.{DefaultPartitioner, EmptyJavaPartitionerFactory, EmptyScalaPartitionerFactory, FacetedPartitionerFactory, PartitionerFactory, RangePartitionerFactory, SinglePartitionFactory}
@@ -10,7 +11,6 @@ class ReadConfigSpec
   extends BasicSpec
     with ODataExpressionMixins
       with FieldFactory {
-
 
   /**
    * Create a configuration instance
@@ -192,7 +192,7 @@ class ReadConfigSpec
           }
         }
 
-        describe("include") {
+        describe("upsert") {
           it("pushed predicates") {
 
             // If no predicates were provided, we expect the pushed predicate to be empty
@@ -253,6 +253,29 @@ class ReadConfigSpec
             emptyConfig
               .withIndexName("hello")
               .getIndex shouldBe "hello"
+          }
+
+          it("new options (case insensitive)") {
+
+            val (k1, v1, v2) = ("keyOne", "v1", "v2")
+            val firstOptions = Map(k1 -> v1)
+            val secondOptions = Map(k1.toUpperCase -> v2)
+
+            // No options, the result should be empty
+            emptyConfig.get(k1) shouldBe empty
+
+            // We expect to retrieve value 'v1'
+            val updatedConfig = emptyConfig.withOptions(
+              JavaScalaConverters.scalaMapToJava(firstOptions)
+            )
+
+            updatedConfig.get(k1) shouldBe Some(v1)
+
+            // We expect to retrieve value 'v2'
+            // (the value should have been updated event though the key is different, case-wise)
+            updatedConfig.withOptions(
+              JavaScalaConverters.scalaMapToJava(secondOptions)
+            ).get(k1) shouldBe Some(v2)
           }
         }
       }

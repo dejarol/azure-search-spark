@@ -27,8 +27,8 @@ class SearchConfig(protected val options: CaseInsensitiveMap[String])
   }
 
   /**
-   * Get the original, case-sensitive, underlying configuration map
-   * @return the original configuration object (case-sensitive)
+   * Get the original, case-insensitive, underlying configuration map
+   * @return the original configuration object (case-insensitive)
    */
 
   final def toMap: Map[String, String] = options

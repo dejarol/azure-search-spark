@@ -8,7 +8,7 @@ class SparkTypeOperationsSpec
   extends BasicSpec
     with FieldFactory {
 
-  describe(anInstanceOf[SparkTypeOperations]) {
+  describe(anInstanceOf[SparkTypeAdapter]) {
     describe(SHOULD) {
       describe("evaluate if a Spark type is") {
         it("a string") {

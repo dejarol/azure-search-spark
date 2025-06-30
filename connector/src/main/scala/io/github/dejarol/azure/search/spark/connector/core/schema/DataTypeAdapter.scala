@@ -3,11 +3,11 @@ package io.github.dejarol.azure.search.spark.connector.core.schema
 import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, EntityDescription}
 
 /**
- * Parent class for defining utility methods for both Spark and Search data types
+ * Adapter interface for working seamlessly with both Spark and Search data types
  * @tparam T data type (either a [[org.apache.spark.sql.types.DataType]] or a [[com.azure.search.documents.indexes.models.SearchFieldDataType]])
  */
 
-trait DataTypeOperations[T] {
+trait DataTypeAdapter[T] {
 
   this: EntityDescription =>
 
@@ -69,7 +69,8 @@ trait DataTypeOperations[T] {
 
   /**
    * Unsafely extract the collection inner type
-   * @throws DataTypeOperations if this instance does not refer to a collection type
+ *
+   * @throws DataTypeAdapter if this instance does not refer to a collection type
    * @return the inner collection type
    */
 

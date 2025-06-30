@@ -1,10 +1,13 @@
 package io.github.dejarol.azure.search.spark.connector.read.config
 
 import com.azure.search.documents.models.{QueryType, SearchMode, SearchOptions}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, SearchConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import io.github.dejarol.azure.search.spark.connector.read.SearchOptionsOperations._
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
+
+import java.util.{Map => JMap}
 
 /**
  * Collection of options related to [[com.azure.search.documents.models.SearchOptions]] building
@@ -28,6 +31,22 @@ case class SearchOptionsBuilderImpl(override protected val options: CaseInsensit
 
     this.copy(
       options = options + (key, value)
+    )
+  }
+
+  /**
+   * Create a new config instance by upserting the given key-value pairs
+   * @param options map containing new key-value pairs
+   * @return a copy of this configuration
+   * @since 0.11.0
+   */
+
+  override def withOptions(options: JMap[String, String]): SearchOptionsBuilderImpl = {
+
+    this.copy(
+      options = this.options ++ CaseInsensitiveMap(
+        JavaScalaConverters.javaMapToScala(options)
+      )
     )
   }
 

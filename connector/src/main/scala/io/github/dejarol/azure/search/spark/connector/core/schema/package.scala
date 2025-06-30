@@ -8,12 +8,12 @@ import scala.language.implicitConversions
 package object schema {
 
   /**
-   * Create an instance of [[SparkTypeOperations]]
+   * Create an instance of [[SparkTypeAdapter]]
    * @param dataType input data type
    * @return an operations instance
    */
 
-  implicit def toSparkTypeOperations(dataType: DataType): SparkTypeOperations = new SparkTypeOperations(dataType)
+  implicit def toSparkTypeAdapter(dataType: DataType): SparkTypeAdapter = new SparkTypeAdapter(dataType)
 
   /**
    * Create an instance of [[SearchFieldOperations]] from a Search field
@@ -24,12 +24,13 @@ package object schema {
   implicit def toSearchFieldOperations(field: SearchField): SearchFieldOperations = new SearchFieldOperations(field)
 
   /**
-   * Create an instance of [[SearchFieldDataTypeOperations]] from a Search field data type
+   * Create an instance of [[SearchFieldDataTypeAdapter]] from a Search field data type
+   *
    * @param `type` search field data type
    * @return an operations instance
    */
 
-  implicit def toSearchTypeOperations(`type`: SearchFieldDataType): SearchFieldDataTypeOperations = new SearchFieldDataTypeOperations(`type`)
+  implicit def toSearchTypeOperations(`type`: SearchFieldDataType): SearchFieldDataTypeAdapter = new SearchFieldDataTypeAdapter(`type`)
 
 }
 

@@ -8,8 +8,8 @@ import org.apache.spark.sql.types._
  * @param input input data type
  */
 
-class SparkTypeOperations(private val input: DataType)
-  extends DataTypeOperations[DataType]
+class SparkTypeAdapter(private val input: DataType)
+  extends DataTypeAdapter[DataType]
     with SubFieldsSupplier[StructField]
     with EntityDescription {
 

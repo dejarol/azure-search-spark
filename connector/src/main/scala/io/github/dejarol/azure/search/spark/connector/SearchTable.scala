@@ -80,11 +80,7 @@ class SearchTable(
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = {
 
     new SearchScanBuilder(
-      ReadConfig(
-        JavaScalaConverters.javaMapToScala(
-          tableProperties.toMap ++ options
-        )
-      ),
+      ReadConfig(tableProperties.toMap).withOptions(options),
       schema()
     )
   }
@@ -98,11 +94,7 @@ class SearchTable(
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
 
     new SearchWriteBuilder(
-      WriteConfig(
-        JavaScalaConverters.javaMapToScala(
-          tableProperties.toMap ++ info.options()
-        )
-      ),
+      WriteConfig(tableProperties.toMap).withOptions(info.options()),
       info.schema()
     )
   }

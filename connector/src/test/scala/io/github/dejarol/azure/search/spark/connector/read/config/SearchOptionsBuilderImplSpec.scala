@@ -2,6 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.read.config
 
 import com.azure.search.documents.models.{QueryType, SearchMode}
 import io.github.dejarol.azure.search.spark.connector.BasicSpec
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.ConfigException
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
@@ -199,7 +200,7 @@ class SearchOptionsBuilderImplSpec
         }
       }
 
-      it("search options") {
+      it("collect all search options") {
 
         val filter = "world"
         val pushedPredicate = "foo"
@@ -227,6 +228,30 @@ class SearchOptionsBuilderImplSpec
         options.getSearchFields should contain theSameElementsAs searchFields
         options.getSearchMode shouldBe searchMode
         options.getFacets should contain theSameElementsAs facets
+      }
+
+      describe("upsert") {
+        it("new options (case-insensitively)") {
+
+          val (k1, v1, v2) = ("keyOne", "v1", "v2")
+          val firstOptions = Map(k1 -> v1)
+          val secondOptions = Map(k1.toUpperCase -> v2)
+
+          // No options, the result should be empty
+          emptyConfig.get(k1) shouldBe empty
+
+          // We expect to retrieve value 'v1'
+          val updatedConfig = emptyConfig.withOptions(
+            JavaScalaConverters.scalaMapToJava(firstOptions)
+          )
+
+          updatedConfig.get(k1) shouldBe Some(v1)
+
+          // We expect to retrieve value 'v2'
+          updatedConfig.withOptions(
+            JavaScalaConverters.scalaMapToJava(secondOptions)
+          ).get(k1) shouldBe Some(v2)
+        }
       }
     }
   }

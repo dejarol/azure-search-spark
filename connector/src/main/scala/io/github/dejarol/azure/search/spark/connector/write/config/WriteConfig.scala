@@ -3,10 +3,13 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 import com.azure.search.documents.SearchDocument
 import com.azure.search.documents.indexes.models.{IndexDocumentsBatch, SearchField, SearchIndex}
 import com.azure.search.documents.models.IndexActionType
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.{ExtendableConfig, IOConfig, SearchIOConfig}
 import io.github.dejarol.azure.search.spark.connector.core.utils.Enums
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
+
+import java.util.{Map => JMap}
 
 /**
  * Write configuration
@@ -29,6 +32,22 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
 
     this.copy(
       options = options + (key, value)
+    )
+  }
+
+  /**
+   * Updates this configuration by upserting the given key-value pairs
+   * @param options map containing new key-value pairs
+   * @return a copy of this configuration, with updated key-value pairs
+   * @since 0.11.0
+   */
+
+  override def withOptions(options: JMap[String, String]): WriteConfig = {
+
+    this.copy(
+      options = this.options ++ CaseInsensitiveMap(
+        JavaScalaConverters.javaMapToScala(options)
+      )
     )
   }
 

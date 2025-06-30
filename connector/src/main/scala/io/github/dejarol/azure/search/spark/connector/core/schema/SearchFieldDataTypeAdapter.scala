@@ -10,8 +10,8 @@ import scala.util.matching.Regex
  * @param input search data type
  */
 
-class SearchFieldDataTypeOperations(private val input: SearchFieldDataType)
-  extends DataTypeOperations[SearchFieldDataType]
+class SearchFieldDataTypeAdapter(private val input: SearchFieldDataType)
+  extends DataTypeAdapter[SearchFieldDataType]
     with EntityDescription {
 
   override def description: String = s"Search type ${input.toString}"
@@ -46,7 +46,7 @@ class SearchFieldDataTypeOperations(private val input: SearchFieldDataType)
 
   private def maybeMatchOfCollectionPattern: Option[Regex.Match] = {
 
-    SearchFieldDataTypeOperations.COLLECTION_PATTERN
+    SearchFieldDataTypeAdapter.COLLECTION_PATTERN
       .findFirstMatchIn(input.toString)
   }
 
@@ -77,7 +77,7 @@ class SearchFieldDataTypeOperations(private val input: SearchFieldDataType)
   final def isGeoPoint: Boolean = input.equals(SearchFieldDataType.GEOGRAPHY_POINT)
 }
 
-private object SearchFieldDataTypeOperations {
+private object SearchFieldDataTypeAdapter {
 
   private val COLLECTION_PATTERN: Regex = "^Collection\\(([\\w.]+)\\)$".r
 }
