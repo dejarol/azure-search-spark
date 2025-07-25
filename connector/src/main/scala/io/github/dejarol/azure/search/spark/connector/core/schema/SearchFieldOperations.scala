@@ -3,7 +3,10 @@ package io.github.dejarol.azure.search.spark.connector.core.schema
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.core.{EntityDescription, JavaScalaConverters}
 
-import java.util.Objects
+/**
+ * Supplier implementation for extracting subFields from a [[com.azure.search.documents.indexes.models.SearchField]]
+ * @param searchField a Search field
+ */
 
 class SearchFieldOperations(private val searchField: SearchField)
   extends SubFieldsSupplier[SearchField]
@@ -13,16 +16,12 @@ class SearchFieldOperations(private val searchField: SearchField)
 
   override def safeSubFields: Option[Seq[SearchField]] = {
 
-    val subFields = searchField.getFields
-    if (Objects.isNull(subFields) || subFields.isEmpty) {
-      None
-    } else {
-      Some(
-        JavaScalaConverters.listToSeq(
-          subFields
-        )
-      )
-    }
+    Option(searchField.getFields)
+      .filterNot {
+        _.isEmpty
+      }.map {
+        JavaScalaConverters.listToSeq
+      }
   }
 
   /**

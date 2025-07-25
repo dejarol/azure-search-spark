@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
  * to apply on {@link com.azure.search.documents.indexes.models.SearchField}(s)
  */
 
+@FunctionalInterface
 public interface SearchFieldAction {
 
     /**
