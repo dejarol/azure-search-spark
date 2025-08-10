@@ -37,24 +37,24 @@ class SearchFieldCreationOptionsSpec
       describe("enrich an existing set of attributes when") {
         it("no key field has been defined") {
 
-          val enriched = SearchFieldCreationOptions.enrichAttributes(
-            Map.empty[String, SearchFieldAttributes]
+          val enriched = SearchFieldCreationOptions.enrichMetadata(
+            Map.empty[String, SearchFieldMetadata]
           )
 
           enriched should have size 1
           enriched should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
           enriched(SearchFieldCreationOptions.DEFAULT_ID_COLUMN) shouldBe
-            SearchFieldAttributes.empty().withKeyFieldEnabled
+            SearchFieldMetadata.empty().withKeyFieldEnabled
         }
 
         it(s"an ${SearchFieldCreationOptions.DEFAULT_ID_COLUMN} field is defined, but not key-enabled") {
 
-          val attributeForId = SearchFieldAttributes.empty()
+          val attributeForId = SearchFieldMetadata.empty()
           val original = Map(
             SearchFieldCreationOptions.DEFAULT_ID_COLUMN -> attributeForId
           )
 
-          val enriched = SearchFieldCreationOptions.enrichAttributes(original)
+          val enriched = SearchFieldCreationOptions.enrichMetadata(original)
           enriched should have size 1
           enriched should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
           val enrichedAttributes = enriched(SearchFieldCreationOptions.DEFAULT_ID_COLUMN)
@@ -66,10 +66,10 @@ class SearchFieldCreationOptionsSpec
     describe("return an-existing set of attributes as-is when") {
       it("a key field has been defined") {
 
-        val attributeForId = SearchFieldAttributes.empty().withKeyFieldEnabled
+        val attributeForId = SearchFieldMetadata.empty().withKeyFieldEnabled
         val original = Map("key" -> attributeForId)
 
-        val enriched = SearchFieldCreationOptions.enrichAttributes(original)
+        val enriched = SearchFieldCreationOptions.enrichMetadata(original)
         enriched should have size 1
         enriched should contain key "key"
         enriched("key") shouldBe attributeForId
@@ -100,7 +100,7 @@ class SearchFieldCreationOptionsSpec
           it("considering JSON-valid options") {
 
             // No options, no attributes
-            createOptions(None, None).originalAttributes shouldBe empty
+            createOptions(None, None).originalMetadata shouldBe empty
 
             // No valid options, no attributes
             createOptions(
@@ -109,7 +109,7 @@ class SearchFieldCreationOptionsSpec
                   "k1" -> "hello"
                 )
               ), None
-            ).originalAttributes shouldBe empty
+            ).originalMetadata shouldBe empty
 
             // One valid option, one attribute
             val v1 =
@@ -125,11 +125,11 @@ class SearchFieldCreationOptionsSpec
                   "k1" -> v1
                 )
               ), None
-            ).originalAttributes
+            ).originalMetadata
 
             originalAttributes should have size 1
             originalAttributes should contain key "k1"
-            originalAttributes("k1") shouldBe SearchFieldAttributes.empty().withKeyFieldEnabled
+            originalAttributes("k1") shouldBe SearchFieldMetadata.empty().withKeyFieldEnabled
           }
         }
 
@@ -139,11 +139,11 @@ class SearchFieldCreationOptionsSpec
 
               // No field is defined
               val emptyOptions = createOptions(None, None)
-              val attributes = emptyOptions.enrichedAttributes
+              val attributes = emptyOptions.enrichedMetadata
               attributes should have size 1
               attributes should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
               attributes(SearchFieldCreationOptions.DEFAULT_ID_COLUMN) shouldBe
-                SearchFieldAttributes.empty().withKeyFieldEnabled
+                SearchFieldMetadata.empty().withKeyFieldEnabled
 
               // One field is defined, but not key-enabled
               val nonEmptyOptions = createOptions(
@@ -154,14 +154,14 @@ class SearchFieldCreationOptionsSpec
                 ), None
               )
 
-              val enrichedAttributes = nonEmptyOptions.enrichedAttributes
+              val enrichedAttributes = nonEmptyOptions.enrichedMetadata
               enrichedAttributes should have size 2
               enrichedAttributes should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
               enrichedAttributes(SearchFieldCreationOptions.DEFAULT_ID_COLUMN) shouldBe
-                SearchFieldAttributes.empty().withKeyFieldEnabled
+                SearchFieldMetadata.empty().withKeyFieldEnabled
 
               enrichedAttributes should contain key "k1"
-              enrichedAttributes("k1") shouldBe SearchFieldAttributes.empty()
+              enrichedAttributes("k1") shouldBe SearchFieldMetadata.empty()
             }
           }
 
@@ -177,17 +177,17 @@ class SearchFieldCreationOptionsSpec
 
             // Original attributes and enriched attributes should be the same number,
             // but the enriched attributes should have the key field enabled
-            val original = nonEmptyOptions.originalAttributes
+            val original = nonEmptyOptions.originalMetadata
             original should have size 1
             original should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
             original(SearchFieldCreationOptions.DEFAULT_ID_COLUMN) shouldBe
-              SearchFieldAttributes.empty()
+              SearchFieldMetadata.empty()
 
-            val enrichedAttributes = nonEmptyOptions.enrichedAttributes
+            val enrichedAttributes = nonEmptyOptions.enrichedMetadata
             enrichedAttributes should have size 1
             enrichedAttributes should contain key SearchFieldCreationOptions.DEFAULT_ID_COLUMN
             enrichedAttributes(SearchFieldCreationOptions.DEFAULT_ID_COLUMN) shouldBe
-              SearchFieldAttributes.empty().withKeyFieldEnabled
+              SearchFieldMetadata.empty().withKeyFieldEnabled
           }
         }
 

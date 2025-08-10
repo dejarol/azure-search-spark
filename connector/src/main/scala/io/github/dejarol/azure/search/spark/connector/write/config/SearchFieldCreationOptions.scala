@@ -33,14 +33,14 @@ case class SearchFieldCreationOptions(
   import SearchFieldCreationOptions._
 
   // Collect valid field attributes definitions
-  private[config] lazy val originalAttributes: Map[String, SearchFieldAttributes] = options.mapValues {
-    Json.safelyReadAsModelUsingJackson[SearchFieldAttributes]
+  private[config] lazy val originalMetadata: Map[String, SearchFieldMetadata] = options.mapValues {
+    Json.safelyReadAsModelUsingJackson[SearchFieldMetadata]
   }.collect {
     case (k, Right(v)) => (k, v)
   }
 
-  private[config] lazy val enrichedAttributes: Map[String, SearchFieldAttributes] = enrichAttributes(originalAttributes)
-  private[config] lazy val fieldActions: Map[String, SearchFieldAction] = enrichedAttributes.mapValues {
+  private[config] lazy val enrichedMetadata: Map[String, SearchFieldMetadata] = enrichMetadata(originalMetadata)
+  private[config] lazy val fieldActions: Map[String, SearchFieldAction] = enrichedMetadata.mapValues {
     _.toAction
   }.collect {
     case (k, Some(v)) => (k, v)
@@ -88,8 +88,9 @@ object SearchFieldCreationOptions {
   /**
    * Creates an instance by safely parsing all the key-value pairs defined within
    * a [[io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig]] instance to
-   * [[io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldAttributes]] and collecting
+   * [[io.github.dejarol.azure.search.spark.connector.write.config.SearchFieldMetadata]] and collecting
    * only the defined actions
+   *
    * @param indexActionColumn index action column (will be excluded from the schema that should be converted)
    * @param searchConfig a Search config
    * @return a collection of options for creating Search fields
@@ -117,9 +118,9 @@ object SearchFieldCreationOptions {
    * @since 0.11.0
    */
 
-  private[config] def enrichAttributes(
-                                        attributes: Map[String, SearchFieldAttributes]
-                                      ): Map[String, SearchFieldAttributes] = {
+  private[config] def enrichMetadata(
+                                      attributes: Map[String, SearchFieldMetadata]
+                                    ): Map[String, SearchFieldMetadata] = {
 
     // Evaluate if the key field is defined
     val existsKeyField: Boolean = attributes.values.exists {
@@ -135,7 +136,7 @@ object SearchFieldCreationOptions {
       // and then enable the key feature
       val attributeForIdColumn = attributes.getOrElse(
         DEFAULT_ID_COLUMN,
-        SearchFieldAttributes.empty()
+        SearchFieldMetadata.empty()
       )
 
       // Upsert the key field

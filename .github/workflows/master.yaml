@@ -4,7 +4,7 @@ on:
     branches:
       - master
 jobs:
-  dev: # TODO: change job name
+  master:
     runs-on: ubuntu-latest
     steps:
       - name: 'Git Checkout'

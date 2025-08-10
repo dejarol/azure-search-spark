@@ -26,21 +26,21 @@ import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConve
  * @since 0.10.0
  */
 
-@JsonDeserialize(using = classOf[SearchFieldAttributes.Deserializer])
-case class SearchFieldAttributes(
-                                  analyzer: Option[LexicalAnalyzerName],
-                                  facetable: Option[Boolean],
-                                  filterable: Option[Boolean],
-                                  indexAnalyzer: Option[LexicalAnalyzerName],
-                                  key: Option[Boolean],
-                                  retrievable: Option[Boolean],
-                                  searchAnalyzer: Option[LexicalAnalyzerName],
-                                  searchable: Option[Boolean],
-                                  sortable: Option[Boolean],
-                                  vectorSearchProfile: Option[String],
-                                  synonymMaps: Option[Seq[String]],
-                                  dimensions: Option[Int]
-                                ) {
+@JsonDeserialize(using = classOf[SearchFieldMetadata.Deserializer])
+case class SearchFieldMetadata(
+                                analyzer: Option[LexicalAnalyzerName],
+                                facetable: Option[Boolean],
+                                filterable: Option[Boolean],
+                                indexAnalyzer: Option[LexicalAnalyzerName],
+                                key: Option[Boolean],
+                                retrievable: Option[Boolean],
+                                searchAnalyzer: Option[LexicalAnalyzerName],
+                                searchable: Option[Boolean],
+                                sortable: Option[Boolean],
+                                vectorSearchProfile: Option[String],
+                                synonymMaps: Option[Seq[String]],
+                                dimensions: Option[Int]
+                              ) {
 
   /**
    * Return a copy of this instance, but with the key field enabled
@@ -48,7 +48,7 @@ case class SearchFieldAttributes(
    * @since 0.11.0
    */
 
-  def withKeyFieldEnabled: SearchFieldAttributes = copy(key = Some(true))
+  def withKeyFieldEnabled: SearchFieldMetadata = copy(key = Some(true))
 
   /**
    * Gets an action that, if applied, will set all defined options to a field
@@ -91,19 +91,19 @@ case class SearchFieldAttributes(
   }
 }
 
-object SearchFieldAttributes {
+object SearchFieldMetadata {
 
   import JsonConversions._
   import JsonNodeOperations._
 
   //noinspection ScalaWeakerAccess
   class Deserializer
-    extends StdDeserializer[SearchFieldAttributes](classOf[SearchFieldAttributes]) {
+    extends StdDeserializer[SearchFieldMetadata](classOf[SearchFieldMetadata]) {
 
-    override def deserialize(p: JsonParser, ctxt: DeserializationContext): SearchFieldAttributes = {
+    override def deserialize(p: JsonParser, ctxt: DeserializationContext): SearchFieldMetadata = {
 
       val jsonNode = ctxt.readTree(p)
-      SearchFieldAttributes(
+      SearchFieldMetadata(
         analyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("analyzer")(LexicalAnalyzerNameConversion),
         facetable = jsonNode.safelyGetAs[Boolean]("facetable")(BooleanConversion),
         filterable = jsonNode.safelyGetAs[Boolean]("filterable")(BooleanConversion),
@@ -126,9 +126,9 @@ object SearchFieldAttributes {
    * @since 0.11.0
    */
 
-  final def empty(): SearchFieldAttributes = {
+  final def empty(): SearchFieldMetadata = {
 
-    SearchFieldAttributes(
+    SearchFieldMetadata(
       analyzer = None,
       facetable = None,
       filterable = None,
