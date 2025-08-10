@@ -4,7 +4,7 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataTy
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import org.scalamock.scalatest.MockFactory
 
-class SearchFieldCreationRulesImplSpec
+class SearchFieldCreationContextImplSpec
   extends BasicSpec
     with FieldFactory
       with MockFactory {
@@ -46,13 +46,13 @@ class SearchFieldCreationRulesImplSpec
    * @return a set of rules
    */
 
-  private def createRulesWithSingleAction(
-                                           key: String,
-                                           field: SearchField,
-                                           feature: SearchFieldFeature
-                                         ): SearchFieldCreationRules = {
+  private def createContextWithSingleAction(
+                                             key: String,
+                                             field: SearchField,
+                                             feature: SearchFieldFeature
+                                           ): SearchFieldCreationContext = {
 
-    SearchFieldCreationRulesImpl(
+    SearchFieldCreationContextImpl(
       None,
       Map(
         key -> mockEnablingAction(
@@ -68,9 +68,9 @@ class SearchFieldCreationRulesImplSpec
    * @return a set of rules
    */
 
-  private def createRulesWithExcludedGeoConversion(name: String): SearchFieldCreationRules = {
+  private def createRulesWithExcludedGeoConversion(name: String): SearchFieldCreationContext = {
 
-    SearchFieldCreationRulesImpl(
+    SearchFieldCreationContextImpl(
       Some(
         Seq(name)
       ),
@@ -78,14 +78,14 @@ class SearchFieldCreationRulesImplSpec
     )
   }
 
-  describe(anInstanceOf[SearchFieldCreationRulesImpl]) {
+  describe(anInstanceOf[SearchFieldCreationContextImpl]) {
     describe(SHOULD) {
       describe("alter a field when") {
         it("a matching field name is found") {
 
           val feature = SearchFieldFeature.SEARCHABLE
           val field = createSearchField("hello", SearchFieldDataType.STRING)
-          val rules = createRulesWithSingleAction(field.getName, field, feature)
+          val rules = createContextWithSingleAction(field.getName, field, feature)
 
           field should not be enabledFor(feature)
           val altered = rules.maybeApplyActions(field, field.getName)
@@ -109,7 +109,7 @@ class SearchFieldCreationRulesImplSpec
 
           val feature = SearchFieldFeature.SEARCHABLE
           val field = createSearchField("world", SearchFieldDataType.STRING)
-          val rules = createRulesWithSingleAction("hello", field, feature)
+          val rules = createContextWithSingleAction("hello", field, feature)
 
           field should not be enabledFor(feature)
           val altered = rules.maybeApplyActions(field, field.getName)

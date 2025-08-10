@@ -121,15 +121,30 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
   final def actionColumn: Option[String] = get(WriteConfig.INDEX_ACTION_COLUMN_CONFIG)
 
   /**
+   * Gets the list of field names to exclude from automatic geo conversion. Suitable for scenarios when a
+   * Spark struct column, with columns
+   *  - <code>type</code> with dataType <code>String</code>
+   *  - <code>coordinates</code> with dataType <code>Array(Double)</code>
+   *
+   * which is a valid structure for a geo point, should be excluded from automatic geo conversion.
+   * For top-level fields, use the field name. For nested fields, use the field path (e.g. <code>address.location</code>)
+   * @return the list of field names to exclude from automatic geo conversion
+   * @since 0.12.0
+   */
+
+  final def excludedFromGeoConversion: Option[Seq[String]] = getAsList(WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG)
+
+  /**
    * Returns the options for enriching fields on target index. The options are defined by [[WriteConfig.FIELD_OPTIONS_PREFIX]]
    * @return options for enriching fields
    */
 
-  final def searchFieldEnrichmentOptions: SearchFieldCreationOptions = {
+  final def searchFieldCreationOptions: SearchFieldCreationOptions = {
 
     SearchFieldCreationOptions(
       getAllWithPrefix(WriteConfig.FIELD_OPTIONS_PREFIX),
       actionColumn,
+      excludedFromGeoConversion
     )
   }
 
@@ -174,7 +189,7 @@ case class WriteConfig(override protected val options: CaseInsensitiveMap[String
 
   final def createIndex(name: String, schema: StructType): SearchIndex = {
 
-    val searchFields: Seq[SearchField] = searchFieldEnrichmentOptions.toSearchFields(schema)
+    val searchFields: Seq[SearchField] = searchFieldCreationOptions.toSearchFields(schema)
     val searchIndex: SearchIndex = new SearchIndex(name)
       .setFields(searchFields: _*)
 
@@ -200,6 +215,7 @@ object WriteConfig {
   final val DEFAULT_ACTION_TYPE: IndexActionType = IndexActionType.MERGE_OR_UPLOAD
   final val FIELD_OPTIONS_PREFIX = "fieldOptions."
   final val INDEX_ATTRIBUTES_PREFIX = "indexAttributes."
+  final val EXCLUDE_FROM_GEO_CONVERSION_CONFIG = "excludeFromGeoConversion"
 
   /**
    * Create an instance from a simple map

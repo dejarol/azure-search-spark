@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchField
 
-trait SearchFieldCreationRules {
+trait SearchFieldCreationContext {
 
   def shouldBeExcludedFromGeoConversion(name: String): Boolean
 

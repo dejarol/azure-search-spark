@@ -79,17 +79,22 @@ class WriteConfigSpec
 
         it("field enrichment options") {
 
-          emptyConfig.searchFieldEnrichmentOptions.toMap shouldBe empty
+          emptyConfig.searchFieldCreationOptions.toMap shouldBe empty
 
           val configMap = Map(
             fieldOptionKey(k1) -> v1,
             fieldOptionKey(k2) -> v2,
             k3 -> v3
           )
-          val fieldCreationOptions = WriteConfig(configMap).searchFieldEnrichmentOptions.toMap
+          val fieldCreationOptions = WriteConfig(configMap).searchFieldCreationOptions.toMap
           fieldCreationOptions should contain key k1
           fieldCreationOptions should contain key k2
           fieldCreationOptions shouldNot contain key k3
+        }
+
+        it("field to exclude from geo conversion") {
+
+          // TODO: add test
         }
       }
 

@@ -21,12 +21,14 @@ import org.apache.spark.sql.types.StructField
  * @param options write options with prefix <code>fieldOptions.</code>
  * @param indexActionColumn name of the column to be used for retrieving the index action for batch upload.
  *                          When converting the Spark fields to Search fields, this field will be excluded
+ * @param excludeFromGeoConversion fields to exclude from automatic geo conversion
  * @since 0.10.0
  */
 
 case class SearchFieldCreationOptions(
                                        override protected val options: CaseInsensitiveMap[String],
-                                       private[config] val indexActionColumn: Option[String]
+                                       private[config] val indexActionColumn: Option[String],
+                                       private[config] val excludeFromGeoConversion: Option[Seq[String]]
                                      )
   extends SearchConfig(options) {
 
@@ -73,6 +75,7 @@ case class SearchFieldCreationOptions(
   def toSearchFields(sparkFields: Seq[StructField]): Seq[SearchField] = {
 
     // If an index action column is defined, it should be excluded from the schema
+    // TODO: change toSearchField to v2
     excludeIndexActionColumn(sparkFields).map {
       field => SchemaUtils.toSearchField(
         field, fieldActions, None
@@ -93,17 +96,20 @@ object SearchFieldCreationOptions {
    *
    * @param indexActionColumn index action column (will be excluded from the schema that should be converted)
    * @param searchConfig a Search config
+   * @param excludeFromGeoConversion fields to exclude from automatic geo conversion
    * @return a collection of options for creating Search fields
    */
 
   def apply(
              searchConfig: SearchConfig,
-             indexActionColumn: Option[String]
+             indexActionColumn: Option[String],
+             excludeFromGeoConversion: Option[Seq[String]]
            ): SearchFieldCreationOptions = {
 
     SearchFieldCreationOptions(
       CaseInsensitiveMap[String](searchConfig.toMap),
-      indexActionColumn
+      indexActionColumn,
+      excludeFromGeoConversion
     )
   }
 

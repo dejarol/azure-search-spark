@@ -11,7 +11,32 @@ class SearchFieldCreationOptionsSpec
 
   /**
    * Creates an instance
-   *
+   * @param options options
+   * @param actionColumn action column
+   * @param excludeFromGeoConversion fields to exclude from automatic geo conversion
+   * @return a test instance
+   */
+
+  private def createOptions(
+                             options: Option[Map[String, String]],
+                             actionColumn: Option[String],
+                             excludeFromGeoConversion: Option[Seq[String]]
+                           ): SearchFieldCreationOptions = {
+
+    SearchFieldCreationOptions(
+      new SearchConfig(
+        CaseInsensitiveMap[String](
+          options.getOrElse(Map.empty)
+        )
+      ),
+      actionColumn,
+      excludeFromGeoConversion
+    )
+  }
+
+  /**
+   * Alternative method for creating a test instance.
+   * With this method, the fields to exclude from automatic geo conversion are not defined
    * @param options      options
    * @param actionColumn action column
    * @return an option instance for testing
@@ -22,13 +47,10 @@ class SearchFieldCreationOptionsSpec
                              actionColumn: Option[String]
                            ): SearchFieldCreationOptions = {
 
-    SearchFieldCreationOptions(
-      new SearchConfig(
-        CaseInsensitiveMap[String](
-          options.getOrElse(Map.empty)
-        )
-      ),
-      actionColumn
+    createOptions(
+      options,
+      actionColumn,
+      None
     )
   }
 

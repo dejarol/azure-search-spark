@@ -293,7 +293,7 @@ object SchemaUtils {
 
   final def toSearchFieldV2(
                              structField: StructField,
-                             rules: SearchFieldCreationRules
+                             rules: SearchFieldCreationContext
                            ): SearchField = {
 
     toSearchFieldV2(
@@ -314,7 +314,7 @@ object SchemaUtils {
   @throws[DataTypeException]
   private def toSearchFieldV2(
                                structField: StructField,
-                               rules: SearchFieldCreationRules,
+                               rules: SearchFieldCreationContext,
                                parentPath: Option[String]
                              ): SearchField = {
 

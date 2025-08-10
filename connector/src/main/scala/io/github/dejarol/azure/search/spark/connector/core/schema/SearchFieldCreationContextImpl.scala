@@ -2,10 +2,10 @@ package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.SearchField
 
-case class SearchFieldCreationRulesImpl(
-                                         private val excludedFromGeoConversion: Option[Seq[String]],
-                                         private val searchFieldActions: Map[String, SearchFieldAction]
-                                       ) extends SearchFieldCreationRules {
+case class SearchFieldCreationContextImpl(
+                                           private val excludedFromGeoConversion: Option[Seq[String]],
+                                           private val searchFieldActions: Map[String, SearchFieldAction]
+                                         ) extends SearchFieldCreationContext {
 
   override def shouldBeExcludedFromGeoConversion(fieldPath: String): Boolean = {
 
