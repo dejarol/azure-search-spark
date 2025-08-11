@@ -6,7 +6,7 @@ import com.azure.search.documents.indexes.models.{SearchField, SearchIndex}
 import com.azure.search.documents.indexes.{SearchIndexClient, SearchIndexClientBuilder}
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.config.IOConfig
-import io.github.dejarol.azure.search.spark.connector.core.schema.SchemaUtils
+import io.github.dejarol.azure.search.spark.connector.core.schema.{NoOpFieldCreationContext, SchemaUtils}
 import io.github.dejarol.azure.search.spark.connector.core.utils.SearchClients
 import io.github.dejarol.azure.search.spark.connector.models.{DocumentDeserializer, DocumentSerializer, ITDocument}
 import io.github.dejarol.azure.search.spark.connector.utils.SearchTestClients
@@ -124,7 +124,7 @@ trait SearchITSpec
     // Define Search fields
     val searchFields = schema.map {
       structField =>
-        val searchField = SchemaUtils.toSearchField(structField, Map.empty, None)
+        val searchField = SchemaUtils.toSearchField(structField, NoOpFieldCreationContext)
         if (searchField.getName.equals("id")) {
           searchField.setKey(true)
         } else searchField

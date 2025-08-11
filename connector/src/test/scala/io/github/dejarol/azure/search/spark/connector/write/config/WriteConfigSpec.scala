@@ -9,7 +9,20 @@ class WriteConfigSpec
   extends BasicSpec
     with WriteConfigFactory {
 
-  private lazy val emptyConfig: WriteConfig = WriteConfig(Map.empty[String, String])
+  /**
+   * Create a configuration instance from some raw options
+   * @param options raw options
+   * @return a configuration instance
+   */
+
+  private def createConfig(options: Map[String, String]): WriteConfig = {
+
+    WriteConfig(
+      options
+    )
+  }
+
+  private lazy val emptyConfig: WriteConfig = createConfig(Map.empty)
   private lazy val (k1, k2, k3, v1, v2, v3) = ("k1", "k2", "k3", "v1", "v2", "v3")
 
   describe(anInstanceOf[WriteConfig]) {
@@ -19,7 +32,7 @@ class WriteConfigSpec
 
           val batchSize = 25
           emptyConfig.batchSize shouldBe WriteConfig.DEFAULT_BATCH_SIZE_VALUE
-          WriteConfig(
+          createConfig(
             Map(
               WriteConfig.BATCH_SIZE_CONFIG -> s"$batchSize"
             )
@@ -46,7 +59,7 @@ class WriteConfigSpec
           forAll(configMaps) {
             configMap =>
 
-              val wConfig = WriteConfig(configMap)
+              val wConfig = createConfig(configMap)
               wConfig.maybeUserSpecifiedAction shouldBe Some(action)
               wConfig.overallAction shouldBe action
           }
@@ -56,7 +69,7 @@ class WriteConfigSpec
 
           val colName = "actionCol"
           emptyConfig.actionColumn shouldBe empty
-          WriteConfig(
+          createConfig(
             Map(
               WriteConfig.INDEX_ACTION_COLUMN_CONFIG -> colName
             )
@@ -71,7 +84,7 @@ class WriteConfigSpec
             fieldOptionKey(k2) -> v2,
             indexOptionKey(k3) -> v3
           )
-          val fieldCreationOptions = WriteConfig(configMap).searchIndexCreationOptions.toMap
+          val fieldCreationOptions = createConfig(configMap).searchIndexCreationOptions.toMap
           fieldCreationOptions should contain key k1
           fieldCreationOptions shouldNot contain key k2
           fieldCreationOptions should contain key k3
@@ -86,7 +99,7 @@ class WriteConfigSpec
             fieldOptionKey(k2) -> v2,
             k3 -> v3
           )
-          val fieldCreationOptions = WriteConfig(configMap).searchFieldCreationOptions.toMap
+          val fieldCreationOptions = createConfig(configMap).searchFieldCreationOptions.toMap
           fieldCreationOptions should contain key k1
           fieldCreationOptions should contain key k2
           fieldCreationOptions shouldNot contain key k3
@@ -94,7 +107,18 @@ class WriteConfigSpec
 
         it("field to exclude from geo conversion") {
 
-          // TODO: add test
+          // For an empty config, this option should be empty
+          emptyConfig.excludedFromGeoConversion shouldBe empty
+
+          // For a non-empty config, some fields should be retrieved
+          val expected = Seq("location", "degree.location")
+          val actual = createConfig(
+            Map(
+              WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> expected.mkString(",")
+            )
+          ).excludedFromGeoConversion
+          actual shouldBe defined
+          actual.get should contain theSameElementsAs expected
         }
       }
 

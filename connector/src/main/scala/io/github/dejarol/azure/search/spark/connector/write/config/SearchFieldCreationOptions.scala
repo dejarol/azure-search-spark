@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
-import io.github.dejarol.azure.search.spark.connector.core.schema.{SchemaUtils, SearchFieldAction}
+import io.github.dejarol.azure.search.spark.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldCreationContextImpl}
 import io.github.dejarol.azure.search.spark.connector.core.utils.json.Json
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructField
@@ -75,10 +75,17 @@ case class SearchFieldCreationOptions(
   def toSearchFields(sparkFields: Seq[StructField]): Seq[SearchField] = {
 
     // If an index action column is defined, it should be excluded from the schema
-    // TODO: change toSearchField to v2
-    excludeIndexActionColumn(sparkFields).map {
+    val schemaWithoutActionColumn = excludeIndexActionColumn(sparkFields)
+
+    // Then, each Spark field should be converted to an equivalent Search field
+    val fieldCreationContext = SearchFieldCreationContextImpl(
+      excludeFromGeoConversion,
+      fieldActions
+    )
+
+    schemaWithoutActionColumn.map {
       field => SchemaUtils.toSearchField(
-        field, fieldActions, None
+        field, fieldCreationContext
       )
     }
   }

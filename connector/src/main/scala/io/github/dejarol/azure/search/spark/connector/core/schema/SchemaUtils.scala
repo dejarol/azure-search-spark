@@ -228,9 +228,8 @@ object SchemaUtils {
   /**
    * Convert a Spark field into a Search field, by inferring the equivalent Search data type
    * and setting all the required field properties
-   * @param structField Spark field.
-   * @param fieldActions map with keys being field paths and values being an action to apply on the field
-   * @param parentPath parent path for the structField (empty for top-level fields)
+   * @param structField Spark field
+   * @param ctx field creation context
    * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for Spark fields with unsupported types
    * @return the equivalent Search field
    */
@@ -238,85 +237,29 @@ object SchemaUtils {
   @throws[DataTypeException]
   final def toSearchField(
                            structField: StructField,
-                           fieldActions: Map[String, SearchFieldAction],
-                           parentPath: Option[String]
+                           ctx: SearchFieldCreationContext
                          ): SearchField = {
 
-    val (name, dType) = (structField.name, structField.dataType)
-    val currentPath: String = parentPath match {
-      case Some(value) => s"$value.$name"
-      case None => name
-    }
-
-    // If it's atomic, we can directly create a SearchField
-    val searchField: SearchField = if (dType.isAtomic) {
-      new SearchField(name, inferSearchTypeFor(dType))
-    } else if (dType.isCollection) {
-
-      val searchField = new SearchField(name, inferSearchTypeFor(dType))
-
-      // If the inner type is complex but not GeoPoint, we should add subFields to newly created field
-      val innerDType = dType.unsafeCollectionInnerType
-      val notEligibleAsGeoPoint = !SchemaUtils.isEligibleAsGeoPoint(innerDType)
-      if (innerDType.isComplex && notEligibleAsGeoPoint) {
-        val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map {
-          toSearchField(_, fieldActions, Some(currentPath))
-        }
-        searchField.setFields(subFields: _*)
-      } else {
-        searchField
-      }
-    } else if (dType.isComplex) {
-
-      val inferredSearchType = inferSearchTypeFor(dType)
-      if (inferredSearchType.isGeoPoint) {
-        new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
-      } else {
-        val subFields = dType.unsafeSubFields.map {
-          toSearchField(_, fieldActions, Some(currentPath))
-        }
-        new SearchField(name, SearchFieldDataType.COMPLEX)
-          .setFields(subFields: _*)
-      }
-    } else {
-      throw DataTypeException.forUnsupportedSparkType(dType)
-    }
-
-    // Retrieve available actions, apply them if necessary
-    fieldActions.collectFirst {
-      case (k, v) if k.equalsIgnoreCase(currentPath) => v
-    } match {
-      case Some(value) => value.apply(searchField)
-      case None => searchField
-    }
-  }
-
-  final def toSearchFieldV2(
-                             structField: StructField,
-                             rules: SearchFieldCreationContext
-                           ): SearchField = {
-
-    toSearchFieldV2(
-      structField, rules, None
+    toSearchFieldRecursive(
+      structField, ctx, None
     )
   }
 
   /**
-   * Convert a Spark field into a Search field, by inferring the equivalent Search data type
-   * and setting all the required field properties
-   * @param structField Spark field.
-   * @param rules write behavior
+   * Recursive version of the method for converting a Spark field into a Search field
+   * @param structField Spark field
+   * @param ctx field creation context
    * @param parentPath parent path for the structField (empty for top-level fields)
    * @throws io.github.dejarol.azure.search.spark.connector.core.DataTypeException for Spark fields with unsupported types
    * @return the equivalent Search field
    */
 
   @throws[DataTypeException]
-  private def toSearchFieldV2(
-                               structField: StructField,
-                               rules: SearchFieldCreationContext,
-                               parentPath: Option[String]
-                             ): SearchField = {
+  private def toSearchFieldRecursive(
+                                      structField: StructField,
+                                      ctx: SearchFieldCreationContext,
+                                      parentPath: Option[String]
+                                    ): SearchField = {
 
     val (name, dType) = (structField.name, structField.dataType)
     val currentPath: String = parentPath match {
@@ -328,8 +271,6 @@ object SchemaUtils {
     val searchField: SearchField = if (dType.isAtomic) {
       new SearchField(name, inferSearchTypeFor(dType))
     } else if (dType.isCollection) {
-
-      val searchField = new SearchField(name, inferSearchTypeFor(dType))
 
       // If the inner type is complex but
       // - not GeoPoint
@@ -338,25 +279,35 @@ object SchemaUtils {
       val innerDType = dType.unsafeCollectionInnerType
       val eligibleAsGeoPoint = SchemaUtils.isEligibleAsGeoPoint(innerDType)
       val eligibleAsGeoPointButToExcludeFromGeoConversion = eligibleAsGeoPoint &&
-        rules.shouldBeExcludedFromGeoConversion(currentPath)
+        ctx.excludeFromGeoConversion(currentPath)
       val eitherNotEligibleAsGeoPointOrEligibleButToExclude = !eligibleAsGeoPoint ||
         eligibleAsGeoPointButToExcludeFromGeoConversion
+
       if (innerDType.isComplex && eitherNotEligibleAsGeoPointOrEligibleButToExclude) {
         val subFields: Seq[SearchField] = innerDType.unsafeSubFields.map {
-          toSearchFieldV2(_, rules, Some(currentPath))
+          toSearchFieldRecursive(_, ctx, Some(currentPath))
         }
-        searchField.setFields(subFields: _*)
+
+        new SearchField(name, SearchFieldDataType.collection(SearchFieldDataType.COMPLEX))
+          .setFields(subFields: _*)
       } else {
-        searchField
+
+        // Otherwise, apply standard inference rules
+        new SearchField(name, inferSearchTypeFor(dType))
       }
     } else if (dType.isComplex) {
 
+      // If the complex type is a candidate geo point and should not be excluded
+      // from natural conversion, make it GeoPoint
       val inferredSearchType = inferSearchTypeFor(dType)
-      if (inferredSearchType.isGeoPoint) {
+      val notToBeExcluded = !ctx.excludeFromGeoConversion(currentPath)
+      if (inferredSearchType.isGeoPoint && notToBeExcluded) {
         new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
       } else {
+
+        // Otherwise, make it complex and add sub fields
         val subFields = dType.unsafeSubFields.map {
-          toSearchFieldV2(_, rules, Some(currentPath))
+          toSearchFieldRecursive(_, ctx, Some(currentPath))
         }
         new SearchField(name, SearchFieldDataType.COMPLEX)
           .setFields(subFields: _*)
@@ -365,6 +316,6 @@ object SchemaUtils {
       throw DataTypeException.forUnsupportedSparkType(dType)
     }
 
-    rules.maybeApplyActions(searchField, currentPath)
+    ctx.maybeApplyActions(searchField, currentPath)
   }
 }

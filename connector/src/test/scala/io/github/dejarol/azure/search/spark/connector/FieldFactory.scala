@@ -2,7 +2,7 @@ package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
 import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
-import io.github.dejarol.azure.search.spark.connector.core.schema.SearchFieldFeature
+import io.github.dejarol.azure.search.spark.connector.core.schema.{GeoPointType, SearchFieldFeature}
 import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 import org.scalatest.matchers.{BeMatcher, MatchResult}
 
@@ -110,6 +110,32 @@ trait FieldFactory {
       .setFields(
         JavaScalaConverters.seqToList(fields)
       )
+  }
+
+  /**
+   * Create a valid geopoint Spark field
+   * @param name field name
+   * @return a valid geopoint Spark field
+   */
+
+  protected final def createGeopointField(name: String): StructField = {
+
+    createStructField(
+      name, GeoPointType.SPARK_SCHEMA
+    )
+  }
+
+  /**
+   * Create an array field of geo points
+   * @param name array column name
+   * @return an array column with geo points
+   */
+
+  protected final def createGeopointArray(name: String): StructField = {
+
+    createArrayField(
+      name, GeoPointType.SPARK_SCHEMA
+    )
   }
 
   /**

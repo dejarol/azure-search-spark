@@ -26,16 +26,74 @@ class SchemaUtilsSpec
 
   /**
    * Convert a [[StructField]] to a [[SearchField]]
-   * @param structField struct fields
+   * @param structField struct field
+   * @param ctx field creation context
    * @return the equivalent Search field
    */
 
-  private def simplyToSearchField(structField: StructField): SearchField = {
+  private def toSearchField(
+                             structField: StructField,
+                             ctx: SearchFieldCreationContext
+                           ): SearchField = {
 
     SchemaUtils.toSearchField(
+      structField, ctx
+    )
+  }
+
+  /**
+   * Convert a [[StructField]] to a [[SearchField]]
+   * @param structField struct field
+   * @return the equivalent Search field
+   */
+
+  private def toSearchField(structField: StructField): SearchField = {
+
+    toSearchField(
+      structField, NoOpFieldCreationContext
+    )
+  }
+
+  /**
+   * Convert a [[StructField]] to a [[SearchField]], creating a context filled by given actions
+   * @param structField struct field
+   * @param actions actions for the context implementation
+   * @return the equivalent Search field
+   */
+
+  private def toSearchField(
+                             structField: StructField,
+                             actions: Map[String, SearchFieldAction]
+                           ): SearchField = {
+
+    toSearchField(
       structField,
-      Map.empty,
-      None
+      SearchFieldCreationContextImpl(
+        None,
+        actions
+      )
+    )
+  }
+
+  /**
+   * Convert a [[StructField]] to a [[SearchField]], creating a context filled with given
+   * field paths to exclude from natural geo conversion
+   * @param structField struct field
+   * @param geoExclusions field paths to exclude from natural geo conversion
+   * @return the equivalent Search field
+   */
+
+  private def toSearchField(
+                             structField: StructField,
+                             geoExclusions: Seq[String]
+                           ): SearchField = {
+
+    toSearchField(
+      structField,
+      SearchFieldCreationContextImpl(
+        Some(geoExclusions),
+        Map.empty
+      )
     )
   }
 
@@ -56,6 +114,25 @@ class SchemaUtilsSpec
           f.getType.equals(sType)
       } shouldBe true
     }
+  }
+
+  /**
+   * Assert that a Search field has been marked as complex, and that its subfields match
+   * the structure of a GeoPoint
+   * @param field a candidate Search field
+   */
+
+  private def assertIsComplexWithGeopointStructure(field: SearchField): Unit = {
+
+    assertExistAll(
+      field.getFields,
+      Map(
+        GeoPointType.TYPE_LABEL -> SearchFieldDataType.STRING,
+        GeoPointType.COORDINATES_LABEL -> SearchFieldDataType.collection(
+          SearchFieldDataType.DOUBLE
+        )
+      )
+    )
   }
 
   describe(`object`[SchemaUtils.type ]) {
@@ -291,7 +368,7 @@ class SchemaUtilsSpec
         it("with atomic types") {
 
           val structField = createStructField(first, DataTypes.StringType)
-          val searchField = simplyToSearchField(structField)
+          val searchField = toSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.STRING
@@ -301,7 +378,7 @@ class SchemaUtilsSpec
           it("atomic types") {
 
             val structField = createArrayField(first, DataTypes.DateType)
-            val searchField = simplyToSearchField(structField)
+            val searchField = toSearchField(structField)
 
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
@@ -312,7 +389,7 @@ class SchemaUtilsSpec
           it("floats") {
 
             val structField = createArrayField(first, DataTypes.FloatType)
-            val searchField = simplyToSearchField(structField)
+            val searchField = toSearchField(structField)
 
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
@@ -330,7 +407,7 @@ class SchemaUtilsSpec
               )
             )
 
-            val searchField = simplyToSearchField(structField)
+            val searchField = toSearchField(structField)
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.COMPLEX
@@ -348,7 +425,7 @@ class SchemaUtilsSpec
           it("geo points") {
 
             val structField = createArrayField(first, GeoPointType.SPARK_SCHEMA)
-            val searchField = simplyToSearchField(structField)
+            val searchField = toSearchField(structField)
             searchField.getName shouldBe structField.name
             searchField.getType shouldBe SearchFieldDataType.collection(
               SearchFieldDataType.GEOGRAPHY_POINT
@@ -367,7 +444,7 @@ class SchemaUtilsSpec
           )
 
           val structField = createStructField(third, structType)
-          val searchField = simplyToSearchField(structField)
+          val searchField = toSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.COMPLEX
@@ -385,57 +462,126 @@ class SchemaUtilsSpec
 
           val structType = GeoPointType.SPARK_SCHEMA
           val structField = createStructField(third, structType)
-          val searchField = simplyToSearchField(structField)
+          val searchField = toSearchField(structField)
 
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.GEOGRAPHY_POINT
         }
 
-        describe("enriched with some special properties, like") {
-          describe("enable/disable a feature") {
+        describe("taking into account user-defined specifications, like") {
+
+          describe("enriching Search fields with some special properties, like") {
+            describe("enable/disable a feature") {
+              it("for top-level fields") {
+
+                val (matchingFieldName, feature) = ("hello", SearchFieldFeature.SEARCHABLE)
+                val matchingStructField = createStructField(matchingFieldName, DataTypes.StringType)
+                val fieldActions = Map(
+                  matchingFieldName -> actionForEnablingFeature(feature)
+                )
+
+                val matchingSearchField = toSearchField(matchingStructField, fieldActions)
+                matchingSearchField shouldBe enabledFor(feature)
+
+                val nonMatchingStructField = createStructField("world", DataTypes.IntegerType)
+                val nonMatchingSearchField = toSearchField(nonMatchingStructField, fieldActions)
+                nonMatchingSearchField should not be enabledFor(feature)
+              }
+
+              it("for nested fields") {
+
+                val (parentName, matchingFieldName, feature) = ("address", "street", SearchFieldFeature.SEARCHABLE)
+                val structField = createStructField(
+                  parentName,
+                  createStructType(
+                    createStructField("city", DataTypes.StringType),
+                    createStructField("zipCode", DataTypes.IntegerType),
+                    createStructField(matchingFieldName, DataTypes.StringType)
+                  )
+                )
+
+                val fieldActions = Map(
+                  s"$parentName.$matchingFieldName" -> actionForEnablingFeature(feature)
+                )
+
+                val searchField = toSearchField(structField, fieldActions)
+                val subFields = JavaScalaConverters.listToSeq(searchField.getFields)
+                val (matching, nonMatching) = subFields.partition {
+                  _.getName.equalsIgnoreCase(matchingFieldName)
+                }
+
+                matching should have size 1
+                matching.head shouldBe enabledFor(feature)
+                forAll(nonMatching) {
+                  _ should not be enabledFor(feature)
+                }
+              }
+            }
+          }
+
+          describe("geo-conversion exclusions") {
+
             it("for top-level fields") {
 
-              val (matchingFieldName, feature) = ("hello", SearchFieldFeature.SEARCHABLE)
-              val matchingStructField = createStructField(matchingFieldName, DataTypes.StringType)
-              val fieldActions = Map(
-                matchingFieldName -> actionForEnablingFeature(feature)
-              )
+              val candidateGeopointField = createGeopointField("position")
+              val searchField = toSearchField(candidateGeopointField, Seq(candidateGeopointField.name))
 
-              val matchingSearchField = SchemaUtils.toSearchField(matchingStructField, fieldActions, None)
-              matchingSearchField shouldBe enabledFor(feature)
-
-              val nonMatchingStructField = createStructField("world", DataTypes.IntegerType)
-              val nonMatchingSearchField = SchemaUtils.toSearchField(nonMatchingStructField, fieldActions, None)
-              nonMatchingSearchField should not be enabledFor(feature)
+              // The equivalent Search field should be complex
+              searchField.getName shouldBe candidateGeopointField.name
+              searchField.getType shouldBe SearchFieldDataType.COMPLEX
+              assertIsComplexWithGeopointStructure(searchField)
             }
 
             it("for nested fields") {
 
-              val (parentName, matchingFieldName, feature) = ("address", "street", SearchFieldFeature.SEARCHABLE)
-              val structField = createStructField(
-                parentName,
+              val (addressFieldName, positionFieldName) = ("address", "position")
+              val addressField = createStructField(
+                addressFieldName,
                 createStructType(
-                  createStructField("city", DataTypes.StringType),
-                  createStructField("zipCode", DataTypes.IntegerType),
-                  createStructField(matchingFieldName, DataTypes.StringType)
+                  createGeopointField(positionFieldName)
                 )
               )
 
-              val fieldActions = Map(
-                s"$parentName.$matchingFieldName" -> actionForEnablingFeature(feature)
+              val searchField = toSearchField(addressField, Seq(s"$addressFieldName.$positionFieldName"))
+              searchField.getName shouldBe addressFieldName
+              searchField.getType shouldBe SearchFieldDataType.COMPLEX
+
+              // The only subfield should be complex
+              val subFields = searchField.getFields
+              subFields should have size 1
+              val positionField = subFields.get(0)
+              positionField.getName shouldBe positionFieldName
+              searchField.getType shouldBe SearchFieldDataType.COMPLEX
+              assertIsComplexWithGeopointStructure(positionField)
+            }
+
+            it("for top-level collection fields") {
+
+              val collectionField = createGeopointArray("locations")
+              val searchField = toSearchField(collectionField, Seq(collectionField.name))
+              searchField.getName shouldBe collectionField.name
+              searchField.getType shouldBe createCollectionType(SearchFieldDataType.COMPLEX)
+              assertIsComplexWithGeopointStructure(searchField)
+            }
+
+            it("for nested collection fields") {
+
+              val (companyFieldName, locationsFieldName) = ("company", "locations")
+              val companyField = createStructField(
+                companyFieldName,
+                createStructType(
+                  createGeopointArray(locationsFieldName)
+                )
               )
-
-              val searchField = SchemaUtils.toSearchField(structField, fieldActions, None)
-              val subFields = JavaScalaConverters.listToSeq(searchField.getFields)
-              val (matching, nonMatching) = subFields.partition {
-                _.getName.equalsIgnoreCase(matchingFieldName)
-              }
-
-              matching should have size 1
-              matching.head shouldBe enabledFor(feature)
-              forAll(nonMatching) {
-                _ should not be enabledFor(feature)
-              }
+              val searchField = toSearchField(companyField, Seq(s"$companyFieldName.$locationsFieldName"))
+              searchField.getName shouldBe companyFieldName
+              searchField.getType shouldBe SearchFieldDataType.COMPLEX
+              val subFields = searchField.getFields
+              subFields should have size 1
+              val locationsField = subFields.get(0)
+              locationsField.getName shouldBe locationsFieldName
+              locationsField.getType shouldBe createCollectionType(SearchFieldDataType.COMPLEX)
+              assertIsComplexWithGeopointStructure(locationsField)
             }
           }
         }

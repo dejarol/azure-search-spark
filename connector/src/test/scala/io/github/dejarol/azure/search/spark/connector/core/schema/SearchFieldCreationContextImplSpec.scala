@@ -98,7 +98,7 @@ class SearchFieldCreationContextImplSpec
 
           val value = "hello"
           createRulesWithExcludedGeoConversion(value)
-            .shouldBeExcludedFromGeoConversion(value) shouldBe true
+            .excludeFromGeoConversion(value) shouldBe true
         }
       }
     }
@@ -122,7 +122,7 @@ class SearchFieldCreationContextImplSpec
 
           val value = "hello"
           createRulesWithExcludedGeoConversion("world")
-            .shouldBeExcludedFromGeoConversion(value) shouldBe false
+            .excludeFromGeoConversion(value) shouldBe false
         }
       }
     }
