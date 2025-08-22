@@ -1,8 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models._
+import io.github.dejarol.azure.search.spark.connector.core.schema.GeoPointType
 import io.github.dejarol.azure.search.spark.connector.models.SimpleBean
-import io.github.dejarol.azure.search.spark.connector.{FieldFactory, SearchITSpec}
+import io.github.dejarol.azure.search.spark.connector.{FieldAssertionMixins, SearchITSpec}
 import org.apache.spark.sql.types.{DataTypes, StructType}
 import org.scalatest.BeforeAndAfterEach
 
@@ -10,9 +11,9 @@ import java.util.{List => JList}
 
 class WriteConfigITSpec
   extends SearchITSpec
-    with FieldFactory
-      with WriteConfigFactory
-        with BeforeAndAfterEach {
+    with WriteConfigFactory
+      with BeforeAndAfterEach
+       with FieldAssertionMixins {
 
   private lazy val (idFieldName, testIndex) = ("id", "write-builder-index")
   private lazy val keyField = createStructField(idFieldName, DataTypes.StringType)
@@ -109,7 +110,7 @@ class WriteConfigITSpec
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
-    getIndexFields(testIndex)
+    getIndexFieldsAsMap(testIndex)
   }
 
   /**
@@ -127,7 +128,7 @@ class WriteConfigITSpec
     indexExists(testIndex) shouldBe true
 
     // Retrieve index fields
-    getIndexFields(testIndex)
+    getIndexFieldsAsMap(testIndex)
   }
 
   /**
@@ -232,7 +233,7 @@ class WriteConfigITSpec
             )
           )
           indexExists(testIndex) shouldBe true
-          val actualFields = getIndexFields(testIndex)
+          val actualFields = getIndexFieldsAsMap(testIndex)
 
           val expectedSchema = schema.filterNot {
             _.name.equalsIgnoreCase(actionTypeColName)
@@ -258,7 +259,7 @@ class WriteConfigITSpec
             optionsForAuthAndIndex(testIndex)
           )
           indexExists(testIndex) shouldBe true
-          val actualFields = getIndexFields(testIndex)
+          val actualFields = getIndexFieldsAsMap(testIndex)
           val maybeKeyField = actualFields.get(keyField.name)
           maybeKeyField shouldBe defined
           maybeKeyField.get.isKey shouldBe true
@@ -442,6 +443,38 @@ class WriteConfigITSpec
                   field.getSearchAnalyzerName shouldBe searchAnalyzer
               }
             }
+          }
+        }
+
+        describe("taking into account user-specific settings, like") {
+          it("excluding candidate geopoints from geo conversion") {
+
+            val geoPointColName = "value"
+            val schema = createStructType(
+              createStructField(idFieldName, DataTypes.StringType),
+              createStructField(geoPointColName, GeoPointType.SPARK_SCHEMA)
+            )
+
+            // Create an index by setting geo conversion exclusion for 'value'
+            val searchFields = createIndexAddingOptions(
+              schema,
+              Map(
+                WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> geoPointColName
+              )
+            ).getFields
+
+            assertAllFieldsMatchNameAndDatatype(
+              searchFields,
+              Map(
+                idFieldName -> SearchFieldDataType.STRING,
+                geoPointColName -> SearchFieldDataType.COMPLEX
+              )
+            )
+
+            // Assert that the 'value' field is complex with geo point structure
+            assertIsComplexWithGeopointStructure(
+              getIndexFieldsAsMap(searchFields)(geoPointColName)
+            )
           }
         }
 

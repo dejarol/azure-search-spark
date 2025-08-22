@@ -1,15 +1,14 @@
 package io.github.dejarol.azure.search.spark.connector.core.schema
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 import io.github.dejarol.azure.search.spark.connector.core.{DataTypeException, JavaScalaConverters}
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldAssertionMixins, FieldFactory}
 import org.apache.spark.sql.types._
-
-import java.util.{List => JList}
 
 class SchemaUtilsSpec
   extends BasicSpec
-    with FieldFactory {
+    with FieldFactory
+      with FieldAssertionMixins {
 
   private lazy val (first, second, third) = ("field1", "field2", "field3")
 
@@ -93,44 +92,6 @@ class SchemaUtilsSpec
       SearchFieldCreationContextImpl(
         Some(geoExclusions),
         Map.empty
-      )
-    )
-  }
-
-  /**
-   * Assert that all Search fields exist within the expected field set
-   * @param actual actual set of fields
-   * @param expected expected set of fields (keys are names, values are data types)
-   */
-
-  private def assertExistAll(
-                              actual: JList[SearchField],
-                              expected: Map[String, SearchFieldDataType]
-                            ): Unit = {
-
-    forAll(actual) {
-      f => expected.exists {
-        case (name, sType) => f.getName.equalsIgnoreCase(name) &&
-          f.getType.equals(sType)
-      } shouldBe true
-    }
-  }
-
-  /**
-   * Assert that a Search field has been marked as complex, and that its subfields match
-   * the structure of a GeoPoint
-   * @param field a candidate Search field
-   */
-
-  private def assertIsComplexWithGeopointStructure(field: SearchField): Unit = {
-
-    assertExistAll(
-      field.getFields,
-      Map(
-        GeoPointType.TYPE_LABEL -> SearchFieldDataType.STRING,
-        GeoPointType.COORDINATES_LABEL -> SearchFieldDataType.collection(
-          SearchFieldDataType.DOUBLE
-        )
       )
     )
   }
@@ -413,7 +374,7 @@ class SchemaUtilsSpec
               SearchFieldDataType.COMPLEX
             )
 
-            assertExistAll(
+            assertAllFieldsMatchNameAndDatatype(
               searchField.getFields,
               Map(
                 second -> SearchFieldDataType.INT32,
@@ -449,7 +410,7 @@ class SchemaUtilsSpec
           searchField.getName shouldBe structField.name
           searchField.getType shouldBe SearchFieldDataType.COMPLEX
 
-          assertExistAll(
+          assertAllFieldsMatchNameAndDatatype(
             searchField.getFields,
             Map(
               first -> SearchFieldDataType.INT32,

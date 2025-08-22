@@ -15,6 +15,7 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructType
 import org.scalatest.BeforeAndAfterAll
 
+import java.util.{List => JList}
 import scala.reflect.runtime.universe.TypeTag
 
 /**
@@ -24,7 +25,8 @@ import scala.reflect.runtime.universe.TypeTag
 trait SearchITSpec
   extends BasicSpec
     with FieldFactory
-      with BeforeAndAfterAll {
+      with FieldAssertionMixins
+        with BeforeAndAfterAll {
 
   protected final lazy val propertiesSupplier: IntegrationPropertiesSupplier = IntegrationPropertiesSuppliers.resolve()
   protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()
@@ -189,20 +191,25 @@ trait SearchITSpec
     }
   }
 
+  protected final def getIndexFieldsAsMap(fields: JList[SearchField]): Map[String, SearchField] = {
+
+    CaseInsensitiveMap[SearchField](
+      JavaScalaConverters.listToSeq(fields).map {
+        field => (field.getName, field)
+      }.toMap
+    )
+  }
+
   /**
    * Get the list of field defined by an index
-   * @param name index name
+   * @param indexName index name
    * @return a collection with defined index fields
    */
 
-  protected final def getIndexFields(name: String): Map[String, SearchField] = {
+  protected final def getIndexFieldsAsMap(indexName: String): Map[String, SearchField] = {
 
-    CaseInsensitiveMap[SearchField](
-      JavaScalaConverters.listToSeq(
-        getSearchIndex(name).getFields
-      ).map {
-        field => (field.getName, field)
-      }.toMap
+    getIndexFieldsAsMap(
+      getSearchIndex(indexName).getFields
     )
   }
 
@@ -258,7 +265,7 @@ trait SearchITSpec
 
 
     val expectedFields = schema.map(_.name.toLowerCase)
-    val actualFieldsNames = getIndexFields(index).keySet.map(_.toLowerCase)
+    val actualFieldsNames = getIndexFieldsAsMap(index).keySet.map(_.toLowerCase)
 
     // Assert same size and content
     actualFieldsNames should have size expectedFields.size

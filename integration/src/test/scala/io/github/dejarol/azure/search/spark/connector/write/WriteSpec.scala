@@ -3,6 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.write
 import com.azure.search.documents.indexes.models.SearchFieldDataType
 import io.github.dejarol.azure.search.spark.connector.core.Constants
 import io.github.dejarol.azure.search.spark.connector.models._
+import io.github.dejarol.azure.search.spark.connector.write.config.WriteConfig
 import io.github.dejarol.azure.search.spark.connector.{SearchITSpec, SparkSpec}
 import org.apache.spark.sql.SaveMode
 
@@ -108,7 +109,7 @@ class WriteSpec
     indexExists(collectionBeansIndex) shouldBe true
 
     // Assert Search collection type
-    val maybeArrayType = getIndexFields(collectionBeansIndex).collectFirst {
+    val maybeArrayType = getIndexFieldsAsMap(collectionBeansIndex).collectFirst {
       case (k, field) if k.equalsIgnoreCase("array") => field.getType
     }
 
@@ -145,7 +146,7 @@ class WriteSpec
     writeUsingDataSource(complexBeansIndex, Seq(input), None, None)
 
     // Assertion for sub document Search type
-    val maybeType = getIndexFields(complexBeansIndex).collectFirst {
+    val maybeType = getIndexFieldsAsMap(complexBeansIndex).collectFirst {
       case (k, field) if k.equals("value") && field.getType.equals(expectedSearchFieldType) =>
         field.getType
     }
@@ -305,6 +306,34 @@ class WriteSpec
             )
 
             dropIndexIfExists(complexBeansIndex, sleep = false)
+          }
+
+          it("sub documents, even though they're candidate as geo points") {
+
+            // TODO: complete test
+            /*
+            val documents: Seq[PairBean[GeoBean]] = Seq(
+              PairBean(
+                GeoBean(
+                  Seq(-91.1402271, -30.45809113)
+                )
+              )
+            )
+
+            writeUsingDataSource[PairBean[GeoBean]](
+              complexBeansIndex,
+              documents,
+              None,
+              Some(
+                Map(
+                  WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> "value"
+                )
+              )
+            )
+
+            indexExists(complexBeansIndex) shouldBe true
+
+             */
           }
         }
       }

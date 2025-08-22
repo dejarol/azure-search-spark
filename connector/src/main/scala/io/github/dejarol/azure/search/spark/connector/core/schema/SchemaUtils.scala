@@ -305,7 +305,7 @@ object SchemaUtils {
         new SearchField(name, SearchFieldDataType.GEOGRAPHY_POINT)
       } else {
 
-        // Otherwise, make it complex and add sub fields
+        // Otherwise, make it complex and add subfields
         val subFields = dType.unsafeSubFields.map {
           toSearchFieldRecursive(_, ctx, Some(currentPath))
         }
