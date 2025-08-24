@@ -94,18 +94,25 @@ class WriteSpec
   /**
    * Assert that a Spark internal array has been properly written to a Search index
    * @param input input document
+   * @param extraWriteOptions additional write options
    * @param expectedSearchType expected Search collection type
    * @tparam T Java/Scala array inner type
    */
 
   private def assertWriteArrayBehaviorFor[T: PropertyDeserializer: TypeTag](
                                                                              input: CollectionBean[T],
+                                                                             extraWriteOptions: Option[Map[String, String]],
                                                                              expectedSearchType: SearchFieldDataType
                                                                            ): Unit = {
 
     // Drop index and write the document
     dropIndexIfExists(collectionBeansIndex, sleep = true)
-    writeUsingDataSource(collectionBeansIndex, Seq(input), None, None)
+    writeUsingDataSource(
+      collectionBeansIndex,
+      Seq(input),
+      columnNames = None,
+      extraOptions = extraWriteOptions
+    )
     indexExists(collectionBeansIndex) shouldBe true
 
     // Assert Search collection type
@@ -129,27 +136,53 @@ class WriteSpec
   }
 
   /**
-   * Asser that a Spark internal row has been properly written as a sub document to a Search index
-   * @param subDocument sub document
+   * Assert that a Spark internal array has been properly written to a Search index
+   * @param input input document
+   * @param expectedSearchType expected Search collection type
+   * @tparam T Java/Scala array inner type
+   */
+
+  private def assertWriteArrayBehaviorFor[T: PropertyDeserializer: TypeTag](
+                                                                             input: CollectionBean[T],
+                                                                             expectedSearchType: SearchFieldDataType
+                                                                           ): Unit = {
+
+   assertWriteArrayBehaviorFor[T](
+     input, None, expectedSearchType
+   )
+  }
+
+  /**
+   * Assert that a Spark internal row has been properly written as a sub document to a Search index
+   * @param subDocument sub document to write using this datasource
+   * @param extraWriteOptions additional write options
    * @param expectedSearchFieldType expected Search field type for the sub document field
    * @tparam T sub document type
    */
 
   private def assertWriteComplexBehavior[T <: Product: PropertyDeserializer: TypeTag](
                                                                                        subDocument: T,
+                                                                                       extraWriteOptions: Option[Map[String, String]],
                                                                                        expectedSearchFieldType: SearchFieldDataType
                                                                                      ): Unit = {
 
     // Drop index and write data
     dropIndexIfExists(complexBeansIndex, sleep = true)
     val input: PairBean[T] = PairBean[T](subDocument)
-    writeUsingDataSource(complexBeansIndex, Seq(input), None, None)
+    writeUsingDataSource(
+      complexBeansIndex,
+      Seq(input),
+      columnNames = None,
+      extraOptions = extraWriteOptions
+    )
 
     // Assertion for sub document Search type
-    val maybeType = getIndexFieldsAsMap(complexBeansIndex).collectFirst {
-      case (k, field) if k.equals("value") && field.getType.equals(expectedSearchFieldType) =>
-        field.getType
-    }
+    val maybeType = getIndexFieldsAsMap(complexBeansIndex)
+      .collectFirst {
+        case (k, field) if k.equals("value") &&
+          field.getType.equals(expectedSearchFieldType) =>
+          field.getType
+      }
 
     maybeType shouldBe defined
 
@@ -163,6 +196,25 @@ class WriteSpec
     head.id shouldBe input.id
     head.value shouldBe defined
     head.value.get shouldBe subDocument
+  }
+
+  /**
+   * Assert that a Spark internal row has been properly written as a sub document to a Search index
+   * @param subDocument sub document to write using this datasource
+   * @param expectedSearchFieldType expected Search field type for the sub document field
+   * @tparam T sub document type
+   */
+
+  private def assertWriteComplexBehavior[T <: Product: PropertyDeserializer: TypeTag](
+                                                                                       subDocument: T,
+                                                                                       expectedSearchFieldType: SearchFieldDataType
+                                                                                     ): Unit = {
+
+    assertWriteComplexBehavior(
+      subDocument,
+      None,
+      expectedSearchFieldType
+    )
   }
 
   describe("Search dataSource") {
@@ -285,12 +337,36 @@ class WriteSpec
             )
 
             assertWriteArrayBehaviorFor[GeoBean](expected, SearchFieldDataType.GEOGRAPHY_POINT)
+          }
+
+          it("complex objects (excluding them from geo conversion)") {
+
+            val expected = CollectionBean[GeoBean](
+              "hello",
+              Some(
+                Seq(
+                  GeoBean(Seq(-91.1402271, -30.45809113)
+                  )
+                )
+              )
+            )
+
+            assertWriteArrayBehaviorFor[GeoBean](
+              expected,
+              Some(
+                Map(
+                  WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> "array"
+                )
+              ),
+              SearchFieldDataType.COMPLEX
+            )
+
             dropIndexIfExists(collectionBeansIndex, sleep = false)
           }
         }
 
         describe("internal Rows as") {
-          it("sub documents") {
+          it("complex objects") {
 
             assertWriteComplexBehavior[SimpleBean](
               SimpleBean("john", Some(LocalDate.now())),
@@ -304,36 +380,21 @@ class WriteSpec
               GeoBean(Seq(3.14, 4.56)),
               SearchFieldDataType.GEOGRAPHY_POINT
             )
-
-            dropIndexIfExists(complexBeansIndex, sleep = false)
           }
 
-          it("sub documents, even though they're candidate as geo points") {
+          it("complex objects (excluding them from geo conversion)") {
 
-            // TODO: complete test
-            /*
-            val documents: Seq[PairBean[GeoBean]] = Seq(
-              PairBean(
-                GeoBean(
-                  Seq(-91.1402271, -30.45809113)
-                )
-              )
-            )
-
-            writeUsingDataSource[PairBean[GeoBean]](
-              complexBeansIndex,
-              documents,
-              None,
+            assertWriteComplexBehavior[GeoBean](
+              GeoBean(Seq(-91.1402271, -30.45809113)),
               Some(
                 Map(
                   WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> "value"
                 )
-              )
+              ),
+              SearchFieldDataType.COMPLEX
             )
 
-            indexExists(complexBeansIndex) shouldBe true
-
-             */
+            dropIndexIfExists(complexBeansIndex, sleep = false)
           }
         }
       }

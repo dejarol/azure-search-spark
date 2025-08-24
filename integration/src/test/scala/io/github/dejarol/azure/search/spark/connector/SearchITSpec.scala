@@ -25,8 +25,7 @@ import scala.reflect.runtime.universe.TypeTag
 trait SearchITSpec
   extends BasicSpec
     with FieldFactory
-      with FieldAssertionMixins
-        with BeforeAndAfterAll {
+      with BeforeAndAfterAll {
 
   protected final lazy val propertiesSupplier: IntegrationPropertiesSupplier = IntegrationPropertiesSuppliers.resolve()
   protected final lazy val searchIndexClient: SearchIndexClient = new SearchIndexClientBuilder()

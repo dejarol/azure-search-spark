@@ -182,6 +182,29 @@ class WriteConfigITSpec
     }
   }
 
+  /**
+   * Create an index using a given schema, setting a geo conversion exclusion
+   * @param schema schema to use for index creation
+   * @param exclusion name of the column to exclude from natural geo conversion
+   * @return a map of index fields (keys are field names and values the field themselves)
+   */
+
+  private def createIndexExcludingGeoColumn(
+                                             schema: StructType,
+                                             exclusion: String
+                                           ): Map[String, SearchField] = {
+
+    // Create an index by setting geo conversion exclusion
+    createIndexAddingOptions(
+      schema,
+      Map(
+        WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> exclusion
+      )
+    )
+
+    getIndexFieldsAsMap(testIndex)
+  }
+
   describe(anInstanceOf[WriteConfig]) {
     describe(SHOULD) {
       it("drop an existing index") {
@@ -447,34 +470,140 @@ class WriteConfigITSpec
         }
 
         describe("taking into account user-specific settings, like") {
-          it("excluding candidate geopoints from geo conversion") {
+          describe("excluding from geo conversion") {
 
-            val geoPointColName = "value"
-            val schema = createStructType(
-              createStructField(idFieldName, DataTypes.StringType),
-              createStructField(geoPointColName, GeoPointType.SPARK_SCHEMA)
+            val (locationColName, addressColName) = ("location", "address")
+            val exclusionForNestedField = s"$addressColName.$locationColName"
+            val idField = createStructField(idFieldName, DataTypes.StringType)
+            val locationField = createStructField(
+              locationColName,
+              GeoPointType.SPARK_SCHEMA
             )
 
-            // Create an index by setting geo conversion exclusion for 'value'
-            val searchFields = createIndexAddingOptions(
-              schema,
-              Map(
-                WriteConfig.EXCLUDE_FROM_GEO_CONVERSION_CONFIG -> geoPointColName
-              )
-            ).getFields
+            val locationArrayField = createStructField(
+              locationColName,
+              createArrayType(GeoPointType.SPARK_SCHEMA)
+            )
 
-            assertAllFieldsMatchNameAndDatatype(
-              searchFields,
-              Map(
+            /**
+             * Extract the name and datatype of each field
+             * @param fields map of fields
+             * @return map of field name and datatype
+             */
+
+            def nameAndDatatypeOf(fields: Map[String, SearchField]): Map[String, SearchFieldDataType] = {
+
+              fields.mapValues {
+                _.getType
+              }
+            }
+
+            it("top-level fields") {
+
+              // Create an index by setting geo conversion exclusion for 'geoColumn'
+              val schema = createStructType(idField, locationField)
+              val actual = createIndexExcludingGeoColumn(schema, locationColName)
+              actual should have size schema.size
+              nameAndDatatypeOf(actual) should contain theSameElementsAs Map(
                 idFieldName -> SearchFieldDataType.STRING,
-                geoPointColName -> SearchFieldDataType.COMPLEX
+                locationColName -> SearchFieldDataType.COMPLEX
               )
-            )
 
-            // Assert that the 'value' field is complex with geo point structure
-            assertIsComplexWithGeopointStructure(
-              getIndexFieldsAsMap(searchFields)(geoPointColName)
-            )
+              // Assert that the 'geoColumn' field is complex with geo point structure
+              assertIsComplexWithGeopointStructure(
+                actual(locationColName)
+              )
+            }
+
+            it("top-level collection fields") {
+
+              // Create an index by setting geo conversion exclusion for 'geoColumn'
+              val schema = createStructType(idField, locationArrayField)
+              val actual = createIndexExcludingGeoColumn(schema, locationColName)
+              actual should have size schema.size
+              nameAndDatatypeOf(actual) should contain theSameElementsAs Map(
+                idFieldName -> SearchFieldDataType.STRING,
+                locationColName -> SearchFieldDataType.collection(
+                  SearchFieldDataType.COMPLEX
+                )
+              )
+
+              // Assert that the geoColumn is complex with geo point structure
+              assertIsComplexWithGeopointStructure(
+                actual(locationColName)
+              )
+            }
+
+            it("nested fields") {
+
+              val schema = createStructType(
+                idField,
+                createStructField(
+                  addressColName,
+                  createStructType(
+                    locationField
+                  )
+                )
+              )
+
+              val actual = createIndexExcludingGeoColumn(schema, exclusionForNestedField)
+              actual should have size schema.size
+              nameAndDatatypeOf(actual) should contain theSameElementsAs Map(
+                idFieldName -> SearchFieldDataType.STRING,
+                addressColName -> SearchFieldDataType.COMPLEX
+              )
+
+              val addressSubFields = actual(addressColName).getFields
+              assertAllFieldsMatchNameAndDatatype(
+                addressSubFields,
+                Map(
+                  locationColName -> SearchFieldDataType.COMPLEX
+                )
+              )
+
+              // Assert that the geoColumn is complex with geo point structure
+              assertIsComplexWithGeopointStructure(
+                addressSubFields.get(0)
+              )
+            }
+
+            it("nested collection fields") {
+
+              val schema = createStructType(
+                idField,
+                createStructField(
+                  addressColName,
+                  createStructType(
+                    createStructField(
+                      locationColName,
+                      createArrayType(GeoPointType.SPARK_SCHEMA)
+                    )
+                  )
+                )
+              )
+
+              val actual = createIndexExcludingGeoColumn(schema, exclusionForNestedField)
+              actual should have size schema.size
+              nameAndDatatypeOf(actual) should contain theSameElementsAs Map(
+                idFieldName -> SearchFieldDataType.STRING,
+                addressColName -> SearchFieldDataType.COMPLEX
+              )
+
+              val addressSubFields = actual(addressColName).getFields
+              assertAllFieldsMatchNameAndDatatype(
+                addressSubFields,
+                Map(
+                  locationColName -> SearchFieldDataType.collection(
+                    SearchFieldDataType.COMPLEX
+                  )
+                )
+              )
+
+              // Assert that the geoColumn is complex with geo point structure
+              assertIsComplexWithGeopointStructure(
+                addressSubFields.get(0)
+              )
+            }
           }
         }
 

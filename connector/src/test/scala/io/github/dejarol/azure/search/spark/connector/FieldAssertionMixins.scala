@@ -1,6 +1,7 @@
 package io.github.dejarol.azure.search.spark.connector
 
 import com.azure.search.documents.indexes.models.{SearchField, SearchFieldDataType}
+import io.github.dejarol.azure.search.spark.connector.core.JavaScalaConverters
 import io.github.dejarol.azure.search.spark.connector.core.schema.GeoPointType
 
 import java.util.{List => JList}
@@ -24,12 +25,12 @@ trait FieldAssertionMixins {
                                                            expected: Map[String, SearchFieldDataType]
                                                          ): Unit = {
 
-    forAll(actual) {
-      f => expected.exists {
-        case (name, sType) => f.getName.equalsIgnoreCase(name) &&
-          f.getType.equals(sType)
-      } shouldBe true
-    }
+    actual should have size expected.size
+    val actualMap = JavaScalaConverters.listToSeq(actual).map {
+      field => (field.getName, field.getType)
+    }.toMap
+
+    actualMap should contain theSameElementsAs expected
   }
 
   /**

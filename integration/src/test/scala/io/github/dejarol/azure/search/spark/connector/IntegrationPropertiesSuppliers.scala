@@ -47,7 +47,10 @@ object IntegrationPropertiesSuppliers {
   }
 
   /**
-   * Resolve which instance of [[IntegrationPropertiesSupplier]] should be used, by reading the value of an env variable
+   * Resolve which instance of [[IntegrationPropertiesSupplier]] should be used, by reading the value of env variable
+   * <code>IS_CI_CD_ENV</code>. If such variable is set to <code>true</code>, it will return a supplier that retrieves
+   * integration properties by reading env variables. Otherwise, it will return a supplier that retrieves integration
+   * properties by reading a local .secrets file
    * @return an instance of [[IntegrationPropertiesSupplier]]
    */
 
