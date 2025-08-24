@@ -5,6 +5,7 @@ import io.github.dejarol.azure.search.spark.connector.core.TestConstants
 import io.github.dejarol.azure.search.spark.connector.core.utils.JsonModel
 import io.github.dejarol.azure.search.spark.connector.{BasicSpec, SearchAPIModelFactory}
 
+// TODO: evaluate deletion
 class JsonSpec
   extends BasicSpec
     with SearchAPIModelFactory {

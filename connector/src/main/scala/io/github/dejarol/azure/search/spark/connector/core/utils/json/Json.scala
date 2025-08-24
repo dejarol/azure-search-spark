@@ -15,6 +15,7 @@ import scala.util.Try
  * Collection of utility methods for dealing with JSON serialization/deserialization
  */
 
+// TODO: evaluate deletion
 object Json {
 
   private lazy val DEFAULT_OBJECT_MAPPER = new ObjectMapper()

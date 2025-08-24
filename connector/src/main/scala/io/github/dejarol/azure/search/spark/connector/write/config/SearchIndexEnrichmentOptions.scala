@@ -3,7 +3,7 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 import com.azure.json.JsonReader
 import com.azure.search.documents.indexes.models._
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
-import io.github.dejarol.azure.search.spark.connector.core.utils.json.Json
+import io.github.dejarol.azure.search.spark.connector.core.utils.json.JsonBackends
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -29,13 +29,8 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
                              function: JsonReader => T
                            ): Option[T] = {
 
-    getAs[T](
-      key,
-      jsonString => Json.unsafelyReadAzModel[T](
-        jsonString,
-        function
-      )
-    )
+    val backend = JsonBackends.forAzureModel[T](function)
+    getAs[T](key, backend.deserialize)
   }
 
   /**
@@ -53,13 +48,8 @@ case class SearchIndexEnrichmentOptions(override protected val options: CaseInse
                                      function: JsonReader => T
                                    ): Option[Seq[T]] = {
 
-    getAsListOf[T](
-      key,
-      jsonString => Json.unsafelyReadAzModelArray[T](
-        jsonString,
-        function
-      )
-    )
+    val backend = JsonBackends.forAzureArrayOf[T](function)
+    getAsListOf[T](key, backend.deserialize)
   }
 
   /**
