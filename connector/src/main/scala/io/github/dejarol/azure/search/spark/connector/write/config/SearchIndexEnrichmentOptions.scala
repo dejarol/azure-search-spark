@@ -297,5 +297,4 @@ object SearchIndexEnrichmentOptions {
       )
     )
   }
-
 }

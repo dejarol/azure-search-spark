@@ -509,6 +509,13 @@ Values within such column should be valid index actions according to the Azure S
         <td></td>
         <td></td>
     </tr>
+    <tr>
+        <td>excludeFromGeoConversion</td>
+        <td>Comma-separated list of fields to exclude from geo conversion. For top-level fields, just specify the field name. 
+            For nested fields, specify the field path (e.g. <code>address.city</code>)</td>
+        <td></td>
+        <td></td>
+    </tr>
 </table>
 
 ### Field options
