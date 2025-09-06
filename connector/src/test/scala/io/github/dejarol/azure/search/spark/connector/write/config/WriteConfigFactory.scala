@@ -1,14 +1,13 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
-import io.github.dejarol.azure.search.spark.connector.{JsonMixIns, SearchAPIModelFactory}
+import io.github.dejarol.azure.search.spark.connector.SearchAPIModelFactory
 
 /**
  * Mix-in trait for creating raw configuration objects for write operations
  */
 
 trait WriteConfigFactory
-  extends JsonMixIns
-    with SearchAPIModelFactory {
+  extends SearchAPIModelFactory {
 
   /**
    * Create a write config key related to search field creation options

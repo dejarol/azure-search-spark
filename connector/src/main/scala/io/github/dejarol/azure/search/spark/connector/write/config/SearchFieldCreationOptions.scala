@@ -3,7 +3,6 @@ package io.github.dejarol.azure.search.spark.connector.write.config
 import com.azure.search.documents.indexes.models.SearchField
 import io.github.dejarol.azure.search.spark.connector.core.config.SearchConfig
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SchemaUtils, SearchFieldAction, SearchFieldCreationContextImpl}
-import io.github.dejarol.azure.search.spark.connector.core.utils.json.Json
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 import org.apache.spark.sql.types.StructField
 
@@ -36,7 +35,7 @@ case class SearchFieldCreationOptions(
 
   // Collect valid field attributes definitions
   private[config] lazy val originalMetadata: Map[String, SearchFieldMetadata] = options.mapValues {
-    Json.safelyReadAsModelUsingJackson[SearchFieldMetadata]
+    SearchFieldMetadata.safelyFromJsonString
   }.collect {
     case (k, Right(v)) => (k, v)
   }

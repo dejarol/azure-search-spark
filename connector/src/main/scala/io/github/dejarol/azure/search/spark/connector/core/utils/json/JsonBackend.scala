@@ -5,6 +5,7 @@ import scala.util.Try
 /**
  * Trait for defining a JSON deserialization backend
  * @tparam T target deserialization type
+ * @since 0.12.0
  */
 
 trait JsonBackend[T] {

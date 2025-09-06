@@ -1,12 +1,10 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.{LexicalAnalyzerName, SearchField, SearchFieldDataType}
-import io.github.dejarol.azure.search.spark.connector.core.utils.json.JsonBackends
-import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory, JsonMixIns}
+import io.github.dejarol.azure.search.spark.connector.{BasicSpec, FieldFactory}
 
 class SearchFieldMetadataSpec
   extends BasicSpec
-    with JsonMixIns
       with FieldFactory {
 
   private lazy val lexicalAnalyzer = LexicalAnalyzerName.AR_LUCENE
@@ -235,23 +233,9 @@ class SearchFieldMetadataSpec
               |}
               |""".stripMargin
 
-          import org.json4s._
-          import org.json4s.jackson.JsonMethods._
-
-          val serializerForLexicalAnalyzerName: CustomSerializer[LexicalAnalyzerName] = new CustomSerializer[LexicalAnalyzerName](
-            formats => (
-              {
-                case JString(s) => LexicalAnalyzerName.fromString(s)
-              },
-              {
-                case x: LexicalAnalyzerName => JString(x.toString)
-              }
-            )
-          )
-
-          val formats: Formats = DefaultFormats + serializerForLexicalAnalyzerName
-          val actual = JsonBackends.json4s[SearchFieldMetadata](formats).deserialize(json)
-
+          val result = SearchFieldMetadata.safelyFromJsonString(json)
+          result shouldBe 'right
+          val actual = result.right.get
           actual.analyzer shouldBe Some(analyzer)
           actual.facetable shouldBe Some(true)
           actual.filterable shouldBe Some(false)
@@ -279,7 +263,9 @@ class SearchFieldMetadataSpec
               |}
               |""".stripMargin
 
-          val actual = readValueAs[SearchFieldMetadata](json)
+          val result = SearchFieldMetadata.safelyFromJsonString(json)
+          result shouldBe 'right
+          val actual = result.right.get
           actual.analyzer shouldBe empty
           actual.facetable shouldBe empty
           actual.filterable shouldBe empty
@@ -303,7 +289,9 @@ class SearchFieldMetadataSpec
                |}
                |""".stripMargin
 
-          val actual = readValueAs[SearchFieldMetadata](json)
+          val result = SearchFieldMetadata.safelyFromJsonString(json)
+          result shouldBe 'right
+          val actual = result.right.get
           actual.analyzer shouldBe empty
         }
       }

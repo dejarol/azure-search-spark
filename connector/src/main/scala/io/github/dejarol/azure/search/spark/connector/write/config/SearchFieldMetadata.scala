@@ -1,12 +1,9 @@
 package io.github.dejarol.azure.search.spark.connector.write.config
 
 import com.azure.search.documents.indexes.models.LexicalAnalyzerName
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import io.github.dejarol.azure.search.spark.connector.core.schema.{SearchFieldAction, SearchFieldFeature}
-import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConversions, JsonNodeOperations}
+import io.github.dejarol.azure.search.spark.connector.core.utils.json.{Json4SCustomSerializers, JsonBackends}
+import org.json4s.{DefaultFormats, Formats}
 
 /**
  * Model for collecting attributes to be set on a [[com.azure.search.documents.indexes.models.SearchField]].
@@ -26,7 +23,6 @@ import io.github.dejarol.azure.search.spark.connector.core.utils.json.{JsonConve
  * @since 0.10.0
  */
 
-@JsonDeserialize(using = classOf[SearchFieldMetadata.Deserializer])
 case class SearchFieldMetadata(
                                 analyzer: Option[LexicalAnalyzerName],
                                 facetable: Option[Boolean],
@@ -93,31 +89,17 @@ case class SearchFieldMetadata(
 
 object SearchFieldMetadata {
 
-  import JsonConversions._
-  import JsonNodeOperations._
+  /**
+   * Safely deserialize a JSON string into an instance
+   * @param json JSON string to deserialize
+   * @return either the exception raised by the deserialization process or an instance
+   * @since 0.12.0
+   */
 
-  //noinspection ScalaWeakerAccess
-  class Deserializer
-    extends StdDeserializer[SearchFieldMetadata](classOf[SearchFieldMetadata]) {
+  final def safelyFromJsonString(json: String): Either[Throwable, SearchFieldMetadata] = {
 
-    override def deserialize(p: JsonParser, ctxt: DeserializationContext): SearchFieldMetadata = {
-
-      val jsonNode = ctxt.readTree(p)
-      SearchFieldMetadata(
-        analyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("analyzer")(LexicalAnalyzerNameConversion),
-        facetable = jsonNode.safelyGetAs[Boolean]("facetable")(BooleanConversion),
-        filterable = jsonNode.safelyGetAs[Boolean]("filterable")(BooleanConversion),
-        indexAnalyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("indexAnalyzer")(LexicalAnalyzerNameConversion),
-        key = jsonNode.safelyGetAs[Boolean]("key")(BooleanConversion),
-        retrievable = jsonNode.safelyGetAs[Boolean]("retrievable")(BooleanConversion),
-        searchAnalyzer = jsonNode.safelyGetAs[LexicalAnalyzerName]("searchAnalyzer")(LexicalAnalyzerNameConversion),
-        searchable = jsonNode.safelyGetAs[Boolean]("searchable")(BooleanConversion),
-        sortable = jsonNode.safelyGetAs[Boolean]("sortable")(BooleanConversion),
-        vectorSearchProfile = jsonNode.safelyGetAs[String]("vectorSearchProfile")(StringConversion),
-        synonymMaps = jsonNode.safelyGetAs[Seq[String]]("synonymMaps")(JsonConversions.forArrayOf[String](StringConversion)),
-        dimensions = jsonNode.safelyGetAs[Int]("dimensions")(IntConversion)
-      )
-    }
+    val formats: Formats = DefaultFormats + Json4SCustomSerializers.forLexicalAnalyzerName
+    JsonBackends.json4s[SearchFieldMetadata](formats).safelyDeserialize(json)
   }
 
   /**

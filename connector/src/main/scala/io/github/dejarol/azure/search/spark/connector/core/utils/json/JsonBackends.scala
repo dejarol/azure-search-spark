@@ -10,6 +10,7 @@ import java.util.{List => JList}
 
 /**
  * Object holding factory methods for creating [[JsonBackend]] instances
+ * @since 0.12.0
  */
 
 object JsonBackends {
